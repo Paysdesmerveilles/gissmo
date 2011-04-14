@@ -1,0 +1,219 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<SCRIPT TYPE="text/javascript">
+<!--
+function popup(mylink, windowname)
+{
+if (! window.focus)return true;
+var href;
+if (typeof(mylink) == 'string')
+   href=mylink;
+else
+   href=mylink.href;
+window.open(href, windowname, 'width=1200, height=800, scrollbars=yes');
+return false;
+}
+//-->
+</SCRIPT>
+
+<html lang="en">
+<head>
+    <title>Recherche</title>
+</head>
+<body>
+  <h1>Recherche de l'historique des équipements</h1>
+  <form action="." method="GET">
+  <TABLE BORDER=0>
+  <TR>
+	<TD>Catégorie</TD>
+	<TD>
+        <select name="Categorie">
+        {% if querycat %}
+          <option value="">---------</option>
+        {% else %}
+          <option value="" selected="selected">---------</option>
+        {% endif %}
+        
+        {% for categorie in ResCatgEquip %}
+            {% if querycat == categorie.nom %}
+            <OPTION VALUE="{{categorie.nom}}" selected="selected">{{categorie.nom}}</OPTION>
+            {% else %}
+            <OPTION VALUE="{{categorie.nom}}">{{categorie.nom}}</OPTION>
+            {% endif %}
+        {% endfor %}
+        </select>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD>Constructeur</TD>
+	<TD>
+        <select name="Constructeur">
+        {% if querycons %}
+          <option value="">---------</option>
+        {% else %}
+          <option value="" selected="selected">---------</option>
+        {% endif %}
+
+        {% for constructeur in ResCons %}
+            {% if querycons == constructeur.nom %}
+            <OPTION VALUE="{{constructeur.nom}}" selected="selected">{{constructeur.nom}}</OPTION>
+            {% else %}
+            <OPTION VALUE="{{constructeur.nom}}">{{constructeur.nom}}</OPTION>
+            {% endif %}
+        {% endfor %}
+        </select>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD>Fournisseur</TD>
+	<TD>
+        <select name="Fournisseur">
+        {% if queryfourn %}
+          <option value="">---------</option>
+        {% else %}
+          <option value="" selected="selected">---------</option>
+        {% endif %}
+
+        {% for fournisseur in ResFourn %}
+            {% if queryfourn == fournisseur.nom %}
+            <OPTION VALUE="{{fournisseur.nom}}" selected="selected">{{fournisseur.nom}}</OPTION>
+            {% else %}
+            <OPTION VALUE="{{fournisseur.nom}}">{{fournisseur.nom}}</OPTION>
+            {% endif %}
+        {% endfor %}
+        </select>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD>Modèle</TD>
+	<TD>
+        <label for="q"></label>
+        <input type="text" name="q" value="{{ query|escape }}"><BR>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD>No série</TD>
+	<TD>
+        <label for="q2"></label>
+        <input type="text" name="q2" value="{{ query2|escape }}"><BR>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD>Evénement</TD>
+	<TD>
+        <select name="Evenement">
+        {% if queryevent %}
+          <option value="">---------</option>
+        {% else %}
+          <option value="" selected="selected">---------</option>
+        {% endif %}
+
+        {% for evenement in ResEventEquip %}
+            {% if queryevent == evenement.description %}
+            <OPTION VALUE="{{evenement.description}}" selected="selected">{{evenement.description}}</OPTION>
+            {% else %}
+            <OPTION VALUE="{{evenement.description}}">{{evenement.description}}</OPTION>
+            {% endif %}
+        {% endfor %}
+        </select>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD></TD>
+	<TD>
+        <input type="submit" value="Rechercher">
+        </TD>
+  </TR>
+
+  </TABLE>
+  </form>
+
+  {% if query or query2 or querycat or querycons or queryfourn or queryevent %}
+    <h2>Résultat :</h2>
+
+    {% if ResEquip %}
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Equipements </CAPTION>
+      <TR>
+      <TH> Catégorie </TH>
+      <TH> Constructeur </TH>
+      <TH> Fournisseur </TH>
+      <TH> Modèle </TH>
+      <TH> No série </TH>
+      <TH> Evénement </TH>
+      <TH> Etat </TH>
+      <TH> Début </TH>
+      <TH> Fin </TH>
+      </TR>
+
+      {% for equip in ResEquip %}
+      <TR>
+        <TD> {{ equip.equipement.categorie|escape }} </TD>
+        <TD> {{ equip.equipement.constructeur.nom|escape }} </TD>
+        <TD> {{ equip.equipement.fournisseur.nom|escape }} </TD>
+        <TD> {{ equip.equipement.modele|escape }} </TD>
+        <TD> {{ equip.equipement.no_serie|escape }} </TD>
+        <TD> {{ equip.evenement|escape }} </TD>
+        <TD> {{ equip.etat|escape }} </TD>
+        <TD> {{ equip.date_debut|escape }} </TD>
+        <TD> {{ equip.date_fin|escape }} </TD>
+      </TR>
+      {% endfor %}
+      </TABLE> 
+      <BR> 
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Emplacements des equipements </CAPTION>
+      <TR>
+      <TH> Catégorie </TH>
+      <TH> Modèle </TH>
+      <TH> No série </TH>
+      <TH> Code station </TH>
+      <TH> Code réseau </TH>
+      <TH> Bati </TH>
+      <TH> Modèle de l'hôte </TH>
+      <TH> No série de l'hôte </TH>
+      <TH> Détail </TH>
+      <TH> Début </TH>
+      <TH> Fin </TH>
+      </TR>
+
+      {% for emplacement in ResEquipStationSite %}
+      <TR>
+        <TD> {{ emplacement.equipement.categorie|escape }} </TD>
+        <TD> {{ emplacement.equipement.modele|escape }} </TD>
+        <TD> {{ emplacement.equipement.no_serie|escape }} </TD>
+        <TD> {{ emplacement.station.code_station|escape }} </TD>
+        <TD> {{ emplacement.reseau.code_reseau|escape }} </TD>
+        <TD> {{ emplacement.bati.description|escape }} </TD>
+        <TD> {{ emplacement.equipement_hote.modele|escape }} </TD>
+        <TD> {{ emplacement.equipement_hote.no_serie|escape }} </TD>
+        <TD> {{ emplacement.detail|escape }} </TD>
+        <TD> {{ emplacement.date_debut|escape }} </TD>
+        <TD> {{ emplacement.date_fin|escape }} </TD>
+      </TR>
+      {% endfor %}
+      </TABLE> 
+      <BR> 
+
+
+    {% else %}
+      <p>Aucun équipement trouvé</p>
+    {% endif %}
+  {% else %}
+    <p>Aucun critère de recherche inscrit</p>
+  {% endif %}
+
+  <BR>
+  <input type=button onclick="window.print()" value='Imprimer cette page'> 
+
+</body>
+</html>
+

@@ -1,0 +1,251 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<SCRIPT TYPE="text/javascript">
+<!--
+function popup(mylink, windowname)
+{
+if (! window.focus)return true;
+var href;
+if (typeof(mylink) == 'string')
+   href=mylink;
+else
+   href=mylink.href;
+window.open(href, windowname, 'width=1200, height=800, scrollbars=yes');
+return false;
+}
+//-->
+</SCRIPT>
+
+{% load extras %}
+
+<html lang="en">
+<head>
+    <title>Recherche</title>
+</head>
+<body>
+  <h1>Recherche des informations d'une station</h1>
+  <form action="." method="GET">
+  <TABLE BORDER=0>
+  <TR>
+	<TD>Station</TD>
+	<TD>
+        <select name="Station">
+        {% if query %}
+          <option value="">---------</option>
+        {% else %}
+          <option value="" selected="selected">---------</option>
+        {% endif %}
+        
+        {% for station in ResStationSite %}
+            {% if query == station.code_station %}
+            <OPTION VALUE="{{station.code_station}}" selected="selected">{{station.code_station}}</OPTION>
+            {% else %}
+            <OPTION VALUE="{{station.code_station}}">{{station.code_station}}</OPTION>
+            {% endif %}
+        {% endfor %}
+        </select>
+	</TD>
+  </TR>
+  <TR>
+	<TD></TD>
+	<TD>
+        <input type="submit" value="Rechercher">
+        </TD>
+  </TR>
+  </TABLE>
+  </form>
+
+  {% if query %}
+    <h2>Résultat pour la station "{{ query|escape }}":</h2>
+
+    {% if ResStation %}
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Station </CAPTION>
+      <TR>
+      <TH> Code </TH>
+      <TH> Nom </TH>
+      <TH> Latitude </TH>
+      <TH> Longitude </TH>
+      <TH> Elévation </TH>
+      <TH> Classification </TH>
+      <TH> Nom du site </TH>
+      <TH> Description </TH>
+      <TH> Adresse </TH>
+      <TH> Commune </TH>
+      <TH> Pays </TH>
+      <TH> Itinéraire </TH>
+
+      </TR>
+      <TR>
+      {% for resstation in ResStation %}
+      <TR>
+        <TD> {{ resstation.code_station|escape }} </TD>
+        <TD> {{ resstation.nom_station|escape }} </TD>
+        <TD> {{ resstation.latitude|escape }} </TD>
+        <TD> {{ resstation.longitude|escape }} </TD>
+        <TD> {{ resstation.elevation|escape }} </TD>
+        <TD> {{ resstation.classification.code_classification|escape }} </TD>
+        <TD> {{ resstation.nom_site|escape }} </TD>
+        <TD> {{ resstation.description|escape }} </TD>
+        <TD> {{ resstation.adresse|escape }} </TD>
+        <TD> {{ resstation.commune|escape }} </TD>
+        <TD> {{ resstation.pays|escape }} </TD>
+        <TD> <A HREF="{{ resstation.googlemap|escape }}" onClick="return popup(this,'')">Itinéraire</A> </TD>
+      </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Historique de la station </CAPTION>
+      <TR>
+      <TH> Evénement </TH>
+      <TH> Etat </TH>
+      <TH> Début </TH>
+      <TH> Fin </TH>
+      </TR>
+      <TR>
+      {% for reshisstation in ResHistStation %}
+      <TR>
+        <TD> {{ reshisstation.evenement.description|escape }} </TD>
+        <TD> {{ reshisstation.etat|escape }} </TD>
+        <TD> {{ reshisstation.date_debut|escape }} </TD>
+        <TD> {{ reshisstation.date_fin|escape }} </TD>
+
+      </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Intervenants </CAPTION>
+      <TR>
+      <TH> Catégorie </TH>
+      <TH> Nom </TH>
+      <TH> Prénom </TH>
+      <TH> Filiale </TH>
+      <TH> Téléphone </TH>
+      <TH> Portable </TH>
+      <TH> Fax </TH>
+      <TH> Email </TH>
+      <TH> Note </TH>
+      </TR>
+      <TR>
+      {% for resintervenant in ResStationSiteIntervenant %}
+      <TR>
+        <TD> {{ resintervenant.intervenant.categorie|escape }} </TD>
+        <TD> {{ resintervenant.intervenant.nom|escape }} </TD>
+        <TD> {{ resintervenant.intervenant.prenom|escape }} </TD>
+        <TD> {{ resintervenant.intervenant.filiale|escape }} </TD>
+        <TD> {{ resintervenant.intervenant.telephone|escape }} </TD>
+        <TD> {{ resintervenant.intervenant.portable|escape }} </TD>
+        <TD> {{ resintervenant.intervenant.fax|escape }} </TD>
+        <TD> {{ resintervenant.intervenant.email|escape }} </TD>
+        <TD> {{ resintervenant.intervenant.note|escape }} </TD>
+      </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Bâtis </CAPTION>
+      <TR>
+      <TH> Catégorie </TH>
+      <TH> Description </TH>
+      </TR>
+      <TR>
+      {% for resbati in ResBati %}
+      <TR>
+        <TD> {{ resbati.categorie|escape }} </TD>
+        <TD> {{ resbati.description|escape }} </TD>
+     </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Equipements </CAPTION>
+      <TR>
+      <TH colspan=4></TH>
+      <TH colspan=6> Emplacement</TH>
+      <TH colspan=4> Historique</TH>
+      <TH></TH>
+      </TR>
+
+      <TR>
+      <TH> Catégorie </TH>
+      <TH> Modèle </TH>
+      <TH> No série </TH>
+      <TH> Réseau </TH>
+      <TH> Bâti </TH>
+      <TH> Modèle de l'hôte</TH>
+      <TH> No série de l'hôte</TH>
+      <TH> Détail </TH>
+      <TH> Date début </TH>
+      <TH> Date fin </TH>
+      <TH> Evénement</TH>
+      <TH> Etat</TH>
+      <TH> Date début</TH>
+      <TH> Date fin</TH>
+      <TH> Intervention </TH>
+      </TR>
+
+      <TR>
+      {% for resequip in ResEquip %}
+      <TR>
+        <TD> {{ resequip.equipement.categorie|escape }} </TD>
+        <TD> {{ resequip.equipement.modele|escape }} </TD>
+        <TD> {{ resequip.equipement.no_serie|escape }} </TD>
+        <TD> {{ resequip.reseau|escape }} </TD>
+        <TD> {{ resequip.bati.description|escape }} </TD>
+        <TD> {{ resequip.equipement_hote.modele|escape }} </TD>
+        <TD> {{ resequip.equipement_hote.no_serie|escape }} </TD>
+        <TD> {{ resequip.detail|escape }} </TD>
+        <TD> {{ resequip.date_debut|escape }} </TD>
+        <TD> {{ resequip.date_fin|escape }} </TD>
+        {% assign count 0 %}
+        {% for reshistequip in ResHistEquip %}
+          {% if resequip.equipement.id == reshistequip.equipement.id %}
+             {% ifequal count 0 %}
+               {% assign count 1 %}  
+               <TD> {{ reshistequip.evenement|escape }} </TD>
+               <TD> {{ reshistequip.etat|escape }} </TD>
+               <TD> {{ reshistequip.date_debut|escape }} </TD>
+               <TD> {{ reshistequip.date_fin|escape }} </TD>
+               <TD WIDTH=400> </TD>
+             {% else %} 
+               <TR>
+               <TD colspan=10> </TD>    
+               <TD> {{ reshistequip.evenement|escape }} </TD>
+               <TD> {{ reshistequip.etat|escape }} </TD>
+               <TD> {{ reshistequip.date_debut|escape }} </TD>
+               <TD> {{ reshistequip.date_fin|escape }} </TD>
+               <TD WIDTH=400> </TD>
+               </TR>    
+             {% endifequal %} 
+          {% endif %}
+        {% endfor %} 
+     </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+    {% else %}
+      <p>Aucune station trouvée</p>
+    {% endif %}
+  {% else %}
+    <p>Aucun critère de recherche inscrit</p>
+  {% endif %}
+
+  <BR>
+  <input type=button onclick="window.print()" value='Imprimer cette page'> 
+
+</body>
+</html>
+

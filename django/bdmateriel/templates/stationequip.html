@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>Recherche{% if query %} Results{% endif %}</title>
+</head>
+<body>
+  <h1>Recherche des équipements d'une station</h1>
+  <form action="." method="GET">
+  <TABLE BORDER=0>
+  <TR>
+	<TD>Station</TD>
+	<TD>
+        <select name="Station">
+        {% if query %}
+          <option value="">---------</option>
+        {% else %}
+          <option value="" selected="selected">---------</option>
+        {% endif %}
+        
+        {% for station in ResStationSite %}
+            {% if query == station.code_station %}
+            <OPTION VALUE="{{station.code_station}}" selected="selected">{{station.code_station}}</OPTION>
+            {% else %}
+            <OPTION VALUE="{{station.code_station}}">{{station.code_station}}</OPTION>
+            {% endif %}
+        {% endfor %}
+        </select>
+	</TD>
+  </TR>
+  <TR>
+	<TD></TD>
+	<TD>
+        <input type="submit" value="Rechercher">
+        </TD>
+  </TR>
+
+  </TABLE>
+  </form>
+
+  {% if query %}
+
+    <h2>Résultat pour la station "{{ query|escape }}" :</h2>
+
+    {% if ResStation %}
+
+      <TABLE BORDER="1" width=1200>
+      <CAPTION> Stations </CAPTION>
+      <TR>
+      <TH> Code </TH>
+      <TH> Nom </TH>
+      <TH> Latitude </TH>
+      <TH> Longitude </TH>
+      <TH> Elévation </TH>
+
+      </TR>
+      <TR>
+      {% for resstation in ResStation %}
+      <TR>
+        <TD> {{ resstation.code_station|escape }} </TD>
+        <TD> {{ resstation.nom_station|escape }} </TD>
+        <TD> {{ resstation.latitude|escape }} </TD>
+        <TD> {{ resstation.longitude|escape }} </TD>
+        <TD> {{ resstation.elevation|escape }} </TD>
+
+      </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+      <TABLE BORDER="1" width=1200>
+      <CAPTION> Equipements </CAPTION>
+      <TR>
+      <TH COLSPAN=5></TH>
+      <TH COLSPAN=2> Equipement hote</TH>
+      <TH COLSPAN=4></TH>
+
+      </TR>
+
+      <TR>
+      <TH> Catégorie </TH>
+      <TH> Modèle </TH>
+      <TH> No série </TH>
+      <TH> Réseau </TH>
+      <TH> Bâti </TH>
+      <TH> Modèle</TH>
+      <TH> No série</TH>
+      <TH> Détail </TH>
+      <TH> Début </TH>
+      <TH> Fin </TH>
+      <TH> Description de l'intervention </TH>
+
+
+      </TR>
+
+      <TR>
+      {% for resbatiequip in ResSiteEquip %}
+      <TR>
+        <TD> {{ resbatiequip.equipement.categorie|escape }} </TD>
+        <TD> {{ resbatiequip.equipement.modele|escape }} </TD>
+        <TD> {{ resbatiequip.equipement.no_serie|escape }} </TD>
+        <TD> {{ resbatiequip.reseau.code_reseau|escape }} </TD>
+        <TD> {{ resbatiequip.bati.description|escape }} </TD>
+        <TD> {{ resbatiequip.equipement_hote.modele|escape }} </TD>
+        <TD> {{ resbatiequip.equipement_hote.no_serie|escape }} </TD>
+        <TD> {{ resbatiequip.detail|escape }} </TD>
+        <TD> {{ resbatiequip.date_debut|escape }} </TD>
+        <TD> {{ resbatiequip.date_fin|escape }} </TD>
+        <TD> <BR><BR><BR><BR><BR> </TD>
+     </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+
+    {% else %}
+      <p>Aucune station trouvée</p>
+    {% endif %}
+  {% else %}
+    <p>Aucun critère de recherche inscrit</p>
+  {% endif %}
+
+  <BR>
+  <input type=button onclick="window.print()" value='Imprimer cette page'> 
+
+</body>
+</html>
+

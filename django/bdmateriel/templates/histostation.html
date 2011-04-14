@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<SCRIPT TYPE="text/javascript">
+<!--
+function popup(mylink, windowname)
+{
+if (! window.focus)return true;
+var href;
+if (typeof(mylink) == 'string')
+   href=mylink;
+else
+   href=mylink.href;
+window.open(href, windowname, 'width=1200, height=800, scrollbars=yes');
+return false;
+}
+//-->
+</SCRIPT>
+
+<html lang="en">
+<head>
+    <title>Recherche</title>
+</head>
+<body>
+  <h1>Recherche de l'historique des stations</h1>
+  <form action="." method="GET">
+  <TABLE BORDER=0>
+
+  <TR>
+	<TD>Code de station</TD>
+	<TD>
+        <label for="q"></label>
+        <input type="text" name="q" value="{{ query|escape }}"><BR>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD>Nom de la station</TD>
+	<TD>
+        <label for="q2"></label>
+        <input type="text" name="q2" value="{{ query2|escape }}"><BR>
+	</TD>
+  </TR>
+
+
+  <TR>
+	<TD>Nom du site</TD>
+	<TD>
+        <label for="q3"></label>
+        <input type="text" name="q3" value="{{ query3|escape }}"><BR>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD>Evénement</TD>
+	<TD>
+        <select name="Evenement">
+        {% if queryevent %}
+          <option value="">---------</option>
+        {% else %}
+          <option value="" selected="selected">---------</option>
+        {% endif %}
+
+        {% for evenement in ResEventStation %}
+            {% if queryevent == evenement.description %}
+            <OPTION VALUE="{{evenement.description}}" selected="selected">{{evenement.description}}</OPTION>
+            {% else %}
+            <OPTION VALUE="{{evenement.description}}">{{evenement.description}}</OPTION>
+            {% endif %}
+        {% endfor %}
+        </select>
+	</TD>
+  </TR>
+
+  <TR>
+	<TD></TD>
+	<TD>
+        <input type="submit" value="Rechercher">
+        </TD>
+  </TR>
+
+  </TABLE>
+  </form>
+
+  {% if query or query2 or query3 or queryevent %}
+    <h2>Résultat :</h2>
+
+    {% if ResStation %}
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Stations </CAPTION>
+      <TR>
+      <TH> Code station </TH>
+      <TH> Nom de la station </TH>
+      <TH> Nom du site </TH>
+      <TH> Evénement </TH>
+      <TH> Etat </TH>
+      <TH> Date début </TH>
+      <TH> Date fin </TH>
+      </TR>
+
+      {% for station in ResStation %}
+      <TR>
+        <TD> {{ station.station.code_station|escape }} </TD>
+        <TD> {{ station.station.nom_station|escape }} </TD>
+        <TD> {{ station.station.nom_site|escape }} </TD>
+        <TD> {{ station.evenement|escape }} </TD>
+        <TD> {{ station.etat|escape }} </TD>
+        <TD> {{ station.date_debut|escape }} </TD>
+        <TD> {{ station.date_fin|escape }} </TD>
+      </TR>
+      {% endfor %}
+      </TABLE> 
+      <BR> 
+
+    {% else %}
+      <p>Aucune station trouvée</p>
+    {% endif %}
+  {% else %}
+    <p>Aucun critère de recherche inscrit</p>
+  {% endif %}
+
+  <BR>
+  <input type=button onclick="window.print()" value='Imprimer cette page'> 
+
+</body>
+</html>
+

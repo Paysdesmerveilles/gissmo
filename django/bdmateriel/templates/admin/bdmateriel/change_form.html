@@ -1,0 +1,24 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n admin_modify adminmedia %}
+
+{% block extrahead %}{{ block.super }}
+{% url 'admin:jsi18n' as jsi18nurl %}
+<script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/" }}"></script>
+<script type="text/javascript" src="{% admin_media_prefix %}js/jquery.min.js"></script>
+<script type="text/javascript">
+    $(function(){
+        $("select+a.add-another").each(function(){
+            $(this).after("&nbsp;<a class='changelink' href='#' title='Edit selected item'></a>");
+            $(this).next().click(function(){
+                if($(this).prev().prev().attr('value')=='') return false;
+                var link = ($(this).prev().attr('href')+'../'+$(this).prev().prev().attr('value'));
+                var win = window.open(link + '?_popup=1', link, 'height=600,width=1000,resizable=yes,scrollbars=yes');
+                win.focus();
+                return false;
+            });
+        });
+    });
+</script>
+{% endblock %}
+
