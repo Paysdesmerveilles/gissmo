@@ -1,0 +1,217 @@
+{% extends "admin/base_site.html" %}
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<SCRIPT TYPE="text/javascript">
+<!--
+function popup(mylink, windowname)
+{
+if (! window.focus)return true;
+var href;
+if (typeof(mylink) == 'string')
+   href=mylink;
+else
+   href=mylink.href;
+window.open(href, windowname, 'width=1200, height=800, scrollbars=yes');
+return false;
+}
+//-->
+</SCRIPT>
+
+{% load extras %}
+
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url admin:index %}">Home</a> &rsaquo;</div>
+{% endblock %}
+
+{% block title %}Recherche des informations d'un équipement{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+<html lang="en">
+<head>
+    <title>Recherche</title>
+</head>
+<body>
+  <h1>Recherche des informations d'un équipement</h1>
+  <form action="." method="GET">
+  <TABLE BORDER=0>
+  <TR>
+	<TD>Equipement</TD>
+	<TD>
+        <select name="Equipement">
+        {% if query %}
+          <option value="">---------</option>
+        {% else %}
+          <option value="" selected="selected">---------</option>
+        {% endif %}
+        
+        {% for equip in ResEquips %}
+            {% if query == equip.id %}
+            <OPTION VALUE={{equip.id}} selected="selected">{{equip.equip_model.equip_model_name}}|{{equip.serial_number}}</OPTION>
+            {% else %}
+            <OPTION VALUE={{equip.id}}>{{equip.equip_model.equip_model_name}}|{{equip.serial_number}}</OPTION>
+            {% endif %}
+        {% endfor %}
+        </select>
+	</TD>
+  </TR>
+  <TR>
+	<TD></TD>
+	<TD>
+        <input type="submit" value="Rechercher">
+        </TD>
+  </TR>
+  </TABLE>
+  </form>
+
+  {% if query %}
+    <h2>Résultat pour l'équipement "{{ query|escape }}":</h2>
+
+    {% if ResEquip %}
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Equipement </CAPTION>
+      <TR>
+      <TH> Supertype </TH>
+      <TH> Type </TH>
+      <TH> Modèle </TH>
+      <TH> Numéro série </TH>
+
+      </TR>
+      <TR>
+      {% for equip in ResEquip %}
+      <TR>
+        <TD> {{ equip.equip_supertype.equip_supertype_name|escape }} </TD>
+        <TD> {{ equip.equip_type.equip_type_name|escape }} </TD>
+        <TD> {{ equip.equip_model.equip_model_name|escape }} </TD>
+        <TD> {{ equip.serial_number|escape }} </TD>
+      </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Intervenants </CAPTION>
+      <TR>
+      <TH> Catégorie </TH>
+      <TH> Nom </TH>
+      <TH> Date début </TH>
+      <TH> Note </TH>
+      <TH> Type d'acces </TH>
+      <TH> Coordonnées </TH>
+      </TR>
+      <TR>
+      {% for equipactor in ResEquipActor %}
+      <TR>
+        <TD> {{ equipactor.actor_type.actor_type_name|escape }} </TD>
+        <TD> {{ equipactor.actor.actor_name|escape }} </TD>
+        <TD> {{ equipactor.start_date|escape }} </TD>
+        <TD> {{ equipactor.note|escape }} </TD>        
+        {% assign count 0 %}
+        {% for actoraccess in ResActorAccess %}
+          {% if actoraccess.actor_id == equipactor.actor_id %}         
+            {% ifequal count 0 %}
+              {% assign count 1 %} 
+              <TD>{{ actoraccess.access_type.access_type_name|escape }}</TD>
+              <TD>{{ actoraccess.coordinate|escape }}</TD>
+            {% else %}
+              <TR>
+              <TD colspan=4> </TD>  
+              <TD>{{ actoraccess.access_type.access_type_name|escape }}</TD>
+              <TD>{{ actoraccess.coordinate|escape }}</TD>
+              </TR>
+            {% endifequal %}
+          {% endif %}
+        {% endfor %}
+      </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Etat </CAPTION>
+      <TR>
+      <TH> Etat </TH>
+      <TH> Date début </TH>
+      <TH> Note </TH>
+      </TR>
+      <TR>
+      {% for etat in ResEquipState %}
+      <TR>
+        <TD> {{ etat.equip_state.equip_state_name|escape }} </TD>
+        <TD> {{ etat.start_date|escape }} </TD>
+        <TD> {{ etat.note|escape }} </TD>
+     </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Caractéristiques </CAPTION>
+      <TR>
+      <TH> Nom </TH>
+      <TH> Valeur </TH>
+      <TH> Date début </TH>
+      <TH> Note </TH>
+      </TR>
+      <TR>
+      {% for charac in ResEquipCharac %}
+      <TR>
+        <TD> {{ charac.equip_charac.equip_charac_name|escape }} </TD>
+        <TD> {{ charac.equip_charac_value|escape }} </TD>
+        <TD> {{ charac.start_date|escape }} </TD>
+        <TD> {{ charac.note|escape }} </TD>
+     </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+      <TABLE BORDER="1" WIDTH=1200>
+      <CAPTION> Emplacement </CAPTION>
+      <TR>
+      <TH> Station </TH>
+      <TH> Réseau </TH>
+      <TH> Bâti </TH>
+      <TH> Modèle de l'hôte</TH>
+      <TH> No série de l'hôte</TH>
+      <TH> Date début </TH>
+      <TH> Note </TH>
+      </TR>
+
+      <TR>
+      {% for equip in ResStationEquip %}
+      <TR>
+        <TD> {{ equip.station.station_code|escape }} </TD>
+        <TD> {{ equip.network.network_name|escape }} </TD>
+        <TD> {{ equip.built.built_type.built_type_name|escape }} </TD>
+        <TD> {{ equip.host_equipment.equip_model.equip_model_name|escape }} </TD>
+        <TD> {{ equip.host_equipment.serial_number|escape }} </TD>
+        <TD> {{ equip.start_date|escape }} </TD>
+        <TD> {{ equip.note|escape }} </TD>
+     </TR>
+      {% endfor %}
+      </TR>
+      </TABLE> 
+      <BR>
+
+    {% else %}
+      <p>Aucune station trouvée</p>
+    {% endif %}
+  {% else %}
+    <p>Aucun critère de recherche inscrit</p>
+  {% endif %}
+
+  <BR>
+  <input type=button onclick="window.print()" value='Imprimer cette page'> 
+
+</body>
+</html>
+
+
+</div>
+{% endblock %}
+

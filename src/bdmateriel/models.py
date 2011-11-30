@@ -1,259 +1,564 @@
 # coding=utf-8
 
 from django.db import models
-from django.db.models import Q
+from django.utils.translation import ugettext_lazy as _
 
-# Create your models here.
-class Classification(models.Model) :
-    code_classification = models.CharField(max_length=5)
+# Ajout pour definir un lien entre des champs FK. Ce qui limitera le choix du drop down select d'un champ FK
+from smart_selects.db_fields import ChainedForeignKey 
+# Fin de l'ajout pour definir un lien entre des champs FK
 
-    def __unicode__(self):
-        return self.code_classification
+# Ajout pour lever des erreurs de validation
+from django.core.exceptions import ValidationError
+# Fin de l'ajout pour lever des erreurs de validation
 
-class Geologie(models.Model) :
-    nom = models.CharField(max_length=50)
-    description = models.TextField(max_length=50, null=True, blank=True)
+"""
+####
+#
+# Actor's section
+#
+####
+"""
 
-    class Meta:
-        verbose_name = "Géologie"
-        verbose_name_plural = u"I. Géologies"
+"""We use this as a public class example class. 
 
-    def __unicode__(self):
-        return self.nom
+You never call this class before calling :func:`public_fn_with_sphinxy_docstring`.
 
-class CategorieBati(models.Model) :
-    nom = models.CharField(max_length=50)
+.. note::
 
-    def __unicode__(self):
-        return self.nom
+An example of intersphinx is this: you **cannot** use :mod:`pickle` on this class.
 
-class SuperCategorieEquip(models.Model) :
-    nom = models.CharField(max_length=20)
+"""
 
-    class Meta:
-        verbose_name = "Super catégorie d'équipement"
-        verbose_name_plural = u"K. Supers catégories d'équipement"
-
-    def __unicode__(self):
-        return self.nom
-
-class CategorieEquip(models.Model) :
-    nom = models.CharField(max_length=20)
+# Type of access to the actor
+class AccessType(models.Model):
+    access_type_name = models.CharField(max_length=40, verbose_name=_("type d'acces"))
 
     class Meta:
-        verbose_name = "Catégorie d'équipement"
-        verbose_name_plural = u"L. Catégories d'équipement"
+        ordering = ['access_type_name']
+        verbose_name = _("type d'acces")
+        verbose_name_plural = _("type d'acces")
 
     def __unicode__(self):
-        return self.nom
+        return self.access_type_name
 
-class CategorieInterv(models.Model) :
-    nom = models.CharField(max_length=20)
-
-    def __unicode__(self):
-        return self.nom
-
-class Reseau(models.Model) :
-    code_reseau = models.CharField(max_length=5)
-    nom_reseau = models.CharField(max_length=50, null=True, blank=True)
-    code_reseau_principal = models.ForeignKey('self', null=True, blank=True)
+# Actor
+class Actor(models.Model):
+    actor_name = models.CharField(max_length=50, verbose_name=_("nom"))
+    actor_note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
-        verbose_name = "Réseau"
-        verbose_name_plural = u"J. Réseaux"
+        verbose_name = _("intervenant")
+        verbose_name_plural = _("D1. Intervenants")
 
     def __unicode__(self):
-        return self.code_reseau
+        return self.actor_name
 
-class EvenementStation(models.Model) :
-    description = models.CharField(max_length=40)
+# Kind of accessibilty and coordinate to contact the actor
+class ActorAccessibility(models.Model):
+    actor = models.ForeignKey("Actor", verbose_name=_("intervenant"))
+    access_type = models.ForeignKey("AccessType", verbose_name=_("type d'acces"))
+    coordinate = models.TextField(null=True, blank=True, verbose_name=_("coordonnees"))
 
     class Meta:
-        verbose_name = "Evénement de la station"
-        verbose_name_plural = "Evénements des stations"
+        verbose_name = _("accessbilite a l'intervenant")
+        verbose_name_plural = _("D2. Accessibilite aux intervenants")
 
     def __unicode__(self):
-        return self.description
+      return u'%s %s %s' % (self.actor.actor_name, self.access_type.access_type_name, self.coordinate)
 
-class EvenementEquip(models.Model) :
-    description = models.CharField(max_length=40)
+# Address of the actor
+class ActorAddress(models.Model):
+    actor = models.ForeignKey("Actor", verbose_name=_("intervenant"))
+    address = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("adresse"))
+    city = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("commune"))
+    department = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("departement"))
+    region = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("region"))
+    country = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("pays"))
+    zip_code = models.CharField(max_length=15, null=True, blank=True, verbose_name=_("code postal"))
 
     class Meta:
-        verbose_name = "Evénement d'un équipement"
-        verbose_name_plural = "Evénements des équipements"
+        ordering = ['actor']
+        verbose_name = _("adresse de l'intervenant")
+        verbose_name_plural = _("D3. Adresses des intervenants")
 
     def __unicode__(self):
-        return self.description
+      return u'%s %s' % (self.actor.actor_name, self.address)
 
-class Intervenant(models.Model) :
-    categorie = models.ForeignKey(CategorieInterv)
-    nom = models.CharField(max_length=50)
-    prenom = models.CharField(max_length=50, null=True, blank=True)
-    filiale = models.CharField(max_length=50, null=True, blank=True)
-    telephone = models.CharField(max_length=15, null=True, blank=True)
-    portable = models.CharField(max_length=15, null=True, blank=True)
-    fax = models.CharField(max_length=15, null=True, blank=True)
-    email = models.EmailField(null=True, blank=True)
-    lien_site = models.URLField(null=True, blank=True, verify_exists=False)
-    note = models.TextField(null=True, blank=True)
+# Role that an actor can have
+class ActorType(models.Model):
+    actor_type_name = models.CharField(max_length=40, verbose_name=_("type d'intervenant"))
 
     class Meta:
-        verbose_name = "Intervenant"
-        verbose_name_plural = "C. Intervenants"
+        ordering = ['actor_type_name']
+        verbose_name = _("type d'intervenant")
+        verbose_name_plural = _("types des intervenants")
 
     def __unicode__(self):
-        return u'%s : %s' % (self.categorie.nom, self.nom)
+        return self.actor_type_name
 
-class Adresse(models.Model) :
-    intervenant = models.ForeignKey(Intervenant)
-    adresse = models.CharField(max_length=100)
-    commune = models.CharField(max_length=100)
-    pays = models.CharField(max_length=50, null=True, blank=True)
-    code_postal = models.CharField(max_length=15, null=True, blank=True)
+####
+#
+# Built's section
+#
+####
 
-    def __unicode__(self):
-      return u'%s %s' % (self.adresse, self.commune)
-
-
-class StationSite(models.Model) :
-    code_station = models.CharField(max_length=25)
-    nom_station = models.CharField(max_length=50, null=True, blank=True)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
-    elevation = models.FloatField(null=True, blank=True)
-    classification = models.ForeignKey(Classification, null=True, blank=True)
-    photo = models.ImageField(upload_to='photos', null=True, blank=True)
-    nom_site = models.CharField(max_length=100)
-    description = models.CharField(max_length=100, null=True, blank=True)
-    adresse = models.CharField(max_length=100, null=True, blank=True)
-    commune = models.CharField(max_length=100, null=True, blank=True)
-    pays =  models.CharField(max_length=50, null=True, blank=True)
-    code_postal = models.CharField(max_length=15, null=True, blank=True)
-    geologie = models.ForeignKey(Geologie, null=True, blank=True)
-    googlemap = models.URLField(null=True, blank=True, verify_exists=False)
-    lien_documentation = models.URLField(null=True, blank=True, verify_exists=False)
-    note = models.TextField(null=True, blank=True)
+# Category of the built
+class BuiltCategory(models.Model):
+    built_category_name = models.CharField(max_length=40, verbose_name=_("categorie du bati"))
 
     class Meta:
-        verbose_name = "Station"
-        verbose_name_plural = "A. Stations"
-        unique_together = ('code_station','nom_site')
+        ordering = ['built_category_name']
+        verbose_name = _("categorie du bati")
+        verbose_name_plural = _("categories des batis")
 
     def __unicode__(self):
-        return self.code_station
+        return self.built_category_name
 
-class StationSiteIntervenant(models.Model) :
-    station = models.ForeignKey(StationSite)
-    intervenant = models.ForeignKey(Intervenant,limit_choices_to = Q(categorie__nom__startswith='Pro') | Q(categorie__nom__startswith='Contact') | Q(categorie__nom__startswith='Exploitant'))
-    date_debut = models.DateField()
-    date_fin = models.DateField(null=True,blank=True)
+# Type of the built
+class BuiltType(models.Model):
+    built_type_name = models.CharField(max_length=40, verbose_name=_("type de bati"))
 
     class Meta:
-        verbose_name = "Intervenant de la station"
-        verbose_name_plural = "G. Intervenants des stations"
-        ordering = ['date_debut']
+        ordering = ['built_type_name']
+        verbose_name = _("type de bati")
+        verbose_name_plural = _("types des batis")
 
     def __unicode__(self):
-        return u'%s %s' % (self.station, self.intervenant)
+        return self.built_type_name
 
-class Bati(models.Model) :
-    station = models.ForeignKey(StationSite)
-    description = models.CharField(max_length=50,unique=True)
-    categorie = models.ForeignKey(CategorieBati)
-    lien_documentation = models.URLField(null=True, blank=True, verify_exists=False)
+# Builts on the site of a station
+class Built(models.Model):
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    built_category = models.ForeignKey("BuiltCategory", verbose_name=_("categorie du bati"))
+    built_type = models.ForeignKey("BuiltType", verbose_name=_("type de bati"))
+    built_note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
-        verbose_name = "Bati"
-        verbose_name_plural = "D. Batis"
+        verbose_name = _("bati")
+        verbose_name_plural = _("B1. Batis")
 
     def __unicode__(self):
-        return u'%s : %s' % (self.station, self.description)
+        return u'%s %s %s' % (self.station.station_code, self.built_category.built_category_name, self.built_type.built_type_name)
 
-class Equipement(models.Model) :
-    super_categorie = models.ForeignKey(SuperCategorieEquip, max_length=20)
-    categorie = models.ForeignKey(CategorieEquip)
-    photo = models.ImageField(upload_to='photos', null=True, blank=True)
-    constructeur = models.ForeignKey(Intervenant, related_name = "constructeur", limit_choices_to = {'categorie__nom__in' : ['Constructeur']})
-    fournisseur = models.ForeignKey(Intervenant, related_name = "fournisseur", limit_choices_to = {'categorie__nom__in' : ['Fournisseur']}, null=True, blank=True)
-    modele = models.CharField(max_length=50)
-    no_serie = models.CharField(max_length=50)
-    dimension = models.CharField(max_length=20, null=True, blank=True)
-    poids = models.CharField(max_length=5, null=True, blank=True)
-    lien_documentation = models.URLField(null=True, blank=True,verify_exists=False)
-    note = models.TextField(null=True, blank=True)
+####
+#
+# Equipment's section
+#
+####
+
+# Type of action that occur on equipment
+class EquipActionType(models.Model):
+    equip_action_type = models.CharField(max_length=40, verbose_name=_("type d'action"))
 
     class Meta:
-        verbose_name = "Equipement"
-        verbose_name_plural = "B. Equipements"
-        ordering = ['super_categorie']
-        unique_together = ('constructeur','modele','no_serie')
+        ordering = ['equip_action_type']
+        verbose_name = _("type d'action sur l'equipement")
+        verbose_name_plural = _("types d'actions sur les equipements")
 
     def __unicode__(self):
-        return u'%s : %s' % (self.modele, self.no_serie)
+        return self.equip_action_type
 
-class EquipIntervenant(models.Model) :
-    equipement = models.ForeignKey(Equipement)
-    intervenant = models.ForeignKey(Intervenant)#,limit_choices_to = {'categorie__nom__in' : ['Proprietaire','Exploitant']})
-    date_debut = models.DateField()
-    date_fin = models.DateField(null=True,blank=True)
-    note = models.TextField(null=True, blank=True)
+#
+# Equipment's actors
+#
+class EquipActor(models.Model):
+    equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
+    actor = models.ForeignKey("Actor", verbose_name=_("intervenant"))
+    actor_type = models.ForeignKey("ActorType", verbose_name=_("role de l'intervenant"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
-        verbose_name = "Intervenant de l'équipement"
-        verbose_name_plural = u"H. Intervenants des équipements"
-        ordering = ['date_debut']
+        verbose_name = _("intervenant de l'equipement")
+        verbose_name_plural = _("D5. Intervenants des equipements")
 
     def __unicode__(self):
-        return u'%s %s %s' % (self.equipement, self.intervenant.categorie, self.intervenant.nom)
+        return u'%s %s %s' % (self.equip.equip_model.equip_model_name, self.actor.actor_name, self.actor_type.actor_type_name)
 
-class EquipStationSite(models.Model) :
-    equipement = models.ForeignKey(Equipement)
-    station = models.ForeignKey(StationSite)
-    reseau = models.ForeignKey(Reseau,null=True,blank=True)
-    bati = models.ForeignKey(Bati, null=True,blank=True)
-    equipement_hote = models.ForeignKey(Equipement, related_name="equipement_hote", null=True,blank=True)
-    detail = models.TextField(null=True,blank=True)
-    date_debut = models.DateField()
-    date_fin = models.DateField(null=True,blank=True)
+# Characteristics of an equipment
+class EquipCharac(models.Model):
+    equip_charac_name = models.CharField(max_length=50, verbose_name=_("caracteristique"))
 
     class Meta:
-        verbose_name = "Emplacement de l'équipement"
-        verbose_name_plural = "Emplacements des équipements"
-        ordering = ['date_debut']
+        verbose_name = _("caracteristique de l'equipement")
+        verbose_name_plural = _("caracteristiques des equipements")
 
     def __unicode__(self):
-        return u'%s %s' % (self.equipement, self.station)
+        return self.equip_charac_name
 
-class HistoriqueStationSite(models.Model) :
-    station = models.ForeignKey(StationSite)
-    evenement = models.ForeignKey(EvenementStation)
-    etat = models.CharField(max_length=20,null=True,blank=True)
-    date_debut = models.DateField()
-    date_fin = models.DateField(null=True,blank=True)
-    note = models.TextField(null=True,blank=True)
+# Possible values for the characteristics of an equipment
+# pour l'instant aucun choix de valeur n'est disponible
+#class EquipCharacValue(models.Model) :
+#    equip_charac = models.ForeignKey("EquipCharac", verbose_name=_("Caracteristique"))
+#    value_choice = models.CharField(max_length=50, verbose_name=_("Choix de valeur"))
+#
+#    class Meta:
+#        ordering = ['id']
+#        verbose_name = _("Choix de valeur de la caracteristique equipement")
+#        verbose_name_plural = _("Choix de valeur des caracteristiques equipement")
+#
+#    def __unicode__(self):
+#        return self.value_choice
+
+# Supertype or category of equipment
+class EquipSupertype(models.Model):
+    equip_supertype_name = models.CharField(max_length=40, verbose_name=_("supertype d'equipement"))
 
     class Meta:
-        verbose_name = "Historique de la station"
-        verbose_name_plural = "E. Historique des stations"
-        ordering = ['date_debut']
+        ordering = ['equip_supertype_name']
+        verbose_name = _("supertype de l'equipement")
+        verbose_name_plural = _("supertypes des equipements")
 
     def __unicode__(self):
-        return self.evenement.description
+        return self.equip_supertype_name
 
-class HistoriqueEquip(models.Model) :
-    equipement = models.ForeignKey(Equipement)
-    evenement = models.ForeignKey(EvenementEquip)
-    etat = models.CharField(max_length=20,null=True,blank=True)
-    date_debut = models.DateField()
-    date_fin = models.DateField(null=True,blank=True)
-    note = models.TextField(null=True,blank=True)
+## Type of equipment
+class EquipType(models.Model):
+    equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
+    equip_type_name = models.CharField(max_length=40, verbose_name=_("type d'equipement"))
 
     class Meta:
-        verbose_name = "Historique de l'équipement"
-        verbose_name_plural = u"F. Historique des équipements"
-        ordering = ['date_debut']
+        ordering = ['equip_supertype__equip_supertype_name','equip_type_name']
+        verbose_name = _("type d'equipement")
+        verbose_name_plural = _("types des equipements")
 
     def __unicode__(self):
-        return self.evenement.description
+        return self.equip_type_name
 
+# Models of equipment
+class EquipModel(models.Model):
+    equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
+    equip_type = ChainedForeignKey(
+        EquipType,
+        chained_field="equip_supertype",
+        chained_model_field="equip_supertype", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("type d'equipement")
+    )
+    equip_model_name = models.CharField(max_length=50, verbose_name=_("modele d'equipement"))
+
+    class Meta:
+        verbose_name = _("modele d'equipement")
+        verbose_name_plural = _("C5. Modeles des equipements")
+
+    def __unicode__(self):
+        return self.equip_model_name
+
+# Equipments
+class Equipment(models.Model):
+    equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
+    equip_type = ChainedForeignKey(
+        EquipType,
+        chained_field="equip_supertype",
+        chained_model_field="equip_supertype", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("type d'equipement")
+    )
+    equip_model = ChainedForeignKey(
+        EquipModel,
+        chained_field="equip_type",
+        chained_model_field="equip_type", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("modele d'equipement")
+    )
+    serial_number = models.CharField(max_length=50, verbose_name=_("numero de serie"))
+
+    class Meta:
+        verbose_name = _("equipement")
+        verbose_name_plural = _("C1. Equipements")
+
+    def __unicode__(self):
+        return u'%s : %s' % (self.equip_model, self.serial_number)
+
+# Possible state of an equipment
+class EquipState(models.Model):
+    equip_state_name = models.CharField(max_length=40, verbose_name=_("etat de l'equipement"))
+
+    class Meta:
+        ordering = ['equip_state_name']
+        verbose_name = _("etat de l'equipement")
+        verbose_name_plural = _("etats des equipements")
+
+    def __unicode__(self):
+        return self.equip_state_name
+
+####
+#
+# Network's section
+#
+####
+
+# Network
+class Network(models.Model):
+    network_code = models.CharField(max_length=5, verbose_name=_("code reseau"))
+    network_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom du reseau"))
+    main_network = models.ForeignKey('self', null=True, blank=True, verbose_name=_("reseau principal"))
+
+    class Meta:
+        verbose_name = _("reseau")
+        verbose_name_plural = _("E1. Reseaux")
+
+    def __unicode__(self):
+        return self.network_code
+
+####
+#
+# Station's section
+#
+####
+
+# Type of action that occur on station
+class StationActionType(models.Model):
+    station_action_type = models.CharField(max_length=40, verbose_name=_("type d'action"))
+
+    class Meta:
+        ordering = ['station_action_type']
+        verbose_name = _("type d'action sur la station")
+        verbose_name_plural = _("types d'actions sur les stations")
+
+    def __unicode__(self):
+        return self.station_action_type
+
+#
+# Station's actors
+#
+class StationActor(models.Model):
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    actor = models.ForeignKey("Actor", verbose_name=_("intervenant"))
+    actor_type = models.ForeignKey("ActorType", verbose_name=_("role"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+
+    class Meta:
+        verbose_name = _("intervenant de la station")
+        verbose_name_plural = _("D4. Intervenants des stations")
+
+    def __unicode__(self):
+        return u'%s : %s : %s' % (self.station.station_name, self.actor.actor_name, self.actor_type.actor_type_name)
+
+# Characteristics of a station
+class StationCharac(models.Model):
+    station_charac_name = models.CharField(max_length=50, verbose_name=_("caracteristique"))
+
+    class Meta:
+        ordering = ['station_charac_name']
+        verbose_name = _("caracteristique de la station")
+        verbose_name_plural = _("caracteristiques des stations")
+
+    def __unicode__(self):
+        return self.station_charac_name
+
+# Possible values for the characteristics of a station
+class StationCharacValue(models.Model):
+    station_charac = models.ForeignKey("StationCharac", verbose_name=_("caracteristique"))
+    station_charac_value = models.CharField(max_length=50, verbose_name=_("choix de valeur"))
+
+    class Meta:
+        ordering = ['id']
+        verbose_name = _("choix de valeur de la caracteristique station")
+        verbose_name_plural = _("choix de valeur des caracteristiques station")
+
+    def __unicode__(self):
+        return self.station_charac_value
+
+# Station or site 
+class StationSite(models.Model):
+    station_code = models.CharField(max_length=40, verbose_name=_("code station"))
+    station_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom station"))
+    latitude = models.FloatField(null=True, blank=True, verbose_name=_("latitude"))
+    longitude = models.FloatField(null=True, blank=True, verbose_name=_("longitude"))
+    elevation = models.FloatField(null=True, blank=True, verbose_name=_("elevation"))
+    site_name = models.CharField(null=True, blank=True,max_length=100, verbose_name=_("nom site"))
+    site_description = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("description"))
+    address = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("adresse"))
+    city = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("commune"))
+    department = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("departement"))
+    region = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("region"))
+    country =  models.CharField(max_length=50, null=True, blank=True, verbose_name=_("pays"))
+    zip_code = models.CharField(max_length=15, null=True, blank=True, verbose_name=_("code postal"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+
+    class Meta:
+        ordering = ['station_code']
+        verbose_name = _("station")
+        verbose_name_plural = _("A1. Stations")
+
+    def __unicode__(self):
+        return self.station_code
+
+
+# Possible state of a station
+class StationState(models.Model):
+    station_state_name = models.CharField(max_length=40, verbose_name=_("etat de la station"))
+
+    class Meta:
+        ordering = ['station_state_name']
+        verbose_name = _("etat de la station")
+        verbose_name_plural = _("etats des stations")
+
+    def __unicode__(self):
+        return self.station_state_name
+
+####
+#
+# Historic's section
+#
+####
+#
+# Historic of the equipment's actions
+#
+class HistoricEquipAction(models.Model):
+    equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
+    equip_action_type = models.ForeignKey("EquipActionType", verbose_name=_("action"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+    station_action = models.ForeignKey("HistoricStationAction", null=True, blank=True, verbose_name=_("intervention station"))
+
+    class Meta:
+        verbose_name = _("hist. des actions sur l'equipement")
+        verbose_name_plural = _("C3. Hist. des actions sur les equipements")
+
+    def clean(self):
+        """
+        Makes sure the date of equipment action is the same as the station action if there is a relation establish
+        """
+        if not self.station_action == None:
+            if not self.start_date == self.station_action.start_date:
+                raise ValidationError('La date de l\'action sur l\'equipement ne correspond pas '
+                                      ' avec celle de l\'action sur la station.')
+
+    def __unicode__(self):
+        return u'%s %s' % (self.equip.equip_model.equip_model_name, self.equip_action_type.equip_action_type)
+
+# Historic of the equipment's characteristics
+class HistoricEquipCharac(models.Model):
+    equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
+    equip_charac = models.ForeignKey("EquipCharac", verbose_name=_("caracteristique"))
+    equip_charac_value = models.TextField(null=True, blank=True, verbose_name=_("valeur"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+
+    class Meta:
+        verbose_name = _("hist. des caract. de l'equipement")
+        verbose_name_plural = _("C4. Hist. des caract. des equipements")
+
+    def __unicode__(self):
+        return u'%s %s %s' % (self.equip.equip_model.equip_model_name, self.equip_charac.equip_charac_name, self.equip_charac_value)
+
+# Historic of the equipment's states
+class HistoricEquipState(models.Model):
+    equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
+    equip_state = models.ForeignKey("EquipState", verbose_name=_("etat"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+
+    class Meta:
+        verbose_name = _("hist. des etats de l'equipement")
+        verbose_name_plural = _("C2. Hist. des etats des equipements")
+
+    def __unicode__(self):
+        return u'%s %s' % (self.equip.equip_model, self.equip_state.equip_state_name)
+
+# Historic of the station's actions
+class HistoricStationAction(models.Model):
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    station_action_type = models.ForeignKey("StationActionType", verbose_name=_("action"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+
+    class Meta:
+        verbose_name = _("Hist. des actions sur la station")
+        verbose_name_plural = _("A3. Hist. des actions sur les stations")
+
+    def __unicode__(self):
+        return u'%s %s' % (self.station.station_code, self.station_action_type.station_action_type)
+
+# Historic of the station's characteristics 
+class HistoricStationCharac(models.Model):
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    station_charac = models.ForeignKey("StationCharac", verbose_name=_("caracteristique"))
+    station_charac_value = ChainedForeignKey(
+        StationCharacValue,
+        chained_field="station_charac",
+        chained_model_field="station_charac", 
+        show_all=False, 
+        auto_choose=True,
+        verbose_name=_("valeur")
+    )
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+
+    class Meta:
+        verbose_name = _("hist. des caracteristiques de la station")
+        verbose_name_plural = _("A4. Hist. des caracteristiques des stations")
+
+    def __unicode__(self):
+        return u'%s : %s : %s' % (self.station.station_code, self.station_charac.station_charac_name, self.station_charac_value.station_charac_value)
+
+# Historic of the station's states
+class HistoricStationState(models.Model):
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    station_state = models.ForeignKey("StationState", verbose_name=_("etat"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+
+    class Meta:
+        verbose_name = _("hist. des etats de la station")
+        verbose_name_plural = _("A2. Hist. des etats des stations")
+
+    def __unicode__(self):
+        return u'%s %s' % (self.station.station_code, self.station_state.station_state_name)
+
+# Historic of the different equipments found on a station
+class HistoricStationEquip(models.Model):
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
+    equip_type = ChainedForeignKey(
+        EquipType,
+        chained_field="equip_supertype",
+        chained_model_field="equip_supertype", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("type d'equipement")
+    )
+    equip = ChainedForeignKey(
+        Equipment,
+        chained_field="equip_type",
+        chained_model_field="equip_type", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("equipement")
+    )
+    network = models.ForeignKey("Network", null=True, blank=True, verbose_name=_("reseau"))
+    built = ChainedForeignKey(
+        Built,
+        chained_field="station",
+        chained_model_field="station", 
+        show_all=False, 
+        auto_choose=False, 
+        verbose_name=_("bati"),
+        null=True, 
+        blank=True
+    )
+    host_equipment = models.ForeignKey("Equipment", null=True, blank=True, verbose_name=_("equipement hote"), related_name='host')
+    start_date = models.DateField(null=True, blank=True, verbose_name=_("date debut"))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+
+    class Meta:
+        ordering = ['start_date']
+        verbose_name = _("hist. des equipements de la station")
+        verbose_name_plural = _("A5. Hist. des equipements des stations")
+
+    def __unicode__(self):
+        return u'%s : %s' % (self.station, self.equip)
 
