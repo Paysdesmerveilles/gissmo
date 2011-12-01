@@ -360,8 +360,8 @@ class StationCharacValue(models.Model):
 
     class Meta:
         ordering = ['id']
-        verbose_name = _("choix de valeur de la caracteristique station")
-        verbose_name_plural = _("choix de valeur des caracteristiques station")
+        verbose_name = _("choix de valeur de la caract. station")
+        verbose_name_plural = _("choix de valeur des caract. station")
 
     def __unicode__(self):
         return self.station_charac_value
@@ -497,8 +497,8 @@ class HistoricStationCharac(models.Model):
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
-        verbose_name = _("hist. des caracteristiques de la station")
-        verbose_name_plural = _("A4. Hist. des caracteristiques des stations")
+        verbose_name = _("hist. des caract. de la station")
+        verbose_name_plural = _("A4. Hist. des caract. des stations")
 
     def __unicode__(self):
         return u'%s : %s : %s' % (self.station.station_code, self.station_charac.station_charac_name, self.station_charac_value.station_charac_value)
