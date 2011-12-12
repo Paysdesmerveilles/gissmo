@@ -20,11 +20,20 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 """
 Usage:
 
+import time
+Afin d'avoir un changement dans les formsets de EquipModelDocInline
+"""
+import time
+
+"""
+Usage:
+
 SubmitButtonField(label="", initial=u"Your submit button text")
 """
 
 #from django import forms
 #from django.utils import html
+#from django.utils.safestring import mark_safe
 
 #class ButtonWidget(forms.Widget):
 #    def render(self, name, value, attrs=None):
@@ -33,9 +42,9 @@ SubmitButtonField(label="", initial=u"Your submit button text")
 #class ButtonField(forms.Field):
 #    def __init__(self, *args, **kwargs):
 #        kwargs["widget"] = ButtonWidget
-#
+
 #        super(ButtonField, self).__init__(*args, **kwargs)
-#
+
 #    def clean(self, value):
 #        return value
 
@@ -171,7 +180,28 @@ class BuiltAdmin(admin.ModelAdmin):
 # EquipmentAdmin's section
 #
 ####
+class EquipModelDocForm(forms.ModelForm):
+    """ Champ pour faire en sorte que les forms inline instancier 
+        soit toujours avec un flag has_changed a True
+        De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants    
+    """
+    always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
 
+    class Meta:
+        model = EquipModelDoc
+
+    def __init__(self, *args, **kwargs):
+        super(EquipModelDocForm, self).__init__(*args, **kwargs)
+
+        if 'instance' in kwargs:
+            self.fields['always_update'].initial = int(time.time())
+
+class EquipModelDocInline(admin.TabularInline):
+    model = EquipModelDoc
+    form = EquipModelDocForm
+    exclude = ['equip_supertype', 'equip_type']
+    extra = 1
+ 
 class EquipActorAdmin(admin.ModelAdmin):
     list_display = ['equip', 'actor', 'actor_type', 'start_date', 'end_date',]
     ordering = ['equip']
@@ -183,6 +213,20 @@ class EquipModelAdmin(admin.ModelAdmin):
     search_fields = ['equip_model_name']
 
     fieldsets = [('', {'fields': [('equip_supertype', 'equip_type', 'equip_model_name')]}),]
+
+    inlines = [EquipModelDocInline]
+
+    def save_formset(self, request, form, formset, change):
+        """ Reference du code
+            http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
+        instances = formset.save(commit=False)
+        for instance in instances:      
+            if isinstance(instance, EquipModelDoc): #Check if it is the correct type of inline
+                instance.equip_supertype = form.cleaned_data['equip_supertype']
+                instance.equip_type = form.cleaned_data['equip_type']
+                instance.save()
+            else:
+                formset.save()
 
 class EquipActorInline(admin.TabularInline):
     model = EquipActor
@@ -363,7 +407,7 @@ class HistoricStationEquipInline(admin.TabularInline):
             parent_station = self.get_object(kwargs['request'], StationSite)
             L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=parent_station)]
             contained_equip = Equipment.objects.filter(id__in = L)
-            return forms.ModelChoiceField(label="Equipement hote",queryset=contained_equip,required=False)
+            return forms.ModelChoiceField(label="Equipement hote",queryset=contained_equip, required=False)
         return super(HistoricStationEquipInline, self).formfield_for_dbfield(field, **kwargs)
 
     def get_object(self, request, model):
@@ -394,7 +438,19 @@ class StationSiteAdmin(admin.ModelAdmin):
 #
 ####
 
+#class HistoricEquipActionAdminForm(forms.ModelForm):
+
+#class HistoricStationActionForm(forms.ModelForm):
+#    nouveau = ButtonField(label="Document equipement", initial=u"Ajouter", widget=ButtonWidget, required=False)
+#    my_url = forms.CharField(widget=URLFieldWidget)
+#    class Meta:
+#        model = HistoricStationAction
+#    class Meta:
+#        model = HistoricEquipAction
+
 class HistoricEquipActionAdmin(admin.ModelAdmin):
+#    form = HistoricEquipActionAdminForm
+
     list_display = ['equip', 'equip_action_type', 'start_date',]
     list_filter = ['equip_action_type',]
     search_fields = ['equip__equip_model__equip_model_name', 'equip__serial_number']
@@ -563,6 +619,15 @@ class NetworkAdmin(admin.ModelAdmin):
             else:
                 return HttpResponseRedirect('../../../')
 
+class StationDocAdmin(admin.ModelAdmin):
+    list_display = ['station', 'document_title', 'inscription_date',]
+
+class EquipModelDocAdmin(admin.ModelAdmin):
+    list_display = ['equip_supertype', 'equip_type', 'equip_model', 'document_title', 'inscription_date',]
+
+class EquipDocAdmin(admin.ModelAdmin):
+    list_display = ['equip_supertype', 'equip_type', 'equip_model', 'equip', 'document_title', 'inscription_date',]
+
 #admin.site.register(AccessType)
 
 admin.site.register(Actor, ActorAdmin)
@@ -601,7 +666,9 @@ admin.site.register(StationActor, StationActorAdmin)
 #admin.site.register(StationCharacValue)
 admin.site.register(StationSite, StationSiteAdmin)
 #admin.site.register(StationState)
-
+admin.site.register(StationDoc, StationDocAdmin)
+admin.site.register(EquipModelDoc, EquipModelDocAdmin)
+admin.site.register(EquipDoc, EquipDocAdmin)
 
 
 

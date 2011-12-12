@@ -562,3 +562,94 @@ class HistoricStationEquip(models.Model):
     def __unicode__(self):
         return u'%s : %s' % (self.station, self.equip)
 
+def stationdoc_file_name(self, filename):
+        return 'stations/%s_%s/%s' % (self.station.id, self.station.station_code, filename)
+
+class StationDoc(models.Model):
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
+    inscription_date = models.DateField(verbose_name=_("date inscription"))
+    document_station = models.FileField(verbose_name=_("document"), upload_to=stationdoc_file_name)
+
+    class Meta:
+        unique_together = ("station", "document_title", "inscription_date")
+        verbose_name = _("Document de la station")
+        verbose_name_plural = _("F3. Documents des stations")
+
+    def __unicode__(self):
+        return u'%s %s %s' % (self.station.station_code, self.document_title, self.inscription_date)
+
+def equipmodeldoc_file_name(self, filename):
+        return 'equipements/%s_%s/%s' % (self.equip_model.id, self.equip_model.equip_model_name, filename)
+
+class EquipModelDoc(models.Model):
+    equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
+    equip_type = ChainedForeignKey(
+        EquipType,
+        chained_field="equip_supertype",
+        chained_model_field="equip_supertype", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("type d'equipement")
+    )
+    equip_model = ChainedForeignKey(
+        EquipModel,
+        chained_field="equip_type",
+        chained_model_field="equip_type", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("modele d'equipement")
+    )
+    document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
+    inscription_date = models.DateField(verbose_name=_("date inscription"))
+    document_equip_model = models.FileField(verbose_name=_("document"), upload_to=equipmodeldoc_file_name)
+
+    class Meta:
+        unique_together = ("equip_model", "document_title", "inscription_date")
+        verbose_name = _("Document du modele d'equipement")
+        verbose_name_plural = _("F1. Documents des modeles d'equipement")
+
+    def __unicode__(self):
+        return u'%s %s %s' % (self.equip_model.equip_model_name, self.document_title, self.inscription_date)
+
+def equipdoc_file_name(self, filename):
+        return 'equipements/%s_%s/%s_%s_%s/%s' % (self.equip.equip_model.id, self.equip.equip_model.equip_model_name, self.equip.id, self.equip.equip_model.equip_model_name, self.equip.serial_number, filename)
+
+class EquipDoc(models.Model):
+    equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
+    equip_type = ChainedForeignKey(
+        EquipType,
+        chained_field="equip_supertype",
+        chained_model_field="equip_supertype", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("type d'equipement")
+    )
+    equip_model = ChainedForeignKey(
+        EquipModel,
+        chained_field="equip_type",
+        chained_model_field="equip_type", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("modele d'equipement")
+    )
+    equip = ChainedForeignKey(
+        Equipment,
+        chained_field="equip_model",
+        chained_model_field="equip_model", 
+        show_all=False, 
+        auto_choose=True, 
+        verbose_name=_("equipement")
+    )
+    document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
+    inscription_date = models.DateField(verbose_name=_("date inscription"))
+    document_equip_model = models.FileField(verbose_name=_("document"), upload_to=equipdoc_file_name)
+
+    class Meta:
+        unique_together = ("equip", "document_title", "inscription_date")
+        verbose_name = _("Document de l'equipement")
+        verbose_name_plural = _("F2. Documents des equipements")
+
+    def __unicode__(self):
+        return u'%s %s %s %s' % (self.equip.equip_model.equip_model_name, self.equip.serial_number, self.document_title, self.inscription_date)
+
