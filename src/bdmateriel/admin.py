@@ -83,7 +83,7 @@ SubmitButtonField(label="", initial=u"Your submit button text")
 ####
 class SpecialOrderingChangeList(ChangeList):
     """
-      SpecialOrderindChangeList
+    SpecialOrderindChangeList
     """
     def apply_special_ordering(self, queryset):
         order_type, order_by = [self.params.get(param, None) for param in ('ot', 'o')]
@@ -181,9 +181,10 @@ class BuiltAdmin(admin.ModelAdmin):
 #
 ####
 class EquipModelDocForm(forms.ModelForm):
-    """ Champ pour faire en sorte que les forms inline instancier 
-        soit toujours avec un flag has_changed a True
-        De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants    
+    """ 
+    Champ pour faire en sorte que les forms inline instancier 
+    soit toujours avec un flag has_changed a True
+    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants    
     """
     always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
 
@@ -239,28 +240,85 @@ class EquipActorInline(admin.TabularInline):
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
     }
 
-#class HistoricEquipActionInlineFormset(forms.models.BaseInlineFormSet):
-# 
-#    def add_fields(self, form, index):
-#        super(HistoricEquipActionInlineFormset, self).add_fields(form, index)
-#        form.fields['start_date'].initial = '2011-02-02'
-#        form.fields['note'].initial = 'Test'
+##class HistoricEquipActionInlineFormset(forms.models.BaseInlineFormSet):
+## 
+##    def add_fields(self, form, index):
+##        super(HistoricEquipActionInlineFormset, self).add_fields(form, index)
+##        date_action = ''
+##        if form.instance:
+##            try :
+##                station_action = form.instance.station_action
+##                if station_action:
+##                    date_action = station_action.start_date
+##            except HistoricStationAction.DoesNotExist:
+##                pass
+##        print '1'
+##        print date_action
+##        form.fields['start_date'].initial = date_action
+###        form.fields['note'].initial = 'Test'
+
+
+##class HistoricEquipActionInlineFormset(forms.models.BaseInlineFormSet):
+##    def add_fields(self, form, index):
+##        super(HistoricEquipActionInlineFormset, self).add_fields(form, index)
+###        equipments = Equipment.objects.none()
+##        date_action = ''
+##        if form.instance:
+##            try :
+##                station_action = form.instance.station_action
+##                print station_action
+##                print station_action.start_date
+##            except HistoricStationAction.DoesNotExist:
+##                pass
+###            else :
+###                date_action = station_action.start_date
+###                equipments = HistoricStationEquip.objects.filter(station=station.pk)
+###                equipments = Equipment.objects.all()
+###        form.fields['equip'].queryset = equipments
+##        form.fields['start_date'].initial = date_action
              
 class HistoricEquipActionInline(admin.TabularInline):
     model = HistoricEquipAction
 #    formset = HistoricEquipActionInlineFormset
-    extra = 0
+    extra = 1
 
-#    def get_formset(self, request, obj=None, **kwargs):
-#        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
-#        self.parent_obj = obj
-#        print self.parent_obj
-#        return super(HistoricEquipActionInline, self).get_formset(
-#            request, obj, **kwargs)
+    def get_formset(self, request, obj=None, **kwargs):
+        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
+        self.parent_obj = obj
+        return super(HistoricEquipActionInline, self).get_formset(
+            request, obj, **kwargs)
  
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
     }
+
+    ####
+    #
+    # Pour limiter dans le choix du select de la FK
+    # que les batis et les equipements de la station
+    #
+    ####
+
+    def formfield_for_dbfield(self, field, **kwargs):
+        if field.name == 'equip':
+            if self.parent_obj :
+                parent_station = self.get_object(kwargs['request'], HistoricStationAction)
+                L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=parent_station.station)]
+                contained_equip = Equipment.objects.filter(id__in = L)
+                return forms.ModelChoiceField(label="equipement",queryset=contained_equip, required=True)    
+        if field.name == 'start_date':
+            if self.parent_obj :
+                if self.parent_obj.__class__.__name__ == 'HistoricStationAction' :
+                    return forms.DateField(label="date", initial=self.parent_obj.start_date, required=True)    
+        return super(HistoricEquipActionInline, self).formfield_for_dbfield(field, **kwargs)
+
+    def get_object(self, request, model):
+        object_id = request.META['PATH_INFO'].strip('/').split('/')[-1]
+        try:
+            object_id = int(object_id)
+        except ValueError:
+            return None
+        return model.objects.get(pk=object_id)
 
 class HistoricEquipCharacInline(admin.TabularInline):
     model = HistoricEquipCharac
@@ -395,19 +453,16 @@ class HistoricStationEquipInline(admin.TabularInline):
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
     }
 
-    ####
-    #
-    # Pour limiter dans le choix du select de la FK
-    # que les batis et les equipements de la station
-    #
-    ####
+    """ 
+    Pour limiter dans le choix du select de la FK que les equipements de la station 
+    """
 
     def formfield_for_dbfield(self, field, **kwargs):
         if field.name == 'host_equipment':
             parent_station = self.get_object(kwargs['request'], StationSite)
             L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=parent_station)]
             contained_equip = Equipment.objects.filter(id__in = L)
-            return forms.ModelChoiceField(label="Equipement hote",queryset=contained_equip, required=False)
+            return forms.ModelChoiceField(label="equipement hote",queryset=contained_equip, required=False)
         return super(HistoricStationEquipInline, self).formfield_for_dbfield(field, **kwargs)
 
     def get_object(self, request, model):
@@ -628,6 +683,58 @@ class EquipModelDocAdmin(admin.ModelAdmin):
 class EquipDocAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model', 'equip', 'document_title', 'inscription_date',]
 
+
+class ChainComponentInlineFormset(forms.models.BaseInlineFormSet):
+ 
+   def clean(self):
+       """Checks that equipment exist for the station."""
+       if any(self.errors):
+           # Don't bother validating the formset unless each form is valid on its own
+           return
+
+       for i in range(0, self.total_form_count()):
+           form = self.forms[i]
+#           print u'Cleaned_data : %s' % (form.cleaned_data)
+           if form.cleaned_data != {}:
+               acqui_chain = form.cleaned_data['acquisition_chain']
+               L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=acqui_chain.station)]
+               equip = form.cleaned_data['equip']
+               if equip.id not in L:
+                   raise forms.ValidationError("Equipement choisi non present dans la station.")
+
+class ChainComponentInline(admin.TabularInline):
+    model = ChainComponent
+    formset = ChainComponentInlineFormset
+    extra = 0
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
+        self.parent_obj = obj
+#        if self.parent_obj: 
+#            print obj.__class__.__name__
+        return super(ChainComponentInline, self).get_formset(
+            request, obj, **kwargs)
+ 
+    """ 
+    Pour limiter dans le choix du select de la FK que les equipements de la station 
+    """
+
+    def formfield_for_dbfield(self, field, **kwargs):
+        if field.name == 'equip':
+            if self.parent_obj :
+                parent_station = self.parent_obj
+                L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=parent_station.station)]
+                contained_equip = Equipment.objects.filter(id__in = L)
+                return forms.ModelChoiceField(label="equipement",queryset=contained_equip, required=True)    
+        return super(ChainComponentInline, self).formfield_for_dbfield(field, **kwargs)
+
+class ChannelInline(admin.TabularInline):
+    model = Channel
+    extra = 0
+ 
+class AcquisitionChainAdmin(admin.ModelAdmin):
+    inlines = [ChainComponentInline, ChannelInline]
+
 #admin.site.register(AccessType)
 
 admin.site.register(Actor, ActorAdmin)
@@ -670,5 +777,7 @@ admin.site.register(StationDoc, StationDocAdmin)
 admin.site.register(EquipModelDoc, EquipModelDocAdmin)
 admin.site.register(EquipDoc, EquipDocAdmin)
 
-
+admin.site.register(AcquisitionChain,AcquisitionChainAdmin)
+#admin.site.register(ChainComponent)
+#admin.site.register(Channel)
 
