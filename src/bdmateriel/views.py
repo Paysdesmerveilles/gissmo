@@ -13,7 +13,7 @@ from django.contrib.admin.widgets import AdminDateWidget
 class TestForm(forms.Form):
     t = forms.DateField(widget=AdminDateWidget())
 
-def rapport_station(request):
+def report_station(request):
     query = request.GET.get('Station','')
     ResStationSite = ''
     ResStation = ''
@@ -83,7 +83,7 @@ def rapport_station(request):
          
     else:
         results = []
-    return render_to_response("rapport_station.html", {
+    return render_to_response("report_station.html", {
         "ResStationSite" : ResStationSite,
         "ResStation" : ResStation,
         "ResStationActor" : ResStationActor,
@@ -95,11 +95,11 @@ def rapport_station(request):
         "query": query
     },
         RequestContext(request, {}),)
-rapport_station = staff_member_required(rapport_station)
+report_station = staff_member_required(report_station)
 
-admin.site.register_view('bdmateriel/rapport_station/', rapport_station)
+admin.site.register_view('report/report_station/', report_station)
 
-def rapport_equip(request):
+def report_equip(request):
     query = request.GET.get('Equipement','')
     ResEquips = ''
     ResEquip = ''
@@ -161,7 +161,7 @@ def rapport_equip(request):
         ResStationEquip = HistoricStationEquip.objects.select_related().filter(qset).distinct()
     else:
         results = []
-    return render_to_response("rapport_equip.html", {
+    return render_to_response("report_equip.html", {
         "ResEquips" : ResEquips,
         "ResEquip" : ResEquip,
         "ResEquipActor" : ResEquipActor,
@@ -172,9 +172,9 @@ def rapport_equip(request):
         "query": query
     },
         RequestContext(request, {}),)
-rapport_equip = staff_member_required(rapport_equip)
+report_equip = staff_member_required(report_equip)
 
-admin.site.register_view('bdmateriel/rapport_equip/', rapport_equip)
+admin.site.register_view('report/report_equip/', report_equip)
 
 def site_maps(request):
 
@@ -202,6 +202,6 @@ def site_maps(request):
          RequestContext(request, {}),)
 site_maps = staff_member_required(site_maps)
 
-admin.site.register_view('bdmateriel/site_maps/', site_maps)
+admin.site.register_view('report/site_maps/', site_maps)
 # Fin du Test primaire.
 

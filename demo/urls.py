@@ -17,7 +17,7 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     (r'^admin/', include(admin.site.urls)),
-    (r'^admin/bdmateriel/', include('bdmateriel.urls')),
+    (r'^admin/report/', include('bdmateriel.urls')),
     (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
     (r'^chaining/', include('smart_selects.urls')), 
 )

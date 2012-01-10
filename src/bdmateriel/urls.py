@@ -11,8 +11,8 @@ urlpatterns = patterns('bdmateriel.views',
     ####(r'^stationequip/$', 'stationequip'),
     ####(r'^histoequip/$', 'histoequip'),
     ####(r'^histostation/$', 'histostation'),    
-    (r'^rapport_equip/$', 'rapport_equip'),
-    (r'^rapport_station/$', 'rapport_station'),    
+    (r'^report_equip/$', 'report_equip'),
+    (r'^report_station/$', 'report_station'),    
     (r'^site_maps/$', 'site_maps'),
 )
 

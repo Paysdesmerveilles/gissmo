@@ -56,8 +56,8 @@
         {% endfor %}
         {% if inline_admin_form.original.pk %}
             <td class="selflink">
-                <a href="/admin/{{ app_label }}/{{ inline_admin_formset.opts.admin_model_path }}/{{ inline_admin_form.original.pk }}/?_popup=1" 
-                   onclick="return popup('/admin/{{ app_label }}/{{ inline_admin_formset.opts.admin_model_path }}/{{ inline_admin_form.original.pk }}/')">Actions sur les equipements</a>
+                <a href="../../{{ inline_admin_formset.opts.admin_model_path }}/{{ inline_admin_form.original.pk }}/?_popup=1" 
+                   onclick="return popup('../../{{ inline_admin_formset.opts.admin_model_path }}/{{ inline_admin_form.original.pk }}/')">Actions sur les equipements</a>
             </td>
         {% endif %}
         {% if inline_admin_formset.formset.can_delete %}

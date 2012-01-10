@@ -48,7 +48,7 @@ class Actor(models.Model):
 
     class Meta:
         verbose_name = _("intervenant")
-        verbose_name_plural = _("D1. Intervenants")
+        verbose_name_plural = _("E1. Intervenants")
 
     def __unicode__(self):
         return self.actor_name
@@ -171,7 +171,7 @@ class EquipActor(models.Model):
 
     class Meta:
         verbose_name = _("intervenant de l'equipement")
-        verbose_name_plural = _("D5. Intervenants des equipements")
+        verbose_name_plural = _("E3. Intervenants des equipements")
 
     def __unicode__(self):
         return u'%s %s %s' % (self.equip.equip_model.equip_model_name, self.actor.actor_name, self.actor_type.actor_type_name)
@@ -241,7 +241,7 @@ class EquipModel(models.Model):
 
     class Meta:
         verbose_name = _("modele d'equipement")
-        verbose_name_plural = _("C5. Modeles des equipements")
+        verbose_name_plural = _("C1. Modeles des equipements")
 
     def __unicode__(self):
         return self.equip_model_name
@@ -269,7 +269,7 @@ class Equipment(models.Model):
 
     class Meta:
         verbose_name = _("equipement")
-        verbose_name_plural = _("C1. Equipements")
+        verbose_name_plural = _("D1. Equipements")
 
     def __unicode__(self):
         return u'%s : %s' % (self.equip_model, self.serial_number)
@@ -300,7 +300,7 @@ class Network(models.Model):
 
     class Meta:
         verbose_name = _("reseau")
-        verbose_name_plural = _("E1. Reseaux")
+        verbose_name_plural = _("F1. Reseaux")
 
     def __unicode__(self):
         return self.network_code
@@ -336,7 +336,7 @@ class StationActor(models.Model):
 
     class Meta:
         verbose_name = _("intervenant de la station")
-        verbose_name_plural = _("D4. Intervenants des stations")
+        verbose_name_plural = _("E2. Intervenants des stations")
 
     def __unicode__(self):
         return u'%s : %s : %s' % (self.station.station_code, self.actor.actor_name, self.actor_type.actor_type_name)
@@ -421,7 +421,7 @@ class HistoricEquipAction(models.Model):
 
     class Meta:
         verbose_name = _("hist. des actions sur l'equipement")
-        verbose_name_plural = _("C3. Hist. des actions sur les equipements")
+        verbose_name_plural = _("D3. Hist. des actions sur les equipements")
 
     def clean(self):
         """
@@ -446,7 +446,7 @@ class HistoricEquipCharac(models.Model):
 
     class Meta:
         verbose_name = _("hist. des caract. de l'equipement")
-        verbose_name_plural = _("C4. Hist. des caract. des equipements")
+        verbose_name_plural = _("D4. Hist. des caract. des equipements")
 
     def __unicode__(self):
         return u'%s %s %s' % (self.equip.equip_model.equip_model_name, self.equip_charac.equip_charac_name, self.equip_charac_value)
@@ -461,7 +461,7 @@ class HistoricEquipState(models.Model):
 
     class Meta:
         verbose_name = _("hist. des etats de l'equipement")
-        verbose_name_plural = _("C2. Hist. des etats des equipements")
+        verbose_name_plural = _("D2. Hist. des etats des equipements")
 
     def __unicode__(self):
         return u'%s %s' % (self.equip.equip_model, self.equip_state.equip_state_name)
@@ -564,128 +564,128 @@ class HistoricStationEquip(models.Model):
 
 # Management of station document
 
-def stationdoc_file_name(self, filename):
-        return 'stations/%s_%s/%s' % (self.station.id, self.station.station_code, filename)
+#### def stationdoc_file_name(self, filename):
+####         return 'stations/%s_%s/%s' % (self.station.id, self.station.station_code, filename)
 
-class StationDoc(models.Model):
-    station = models.ForeignKey("StationSite", verbose_name=_("station"))
-    document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription"))
-    document_station = models.FileField(verbose_name=_("document"), upload_to=stationdoc_file_name)
-
-    class Meta:
-        unique_together = ("station", "document_title", "inscription_date")
-        verbose_name = _("Document de la station")
-        verbose_name_plural = _("F3. Documents des stations")
-
-    def __unicode__(self):
-        return u'%s %s %s' % (self.station.station_code, self.document_title, self.inscription_date)
+#### class StationDoc(models.Model):
+####     station = models.ForeignKey("StationSite", verbose_name=_("station"))
+####     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
+####     inscription_date = models.DateField(verbose_name=_("date inscription"))
+####     document_station = models.FileField(verbose_name=_("document"), upload_to=stationdoc_file_name)
+#### 
+####     class Meta:
+####         unique_together = ("station", "document_title", "inscription_date")
+####         verbose_name = _("Document de la station")
+####         verbose_name_plural = _("G1. Documents des stations")
+#### 
+####     def __unicode__(self):
+####         return u'%s %s %s' % (self.station.station_code, self.document_title, self.inscription_date)
 
 # Management of equipment model document
 
-def equipmodeldoc_file_name(self, filename):
-        return 'equipements/%s_%s/%s' % (self.equip_model.id, self.equip_model.equip_model_name, filename)
+#### def equipmodeldoc_file_name(self, filename):
+####         return 'equipements/%s_%s/%s' % (self.equip_model.id, self.equip_model.equip_model_name, filename)
 
-class EquipModelDoc(models.Model):
-    equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
-    equip_type = ChainedForeignKey(
-        EquipType,
-        chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
-        verbose_name=_("type d'equipement")
-    )
-    equip_model = ChainedForeignKey(
-        EquipModel,
-        chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
-        verbose_name=_("modele d'equipement")
-    )
-    document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription"))
-    document_equip_model = models.FileField(verbose_name=_("document"), upload_to=equipmodeldoc_file_name)
-
-    class Meta:
-        unique_together = ("equip_model", "document_title", "inscription_date")
-        verbose_name = _("Document du modele d'equipement")
-        verbose_name_plural = _("F1. Documents des modeles d'equipement")
-
-    def __unicode__(self):
-        return u'%s %s %s' % (self.equip_model.equip_model_name, self.document_title, self.inscription_date)
+#### class EquipModelDoc(models.Model):
+####     equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
+####     equip_type = ChainedForeignKey(
+####         EquipType,
+####         chained_field="equip_supertype",
+####         chained_model_field="equip_supertype", 
+####         show_all=False, 
+####         auto_choose=True, 
+####         verbose_name=_("type d'equipement")
+####     )
+####     equip_model = ChainedForeignKey(
+####         EquipModel,
+####         chained_field="equip_type",
+####         chained_model_field="equip_type", 
+####         show_all=False, 
+####         auto_choose=True, 
+####         verbose_name=_("modele d'equipement")
+####     )
+####     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
+####     inscription_date = models.DateField(verbose_name=_("date inscription"))
+####     document_equip_model = models.FileField(verbose_name=_("document"), upload_to=equipmodeldoc_file_name)
+#### 
+####     class Meta:
+####         unique_together = ("equip_model", "document_title", "inscription_date")
+####         verbose_name = _("Document du modele d'equipement")
+####         verbose_name_plural = _("G2. Documents des modeles d'equipement")
+#### 
+####     def __unicode__(self):
+####         return u'%s %s %s' % (self.equip_model.equip_model_name, self.document_title, self.inscription_date)
 
 # Management of equipment document
 
-def equipdoc_file_name(self, filename):
-        return 'equipements/%s_%s/%s_%s_%s/%s' % (self.equip.equip_model.id, self.equip.equip_model.equip_model_name, self.equip.id, self.equip.equip_model.equip_model_name, self.equip.serial_number, filename)
+#### def equipdoc_file_name(self, filename):
+####         return 'equipements/%s_%s/%s_%s_%s/%s' % (self.equip.equip_model.id, self.equip.equip_model.equip_model_name, self.equip.id, self.equip.equip_model.equip_model_name, self.equip.serial_number, filename)
 
-class EquipDoc(models.Model):
-    equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
-    equip_type = ChainedForeignKey(
-        EquipType,
-        chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
-        verbose_name=_("type d'equipement")
-    )
-    equip_model = ChainedForeignKey(
-        EquipModel,
-        chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
-        verbose_name=_("modele d'equipement")
-    )
-    equip = ChainedForeignKey(
-        Equipment,
-        chained_field="equip_model",
-        chained_model_field="equip_model", 
-        show_all=False, 
-        auto_choose=True, 
-        verbose_name=_("equipement")
-    )
-    document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription"))
-    document_equip_model = models.FileField(verbose_name=_("document"), upload_to=equipdoc_file_name)
-
-    class Meta:
-        unique_together = ("equip", "document_title", "inscription_date")
-        verbose_name = _("Document de l'equipement")
-        verbose_name_plural = _("F2. Documents des equipements")
-
-    def __unicode__(self):
-        return u'%s %s %s %s' % (self.equip.equip_model.equip_model_name, self.equip.serial_number, self.document_title, self.inscription_date)
+#### class EquipDoc(models.Model):
+####     equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
+####     equip_type = ChainedForeignKey(
+####         EquipType,
+####         chained_field="equip_supertype",
+####         chained_model_field="equip_supertype", 
+####         show_all=False, 
+####         auto_choose=True, 
+####         verbose_name=_("type d'equipement")
+####     )
+####     equip_model = ChainedForeignKey(
+####         EquipModel,
+####         chained_field="equip_type",
+####         chained_model_field="equip_type", 
+####         show_all=False, 
+####         auto_choose=True, 
+####         verbose_name=_("modele d'equipement")
+####     )
+####     equip = ChainedForeignKey(
+####         Equipment,
+####         chained_field="equip_model",
+####         chained_model_field="equip_model", 
+####         show_all=False, 
+####         auto_choose=True, 
+####         verbose_name=_("equipement")
+####     )
+####     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
+####     inscription_date = models.DateField(verbose_name=_("date inscription"))
+####     document_equip = models.FileField(verbose_name=_("document"), upload_to=equipdoc_file_name)
+#### 
+####     class Meta:
+####         unique_together = ("equip", "document_title", "inscription_date")
+####         verbose_name = _("Document de l'equipement")
+####         verbose_name_plural = _("G3. Documents des equipements")
+#### 
+####     def __unicode__(self):
+####         return u'%s %s %s %s' % (self.equip.equip_model.equip_model_name, self.equip.serial_number, self.document_title, self.inscription_date)
 
 # Acquisition chain
 
-class AcquisitionChain(models.Model) :
-    station = models.ForeignKey("StationSite", verbose_name=_("station"))
-    location_code = models.CharField(max_length=2, verbose_name=_("code localisation"))
-    latitude = models.FloatField(null=True, blank=True, verbose_name=_("latitude"))
-    longitude = models.FloatField(null=True, blank=True, verbose_name=_("longitude"))
-    elevation = models.FloatField(null=True, blank=True, verbose_name=_("elevation"))
-    depth = models.FloatField(null=True, blank=True, verbose_name=_("profondeur"))
+#### class AcquisitionChain(models.Model) :
+####     station = models.ForeignKey("StationSite", verbose_name=_("station"))
+####     location_code = models.CharField(max_length=2, verbose_name=_("code localisation"))
+####     latitude = models.FloatField(null=True, blank=True, verbose_name=_("latitude"))
+####     longitude = models.FloatField(null=True, blank=True, verbose_name=_("longitude"))
+####     elevation = models.FloatField(null=True, blank=True, verbose_name=_("elevation"))
+####     depth = models.FloatField(null=True, blank=True, verbose_name=_("profondeur"))
+#### 
+####     class Meta:
+####         verbose_name = _("Chaine d'acquisition")
+####         verbose_name_plural = _("H1. Chaines d'acquisition")
+####     
+####     def __unicode__(self):
+####         return u'%s : %s' % (self.station.station_code, self.location_code)
 
-    class Meta:
-        verbose_name = _("Chaine d'acquisition")
-        verbose_name_plural = _("G1. Chaines d'acquisition")
-    
-    def __unicode__(self):
-        return u'%s : %s' % (self.station.station_code, self.location_code)
-
-class ChainComponent(models.Model) :
-    acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
-    equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
-    order = models.IntegerField(null=True, blank=True, verbose_name=_("ordre"))
-    start_date = models.DateField(verbose_name=_("date debut"))
-    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
-
-    class Meta:
-        verbose_name = _("Composante de la chaine d'acqui")
-        verbose_name_plural = _("G2. Composantes des chaines d'acqui")
+#### class ChainComponent(models.Model) :
+####     acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
+####     equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
+####     order = models.IntegerField(null=True, blank=True, verbose_name=_("ordre"))
+####     start_date = models.DateField(verbose_name=_("date debut"))
+####     end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
+#### 
+####     class Meta:
+####         verbose_name = _("Composante de la chaine d'acqui")
+####         verbose_name_plural = _("H2. Composantes des chaines d'acqui")
 
 ##    def clean(self):
 ##        """
@@ -709,22 +709,22 @@ class ChainComponent(models.Model) :
 ##            if self.equip.id not in L:
 ##                    raise ValidationError('L\'equipment inscrit n\'est pas installe dans la station.')
 
-    def __unicode__(self):
-        return u'%s : %s : %s : %s : %s' % (self.acquisition_chain, self.equip.equip_model.equip_model_name, self.equip.serial_number, self.start_date, self.end_date)
+####     def __unicode__(self):
+####         return u'%s : %s : %s : %s : %s' % (self.acquisition_chain, self.equip.equip_model.equip_model_name, self.equip.serial_number, self.start_date, self.end_date)
 
-class Channel(models.Model) :
-    network = models.ForeignKey('Network', verbose_name=_("reseau"))
-    acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
-    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"))
-    dip = models.FloatField(max_length=5, verbose_name=_("angle d'inclinaison"))
-    azimuth = models.FloatField(max_length=5, verbose_name=_("azimut"))
-    sample_rate =  models.FloatField(verbose_name=_("frequence (Hz)"))
-    start_date = models.DateField(verbose_name=_("date debut"))
-    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
-
-    class Meta:
-        verbose_name = _("Canal d'acquisition")
-        verbose_name_plural = _("G3. Canaux d'acquisition")
-
-    def __unicode__(self):
-        return u'%s : %s : %s : %s' % (self.network, self.acquisition_chain, self.channel_code, self.sample_rate)
+#### class Channel(models.Model) :
+####     network = models.ForeignKey('Network', verbose_name=_("reseau"))
+####     acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
+####     channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"))
+####     dip = models.FloatField(null=True, blank=True, max_length=5, verbose_name=_("angle d'inclinaison"))
+####     azimuth = models.FloatField(null=True, blank=True, max_length=5, verbose_name=_("azimut"))
+####     sample_rate =  models.FloatField(verbose_name=_("frequence (Hz)"))
+####     start_date = models.DateField(verbose_name=_("date debut"))
+####     end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
+#### 
+####     class Meta:
+####         verbose_name = _("Canal d'acquisition")
+####         verbose_name_plural = _("H3. Canaux d'acquisition")
+#### 
+####     def __unicode__(self):
+####         return u'%s : %s : %s : %s' % (self.network, self.acquisition_chain, self.channel_code, self.sample_rate)
