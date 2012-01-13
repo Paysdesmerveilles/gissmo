@@ -56,22 +56,21 @@
 
   {% for i in ResSite %}
     sites.push(["{{i.station_code}}", {{i.latitude}}, {{i.longitude}}, 0]);
-    url.push("/admin/bdmateriel/stationsite/" + {{i.id}} + "/");
+    url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.id}} + "/");
     information.push("{{i.station_code}}");
   {% endfor %}
 
   {% for i in ResStationSite %}
     sites.push(["{{i.station_code}}", {{i.latitude}}, {{i.longitude}}, 1]);
-    url.push("/admin/bdmateriel/stationsite/" + {{i.id}} + "/");
+    url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.id}} + "/");
     information.push("{{i.station_name}}");
   {% endfor %}
   
   {% for i in ResHistStations %}
     sites.push(["{{i.station.station_code}}", {{i.station.latitude}}, {{i.station.longitude}}, {{i.station_state.id}}]);
-    url.push("/admin/bdmateriel/stationsite/" + {{i.station.id}} + "/");
+    url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.station.id}} + "/");
     information.push("{{i.station.station_name}}");
   {% endfor %}
-
 
   function initialize() {
     var vesdun = new google.maps.LatLng(46.539722, 2.430278);
@@ -220,22 +219,6 @@
       {% endfor %}
       <tr><td></td><td>Total</td><td><script type="text/javascript">document.write(sites.length)</script></td></tr>
   </table><br></br>
-  <form action="." method="GET">
-  <TABLE BORDER=0>
-  <TR>
-	<TD>Date désirée</TD>
-	<TD>
-          <input id="date" type="text" class="vDateField" name="date" size="10" />
-	</TD>
-  </TR>
-  <TR>
-	<TD></TD>
-	<TD>
-        <input type="submit" value="Actualiser">
-        </TD>
-  </TR>
-  </TABLE>
-  </form>
 </div>
 </body>
 </html>

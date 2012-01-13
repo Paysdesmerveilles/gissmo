@@ -241,21 +241,21 @@ class EquipActorInline(admin.TabularInline):
     }
 
 class HistoricEquipActionInlineFormset(forms.models.BaseInlineFormSet):
-   def clean(self):
-       """Checks that equipment exist for the station."""
-       if any(self.errors):
-           # Don't bother validating the formset unless each form is valid on its own
-           return
+    def clean(self):
+        """Checks that equipment exist for the station."""
+        if any(self.errors):
+            # Don't bother validating the formset unless each form is valid on its own
+            return
 
-       for i in range(0, self.total_form_count()):
-           form = self.forms[i]
-           if form.cleaned_data != {}:
-               station_action = form.cleaned_data['station_action']
-               if station_action:
-                   L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=station_action.station)]
-                   equip = form.cleaned_data['equip']
-                   if equip.id not in L:
-                       raise forms.ValidationError("Equipement choisi non present dans la station.")
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            if form.cleaned_data != {}:
+                station_action = form.cleaned_data['station_action']
+                if station_action:
+                    L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=station_action.station)]
+                    equip = form.cleaned_data['equip']
+                    if equip.id not in L:
+                        raise forms.ValidationError("Equipement choisi non present dans la station.")
              
 class HistoricEquipActionInline(admin.TabularInline):
     model = HistoricEquipAction
@@ -494,7 +494,34 @@ class StationSiteAdmin(admin.ModelAdmin):
 #
 ####
 
-#class HistoricEquipActionAdminForm(forms.ModelForm):
+class HistoricEquipActionAdminForm(forms.ModelForm):
+
+    class Meta:
+        model = HistoricEquipAction
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        equip = cleaned_data.get("equip")
+        station_action = cleaned_data.get("station_action")
+
+        if equip != None and station_action != None:
+            if equip and station_action:
+                # both fields valid
+                L = [equipment.equip_id for equipment in HistoricStationEquip.objects.filter(station=station_action.station)]
+                if equip.id not in L:
+                    raise forms.ValidationError("Equipement choisi non present dans la station de l\'intervention.")
+        # Always return the full collection of cleaned data.
+        return cleaned_data
+
+    def __init__(self, *args, **kwargs):
+        super(HistoricEquipActionAdminForm, self).__init__(*args, **kwargs)
+        if 'instance' in kwargs:
+            historique = kwargs['instance']
+            parent_equip = historique.equip_id
+            L = [station.station_id for station in HistoricStationEquip.objects.filter(equip=parent_equip)]
+            self.fields['station_action'].queryset = HistoricStationAction.objects.filter(station__in = L)
+        else:
+            self.fields['station_action'].queryset = HistoricStationAction.objects.none()
 
 #class HistoricStationActionForm(forms.ModelForm):
 #    nouveau = ButtonField(label="Document equipement", initial=u"Ajouter", widget=ButtonWidget, required=False)
@@ -505,7 +532,7 @@ class StationSiteAdmin(admin.ModelAdmin):
 #        model = HistoricEquipAction
 
 class HistoricEquipActionAdmin(admin.ModelAdmin):
-#    form = HistoricEquipActionAdminForm
+    form = HistoricEquipActionAdminForm
 
     list_display = ['equip', 'equip_action_type', 'start_date',]
     list_filter = ['equip_action_type',]

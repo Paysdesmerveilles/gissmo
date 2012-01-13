@@ -111,8 +111,6 @@ def report_equip(request):
 
     ResEquips = Equipment.objects.all()
 
-    print query
-
     if query:
 #       Equipement qui repond au critere
         qset = (
@@ -180,7 +178,7 @@ def site_maps(request):
 
     ResHistStations = ''
     ResState = ''
-    
+
 #   Stations operationnelles
 #    ResHistStations = HistoricStationState.objects.filter(station_state__station_state_name__icontains = u'Op').distinct()
 
