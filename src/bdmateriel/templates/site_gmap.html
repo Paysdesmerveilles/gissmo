@@ -2,7 +2,16 @@
 
 {% load i18n %}
 
-{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url admin:index %}">Home</a> &rsaquo;</div>
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url admin:index %}">{% trans 'Home' %}</a> &rsaquo;
+        <a href="{% url admin:app_list 'bdmateriel' %}">{% trans 'Bdmateriel' %}</a> &rsaquo;
+        <a href="{% url admin:bdmateriel_stationsite_changelist %}">{% trans 'A1. Stations' %}</a> &rsaquo;
+        {% if ResStationUnique %}
+          <a href="{% url admin:bdmateriel_stationsite_change ResStationUnique.id %}">{{ResStationUnique.station_code}}</a> &rsaquo;
+        {% endif %}
+        Carte des stations
+    </div>
 {% endblock %}
 
 {% block title %}Recherche des informations de la construction RESIF{% endblock %}
@@ -28,7 +37,6 @@
   var map;
   var marker;
   var url = [];
-  var classe_a = 0;
   var information = [];
   var contentString = '<div id="content">'+
     '<div id="siteNotice">'+
@@ -67,7 +75,11 @@
   {% endfor %}
   
   {% for i in ResHistStations %}
-    sites.push(["{{i.station.station_code}}", {{i.station.latitude}}, {{i.station.longitude}}, {{i.station_state.id}}]);
+    {% if i.station.station_code == ResStationUnique.station_code %}
+      sites.push(["{{i.station.station_code}}", {{i.station.latitude}}, {{i.station.longitude}}, {{i.station_state.id}}, 0]);
+    {% else %}
+      sites.push(["{{i.station.station_code}}", {{i.station.latitude}}, {{i.station.longitude}}, {{i.station_state.id}}, 1]);
+    {% endif %}
     url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.station.id}} + "/");
     information.push("{{i.station.station_name}}");
   {% endfor %}
@@ -138,6 +150,7 @@
       if (station[0] == 'EOST' || station[0] == 'IPGP' || station[0] == 'OCA' || station[0] == 'OMP' || station[0] == 'OPGC' || station[0] == 'ISTERRE' || station[0] == 'OSUNA' || station[0] == 'OREME')
           {image = ''}
 */
+
       var myLatLng = new google.maps.LatLng(station[1], station[2]);
           marker = new google.maps.Marker({
           position: myLatLng,
@@ -146,6 +159,13 @@
           title : station[0]
       });
 
+      switch (station[4])
+      {
+      case 0:
+          marker.setAnimation(move = google.maps.Animation.BOUNCE)
+          break;
+      }
+      
       attachURL(marker, i);
 
       //google.maps.event.addListener(marker, 'click', toggleBounce);
@@ -194,7 +214,6 @@
     }
     return classe_b;
   } 
-
 
 </script>
 

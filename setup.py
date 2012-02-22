@@ -4,12 +4,12 @@ from distutils.core import setup
 
 setup(
     name = "bdmateriel",
-    version = "0.8",
+    version = "0.9",
     author = "Martin Dutil",
     author_email = "mdutil@unistra.fr",
     description = "BD suivi materiel",
     url = "https://teatime.u-strasbg.fr/prj/projects/bdmatos/",
     packages = ['bdmateriel','bdmateriel.templatetags',],
     package_dir = {'bdmateriel': 'src/bdmateriel'},
-    package_data = {'bdmateriel': ['templates/*.html','templates/admin/*.html','templates/admin/bdmateriel/*.html','static/*.png']},
+    package_data = {'bdmateriel': ['templates/*.html','templates/admin/*.html','templates/admin/bdmateriel/*.html','templates/admin/bdmateriel/stationsite/*.html','static/*.png']},
 )

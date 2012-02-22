@@ -175,9 +175,10 @@ report_equip = staff_member_required(report_equip)
 admin.site.register_view('report/report_equip/', report_equip)
 
 def site_maps(request):
-
+    query = request.GET.get('Station','')
     ResHistStations = ''
     ResState = ''
+    ResStationUnique = ''
 
 #   Stations operationnelles
 #    ResHistStations = HistoricStationState.objects.filter(station_state__station_state_name__icontains = u'Op').distinct()
@@ -194,8 +195,11 @@ def site_maps(request):
 
     ResState = StationState.objects.all()
 
+    if query: 
+        ResStationUnique = StationSite.objects.get(pk=query)
+
     return render_to_response("site_gmap.html", {
-        "ResHistStations": ResHistStations, "ResState": ResState
+        "ResHistStations": ResHistStations, "ResState": ResState, "query": query, "ResStationUnique": ResStationUnique
     },
          RequestContext(request, {}),)
 site_maps = staff_member_required(site_maps)

@@ -16,10 +16,10 @@ urlpatterns = patterns('',
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    (r'^admin/report/', include('bdmateriel.urls')),
+    (r'^bdmateriel/', include('bdmateriel.urls')),
     (r'^admin/', include(admin.site.urls)),
     (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
-    (r'^chaining/', include('smart_selects.urls')), 
+    (r'^chaining/', include('smart_selects.urls')),
 )
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
