@@ -120,27 +120,27 @@
       {
       case 6:
       /** Classification B a construire */
-          {image = '/static/feu_orange.png'};
+          {image = '{{ STATIC_URL }}img/feu_orange.png'};
           break;
       case 5:
       /** Classification B en operation */
-          {image = '/static/feu_bleu.png'};
+          {image = '{{ STATIC_URL }}img/feu_bleu.png'};
           break;
       case 4:
       /** Classification A a construire */
-          {image = '/static/feu_jaune.png'};
+          {image = '{{ STATIC_URL }}img/feu_jaune.png'};
           break;
       case 3:
       /** Classification A en operation */
-          {image = '/static/feu_blanc.png'}
+          {image = '{{ STATIC_URL }}img/feu_blanc.png'}
           break;
       /** Classification A+ a construire */
       case 2:
-          {image = '/static/feu_rouge.png'}
+          {image = '{{ STATIC_URL }}img/feu_rouge.png'}
           break;
       /** Classification A+ en operation  */
       case 1:
-          {image = '/static/feu_vert.png'}
+          {image = '{{ STATIC_URL }}img/feu_vert.png'}
           break;
       /** Observatoires - classification inconue */
       default:   
@@ -224,16 +224,16 @@
   <table border="1">
       {% for state in ResState %}
           {% if state.id == 1 %}
-             <tr><td><img src="/static/feu_vert.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(1))</script></td></tr>
+             <tr><td><img src="{{ STATIC_URL }}img/feu_vert.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(1))</script></td></tr>
           {% endif %}
           {% if state.id == 2 %}
-             <tr><td><img src="/static/feu_rouge.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(2))</script></td></tr>
+             <tr><td><img src="{{ STATIC_URL }}img/feu_rouge.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(2))</script></td></tr>
           {% endif %}
           {% if state.id == 3 %}
-             <tr><td><img src="/static/feu_blanc.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(3))</script></td></tr>
+             <tr><td><img src="{{ STATIC_URL }}img/feu_blanc.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(3))</script></td></tr>
           {% endif %}
           {% if state.id == 4 %}
-             <tr><td><img src="/static/feu_jaune.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
+             <tr><td><img src="{{ STATIC_URL }}img/feu_jaune.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
           {% endif %}
       {% endfor %}
       <tr><td></td><td>Total</td><td><script type="text/javascript">document.write(sites.length)</script></td></tr>
