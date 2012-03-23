@@ -1,14 +1,22 @@
 # Create your views here.
+import os.path
+import mimetypes
+
 from django.db.models import Q
 from models import *
 from django.template import RequestContext
 from django.shortcuts import render_to_response
+from django.core.exceptions import PermissionDenied
+from django.db.models import get_model
+from django.shortcuts import get_object_or_404
+from django.shortcuts import HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib import admin
 
 from django import forms
 from django.forms.fields import DateField
 from django.contrib.admin.widgets import AdminDateWidget
+
+from django.utils.encoding import smart_str
 
 class TestForm(forms.Form):
     t = forms.DateField(widget=AdminDateWidget())
@@ -97,8 +105,6 @@ def report_station(request):
         RequestContext(request, {}),)
 report_station = staff_member_required(report_station)
 
-admin.site.register_view('report/report_station/', report_station)
-
 def report_equip(request):
     query = request.GET.get('Equipement','')
     ResEquips = ''
@@ -172,8 +178,6 @@ def report_equip(request):
         RequestContext(request, {}),)
 report_equip = staff_member_required(report_equip)
 
-admin.site.register_view('report/report_equip/', report_equip)
-
 def site_maps(request):
     query = request.GET.get('Station','')
     ResHistStations = ''
@@ -204,6 +208,25 @@ def site_maps(request):
          RequestContext(request, {}),)
 site_maps = staff_member_required(site_maps)
 
-admin.site.register_view('report/site_maps/', site_maps)
 # Fin du Test primaire.
 
+def get_file(request, app_label, model_name, field_name, identifier, filename):
+    import os.path
+    import mimetypes
+    from django.utils.encoding import smart_str
+    mimetypes.init()
+
+    model = get_model(app_label, model_name)
+    instance = get_object_or_404(model, pk=identifier)
+
+    if (not request.user.is_anonymous()) and request.user.is_authenticated() and instance.owner.pk == request.user.pk:
+        path = getattr(instance, field_name).file.name
+        file_name = os.path.basename(path)
+        mime_type_guess = mimetypes.guess_type(file_name)
+        fsock = open(path,"r")
+        if mime_type_guess is not None:
+            response = HttpResponse(fsock, mimetype=mime_type_guess[0])
+        response['Content-Disposition'] = 'attachment; filename=' + smart_str(file_name)
+        return response    
+    else:
+        raise PermissionDenied()
