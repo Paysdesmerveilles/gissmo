@@ -14,5 +14,6 @@ urlpatterns = patterns('bdmateriel.views',
     url(r'^report_equip/$', 'report_equip', name='report_equip'),
     url(r'^report_station/$', 'report_station', name='report_station'),    
     url(r'^site_maps/$', 'site_maps', name='site_maps'),
+    url(r'^get_file/(?P<app_label>.+)/(?P<model_name>.+)/(?P<field_name>.+)/(?P<identifier>\d+)$', 'get_file', name='get_file'),
 )
 

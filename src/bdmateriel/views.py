@@ -210,10 +210,7 @@ site_maps = staff_member_required(site_maps)
 
 # Fin du Test primaire.
 
-def get_file(request, app_label, model_name, field_name, identifier, filename):
-    import os.path
-    import mimetypes
-    from django.utils.encoding import smart_str
+def get_file(request, app_label, model_name, field_name, identifier):
     mimetypes.init()
 
     model = get_model(app_label, model_name)

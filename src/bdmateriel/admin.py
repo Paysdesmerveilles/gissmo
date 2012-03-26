@@ -16,6 +16,8 @@ from django.contrib.admin.views.main import ChangeList
 from django.utils.translation import ugettext as _
 from django.utils.encoding import force_unicode
 from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.utils.safestring import mark_safe
+from django.core.urlresolvers import reverse
 
 """
 Usage:
@@ -33,7 +35,6 @@ SubmitButtonField(label="", initial=u"Your submit button text")
 
 #from django import forms
 #from django.utils import html
-#from django.utils.safestring import mark_safe
 
 #class ButtonWidget(forms.Widget):
 #    def render(self, name, value, attrs=None):
@@ -702,14 +703,111 @@ class NetworkAdmin(admin.ModelAdmin):
             else:
                 return HttpResponseRedirect('../../../')
 
-######## class StationDocAdmin(admin.ModelAdmin):
-########     list_display = ['station', 'document_title', 'inscription_date',]
+class StationDocAdmin(admin.ModelAdmin):
+    exclude = ('owner',)
+    list_display = ['station', 'document_title', 'inscription_date',]
 
-######## class EquipModelDocAdmin(admin.ModelAdmin):
-########     list_display = ['equip_supertype', 'equip_type', 'equip_model', 'document_title', 'inscription_date',]
+#
+#    Code pour securiser encore plus
+#    Verifie si on a la permission pour faire des changements sinon aucune edition et visualisation possible
+#
+#    def has_change_permission(self, request, obj=None):
+#        has_class_permission = super(StationDocAdmin, self).has_change_permission(request, obj)
+#        if not has_class_permission:
+#            return False
+#        if obj is not None and not request.user.is_superuser and request.user.id != obj.owner.id:
+#            return False
+#        return True
 
-######## class EquipDocAdmin(admin.ModelAdmin):
-########     list_display = ['equip_supertype', 'equip_type', 'equip_model', 'equip', 'document_title', 'inscription_date',]
+#
+#    Code pour securiser encore plus
+#    Presente que les dossiers accessibles dans le change list
+#
+#    def queryset(self, request):
+#        if request.user.is_superuser:
+#            return StationDoc.objects.all()
+#        return StationDoc.objects.filter(owner=request.user)
+
+    def get_form(self, request, obj=None, **kwargs):
+        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
+        self.parent_obj = obj
+        return super(StationDocAdmin, self).get_form(request, obj, **kwargs)
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'document_station':
+            if self.parent_obj :
+                kwargs['widget'] = AdminFileWidget(attrs={'app_label':self.parent_obj._meta.app_label, 'model_name':self.parent_obj._meta.object_name.lower(), 'field_name':db_field.name, 'id':self.parent_obj.id})
+        return super(StationDocAdmin,self).formfield_for_dbfield(db_field,**kwargs)
+
+#   Inscription du user comme valeur par defaut dans le champ owner
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.owner = request.user
+        obj.save()
+
+class EquipModelDocAdmin(admin.ModelAdmin):
+    exclude = ('owner',)
+    list_display = ['equip_supertype', 'equip_type', 'equip_model', 'document_title', 'inscription_date',]
+
+    def get_form(self, request, obj=None, **kwargs):
+        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
+        self.parent_obj = obj
+        return super(EquipModelDocAdmin, self).get_form(request, obj, **kwargs)
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'document_equip_model':
+            if self.parent_obj :
+                kwargs['widget'] = AdminFileWidget(attrs={'app_label':self.parent_obj._meta.app_label, 'model_name':self.parent_obj._meta.object_name.lower(), 'field_name':db_field.name, 'id':self.parent_obj.id})
+        return super(EquipModelDocAdmin,self).formfield_for_dbfield(db_field,**kwargs)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.owner = request.user
+        obj.save()
+
+class EquipDocAdmin(admin.ModelAdmin):
+    exclude = ('owner',)
+    list_display = ['equip_supertype', 'equip_type', 'equip_model', 'equip', 'document_title', 'inscription_date',]
+
+    def get_form(self, request, obj=None, **kwargs):
+        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
+        self.parent_obj = obj
+        return super(EquipDocAdmin, self).get_form(request, obj, **kwargs)
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'document_equip':
+            if self.parent_obj :
+                kwargs['widget'] = AdminFileWidget(attrs={'app_label':self.parent_obj._meta.app_label, 'model_name':self.parent_obj._meta.object_name.lower(), 'field_name':db_field.name, 'id':self.parent_obj.id})
+        return super(EquipDocAdmin,self).formfield_for_dbfield(db_field,**kwargs)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.owner = request.user
+        obj.save()
+
+class AdminFileWidget(forms.FileInput):
+    """
+    A FileField Widget that shows its current value if it has one.
+    """
+    def __init__(self, attrs={}):
+        self.app_label = attrs['app_label']
+        self.model_name = attrs['model_name']
+        self.field_name = attrs['field_name']
+        self.id = attrs['id']
+        super(AdminFileWidget, self).__init__(attrs)
+
+    def render(self, name, value, attrs=None):
+        output = []
+        url = ''
+        liste = value.url.split('/')
+        url = reverse('get_file', args=[self.app_label, self.model_name, self.field_name, self.id])
+
+        if value and hasattr(value, "url"):
+            output.append('%s <a target="_blank" href="%s">%s</a> <br />%s ' % \
+                (_('Currently:'), url, value.name.split('/')[-1], _('Change:')))
+        output.append(super(AdminFileWidget, self).render(name, value, attrs))
+        return mark_safe(u''.join(output))
 
 ######## class ChainComponentInlineFormset(forms.models.BaseInlineFormSet):
 ########  
@@ -803,9 +901,9 @@ admin.site.register(StationActor, StationActorAdmin)
 #admin.site.register(StationCharacValue)
 admin.site.register(StationSite, StationSiteAdmin)
 #admin.site.register(StationState)
-######## admin.site.register(StationDoc, StationDocAdmin)
-######## admin.site.register(EquipModelDoc, EquipModelDocAdmin)
-######## admin.site.register(EquipDoc, EquipDocAdmin)
+admin.site.register(StationDoc, StationDocAdmin)
+admin.site.register(EquipModelDoc, EquipModelDocAdmin)
+admin.site.register(EquipDoc, EquipDocAdmin)
 
 ######## admin.site.register(AcquisitionChain,AcquisitionChainAdmin)
 ######## admin.site.register(ChainComponent)

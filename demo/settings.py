@@ -1,8 +1,8 @@
 # Django settings for monsitedev project.
 import os
 
-import sys
-sys.path.insert(0, "/home/mdutil/gitclone/bdmatos/src")
+#import sys
+#sys.path.insert(0, "/home/mdutil/gitclone/bdmatos/src")
 #PROJECT_PATH = os.path.abspath(os.path.curdir)
 #(filepath, filename) = os.path.split(PROJECT_PATH)
 #APP_PATH = os.path.join(filepath, 'bdmateriel')
@@ -127,6 +127,9 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
+# Absolute filesystem path to the directory that will hold user-uploaded files with custom view.
+UPLOAD_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -138,7 +141,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'adminplus',
     'smart_selects',
     'bdmateriel',
 )
