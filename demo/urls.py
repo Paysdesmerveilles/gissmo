@@ -3,9 +3,7 @@ from django.conf import settings
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-from adminplus import AdminSitePlus
 
-admin.site = AdminSitePlus()
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -18,6 +16,8 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     (r'^bdmateriel/', include('bdmateriel.urls')),
     (r'^admin/', include(admin.site.urls)),
+#    (r'^equipments/(.+)/(?P<app_label>.+)/(?P<model_name>.+)/(?P<field_name>.+)/(?P<identifier>\d+)/(?P<filename>.*)$', 'bdmateriel.views.get_file'),
+#    (r'^equipments/(.+)/(.+)/(?P<app_label>.+)/(?P<model_name>.+)/(?P<field_name>.+)/(?P<identifier>\d+)/(?P<filename>.*)$', 'bdmateriel.views.get_file'),
     (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
     (r'^chaining/', include('smart_selects.urls')),
 )
