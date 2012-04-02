@@ -35,6 +35,7 @@
 {% block object-tools %}
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
+    <li><a href="{% url itineraire_maps %}?Station={{ object_id }}" class="historylink">Itinéraire</a></li>
     <li><a href="{% url site_maps %}?Station={{ object_id }}" class="historylink">Carte des stations</a></li>
     <li><a href="history/" class="historylink">History</a></li>
   </ul>

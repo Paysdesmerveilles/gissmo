@@ -1,0 +1,81 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url admin:index %}">{% trans 'Home' %}</a> &rsaquo;
+        <a href="{% url admin:app_list 'bdmateriel' %}">{% trans 'Bdmateriel' %}</a> &rsaquo;
+        <a href="{% url admin:bdmateriel_stationsite_changelist %}">{% trans 'A1. Stations' %}</a> &rsaquo;
+        {% if ResStationUnique %}
+          <a href="{% url admin:bdmateriel_stationsite_change ResStationUnique.id %}">{{ResStationUnique.station_code}}</a> &rsaquo;
+        {% endif %}
+        Carte des stations
+    </div>
+{% endblock %}
+
+{% block title %}Recherche des informations de la construction RESIF{% endblock %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+  html { height: 100% }
+  body { height: 100%; margin: 0px; padding: 0px }
+  #map_canvas { height: 100% }
+</style>
+
+<script type="text/javascript"
+    src="http://maps.google.fr/maps/api/js?sensor=false">
+</script>
+
+<script type="text/javascript">
+
+  var directionsDisplay;
+  var directionsService = new google.maps.DirectionsService();
+  var map;
+
+  function initialize() {
+    directionsDisplay = new google.maps.DirectionsRenderer();
+    var vesdun = new google.maps.LatLng(46.539722, 2.430278);
+    var myOptions = {
+      zoom: 6,
+      center: vesdun,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+
+    map = new google.maps.Map(document.getElementById("map_canvas"),
+        myOptions);
+    directionsDisplay.setMap(map);
+    directionsDisplay.setPanel(document.getElementById("directionsPanel"));
+
+    calcRoute()
+  }
+
+  function calcRoute() {    
+    var start = new google.maps.LatLng({{Observatoire.latitude}}, {{Observatoire.longitude}});
+    var end = new google.maps.LatLng({{ResStationUnique.latitude}}, {{ResStationUnique.longitude}});
+ 
+    var request = {
+      origin:start,
+      destination:end,
+      travelMode: google.maps.TravelMode.DRIVING
+    };
+    directionsService.route(request, function(result, status) {
+      if (status == google.maps.DirectionsStatus.OK) {
+        directionsDisplay.setDirections(result);
+      }
+    });
+  }
+</script>
+
+</head>
+<body onload="initialize()">
+  <div id="map_canvas" style="position: absolute; left:0%; width:50%; height:800px"></div>
+  <div id="directionsPanel" style="position: absolute; left:55%; width:50%; height:100%"></div>
+</body>
+</html>
+{% endblock %}

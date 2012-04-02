@@ -208,6 +208,36 @@ def site_maps(request):
          RequestContext(request, {}),)
 site_maps = staff_member_required(site_maps)
 
+def itineraire_maps(request):
+    query = request.GET.get('Station','')
+    ResStationUnique = ''
+    Observatoire = ''
+
+    if query: 
+        ResStationUnique = StationSite.objects.get(pk=query)
+
+#   Un utilisateur ne doit avoir que deux groupes resif et l'observatoire d'attache
+    user_group_list = request.user.groups.exclude(name__iexact = "Resif").values_list('name',flat=True)
+
+#   Verification si la liste est vide
+#   Le point de depart est l'EOST, si le user n'a pas d'observatoire assigne ou si l'observatoire n'est pas inscrit comme une station
+    if user_group_list:
+        user_group = user_group_list[0]
+    else:
+        user_group = 'EOST'
+
+    try:
+        Observatoire = StationSite.objects.get(station_code = user_group)
+    except StationSite.DoesNotExist:
+        Observatoire = StationSite.objects.get(station_code = 'EOST')
+ 
+    return render_to_response("itineraire_gmap.html", {
+        "ResStationUnique": ResStationUnique,
+        "Observatoire": Observatoire,
+    },
+         RequestContext(request, {}),)
+itineraire_maps = staff_member_required(itineraire_maps)
+
 # Fin du Test primaire.
 
 def get_file(request, app_label, model_name, field_name, identifier):
