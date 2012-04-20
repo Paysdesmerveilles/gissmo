@@ -173,8 +173,8 @@ class EquipActor(models.Model):
     equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
     actor = models.ForeignKey("Actor", verbose_name=_("intervenant"))
     actor_type = models.ForeignKey("ActorType", verbose_name=_("role de l'intervenant"))
-    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
-    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -338,8 +338,8 @@ class StationActor(models.Model):
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     actor = models.ForeignKey("Actor", verbose_name=_("intervenant"))
     actor_type = models.ForeignKey("ActorType", verbose_name=_("role"))
-    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
-    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -378,9 +378,12 @@ class StationCharacValue(models.Model):
 class StationSite(models.Model):
     station_code = models.CharField(max_length=40, verbose_name=_("code station"))
     station_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom station"))
-    latitude = models.FloatField(null=True, blank=True, verbose_name=_("latitude"))
-    longitude = models.FloatField(null=True, blank=True, verbose_name=_("longitude"))
-    elevation = models.FloatField(null=True, blank=True, verbose_name=_("elevation"))
+    latitude = models.FloatField(null=True, blank=True, verbose_name=_("latitude (degre decimal)"))
+    longitude = models.FloatField(null=True, blank=True, verbose_name=_("longitude (degre decimal)"))
+    elevation = models.FloatField(null=True, blank=True, verbose_name=_("elevation (m)"))
+#    latitude = models.DecimalField(null=True, blank=True, verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
+#    longitude = models.DecimalField(null=True, blank=True, verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
+#    elevation = models.DecimalField(null=True, blank=True, verbose_name=_("elevation (m)"), max_digits=4, decimal_places=1)
     site_name = models.CharField(null=True, blank=True,max_length=100, verbose_name=_("nom site"))
     site_description = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("description"))
     address = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("adresse"))
@@ -423,7 +426,7 @@ class StationState(models.Model):
 class HistoricEquipAction(models.Model):
     equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
     equip_action_type = models.ForeignKey("EquipActionType", verbose_name=_("action"))
-    start_date = models.DateField(null=True,blank=True, verbose_name=_("date"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
     station_action = models.ForeignKey("HistoricStationAction", null=True, blank=True, verbose_name=_("intervention station"))
 
@@ -448,8 +451,8 @@ class HistoricEquipCharac(models.Model):
     equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
     equip_charac = models.ForeignKey("EquipCharac", verbose_name=_("caracteristique"))
     equip_charac_value = models.TextField(null=True, blank=True, verbose_name=_("valeur"))
-    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
-    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -463,8 +466,8 @@ class HistoricEquipCharac(models.Model):
 class HistoricEquipState(models.Model):
     equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
     equip_state = models.ForeignKey("EquipState", verbose_name=_("etat"))
-    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
-    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -478,7 +481,7 @@ class HistoricEquipState(models.Model):
 class HistoricStationAction(models.Model):
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     station_action_type = models.ForeignKey("StationActionType", verbose_name=_("action"))
-    start_date = models.DateField(null=True,blank=True, verbose_name=_("date"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -500,8 +503,8 @@ class HistoricStationCharac(models.Model):
         auto_choose=True,
         verbose_name=_("valeur")
     )
-    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
-    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -515,8 +518,8 @@ class HistoricStationCharac(models.Model):
 class HistoricStationState(models.Model):
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     station_state = models.ForeignKey("StationState", verbose_name=_("etat"))
-    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut"))
-    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin"))
+    start_date = models.DateField(null=True,blank=True, verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True,blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -558,8 +561,8 @@ class HistoricStationEquip(models.Model):
         blank=True
     )
     host_equipment = models.ForeignKey("Equipment", null=True, blank=True, verbose_name=_("equipement hote"), related_name='host')
-    start_date = models.DateField(null=True, blank=True, verbose_name=_("date debut"))
-    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
+    start_date = models.DateField(null=True, blank=True, verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -579,7 +582,7 @@ class StationDoc(models.Model):
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     owner = models.ForeignKey(User)
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription"))
+    inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_station = models.FileField(storage=fs, verbose_name=_("document"), upload_to=stationdoc_filename)
 
     class Meta:
@@ -615,7 +618,7 @@ class EquipModelDoc(models.Model):
     )
     owner = models.ForeignKey(User)
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription"))
+    inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_equip_model = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipmodeldoc_filename)
 
     class Meta:
@@ -659,7 +662,7 @@ class EquipDoc(models.Model):
     )
     owner = models.ForeignKey(User)
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription"))
+    inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_equip = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipdoc_filename)
 
     class Meta:
@@ -672,31 +675,37 @@ class EquipDoc(models.Model):
 
 # Acquisition chain
 
-#### class AcquisitionChain(models.Model) :
-####     station = models.ForeignKey("StationSite", verbose_name=_("station"))
-####     location_code = models.CharField(max_length=2, verbose_name=_("code localisation"))
-####     latitude = models.FloatField(null=True, blank=True, verbose_name=_("latitude"))
-####     longitude = models.FloatField(null=True, blank=True, verbose_name=_("longitude"))
-####     elevation = models.FloatField(null=True, blank=True, verbose_name=_("elevation"))
-####     depth = models.FloatField(null=True, blank=True, verbose_name=_("profondeur"))
-#### 
-####     class Meta:
-####         verbose_name = _("Chaine d'acquisition")
-####         verbose_name_plural = _("H1. Chaines d'acquisition")
-####     
-####     def __unicode__(self):
-####         return u'%s : %s' % (self.station.station_code, self.location_code)
+class AcquisitionChain(models.Model) :
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    location_code = models.CharField(max_length=2, verbose_name=_("code localisation"))
+    latitude = models.FloatField(null=True, blank=True, verbose_name=_("latitude (degre decimal)"))
+    longitude = models.FloatField(null=True, blank=True, verbose_name=_("longitude (degre decimal)"))
+    elevation = models.FloatField(null=True, blank=True, verbose_name=_("elevation (m)"))
+#    latitude = models.DecimalField(null=True, blank=True, verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
+#    longitude = models.DecimalField(null=True, blank=True, verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
+#    elevation = models.DecimalField(null=True, blank=True, verbose_name=_("elevation (m)"), max_digits=4, decimal_places=1)
+    depth = models.DecimalField(null=True, blank=True, verbose_name=_("profondeur (m)"), max_digits=4, decimal_places=1)
+    component = models.ManyToManyField(Equipment, verbose_name=_("composante"))
+    start_date = models.DateField(verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
 
-#### class ChainComponent(models.Model) :
-####     acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
-####     equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
-####     order = models.IntegerField(null=True, blank=True, verbose_name=_("ordre"))
-####     start_date = models.DateField(verbose_name=_("date debut"))
-####     end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
-#### 
-####     class Meta:
-####         verbose_name = _("Composante de la chaine d'acqui")
-####         verbose_name_plural = _("H2. Composantes des chaines d'acqui")
+    class Meta:
+        verbose_name = _("Chaine d'acquisition")
+        verbose_name_plural = _("H1. Chaines d'acquisition")
+    
+    def __unicode__(self):
+        return u'%s : %s : %s' % (self.station.station_code, self.location_code, self.start_date)
+
+#####class ChainComponent(models.Model) :
+#####    acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
+#####    equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
+#####    order = models.IntegerField(null=True, blank=True, verbose_name=_("ordre"))
+#####    start_date = models.DateField(verbose_name=_("date debut (aaaa-mm-jj)"))
+#####    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
+#####
+#####    class Meta:
+#####        verbose_name = _("Composante de la chaine d'acqui")
+#####        verbose_name_plural = _("H2. Composantes des chaines d'acqui")
 
 ##    def clean(self):
 ##        """
@@ -720,22 +729,49 @@ class EquipDoc(models.Model):
 ##            if self.equip.id not in L:
 ##                    raise ValidationError('L\'equipment inscrit n\'est pas installe dans la station.')
 
-####     def __unicode__(self):
-####         return u'%s : %s : %s : %s : %s' % (self.acquisition_chain, self.equip.equip_model.equip_model_name, self.equip.serial_number, self.start_date, self.end_date)
+#####    def __unicode__(self):
+#####        return u'%s : %s : %s : %s : %s' % (self.acquisition_chain, self.equip.equip_model.equip_model_name, self.equip.serial_number, self.start_date, self.end_date)
 
-#### class Channel(models.Model) :
-####     network = models.ForeignKey('Network', verbose_name=_("reseau"))
-####     acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
-####     channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"))
-####     dip = models.FloatField(null=True, blank=True, max_length=5, verbose_name=_("angle d'inclinaison"))
-####     azimuth = models.FloatField(null=True, blank=True, max_length=5, verbose_name=_("azimut"))
-####     sample_rate =  models.FloatField(verbose_name=_("frequence (Hz)"))
-####     start_date = models.DateField(verbose_name=_("date debut"))
-####     end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
-#### 
-####     class Meta:
-####         verbose_name = _("Canal d'acquisition")
-####         verbose_name_plural = _("H3. Canaux d'acquisition")
-#### 
-####     def __unicode__(self):
-####         return u'%s : %s : %s : %s' % (self.network, self.acquisition_chain, self.channel_code, self.sample_rate)
+#####class Channel(models.Model) :
+#####    network = models.ForeignKey('Network', verbose_name=_("reseau"))
+#####    acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
+#####    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"))
+#####    dip = models.FloatField(null=True, blank=True, max_length=5, verbose_name=_("angle d'inclinaison (degre)"))
+#####    azimuth = models.FloatField(null=True, blank=True, max_length=5, verbose_name=_("azimut (degre)"))
+#####    sample_rate =  models.FloatField(verbose_name=_("frequence (Hz)"))
+#####    start_date = models.DateField(verbose_name=_("date debut (aaaa-mm-jj)"))
+#####    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
+#####
+#####    class Meta:
+#####        verbose_name = _("Canal d'acquisition")
+#####        verbose_name_plural = _("H3. Canaux d'acquisition")
+#####
+#####    def __unicode__(self):
+#####        return u'%s : %s : %s : %s' % (self.network, self.acquisition_chain, self.channel_code, self.sample_rate)
+
+CHANNEL_CHOICES = (
+    ('1', 'HHE'),
+    ('2', 'HHN'),
+    ('3', 'HHZ'),
+)
+
+class Channel(models.Model) :
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    channel_code = models.CharField(max_length=1, verbose_name=_("code du canal"), choices=CHANNEL_CHOICES)
+    network = models.ForeignKey('Network', verbose_name=_("code reseau"))
+    acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
+    dip = models.DecimalField(null=True, blank=True, max_length=5, verbose_name=_("angle d'inclinaison (degre)"), max_digits=3, decimal_places=1)
+    azimuth = models.DecimalField(null=True, blank=True, max_length=5, verbose_name=_("azimut (degre)"), max_digits=4, decimal_places=1)
+    gain =  models.FloatField(null=True, blank=True, verbose_name=_("gain"))
+    sample_rate =  models.FloatField(verbose_name=_("frequence (Hz)"))
+    start_date = models.DateField(verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
+
+
+    class Meta:
+        verbose_name = _("Canal d'acquisition")
+        verbose_name_plural = _("H2. Canaux d'acquisition")
+
+    def __unicode__(self):
+        return u'%s : %s : %s : %s' % (self.channel_code, self.station, self.network, self.sample_rate)
+

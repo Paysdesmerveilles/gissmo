@@ -6,7 +6,7 @@ from django import forms
 # Fin de l'ajout pour definir un autre formfield_for_dbfield
 
 # Ajout pour limiter la taille d'un champ Textfield a plus ou moins une ligne dans une section inline
-from django.forms import Textarea
+from django.forms import Textarea, TextInput
 # Fin de l'ajout pour limiter la taille d'un champ Textfield
 
 # Ajout pour ordering by multiple fields in a column sort
@@ -126,6 +126,15 @@ class SpecialOrderingChangeList(ChangeList):
 # Fin de l'ajout to order by multiple fields in a column sort
 ####
 
+#class ChannelInline(admin.TabularInline):
+#    model = Channel
+#    extra = 0
+#
+#    formfield_overrides = {
+#        models.CharField: {'widget': TextInput(attrs={'size':6})},
+#        models.FloatField: {'widget': TextInput(attrs={'size':6})},
+#    }
+
 ####
 #
 # ActorAdmin's section
@@ -181,28 +190,29 @@ class BuiltAdmin(admin.ModelAdmin):
 # EquipmentAdmin's section
 #
 ####
-######## class EquipModelDocForm(forms.ModelForm):
-########     """ 
-########     Champ pour faire en sorte que les forms inline instancier 
-########     soit toujours avec un flag has_changed a True
-########     De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants    
-########     """
-########     always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
-######## 
-########     class Meta:
-########         model = EquipModelDoc
-######## 
-########     def __init__(self, *args, **kwargs):
-########         super(EquipModelDocForm, self).__init__(*args, **kwargs)
-######## 
-########         if 'instance' in kwargs:
-########             self.fields['always_update'].initial = int(time.time())
+class EquipModelDocForm(forms.ModelForm):
+    """ 
+    Champ pour faire en sorte que les forms inline instancier 
+    soit toujours avec un flag has_changed a True
+    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants    
+    """
+    always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
 
-######## class EquipModelDocInline(admin.TabularInline):
-########     model = EquipModelDoc
-########     form = EquipModelDocForm
-########     exclude = ['equip_supertype', 'equip_type']
-########     extra = 1
+    class Meta:
+        model = EquipModelDoc
+
+    def __init__(self, *args, **kwargs):
+        super(EquipModelDocForm, self).__init__(*args, **kwargs)
+
+        if 'instance' in kwargs:
+            self.fields['always_update'].initial = int(time.time())
+
+class EquipModelDocInline(admin.TabularInline):
+    model = EquipModelDoc
+    form = EquipModelDocForm
+    exclude = ['equip_supertype', 'equip_type','owner']
+    extra = 1
+    ordering = ['-inscription_date']
  
 class EquipActorAdmin(admin.ModelAdmin):
     list_display = ['equip', 'actor', 'actor_type', 'start_date', 'end_date',]
@@ -216,23 +226,31 @@ class EquipModelAdmin(admin.ModelAdmin):
 
     fieldsets = [('', {'fields': [('equip_supertype', 'equip_type', 'equip_model_name')]}),]
 
-########     inlines = [EquipModelDocInline]
-######## 
-########     def save_formset(self, request, form, formset, change):
-########         """ Reference du code
-########             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
-########         instances = formset.save(commit=False)
-########         for instance in instances:      
-########             if isinstance(instance, EquipModelDoc): #Check if it is the correct type of inline
-########                 instance.equip_supertype = form.cleaned_data['equip_supertype']
-########                 instance.equip_type = form.cleaned_data['equip_type']
-########                 instance.save()
-########             else:
-########                 formset.save()
+    inlines = [EquipModelDocInline]
+
+    def save_formset(self, request, form, formset, change):
+        """ Reference du code
+            http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
+        instances = formset.save(commit=False)
+        for instance in instances:      
+            if isinstance(instance, EquipModelDoc): #Check if it is the correct type of inline
+                instance.equip_supertype = form.cleaned_data['equip_supertype']
+                instance.equip_type = form.cleaned_data['equip_type']
+                # Hack to check if it is an empty inline not yet instanciate to bypass the owner cannot be an null field
+                # try:
+                #     instance.clean_fields()
+                # except ValidationError, e:
+                #     instance.owner = request.user
+                if not instance.pk:
+                    instance.owner = request.user
+                instance.save()
+            else:
+                formset.save()
 
 class EquipActorInline(admin.TabularInline):
     model = EquipActor
     extra = 0
+    ordering = ['-start_date']
 
     # Presenter les champs dans l'ordre ci-dessous au lieu de : 'actor_type', 'actor', 'start_date', 'end_date', 'note' comme definit dans le modele
     fields = ('actor', 'actor_type', 'start_date', 'end_date', 'note')
@@ -262,6 +280,7 @@ class HistoricEquipActionInline(admin.TabularInline):
     model = HistoricEquipAction
     formset = HistoricEquipActionInlineFormset
     extra = 1
+    ordering = ['-start_date']
 
     def get_formset(self, request, obj=None, **kwargs):
         # Hack! Hook parent obj just in time to use in formfield_for_manytomany
@@ -312,6 +331,7 @@ class HistoricEquipActionInline(admin.TabularInline):
 class HistoricEquipCharacInline(admin.TabularInline):
     model = HistoricEquipCharac
     extra = 0
+    ordering = ['-start_date']
  
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
@@ -320,6 +340,7 @@ class HistoricEquipCharacInline(admin.TabularInline):
 class HistoricEquipStateInline(admin.TabularInline):
     model = HistoricEquipState
     extra = 0
+    ordering = ['-start_date']
  
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
@@ -347,10 +368,35 @@ class HistoricEquipStationInline(admin.TabularInline):
     formset = HistoricEquipStationInlineFormset
     exclude = ['equip_supertype', 'equip_type']
     extra = 1
+    ordering = ['-start_date']
  
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
     }
+
+class EquipDocForm(forms.ModelForm):
+    """ 
+    Champ pour faire en sorte que les forms inline instancier 
+    soit toujours avec un flag has_changed a True
+    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants    
+    """
+    always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
+
+    class Meta:
+        model = EquipDoc
+
+    def __init__(self, *args, **kwargs):
+        super(EquipDocForm, self).__init__(*args, **kwargs)
+
+        if 'instance' in kwargs:
+            self.fields['always_update'].initial = int(time.time())
+
+class EquipDocInline(admin.TabularInline):
+    model = EquipDoc
+    form = EquipDocForm
+    exclude = ['equip_supertype', 'equip_type', 'equip_model','owner']
+    extra = 1
+    ordering = ['-inscription_date']
 
 class EquipmentAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model', 'serial_number',]
@@ -365,7 +411,7 @@ class EquipmentAdmin(admin.ModelAdmin):
     def get_changelist(self, request, **kwargs):
         return SpecialOrderingChangeList
 
-    inlines = [EquipActorInline, HistoricEquipStateInline, HistoricEquipActionInline, HistoricEquipCharacInline, HistoricEquipStationInline]
+    inlines = [EquipActorInline, HistoricEquipStateInline, HistoricEquipActionInline, HistoricEquipCharacInline, HistoricEquipStationInline, EquipDocInline]
 
     def save_formset(self, request, form, formset, change):
         """ Reference du code
@@ -375,6 +421,13 @@ class EquipmentAdmin(admin.ModelAdmin):
             if isinstance(instance, HistoricStationEquip): #Check if it is the correct type of inline
                 instance.equip_supertype = form.cleaned_data['equip_supertype']
                 instance.equip_type = form.cleaned_data['equip_type']
+                instance.save()
+            elif isinstance(instance, EquipDoc): #Check if it is the correct type of inline
+                instance.equip_supertype = form.cleaned_data['equip_supertype']
+                instance.equip_type = form.cleaned_data['equip_type']
+                instance.equip_model = form.cleaned_data['equip_model']
+                if not instance.pk:
+                    instance.owner = request.user
                 instance.save()
             else:
                 formset.save()
@@ -393,8 +446,9 @@ class StationActorAdmin(admin.ModelAdmin):
 class StationActorInline(admin.TabularInline):
     model = StationActor
     extra = 0
+    ordering = ['-start_date']
 
-    # ordering difffently the field 
+    # ordering or presenting difffently the field 
     fields = ('actor', 'actor_type', 'start_date', 'end_date', 'note')
 
     formfield_overrides = {
@@ -426,14 +480,36 @@ class HistoricStationActionInline(admin.TabularInline):
 class HistoricStationCharacInline(admin.TabularInline):
     model = HistoricStationCharac
     extra = 1
- 
+    ordering = ['-start_date'] 
+
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
     }
 
+class HistoricStationStateInlineFormset(forms.models.BaseInlineFormSet):
+    def clean(self):
+        """Checks that equipment exist for the station."""
+        if any(self.errors):
+            # Don't bother validating the formset unless each form is valid on its own
+            return
+
+        count_date_fin = 0
+ 
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            if form.cleaned_data != {}:
+                station = form.cleaned_data['station']
+                if form.cleaned_data['end_date'] == None:
+                    count_date_fin += 1
+
+        if count_date_fin > 1:
+            raise forms.ValidationError("Une station ne peut avoir deux etats sans date de fin")
+
 class HistoricStationStateInline(admin.TabularInline):
     model = HistoricStationState
+    formset = HistoricStationStateInlineFormset
     extra = 0
+    ordering = ['-start_date']
  
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
@@ -449,7 +525,9 @@ class BuiltInline(admin.TabularInline):
 
 class HistoricStationEquipInline(admin.TabularInline):
     model = HistoricStationEquip
+    exclude = ['network']
     extra = 1
+    ordering = ['-start_date']
  
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
@@ -475,8 +553,85 @@ class HistoricStationEquipInline(admin.TabularInline):
             return None
         return model.objects.get(pk=object_id)
 
+class StationDocInline(admin.TabularInline):
+    model = StationDoc
+    exclude = ['owner']
+    extra = 1
+    ordering = ['-inscription_date']
+
+class AcquiChainInline(admin.TabularInline):
+    model = AcquisitionChain
+    extra = 0
+    ordering = ['-start_date']
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
+        self.parent_obj = obj
+        return super(AcquiChainInline, self).get_formset(
+            request, obj, **kwargs)
+
+    """ 
+    Pour limiter dans le choix du select de la FK que les equipements de la station 
+    """
+
+    def formfield_for_dbfield(self, field, **kwargs):
+        if field.name == 'component':
+            parent_station = self.get_object(kwargs['request'], StationSite)
+            L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=parent_station)]
+            contained_equip = Equipment.objects.filter(id__in = L)
+            return forms.ModelMultipleChoiceField(label="composante",queryset=contained_equip, required=False)
+        if field.name == 'latitude':
+            if self.parent_obj :
+                return forms.FloatField(label="latitude (degre decimal)", initial=self.parent_obj.latitude, required=True)
+        if field.name == 'longitude':
+            if self.parent_obj :
+                return forms.FloatField(label="longitude (degre decimal)", initial=self.parent_obj.longitude, required=True)
+        if field.name == 'elevation':
+            if self.parent_obj :
+                return forms.FloatField(label="elevation (m)", initial=self.parent_obj.elevation, required=True)
+        return super(AcquiChainInline, self).formfield_for_dbfield(field, **kwargs)
+
+    def get_object(self, request, model):
+        object_id = request.META['PATH_INFO'].strip('/').split('/')[-1]
+        try:
+            object_id = int(object_id)
+        except ValueError:
+            return None
+        return model.objects.get(pk=object_id)
+
+class ChannelInline(admin.TabularInline):
+    model = Channel
+    extra = 0
+    ordering = ['-start_date']
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
+        self.parent_obj = obj
+        return super(ChannelInline, self).get_formset(
+            request, obj, **kwargs)
+
+    """ 
+    Pour limiter dans le choix du select de la FK que les equipements de la station 
+    """
+
+    def formfield_for_dbfield(self, field, **kwargs):
+        if field.name == 'acquisition_chain':
+            parent_station = self.get_object(kwargs['request'], StationSite)
+            contained_acqui = AcquisitionChain.objects.filter(station=parent_station)
+            return forms.ModelChoiceField(label="Chaine d'acquisition",queryset=contained_acqui, required=True)
+        return super(ChannelInline, self).formfield_for_dbfield(field, **kwargs)
+
+    def get_object(self, request, model):
+        object_id = request.META['PATH_INFO'].strip('/').split('/')[-1]
+        try:
+            object_id = int(object_id)
+        except ValueError:
+            return None
+        return model.objects.get(pk=object_id)
+
+
 class StationSiteAdmin(admin.ModelAdmin):
-    list_display = ('station_code', 'station_name', 'site_name','latitude','longitude','elevation')
+    list_display = ('station_code', 'station_name','latitude','longitude','elevation')
     ordering = ['station_code']
     search_fields = ['station_code']
 
@@ -485,9 +640,21 @@ class StationSiteAdmin(admin.ModelAdmin):
     }
     fieldsets = [
         ('Information sur la station' , {'fields': [('station_code','station_name','latitude','longitude','elevation')]}),
-        ('Information sur le site' , {'fields': [('site_name','site_description','note'),('address', 'zip_code', 'city'),('department','region','country')], 'classes': ['collapse']}),
+        ('Information sur le site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country'),'note'], 'classes': ['collapse']}),
     ]
-    inlines = [StationActorInline, HistoricStationStateInline, HistoricStationActionInline, HistoricStationCharacInline, BuiltInline, HistoricStationEquipInline]
+    inlines = [StationActorInline, HistoricStationStateInline, HistoricStationActionInline, HistoricStationCharacInline, BuiltInline, HistoricStationEquipInline, AcquiChainInline, ChannelInline, StationDocInline,]
+
+    def save_formset(self, request, form, formset, change):
+        """ Reference du code
+            http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
+        instances = formset.save(commit=False)
+        for instance in instances:      
+            if isinstance(instance, StationDoc): #Check if it is the correct type of inline
+                if not instance.pk:
+                    instance.owner = request.user
+                instance.save()
+            else:
+                formset.save()
 
 ####
 #
@@ -616,6 +783,11 @@ class HistoricStationStateAdmin(admin.ModelAdmin):
     list_filter = ['station_state',]
     ordering = ['station']
     search_fields = ['station__station_code']
+
+#    def format_date(self, obj):
+#        return obj.start_date.strftime('%Y-%m-%d')
+#    format_date.short_description = 'start date'
+#    format_date.admin_order_field = 'start_date'
 
     special_ordering = {'station': ('station__station_code', 'station_state__station_state_name', 'start_date'), 'station_state': ('station_state__station_state_name', 'start_date')}
  
@@ -809,59 +981,52 @@ class AdminFileWidget(forms.FileInput):
         output.append(super(AdminFileWidget, self).render(name, value, attrs))
         return mark_safe(u''.join(output))
 
-######## class ChainComponentInlineFormset(forms.models.BaseInlineFormSet):
-########  
-########    def clean(self):
-########        """Checks that equipment exist for the station."""
-########        if any(self.errors):
-########            # Don't bother validating the formset unless each form is valid on its own
-########            return
-######## 
-########        for i in range(0, self.total_form_count()):
-########            form = self.forms[i]
-######## #           print u'Cleaned_data : %s' % (form.cleaned_data)
-########            if form.cleaned_data != {}:
-########                acqui_chain = form.cleaned_data['acquisition_chain']
-########                L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=acqui_chain.station)]
-########                equip = form.cleaned_data['equip']
-########                if equip.id not in L:
-########                    raise forms.ValidationError("Equipement choisi non present dans la station.")
+#####class ChainComponentInlineFormset(forms.models.BaseInlineFormSet):
+##### 
+#####   def clean(self):
+#####       """Checks that equipment exist for the station."""
+#####       if any(self.errors):
+#####           # Don't bother validating the formset unless each form is valid on its own
+#####           return
+#####
+#####       for i in range(0, self.total_form_count()):
+#####           form = self.forms[i]
+######           print u'Cleaned_data : %s' % (form.cleaned_data)
+#####           if form.cleaned_data != {}:
+#####               acqui_chain = form.cleaned_data['acquisition_chain']
+#####               L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=acqui_chain.station)]
+#####               equip = form.cleaned_data['equip']
+#####               if equip.id not in L:
+#####                   raise forms.ValidationError("Equipement choisi non present dans la station.")
 
-######## class ChainComponentInline(admin.TabularInline):
-########     model = ChainComponent
-########     formset = ChainComponentInlineFormset
-########     extra = 0
-######## 
-########     def get_formset(self, request, obj=None, **kwargs):
-########         # Hack! Hook parent obj just in time to use in formfield_for_manytomany
-########         self.parent_obj = obj
-######## #        if self.parent_obj: 
-######## #            print obj.__class__.__name__
-########         return super(ChainComponentInline, self).get_formset(
-########             request, obj, **kwargs)
-########  
-######## """ 
-########     Pour limiter dans le choix du select de la FK que les equipements de la station 
-########     """
-######## 
-########     def formfield_for_dbfield(self, field, **kwargs):
-########         if field.name == 'equip':
-########             if self.parent_obj :
-########                 parent_station = self.parent_obj
-########                 L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=parent_station.station)]
-########                 contained_equip = Equipment.objects.filter(id__in = L)
-########                 return forms.ModelChoiceField(label="equipement",queryset=contained_equip, required=True)    
-########         return super(ChainComponentInline, self).formfield_for_dbfield(field, **kwargs)
+#####class ChainComponentInline(admin.TabularInline):
+#####    model = ChainComponent
+#####    formset = ChainComponentInlineFormset
+#####    extra = 0
+#####
+#####    def get_formset(self, request, obj=None, **kwargs):
+#####        # Hack! Hook parent obj just in time to use in formfield_for_manytomany
+#####        self.parent_obj = obj
+######        if self.parent_obj: 
+######            print obj.__class__.__name__
+#####        return super(ChainComponentInline, self).get_formset(request, obj, **kwargs)
+#####
+#####    def formfield_for_dbfield(self, field, **kwargs):
+#####        if field.name == 'equip':
+#####            if self.parent_obj :
+#####                parent_station = self.parent_obj
+#####                L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=parent_station.station)]
+#####                contained_equip = Equipment.objects.filter(id__in = L)
+#####                return forms.ModelChoiceField(label="equipement",queryset=contained_equip, required=True)    
+#####        return super(ChainComponentInline, self).formfield_for_dbfield(field, **kwargs)
 
-######## class ChannelInline(admin.TabularInline):
-########     model = Channel
-########     extra = 0
+
  
-######## class AcquisitionChainAdmin(admin.ModelAdmin):
-########     inlines = [ChainComponentInline, ChannelInline]
+#####class AcquisitionChainAdmin(admin.ModelAdmin):
+#####    inlines = [ChainComponentInline, ChannelInline]
 
-######## class ChannelAdmin(admin.ModelAdmin):
-######## list_display = ['network', 'acquisition_chain', 'channel_code', 'dip', 'azimuth', 'sample_rate', 'start_date']
+#class ChannelAdmin(admin.ModelAdmin):
+#    list_display = ['channel_code', 'station', 'network', 'dip', 'azimuth', 'sample_rate', 'start_date']
 
 #admin.site.register(AccessType)
 
@@ -870,12 +1035,12 @@ admin.site.register(Actor, ActorAdmin)
 #admin.site.register(ActorAddress, ActorAddressAdmin)
 #admin.site.register(ActorType)
 
-admin.site.register(Built, BuiltAdmin)
+#####admin.site.register(Built, BuiltAdmin)
 #admin.site.register(BuiltCategory)
 #admin.site.register(BuiltType)
 
 #admin.site.register(EquipActionType)
-admin.site.register(EquipActor, EquipActorAdmin)
+#####admin.site.register(EquipActor, EquipActorAdmin)
 #admin.site.register(EquipCharac)
 #admin.site.register(EquipCharacValue)
 #admin.site.register(EquipSupertype)
@@ -884,27 +1049,28 @@ admin.site.register(EquipModel, EquipModelAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
 #admin.site.register(EquipState)
 
-admin.site.register(HistoricEquipAction, HistoricEquipActionAdmin)
-admin.site.register(HistoricEquipCharac, HistoricEquipCharacAdmin)
-admin.site.register(HistoricEquipState, HistoricEquipStateAdmin)
+#####admin.site.register(HistoricEquipAction, HistoricEquipActionAdmin)
+#####admin.site.register(HistoricEquipCharac, HistoricEquipCharacAdmin)
+#####admin.site.register(HistoricEquipState, HistoricEquipStateAdmin)
 admin.site.register(HistoricStationAction, HistoricStationActionAdmin)
-admin.site.register(HistoricStationCharac, HistoricStationCharacAdmin)
-admin.site.register(HistoricStationState, HistoricStationStateAdmin)
+#####admin.site.register(HistoricStationCharac, HistoricStationCharacAdmin)
+#####admin.site.register(HistoricStationState, HistoricStationStateAdmin)
 
-admin.site.register(HistoricStationEquip, HistoricStationEquipAdmin)
+#####admin.site.register(HistoricStationEquip, HistoricStationEquipAdmin)
 
-admin.site.register(Network, NetworkAdmin)
+#####admin.site.register(Network, NetworkAdmin)
 
 #admin.site.register(StationActionType)
-admin.site.register(StationActor, StationActorAdmin)
+#####admin.site.register(StationActor, StationActorAdmin)
 #admin.site.register(StationCharac)
 #admin.site.register(StationCharacValue)
 admin.site.register(StationSite, StationSiteAdmin)
 #admin.site.register(StationState)
-admin.site.register(StationDoc, StationDocAdmin)
-admin.site.register(EquipModelDoc, EquipModelDocAdmin)
-admin.site.register(EquipDoc, EquipDocAdmin)
+#####admin.site.register(StationDoc, StationDocAdmin)
+#####admin.site.register(EquipModelDoc, EquipModelDocAdmin)
+#####admin.site.register(EquipDoc, EquipDocAdmin)
 
-######## admin.site.register(AcquisitionChain,AcquisitionChainAdmin)
-######## admin.site.register(ChainComponent)
-######## admin.site.register(Channel, ChannelAdmin)
+admin.site.register(AcquisitionChain)
+#admin.site.register(ChainComponent)
+admin.site.register(Channel)
+#admin.site.register(Channel2)

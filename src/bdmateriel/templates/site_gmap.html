@@ -62,18 +62,6 @@
   var sites = [];
   var stations = [];
 
-  {% for i in ResSite %}
-    sites.push(["{{i.station_code}}", {{i.latitude}}, {{i.longitude}}, 0]);
-    url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.id}} + "/");
-    information.push("{{i.station_code}}");
-  {% endfor %}
-
-  {% for i in ResStationSite %}
-    sites.push(["{{i.station_code}}", {{i.latitude}}, {{i.longitude}}, 1]);
-    url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.id}} + "/");
-    information.push("{{i.station_name}}");
-  {% endfor %}
-  
   {% for i in ResHistStations %}
     {% if i.station.station_code == ResStationUnique.station_code %}
       sites.push(["{{i.station.station_code}}", {{i.station.latitude}}, {{i.station.longitude}}, {{i.station_state.id}}, 0]);
@@ -81,7 +69,7 @@
       sites.push(["{{i.station.station_code}}", {{i.station.latitude}}, {{i.station.longitude}}, {{i.station_state.id}}, 1]);
     {% endif %}
     url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.station.id}} + "/");
-    information.push("{{i.station.station_name}}");
+    information.push("{{i.station.station_code}}");
   {% endfor %}
 
   function initialize() {
@@ -175,7 +163,7 @@
 
   function attachURL(marker, number) {
     var infowindow = new google.maps.InfoWindow(
-        { content: information[number]
+        {content: information[number]
         });
 
     google.maps.event.addListener(marker, 'mouseover', function() {
