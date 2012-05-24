@@ -190,7 +190,7 @@ class BuiltAdmin(admin.ModelAdmin):
 # EquipmentAdmin's section
 #
 ####
-class EquipModelDocForm(forms.ModelForm):
+class EquipModelDocInlineForm(forms.ModelForm):
     """ 
     Champ pour faire en sorte que les forms inline instancier 
     soit toujours avec un flag has_changed a True
@@ -202,14 +202,16 @@ class EquipModelDocForm(forms.ModelForm):
         model = EquipModelDoc
 
     def __init__(self, *args, **kwargs):
-        super(EquipModelDocForm, self).__init__(*args, **kwargs)
+        super(EquipModelDocInlineForm, self).__init__(*args, **kwargs)
 
         if 'instance' in kwargs:
+            instance_document = kwargs['instance']
             self.fields['always_update'].initial = int(time.time())
+            self.fields['document_equip_model'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_equip_model', 'id':instance_document.id})
 
 class EquipModelDocInline(admin.TabularInline):
     model = EquipModelDoc
-    form = EquipModelDocForm
+    form = EquipModelDocInlineForm
     exclude = ['equip_supertype', 'equip_type','owner']
     extra = 1
     ordering = ['-inscription_date']
@@ -374,7 +376,7 @@ class HistoricEquipStationInline(admin.TabularInline):
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
     }
 
-class EquipDocForm(forms.ModelForm):
+class EquipDocInlineForm(forms.ModelForm):
     """ 
     Champ pour faire en sorte que les forms inline instancier 
     soit toujours avec un flag has_changed a True
@@ -386,14 +388,16 @@ class EquipDocForm(forms.ModelForm):
         model = EquipDoc
 
     def __init__(self, *args, **kwargs):
-        super(EquipDocForm, self).__init__(*args, **kwargs)
+        super(EquipDocInlineForm, self).__init__(*args, **kwargs)
 
         if 'instance' in kwargs:
+            instance_document = kwargs['instance']
             self.fields['always_update'].initial = int(time.time())
+            self.fields['document_equip'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_equip', 'id':instance_document.id})
 
 class EquipDocInline(admin.TabularInline):
     model = EquipDoc
-    form = EquipDocForm
+    form = EquipDocInlineForm
     exclude = ['equip_supertype', 'equip_type', 'equip_model','owner']
     extra = 1
     ordering = ['-inscription_date']
@@ -479,7 +483,7 @@ class HistoricStationActionInline(admin.TabularInline):
 
 class HistoricStationCharacInline(admin.TabularInline):
     model = HistoricStationCharac
-    extra = 1
+    extra = 0
     ordering = ['-start_date'] 
 
     formfield_overrides = {
@@ -526,7 +530,7 @@ class BuiltInline(admin.TabularInline):
 class HistoricStationEquipInline(admin.TabularInline):
     model = HistoricStationEquip
     exclude = ['network']
-    extra = 1
+    extra = 0
     ordering = ['-start_date']
  
     formfield_overrides = {
@@ -552,12 +556,6 @@ class HistoricStationEquipInline(admin.TabularInline):
         except ValueError:
             return None
         return model.objects.get(pk=object_id)
-
-class StationDocInline(admin.TabularInline):
-    model = StationDoc
-    exclude = ['owner']
-    extra = 1
-    ordering = ['-inscription_date']
 
 class AcquiChainInline(admin.TabularInline):
     model = AcquisitionChain
@@ -629,6 +627,36 @@ class ChannelInline(admin.TabularInline):
             return None
         return model.objects.get(pk=object_id)
 
+#class StationDocInlineFormset(forms.models.BaseInlineFormSet):
+#    def add_fields(self, form, index):
+#        super(StationDocInlineFormset, self).add_fields(form, index)
+#
+#        # Change widget for the field document station for each formset instanciate
+#        try:
+#            if index != None:
+#                instance = self.get_queryset()[index]
+#                pk_value = instance.pk
+#                form.fields["document_station"].widget = AdminFileWidget(attrs={'app_label':self.model._meta.app_label, 'model_name':self.model._meta.object_name.lower(), 'field_name':'document_station', 'id':pk_value})
+#        except IndexError:
+#            pass
+
+class StationDocInlineForm(forms.ModelForm):
+    class Meta:
+        model = StationDoc
+
+    def __init__(self, *args, **kwargs):
+        super(StationDocInlineForm, self).__init__(*args, **kwargs)
+
+        if 'instance' in kwargs:
+            instance_document = kwargs['instance']
+            self.fields['document_station'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_station', 'id':instance_document.id})
+
+class StationDocInline(admin.TabularInline):
+    model = StationDoc
+    form = StationDocInlineForm
+    exclude = ['owner']
+    extra = 0
+    ordering = ['-inscription_date']
 
 class StationSiteAdmin(admin.ModelAdmin):
     list_display = ('station_code', 'station_name','latitude','longitude','elevation')
@@ -972,7 +1000,8 @@ class AdminFileWidget(forms.FileInput):
     def render(self, name, value, attrs=None):
         output = []
         url = ''
-        liste = value.url.split('/')
+        if value:
+            liste = value.url.split('/')
         url = reverse('get_file', args=[self.app_label, self.model_name, self.field_name, self.id])
 
         if value and hasattr(value, "url"):
@@ -1066,7 +1095,7 @@ admin.site.register(HistoricStationAction, HistoricStationActionAdmin)
 #admin.site.register(StationCharacValue)
 admin.site.register(StationSite, StationSiteAdmin)
 #admin.site.register(StationState)
-#####admin.site.register(StationDoc, StationDocAdmin)
+admin.site.register(StationDoc, StationDocAdmin)
 #####admin.site.register(EquipModelDoc, EquipModelDocAdmin)
 #####admin.site.register(EquipDoc, EquipDocAdmin)
 
