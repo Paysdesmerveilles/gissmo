@@ -667,8 +667,17 @@ class StationSiteAdmin(admin.ModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
     }
     fieldsets = [
-        ('Information sur la station' , {'fields': [('station_code','station_name','latitude','longitude','elevation')]}),
-        ('Information sur le site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country'),'note'], 'classes': ['collapse']}),
+        ('Information sur la station' , {'fields': [('station_code','station_name'),('latitude','longitude','elevation')]}),
+        ('Information sur le site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country'),('note','surface_geology')], 'classes': ['collapse']}),
+        ('Earthquake recording' , {'fields': [('er_strong_motion_record','er_number_record_pga_lt01','er_number_record_pga_ge01','er_max_pga', 'er_max_pga_date', 'er_source')], 'classes': ['collapse']}),
+        ('Morphological data' , {'fields': [('md_morphology','md_basin_width','md_basin_depth','md_basin_length','md_closest_distance_edge')], 'classes':  ['collapse']}),
+        ('Geological data' , {'fields': [('gd_geoligical_map','gd_stratigraphy_lithology','gd_bedrock_depth','gd_ground_water_table','gd_water_table_depth')], 'classes': ['collapse']}),
+        ('Geognostic investigation' , {'fields': [('gi_in_situ','gi_survey_year','gi_borehole_stratigraphy'),('gi_spt','gi_spt_number','gi_spt_max_depth'),('gi_cpt','gi_cpt_number','gi_cpt_max_depth'),('gi_survey_closest_distance','gi_raw_data','gi_raw_data_type')], 'classes':  ['collapse']}),
+        ('Geotechnical laboratory analysis' , {'fields': [('gl_lab_test','gl_survey_year','gl_gamma','gl_resonant_column','gl_torsional_shear','gl_triaxial_cyclic_loading','gl_survey_closest_distance','gl_raw_data','gl_raw_data_type')], 'classes': ['collapse']}),
+        ('Geophysical data' , {'fields': [('gd_in_situ','gd_survey_year'),('gd_p_wave_velocity','gd_p_depth','gd_p_method'),('gd_s_wave_velocity','gd_s_depth','gd_s_method'),('gd_qp','gd_qp_depth','gd_qp_method'),('gd_qs','gd_qs_depth','gd_qs_method'),('gd_survey_closest_distance','gd_raw_data','gd_raw_data_type','gd_EC8_code')], 'classes': ['collapse']}),
+        ('Noise recordings' , {'fields': [('nr_in_situ','nr_survey_year','nr_single_station_measurements','nr_ssm_duration','nr_ssm_raw_data','nr_array_measurements','nr_am_duration','nr_am_raw_data')], 'classes': ['collapse']}),
+        ('Site response & transfer function' , {'fields': [('sr_analysis','sr_survey_year','sr_experimental_earthquake','sr_experimental_ambient_noise'),('sr_theoretical_1D','sr_theoretical_2D','sr_theoretical_3D'),('stf_survey_year','stf_determination_type')], 'classes': ['collapse']}),
+        ('Dispersion curve information' , {'fields': [('dc_survey_year'),('dc_rayleigh_waves','dc_rw_recordings_method','dc_rw_analysis_active','dc_rw_analysis_passive'),('dc_love_waves','dc_lw_recordings_method','dc_lw_analysis_active','dc_lw_analysis_passive')], 'classes': ['collapse']}),
     ]
     inlines = [StationActorInline, HistoricStationStateInline, HistoricStationActionInline, HistoricStationCharacInline, BuiltInline, HistoricStationEquipInline, AcquiChainInline, ChannelInline, StationDocInline,]
 
