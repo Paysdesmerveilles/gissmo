@@ -1,10 +1,12 @@
 # coding=utf-8
 
+# Test sur branche revision
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 # Ajout pour definir un lien entre des champs FK. Ce qui limitera le choix du drop down select d'un champ FK
-from smart_selects.db_fields import ChainedForeignKey 
+from smart_selects.db_fields import ChainedForeignKey
 # Fin de l'ajout pour definir un lien entre des champs FK
 
 # Ajout pour lever des erreurs de validation
@@ -27,7 +29,7 @@ fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 ####
 """
 
-"""We use this as a public class example class. 
+"""We use this as a public class example class.
 
 You never call this class before calling :func:`public_fn_with_sphinxy_docstring`.
 
@@ -240,9 +242,9 @@ class EquipModel(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip_model_name = models.CharField(max_length=50, verbose_name=_("modele d'equipement"))
@@ -260,17 +262,17 @@ class Equipment(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip_model = ChainedForeignKey(
         EquipModel,
         chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_type",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("modele d'equipement")
     )
     serial_number = models.CharField(max_length=50, verbose_name=_("numero de serie"))
@@ -374,7 +376,7 @@ class StationCharacValue(models.Model):
     def __unicode__(self):
         return self.station_charac_value
 
-# Station or site 
+# Station or site
 class StationSite(models.Model):
     station_code = models.CharField(max_length=40, verbose_name=_("code station"))
     station_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom station"))
@@ -426,7 +428,7 @@ class StationSite(models.Model):
     gi_cpt_max_depth = models.CharField(max_length=25, null=True, blank=True,verbose_name=_("cpt max depth"))
     gi_survey_closest_distance = models.IntegerField(max_length=4, null=True, blank=True, verbose_name=_("survey's closest distance (m)"))
     gi_raw_data = models.NullBooleanField(verbose_name=_("raw data"))
-    gi_raw_data_type = models.CharField(max_length=3, null=True, blank=True, verbose_name=_("raw data type (A, D, A/D)"))  
+    gi_raw_data_type = models.CharField(max_length=3, null=True, blank=True, verbose_name=_("raw data type (A, D, A/D)"))
     #   geotechnical_laboratory_analysis
     gl_lab_test = models.NullBooleanField(verbose_name=_("lab test"))
     gl_survey_year = models.CharField(max_length=9, null=True, blank=True,verbose_name=_("survey year"))
@@ -436,7 +438,7 @@ class StationSite(models.Model):
     gl_triaxial_cyclic_loading = models.NullBooleanField(verbose_name=_("triaxial cyclic loading"))
     gl_survey_closest_distance = models.IntegerField(max_length=4, null=True, blank=True, verbose_name=_("survey's closest distance (m)"))
     gl_raw_data = models.NullBooleanField(verbose_name=_("raw data"))
-    gl_raw_data_type = models.CharField(max_length=3, null=True, blank=True, verbose_name=_("raw data type (A, D, A/D)"))   
+    gl_raw_data_type = models.CharField(max_length=3, null=True, blank=True, verbose_name=_("raw data type (A, D, A/D)"))
     #   geophysical_data
     gd_in_situ = models.NullBooleanField(verbose_name=_("in situ"))
     gd_survey_year = models.CharField(max_length=9, null=True, blank=True,verbose_name=_("survey year"))
@@ -454,9 +456,9 @@ class StationSite(models.Model):
     gd_qs_method = models.CharField(max_length=50, null=True, blank=True,verbose_name=_("qs method"))
     gd_survey_closest_distance = models.IntegerField(max_length=4, null=True, blank=True, verbose_name=_("survey's closest distance (m)"))
     gd_raw_data = models.NullBooleanField(verbose_name=_("raw data"))
-    gd_raw_data_type = models.CharField(max_length=3, null=True, blank=True, verbose_name=_("raw data type (A, D, A/D)"))  
+    gd_raw_data_type = models.CharField(max_length=3, null=True, blank=True, verbose_name=_("raw data type (A, D, A/D)"))
     gd_EC8_code = models.CharField(max_length=25, null=True, blank=True,verbose_name=_("EC8 code"))
-    #   noise recordings 
+    #   noise recordings
     nr_in_situ = models.NullBooleanField(verbose_name=_("in situ"))
     nr_survey_year = models.CharField(max_length=9, null=True, blank=True,verbose_name=_("survey year"))
     nr_single_station_measurements = models.NullBooleanField(verbose_name=_("single station measurements"))
@@ -584,15 +586,15 @@ class HistoricStationAction(models.Model):
     def __unicode__(self):
         return u'%s %s' % (self.station.station_code, self.station_action_type.station_action_type)
 
-# Historic of the station's characteristics 
+# Historic of the station's characteristics
 class HistoricStationCharac(models.Model):
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     station_charac = models.ForeignKey("StationCharac", verbose_name=_("caracteristique"))
     station_charac_value = ChainedForeignKey(
         StationCharacValue,
         chained_field="station_charac",
-        chained_model_field="station_charac", 
-        show_all=False, 
+        chained_model_field="station_charac",
+        show_all=False,
         auto_choose=True,
         verbose_name=_("valeur")
     )
@@ -629,28 +631,28 @@ class HistoricStationEquip(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip = ChainedForeignKey(
         Equipment,
         chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_type",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("equipement")
     )
     network = models.ForeignKey("Network", null=True, blank=True, verbose_name=_("reseau"))
     built = ChainedForeignKey(
         Built,
         chained_field="station",
-        chained_model_field="station", 
-        show_all=False, 
-        auto_choose=False, 
+        chained_model_field="station",
+        show_all=False,
+        auto_choose=False,
         verbose_name=_("bati"),
-        null=True, 
+        null=True,
         blank=True
     )
     host_equipment = models.ForeignKey("Equipment", null=True, blank=True, verbose_name=_("equipement hote"), related_name='host')
@@ -696,17 +698,17 @@ class EquipModelDoc(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip_model = ChainedForeignKey(
         EquipModel,
         chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_type",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("modele d'equipement")
     )
     owner = models.ForeignKey(User)
@@ -732,25 +734,25 @@ class EquipDoc(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip_model = ChainedForeignKey(
         EquipModel,
         chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_type",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("modele d'equipement")
     )
     equip = ChainedForeignKey(
         Equipment,
         chained_field="equip_model",
-        chained_model_field="equip_model", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_model",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("equipement")
     )
     owner = models.ForeignKey(User)
@@ -785,7 +787,7 @@ class AcquisitionChain(models.Model) :
     class Meta:
         verbose_name = _("Chaine d'acquisition")
         verbose_name_plural = _("H1. Chaines d'acquisition")
-    
+
     def __unicode__(self):
         return u'%s : %s : %s' % (self.station.station_code, self.location_code, self.start_date)
 
