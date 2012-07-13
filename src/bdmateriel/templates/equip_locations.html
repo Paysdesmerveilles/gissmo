@@ -1,0 +1,30 @@
+<fieldset class="module aligned collapse">
+  <h2>Différents emplacements de l'equipement ({{ locations.0.station.station_code }})</h2>
+   <table>
+     <thead><tr>
+         <th>Emplacement</th>
+         <th>Date et heure</th>
+         <th>Note</th>
+     </tr></thead>
+     <tbody>
+     {% for location in locations %}
+        <tr>
+        <td class="equip_location">
+          <p>{{ location.station.station_code }}</p>
+        </td>
+
+        <td class="start_date">
+          <input readonly="readonly" value="{{ location.intervention.intervention_date|date:"Y-m-d H:i:s"}}" type="text" size="20" />
+        </td>
+
+        <td class="note">
+          <textarea readonly="readonly" rows="1" cols="40">{{ location.note }}</textarea>
+        </td>
+        </tr>
+     {% endfor %}
+     </tbody>
+   </table>
+</fieldset>
+
+
+

@@ -1,0 +1,30 @@
+<fieldset class="module aligned collapse">
+  <h2>Actions effectuees sur la station</h2>
+   <table>
+     <thead><tr>
+         <th>Action</th>
+         <th>Date et heure</th>
+         <th>Note</th>
+     </tr></thead>
+     <tbody>
+     {% for action in actions %}
+        <tr>
+        <td class="station_action">
+          <p>{{ action.get_station_action_display }}</p>
+        </td>
+
+        <td class="start_date">
+          <input readonly="readonly" value="{{ action.intervention.intervention_date|date:"Y-m-d H:i:s"}}" type="text" size="20" />
+        </td>
+
+        <td class="note">
+          <textarea readonly="readonly" rows="1" cols="40">{{ action.note }}</textarea>
+        </td>
+        </tr>
+     {% endfor %}
+     </tbody>
+   </table>
+</fieldset>
+
+
+

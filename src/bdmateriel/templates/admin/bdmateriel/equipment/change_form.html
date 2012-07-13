@@ -6,7 +6,6 @@
 {% block extrahead %}{{ block.super }}
 {% url 'admin:jsi18n' as jsi18nurl %}
 <script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/" }}"></script>
-<script type="text/javascript" src="/static/my_ajax_function.js"></script>
 {{ media }}
 {% endblock %}
 
@@ -30,7 +29,7 @@
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
     {% block object-tools-items %}
-    <li><a href="{% url 'admin:bdmateriel_intervention_add' %}?station={{ object_id }}">Add intervention</a>
+    <li><a href="{% url 'admin:bdmateriel_intervention_add' %}{% equip_last_station object_id %}&equip={{ object_id }}">Add intervention</a>
     <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
     {% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
     {% endblock %}
@@ -62,11 +61,11 @@
 
 {% submit_row %}
 
-{% if object_id %}{% display_station_states object_id %}{% endif %}
+{% if object_id %}{% display_equip_states object_id %}{% endif %}
 
-{% if object_id %}{% display_station_actions object_id %}{% endif %}
+{% if object_id %}{% display_equip_actions object_id %}{% endif %}
 
-{% if object_id %}{% display_equip_last_location object_id %}{% endif %}
+{% if object_id %}{% display_equip_locations object_id %}{% endif %}
 
 {% if adminform and add %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>

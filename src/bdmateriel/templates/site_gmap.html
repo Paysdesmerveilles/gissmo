@@ -2,16 +2,7 @@
 
 {% load i18n %}
 
-{% block breadcrumbs %}
-    <div class="breadcrumbs">
-        <a href="{% url admin:index %}">{% trans 'Home' %}</a> &rsaquo;
-        <a href="{% url admin:app_list 'bdmateriel' %}">{% trans 'Bdmateriel' %}</a> &rsaquo;
-        <a href="{% url admin:bdmateriel_stationsite_changelist %}">{% trans 'A1. Stations' %}</a> &rsaquo;
-        {% if ResStationUnique %}
-          <a href="{% url admin:bdmateriel_stationsite_change ResStationUnique.id %}">{{ResStationUnique.station_code}}</a> &rsaquo;
-        {% endif %}
-        Carte des stations
-    </div>
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url admin:index %}">Home</a> &rsaquo;</div>
 {% endblock %}
 
 {% block title %}Recherche des informations de la construction RESIF{% endblock %}
@@ -37,6 +28,7 @@
   var map;
   var marker;
   var url = [];
+  var classe_a = 0;
   var information = [];
   var contentString = '<div id="content">'+
     '<div id="siteNotice">'+
@@ -63,14 +55,12 @@
   var stations = [];
 
   {% for i in ResHistStations %}
-    {% if i.station.station_code == ResStationUnique.station_code %}
-      sites.push(["{{i.station.station_code}}", {{i.station.latitude}}, {{i.station.longitude}}, {{i.station_state.id}}, 0]);
-    {% else %}
-      sites.push(["{{i.station.station_code}}", {{i.station.latitude}}, {{i.station.longitude}}, {{i.station_state.id}}, 1]);
-    {% endif %}
-    url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.station.id}} + "/");
-    information.push("{{i.station.station_code}}");
+    sites.push(["{{i}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state.id}}]);
+    url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.intervention.station.id}} + "/");
+    information.push("{{i.intervention.station.station_name}}");    
   {% endfor %}
+
+  alert(sites)
 
   function initialize() {
     var vesdun = new google.maps.LatLng(46.539722, 2.430278);
@@ -108,27 +98,27 @@
       {
       case 6:
       /** Classification B a construire */
-          {image = '{{ STATIC_URL }}img/feu_orange.png'};
+          {image = '/static/feu_orange.png'};
           break;
       case 5:
       /** Classification B en operation */
-          {image = '{{ STATIC_URL }}img/feu_bleu.png'};
+          {image = '/static/feu_bleu.png'};
           break;
       case 4:
       /** Classification A a construire */
-          {image = '{{ STATIC_URL }}img/feu_jaune.png'};
+          {image = '/static/feu_jaune.png'};
           break;
       case 3:
       /** Classification A en operation */
-          {image = '{{ STATIC_URL }}img/feu_blanc.png'}
+          {image = '/static/feu_blanc.png'}
           break;
       /** Classification A+ a construire */
       case 2:
-          {image = '{{ STATIC_URL }}img/feu_rouge.png'}
+          {image = '/static/feu_rouge.png'}
           break;
       /** Classification A+ en operation  */
       case 1:
-          {image = '{{ STATIC_URL }}img/feu_vert.png'}
+          {image = '/static/feu_vert.png'}
           break;
       /** Observatoires - classification inconue */
       default:   
@@ -138,7 +128,6 @@
       if (station[0] == 'EOST' || station[0] == 'IPGP' || station[0] == 'OCA' || station[0] == 'OMP' || station[0] == 'OPGC' || station[0] == 'ISTERRE' || station[0] == 'OSUNA' || station[0] == 'OREME')
           {image = ''}
 */
-
       var myLatLng = new google.maps.LatLng(station[1], station[2]);
           marker = new google.maps.Marker({
           position: myLatLng,
@@ -147,13 +136,6 @@
           title : station[0]
       });
 
-      switch (station[4])
-      {
-      case 0:
-          marker.setAnimation(move = google.maps.Animation.BOUNCE)
-          break;
-      }
-      
       attachURL(marker, i);
 
       //google.maps.event.addListener(marker, 'click', toggleBounce);
@@ -163,7 +145,7 @@
 
   function attachURL(marker, number) {
     var infowindow = new google.maps.InfoWindow(
-        {content: information[number]
+        { content: information[number]
         });
 
     google.maps.event.addListener(marker, 'mouseover', function() {
@@ -203,6 +185,7 @@
     return classe_b;
   } 
 
+
 </script>
 
 </head>
@@ -212,16 +195,16 @@
   <table border="1">
       {% for state in ResState %}
           {% if state.id == 1 %}
-             <tr><td><img src="{{ STATIC_URL }}img/feu_vert.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(1))</script></td></tr>
+             <tr><td><img src="/static/feu_vert.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(1))</script></td></tr>
           {% endif %}
           {% if state.id == 2 %}
-             <tr><td><img src="{{ STATIC_URL }}img/feu_rouge.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(2))</script></td></tr>
+             <tr><td><img src="/static/feu_rouge.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(2))</script></td></tr>
           {% endif %}
           {% if state.id == 3 %}
-             <tr><td><img src="{{ STATIC_URL }}img/feu_blanc.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(3))</script></td></tr>
+             <tr><td><img src="/static/feu_blanc.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(3))</script></td></tr>
           {% endif %}
           {% if state.id == 4 %}
-             <tr><td><img src="{{ STATIC_URL }}img/feu_jaune.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
+             <tr><td><img src="/static/feu_jaune.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
           {% endif %}
       {% endfor %}
       <tr><td></td><td>Total</td><td><script type="text/javascript">document.write(sites.length)</script></td></tr>

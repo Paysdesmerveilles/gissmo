@@ -1,0 +1,30 @@
+<fieldset class="module aligned collapse">
+  <h2>Etats de l'equipement ({{ states.0.get_equip_state_display }})</h2>
+   <table>
+     <thead><tr>
+         <th>Etat</th>
+         <th>Date et heure</th>
+         <th>Note</th>
+     </tr></thead>
+     <tbody>
+     {% for state in states %}
+        <tr>
+        <td class="equip_state">
+          <p>{{ state.get_equip_state_display }}</p>
+        </td>
+
+        <td class="start_date">
+          <input readonly="readonly" value="{{ state.intervention.intervention_date|date:"Y-m-d H:i:s" }}" type="text" size="20" />
+        </td>
+
+        <td class="note">
+          <textarea readonly="readonly" rows="1" cols="40">{{ state.note }}</textarea>
+        </td>
+        </tr>
+     {% endfor %}
+     </tbody>
+   </table>
+</fieldset>
+
+
+

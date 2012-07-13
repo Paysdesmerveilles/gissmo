@@ -1,0 +1,55 @@
+<fieldset class="module">
+  <h2>Equipments présents à la station</h2>
+   <table>
+     <thead><tr>
+         <th>Supertype</th>
+         <th>Type</th>
+         <th>Modèle</th>
+         <th>No série</th>
+         <th>Date et heure</th>
+         <th>Etat</th>
+         <th>Built</th>
+         <th>Note</th>
+     </tr></thead>
+     <tbody>
+     {% for location in locations %}
+        <tr>
+        <td class="equip_supertype">
+          <p>{{ location.equip.equip_supertype }}</p>
+        </td>
+
+        <td class="equip_type">
+          <p>{{ location.equip.equip_type }}</p>
+        </td>
+
+        <td class="equip_model">
+          <p>{{ location.equip.equip_model }}</p>
+        </td>
+
+        <td class="equip_model">
+          <p>{{ location.equip.serial_number }}</p>
+        </td>
+
+        <td class="start_date">
+          <input readonly="readonly" value="{{ location.intervention.intervention_date|date:"Y-m-d H:i:s"}}" type="text" size="20" />
+        </td>
+
+        <td class="state">
+          <p>{{ location.get_equip_state_display }}</p>
+        </td>
+
+        <td class="built">
+          <p>{{ location.built }}</p>
+        </td>
+
+        <td class="note">
+          <textarea readonly="readonly" rows="1" cols="40">{{ location.note }}</textarea>
+        </td>
+        </tr>
+     {% endfor %}
+     </tbody>
+   </table>
+</fieldset>
+
+
+
