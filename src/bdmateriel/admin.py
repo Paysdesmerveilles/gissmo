@@ -328,7 +328,7 @@ class InterventionAdmin(admin.ModelAdmin):
     inlines = [IntervActorInline, IntervStationInline, IntervEquipInline]
 
     class Media:
-        js = ["my_ajax_function.js"]
+        js = ["js/my_ajax_function.js"]
 
 ######## class ChainComponentInlineFormset(forms.models.BaseInlineFormSet):
 ########  
