@@ -1,6 +1,8 @@
 # coding=utf-8
 
 # Create your views here.
+import os.path
+import mimetypes
 from django.db.models import Q
 from models import *
 
@@ -12,6 +14,7 @@ from django.contrib import admin
 from django.db.models import get_model
 
 from django.utils import simplejson
+from django.utils.encoding import smart_str
 
 def site_maps(request):
     query = request.GET.get('Station','')
@@ -68,10 +71,7 @@ def itineraire_maps(request):
          RequestContext(request, {}),)
 itineraire_maps = staff_member_required(itineraire_maps)
 
-def get_file(request, app_label, model_name, field_name, identifier, filename):
-    import os.path
-    import mimetypes
-    from django.utils.encoding import smart_str
+def get_file(request, app_label, model_name, field_name, identifier):
     mimetypes.init()
 
     model = get_model(app_label, model_name)
@@ -88,8 +88,6 @@ def get_file(request, app_label, model_name, field_name, identifier, filename):
         return response    
     else:
         raise PermissionDenied()
-
-
 
 # TODO fonction qui selon station_action choisi retourne station_state possible
 def xhr_station_state(request):
