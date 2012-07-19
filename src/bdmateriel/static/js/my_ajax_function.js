@@ -2,8 +2,7 @@ function get_station_state(selectBox, urlparm){
     var actiontypevalue = selectBox.options[selectBox.options.selectedIndex].value;
     var singleValues = selectBox.id.split("-")[1];
     var changeselect = 'select#id_intervstation_set-'+singleValues+'-station_state';
-    xhr_station_state_url = urlparm
-   alert(urlparm)
+    var xhr_station_state_url = urlparm
     $.ajax({
       type: "GET",
       url: xhr_station_state_url,

@@ -21,8 +21,8 @@ def site_maps(request):
     ResHistStations = []
     ResState = []
     ResStationUnique = []
-
-    ResState = StationState.objects.all()
+    StationUnique = ''
+    Liste = []
 
     Stations = StationSite.objects.all()
 
@@ -30,13 +30,18 @@ def site_maps(request):
         last_station_state = IntervStation.objects.filter(intervention__station=station, station_state__isnull=False).order_by('-intervention__intervention_date')[:1]
         if last_station_state:
             for last in last_station_state:
-                ResHistStations.append(last_station_state)
+                Liste.append(last.id)
+
+    ResHistStations = IntervStation.objects.filter(id__in=Liste)
 
     if query: 
         ResStationUnique = IntervStation.objects.filter(intervention__station=query, station_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+        if ResStationUnique:
+            for resstationunique in ResStationUnique:
+                StationUnique = resstationunique.intervention.station
 
     return render_to_response("site_gmap.html", {
-        "ResHistStations": ResHistStations, "ResState": ResState, "query": query, "ResStationUnique": ResStationUnique
+        "ResHistStations": ResHistStations, "ResState": ResState, "query": query, "StationUnique": StationUnique
     },
          RequestContext(request, {}),)
 site_maps = staff_member_required(site_maps)

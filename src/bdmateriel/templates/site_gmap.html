@@ -2,7 +2,16 @@
 
 {% load i18n %}
 
-{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url admin:index %}">Home</a> &rsaquo;</div>
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url admin:index %}">{% trans 'Home' %}</a> &rsaquo;
+        <a href="{% url admin:app_list 'bdmateriel' %}">{% trans 'Bdmateriel' %}</a> &rsaquo;
+        <a href="{% url admin:bdmateriel_stationsite_changelist %}">{% trans 'A1. Stations' %}</a> &rsaquo;
+        {% if StationUnique %}
+          <a href="{% url admin:bdmateriel_stationsite_change StationUnique.id %}">{{StationUnique.station_code}}</a> &rsaquo;
+        {% endif %}
+        Carte des stations
+    </div>
 {% endblock %}
 
 {% block title %}Recherche des informations de la construction RESIF{% endblock %}
@@ -55,12 +64,14 @@
   var stations = [];
 
   {% for i in ResHistStations %}
-    sites.push(["{{i}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state.id}}]);
+    {% if i.intervention.station.station_code == StationUnique.station_code %}
+      sites.push(["{{i.intervention.station.station_name}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state}}, 0]);
+    {% else %}
+      sites.push(["{{i.intervention.station.station_name}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state}}, 1]);
+    {% endif %}
     url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.intervention.station.id}} + "/");
-    information.push("{{i.intervention.station.station_name}}");    
+    information.push("{{i.intervention.station.station_code}}");    
   {% endfor %}
-
-  alert(sites)
 
   function initialize() {
     var vesdun = new google.maps.LatLng(46.539722, 2.430278);
@@ -97,28 +108,28 @@
       switch (station[3])
       {
       case 6:
-      /** Classification B a construire */
-          {image = '/static/feu_orange.png'};
+      /** Autre */
+          {image = '{{ STATIC_URL }}img/feu_orange.png'};
           break;
       case 5:
-      /** Classification B en operation */
-          {image = '/static/feu_bleu.png'};
+      /** Fermee */
+          {image = '{{ STATIC_URL }}img/feu_bleu.png'};
           break;
       case 4:
-      /** Classification A a construire */
-          {image = '/static/feu_jaune.png'};
+      /** En panne */
+          {image = '{{ STATIC_URL }}img/feu_rouge.png'};
           break;
       case 3:
-      /** Classification A en operation */
-          {image = '/static/feu_blanc.png'}
+      /** En defaillance */
+          {image = '{{ STATIC_URL }}img/feu_jaune.png'}
           break;
-      /** Classification A+ a construire */
+      /** En operation */
       case 2:
-          {image = '/static/feu_rouge.png'}
+          {image = "{{ STATIC_URL }}img/feu_vert.png"}
           break;
-      /** Classification A+ en operation  */
+      /** En installation */
       case 1:
-          {image = '/static/feu_vert.png'}
+          {image = '{{ STATIC_URL }}img/feu_blanc.png'}
           break;
       /** Observatoires - classification inconue */
       default:   
@@ -135,6 +146,13 @@
           icon: image,
           title : station[0]
       });
+
+      switch (station[4])
+      {
+      case 0:
+          marker.setAnimation(move = google.maps.Animation.BOUNCE)
+          break;
+      }
 
       attachURL(marker, i);
 
@@ -193,20 +211,12 @@
   <div id="map_canvas" style="position: absolute; left:0%; width:50%; height:800px"></div>
   <div style="position: absolute; left:55%; width:25%; height:100%">Légende
   <table border="1">
-      {% for state in ResState %}
-          {% if state.id == 1 %}
-             <tr><td><img src="/static/feu_vert.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(1))</script></td></tr>
-          {% endif %}
-          {% if state.id == 2 %}
-             <tr><td><img src="/static/feu_rouge.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(2))</script></td></tr>
-          {% endif %}
-          {% if state.id == 3 %}
-             <tr><td><img src="/static/feu_blanc.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(3))</script></td></tr>
-          {% endif %}
-          {% if state.id == 4 %}
-             <tr><td><img src="/static/feu_jaune.png"/></td><td>{{state.station_state_name}}</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
-          {% endif %}
-      {% endfor %}
+      <tr><td><img src="{{ STATIC_URL }}img/feu_blanc.png"/></td><td>En installation</td><td><script type="text/javascript">document.write(denombre_station(1))</script></td></tr>
+      <tr><td><img src="{{ STATIC_URL }}img/feu_vert.png"/></td><td>En opération</td><td><script type="text/javascript">document.write(denombre_station(2))</script></td></tr>
+      <tr><td><img src="{{ STATIC_URL }}img/feu_jaune.png"/></td><td>En défaillance</td><td><script type="text/javascript">document.write(denombre_station(3))</script></td></tr>
+      <tr><td><img src="{{ STATIC_URL }}img/feu_rouge.png"/></td><td>En panne</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
+      <tr><td><img src="{{ STATIC_URL }}img/feu_bleu.png"/></td><td>Fermée</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
+      <tr><td><img src="{{ STATIC_URL }}img/feu_orange.png"/></td><td>Autre</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
       <tr><td></td><td>Total</td><td><script type="text/javascript">document.write(sites.length)</script></td></tr>
   </table><br></br>
 </div>

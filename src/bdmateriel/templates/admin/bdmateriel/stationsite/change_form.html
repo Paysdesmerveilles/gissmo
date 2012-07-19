@@ -31,6 +31,8 @@
   <ul class="object-tools">
     {% block object-tools-items %}
     <li><a href="{% url 'admin:bdmateriel_intervention_add' %}?station={{ object_id }}">Add intervention</a>
+    <li><a href="{% url 'itineraire_maps' %}?Station={{ object_id }}">Itinéraire</a></li>
+    <li><a href="{% url 'site_maps' %}?Station={{ object_id }}">Carte des stations</a></li>
     <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
     {% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
     {% endblock %}
