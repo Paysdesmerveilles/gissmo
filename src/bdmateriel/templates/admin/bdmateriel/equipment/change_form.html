@@ -61,11 +61,7 @@
 
 {% submit_row %}
 
-{% if object_id %}{% display_equip_states object_id %}{% endif %}
-
-{% if object_id %}{% display_equip_actions object_id %}{% endif %}
-
-{% if object_id %}{% display_equip_locations object_id %}{% endif %}
+{% if object_id %}{% display_equip_interventions object_id %}{% endif %}
 
 {% if adminform and add %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>

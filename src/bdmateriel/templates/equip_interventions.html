@@ -1,0 +1,52 @@
+{% load url from future %}
+
+<fieldset class="module aligned collapse">
+  <h2>Interventions sur l'equipement (Dernier état : {{ intervs.0.get_equip_state_display }}) - (Dernier emplacement : {{ intervs.0.station.station_code }}-{{ intervs.0.built }})</h2>
+   <table>
+     <thead><tr>
+         <th>Action</th>
+         <th>Etat</th>
+         <th>Site</th>
+         <th>Built</th>
+         <th>Date et heure</th>
+         <th>Note</th>
+         <th></th>
+     </tr></thead>
+     <tbody>
+     {% for interv in intervs %}
+        <tr>
+        <td class="equip_action">
+          <p>{{ interv.get_equip_action_display }}</p>
+        </td>
+
+        <td class="equip_state">
+          <p>{{ interv.get_equip_state_display }}</p>
+        </td>
+
+        <td class="equip_site">
+          <p>{{ interv.station }}</p>
+        </td>
+
+        <td class="equip_built">
+          <p>{{ interv.built }}</p>
+        </td>
+
+        <td class="start_date">
+          <input readonly="readonly" value="{{ interv.intervention.intervention_date|date:"Y-m-d H:i:s" }}" type="text" size="20" />
+        </td>
+
+        <td class="note">
+          <textarea readonly="readonly" rows="1" cols="40">{{ interv.note }}</textarea>
+        </td>
+
+        <td class="intervention">
+          <a href="{% url 'admin:bdmateriel_intervention_change' interv.intervention.id %}">Edit</a>
+        </td>
+        </tr>
+     {% endfor %}
+     </tbody>
+   </table>
+</fieldset>
+
+
+

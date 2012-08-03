@@ -88,8 +88,8 @@ class SpecialOrderingChangeList(ChangeList):
 ####
 class ActorAdmin(admin.ModelAdmin):
     list_display = ['actor_type', 'actor_name',]
-    ordering = ['actor_name']
-    search_fields = ['actor_name']
+    ordering = ['actor_name',]
+    search_fields = ['actor_name',]
 #    exclude = ['actor_type',]
 
 ####
@@ -98,14 +98,17 @@ class ActorAdmin(admin.ModelAdmin):
 #
 ####
 class BuiltAdmin(admin.ModelAdmin):
-    list_display = ['station', 'built_type', 'built_short_desc']
-    ordering = ['station']
-    search_fields = ['station__station_code']
+    list_display = ['station', 'built_type', 'built_short_desc',]
+    ordering = ['station',]
+    search_fields = ['station__station_code',]
 
+# Version 1.4 changing
     special_ordering = {'station': ('station__station_code', 'built_type__built_type_name')}
  
+# Version 1.4 changing
     def get_changelist(self, request, **kwargs):
         return SpecialOrderingChangeList
+#
 
 ####
 #
@@ -115,17 +118,17 @@ class BuiltAdmin(admin.ModelAdmin):
 class EquipModelDocInline(admin.TabularInline):
     model = EquipModelDoc
     form = EquipModelDocInlineForm
-    exclude = ['equip_supertype', 'equip_type','owner']
+    exclude = ['equip_supertype', 'equip_type','owner',]
     extra = 1
 
 class EquipModelAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model_name',]
     list_filter = ['equip_supertype', 'equip_type',]
-    search_fields = ['equip_model_name']
+    search_fields = ['equip_model_name',]
 
     fieldsets = [('', {'fields': [('equip_supertype', 'equip_type', 'equip_model_name')]}),]
 
-    inlines = [EquipModelDocInline]
+    inlines = [EquipModelDocInline,]
 
     def save_formset(self, request, form, formset, change):
         """ Reference du code
@@ -135,6 +138,8 @@ class EquipModelAdmin(admin.ModelAdmin):
             if isinstance(instance, EquipModelDoc): #Check if it is the correct type of inline
                 instance.equip_supertype = form.cleaned_data['equip_supertype']
                 instance.equip_type = form.cleaned_data['equip_type']
+                if not instance.pk:
+                    instance.owner = request.user
                 instance.save()
             else:
                 formset.save()
@@ -147,20 +152,30 @@ class EquipDocInline(admin.TabularInline):
     ordering = ['-inscription_date']
 
 class EquipmentAdmin(admin.ModelAdmin):
-    list_display = ['equip_supertype', 'equip_type', 'equip_model', 'serial_number']
+    list_display = ['equip_supertype', 'equip_type', 'equip_model', 'serial_number', 'get_last_state', 'get_last_place', 'owner',]
     list_filter = ['equip_supertype', 'equip_type', 'equip_model',]
-    ordering = ['equip_supertype']
-    search_fields = ['equip_model__equip_model_name', 'serial_number']
+    ordering = ['equip_supertype',]
+    search_fields = ['equip_model__equip_model_name', 'serial_number',]
     form = EquipmentForm
 
+# Version 1.4 changing
     special_ordering = {'equip_supertype': ('equip_supertype__equip_supertype_name', 'equip_type__equip_type_name', 'equip_model__equip_model_name','serial_number'), 'equip_type': ('equip_type__equip_type_name', 'equip_model__equip_model_name','serial_number'), 'equip_model': ('equip_model__equip_model_name','serial_number')}
  
     fieldsets = [('Equipements', {'fields': [('equip_supertype', 'equip_type', 'equip_model', 'serial_number','owner','purchase_date','stockage_site')]}),
                  ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
                  ('Informations complementaires' , {'fields': [('note')], 'classes': ['collapse']}),]
 
-    inlines = [EquipDocInline]
+    inlines = [EquipDocInline,]
 
+    def get_last_state(self, obj):
+        return '%s'%(EquipState.EQUIP_STATES[equip_last_state(obj.id)-1][1])
+    get_last_state.short_description = 'Etat'
+
+    def get_last_place(self, obj):
+        return '%s'%(equip_last_place(obj.id))
+    get_last_place.short_description = 'Emplacement'
+
+# Version 1.4 changing
     def get_changelist(self, request, **kwargs):
         return SpecialOrderingChangeList
 
@@ -199,6 +214,21 @@ class EquipmentAdmin(admin.ModelAdmin):
                 interv_actor.save()
         super(EquipmentAdmin, self).save_model(request, obj, form, change)
 
+    def save_formset(self, request, form, formset, change):
+        """ Reference du code
+            http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
+        instances = formset.save(commit=False)
+        for instance in instances:      
+            if isinstance(instance, EquipDoc): #Check if it is the correct type of inline
+                instance.equip_supertype = form.cleaned_data['equip_supertype']
+                instance.equip_type = form.cleaned_data['equip_type']
+                instance.equip_model = form.cleaned_data['equip_model']
+                if not instance.pk:
+                    instance.owner = request.user
+                instance.save()
+            else:
+                formset.save()
+
 ####
 #
 # StationAdmin's section
@@ -216,22 +246,28 @@ class BuiltInline(admin.TabularInline):
 class StationDocInline(admin.TabularInline):
     model = StationDoc
     form = StationDocInlineForm
-    exclude = ['owner']
+    exclude = ['owner',]
     extra = 0
-    ordering = ['-inscription_date']
+    ordering = ['-inscription_date',]
 
 class StationSiteAdmin(admin.ModelAdmin):
-    list_display = ('station_code', 'station_name', 'site_type', 'latitude','longitude','elevation')
-    ordering = ['station_code']
-    search_fields = ['station_code']
+    list_display = ('station_code', 'station_name', 'operator', 'get_last_state', 'site_type', 'latitude', 'longitude', 'elevation',)
+    list_filter = ['operator',  'site_type',]
+    ordering = ['station_code',]
+    search_fields = ['station_code',]
     form = StationSiteForm
 
     fieldsets = [
-        ('Information sur la station' , {'fields': [('site_type','station_code','station_name','operator','creation_date'),('latitude','longitude','elevation')]}),
+        ('Information sur le site' , {'fields': [('site_type','station_code','station_name','operator','creation_date'),('latitude','longitude','elevation')]}),
         ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
-        ('Information sur le site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country'),('note')], 'classes': ['collapse']}),]
+        ('Adresse du site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country'),('note')], 'classes': ['collapse']}),]
 
     inlines = [BuiltInline, StationDocInline,]
+
+    def get_last_state(self, obj):
+        """ To display the last state of the station in the change_list """
+        return '%s'%(StationState.STATION_STATES[station_last_state(obj.id)-1][1])
+    get_last_state.short_description = 'Etat'
 
     def save_model(self, request, obj, form, change):
         """
@@ -253,6 +289,18 @@ class StationSiteAdmin(admin.ModelAdmin):
             interv_actor = IntervActor(intervention=intervention, actor=actor)
             interv_actor.save()
         super(StationSiteAdmin, self).save_model(request, obj, form, change)
+
+    def save_formset(self, request, form, formset, change):
+        """ Reference du code
+            http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
+        instances = formset.save(commit=False)
+        for instance in instances:      
+            if isinstance(instance, StationDoc): #Check if it is the correct type of inline
+                if not instance.pk:
+                    instance.owner = request.user
+                instance.save()
+            else:
+                formset.save()
 
 ####
 #
@@ -303,6 +351,7 @@ class IntervEquipInline(admin.TabularInline):
     formset = IntervEquipInlineFormset
 
     def get_formset(self, request, obj=None, **kwargs):
+        """ Pourquoi est-ce que station est necessaire """
         station = request.GET.get('station', '') 
         equip = request.GET.get('equip', '') 
         initial = []
@@ -313,9 +362,9 @@ class IntervEquipInline(admin.TabularInline):
             """
             Pre-populating formset using GET params
             """
-            initial.append(request.user.username)
+            initial.append(equip)
         formset = super(IntervEquipInline, self).get_formset(request, obj, **kwargs)
-#        formset.__init__ = curry(formset.__init__, initial=initial)
+        formset.__init__ = curry(formset.__init__, initial=initial)
         return formset
 
     formfield_overrides = {
@@ -324,6 +373,8 @@ class IntervEquipInline(admin.TabularInline):
 
 class InterventionAdmin(admin.ModelAdmin):
     list_display = ['station', 'intervention_date',]
+    list_filter = ['station',]
+    form = InterventionForm
 
     inlines = [IntervActorInline, IntervStationInline, IntervEquipInline]
 

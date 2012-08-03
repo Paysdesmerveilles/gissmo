@@ -9,14 +9,24 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
-from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc 
+from datetime import datetime
+
+from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc
 
 # TODO Voir a deplacer dans un autre fichier
 from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate
 
-# TODO Eliminer EquipAction, EquipState, StationAction, StationState
+# TODO Eliminer ou bonifier EquipAction, EquipState, StationAction, StationState
 from models import EquipAction, EquipState, StationAction, StationState
 
+
+"""
+Usage:
+
+import time
+Afin d'avoir un changement dans les formsets de EquipModelDocInline
+"""
+import time
 """
 Devra aller dans widget.py
 """
@@ -80,6 +90,20 @@ class EquipDocInlineForm(forms.ModelForm):
             self.fields['always_update'].initial = int(time.time())
             self.fields['document_equip'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_equip', 'id':instance_document.id})
 
+class InterventionForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(InterventionForm, self).__init__(*args, **kwargs)
+
+        #today = datetime.now()
+        #today_at_midnight = datetime(today.year, today.month, today.day)
+        #self.fields['intervention_date'].initial = today_at_midnight
+        #Hack to display time but let data empty to froce the user to fill the field
+        split_widget = widgets.AdminSplitDateTime()
+        split_widget.widgets[0].attrs = {'class': 'vDateField', 'size': '10'}
+        split_widget.widgets[1].attrs = {'class': 'vTimeField', 'size': '8', 'value': '00:00:00'}
+        self.fields['intervention_date'].widget = split_widget
+
 class EquipmentForm(forms.ModelForm):
     """
     Add of fields to obtain the date of purchase and stockage_site only when it'a new station 
@@ -91,7 +115,7 @@ class EquipmentForm(forms.ModelForm):
     for obs in observatories:
         OBS_CHOICES.append((obs.id, obs.__unicode__()))
     purchase_date = forms.DateField(widget=widgets.AdminDateWidget,label='Date achat',required=False)
-    stockage_site = forms.IntegerField(widget=forms.Select(choices=OBS_CHOICES),required=False)
+    stockage_site = forms.IntegerField(widget=forms.Select(choices=OBS_CHOICES),label='Site entreposage',required=False)
 
     def __init__(self, *args, **kwargs):
         super(EquipmentForm, self).__init__(*args, **kwargs)
@@ -104,6 +128,8 @@ class EquipmentForm(forms.ModelForm):
         else:
             self.fields['purchase_date'].required = True
             self.fields['stockage_site'].required = True
+
+        self.fields['owner'].queryset = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.INCONNU))
 
     class Meta:
         model = Equipment
@@ -137,7 +163,7 @@ class StationSiteForm(forms.ModelForm):
         else:
             self.fields['creation_date'].required = True
 
-        self.fields['operator'].queryset = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ENTREPRISE_SAV) | Q(actor_type=Actor.INCONNU))
+        self.fields['operator'].queryset = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.ENTREPRISE_SAV) | Q(actor_type=Actor.INCONNU))
 
     class Meta:
         model = StationSite
@@ -182,9 +208,23 @@ class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
 
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
+    def __init__(self, *args, **kwargs):
+        """
+        Grabs the curried initial values and stores them into a 'private'
+        variable. Note: the use of self.__initial is important, using
+        self.initial or self._initial will be erased by a parent class
+        """
+        self.__initial = kwargs.pop('initial', [])
+        super(IntervEquipInlineFormset, self).__init__(*args, **kwargs)
+
     def add_fields(self, form, index):
         super(IntervEquipInlineFormset, self).add_fields(form, index)
         
+        # TODO Ameliorer cette comparaison
+        if self.__initial and self.__initial != ['']:
+            equip = get_object_or_404(Equipment, id=self.__initial[0])
+            form.fields['equip'].initial = equip
+
         ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
         ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
         STATE_CHOICES = [(c[0], c[1]) for c in EquipState.EQUIP_STATES]
@@ -193,8 +233,9 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         url1 = reverse('xhr_equip_state')
         url2 = reverse('xhr_equipment')
         url3 = reverse('xhr_station')
+        url4 = reverse('xhr_built')
 
-        form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\');'})
+        form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'})
         form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
 
     def clean(self):
@@ -205,14 +246,36 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         Liste_equip = []
 
         # Obtain the information from the form needed for the validation
-        intervention_station = self.instance.station
-        intervention_date = self.instance.intervention_date
+        intervention_station_id = self.data.get('station')
+        if intervention_station_id:
+            try:
+                intervention_station = StationSite.objects.get(id=intervention_station_id)
+            except StationSite.DoesNotExist:
+                intervention_station = StationSite.objects.none()
+        else:
+            intervention_station = StationSite.objects.none()
+
+        date_intervention = self.data.get('intervention_date_0')
+        heure_intervention = self.data.get('intervention_date_1') 
+        if date_intervention and heure_intervention:
+            date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
+            try:
+                intervention_date = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                intervention_date = ''
+            pass
+        else:
+            intervention_date = ''
 
         # get forms that actually have valid data
         for form in self.forms:
             # Acquire data for each field
             if form.cleaned_data != {}:
                 # Obtain the information from the formset needed for the validation
+                equip_action = ''
+                equip_state = ''
+                equip = ''
+                target_station = ''
                 if form.cleaned_data['equip_action']:
                     equip_action = form.cleaned_data['equip_action']
                 if form.cleaned_data['equip_state']:
@@ -374,15 +437,15 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
                      errors += 1
                 if station_action == StationAction.OPERER and station_state != StationState.OPERATION:
                      errors += 1
-                if station_action == StationAction.CONSTATER_DEFAUT and (station_state != StationState.DEFAUT or station_state != StationState.PANNE):
+                if station_action == StationAction.CONSTATER_DEFAUT and (station_state != StationState.DEFAUT and station_state != StationState.PANNE):
                      errors += 1
-                if station_action == StationAction.MAINT_PREV_DISTANTE and (station_state != StationState.DEFAUT or station_state != StationState.PANNE or station_state != StationState.OPERATION):
+                if station_action == StationAction.MAINT_PREV_DISTANTE and (station_state != StationState.DEFAUT and station_state != StationState.PANNE and station_state != StationState.OPERATION):
                      errors += 1
-                if station_action == StationAction.MAINT_CORR_DISTANTE and (station_state != StationState.DEFAUT or station_state != StationState.PANNE or station_state != StationState.OPERATION):
+                if station_action == StationAction.MAINT_CORR_DISTANTE and (station_state != StationState.DEFAUT and station_state != StationState.PANNE and station_state != StationState.OPERATION):
                      errors += 1
-                if station_action == StationAction.MAINT_PREV_SITE and (station_state != StationState.DEFAUT or station_state != StationState.PANNE or station_state != StationState.OPERATION):
+                if station_action == StationAction.MAINT_PREV_SITE and (station_state != StationState.DEFAUT and station_state != StationState.PANNE and station_state != StationState.OPERATION):
                      errors += 1
-                if station_action == StationAction.MAINT_CORR_SITE and (station_state != StationState.DEFAUT or station_state != StationState.PANNE or station_state != StationState.OPERATION):
+                if station_action == StationAction.MAINT_CORR_SITE and (station_state != StationState.DEFAUT and station_state != StationState.PANNE and station_state != StationState.OPERATION):
                      errors += 1
                 if station_action == StationAction.DEMANTELER and station_state != StationState.FERMEE:
                      errors += 1

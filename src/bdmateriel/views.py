@@ -3,6 +3,7 @@
 # Create your views here.
 import os.path
 import mimetypes
+from datetime import datetime
 from django.db.models import Q
 from models import *
 
@@ -148,8 +149,13 @@ def xhr_equip_state(request):
             select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
         elif int(action) == EquipAction.INSTALLER:
             select_choice = [{"optionValue": EquipState.OPERATION, "optionDisplay": EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]}]
+            select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
+            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
         elif int(action) == EquipAction.DESINSTALLER:
-            select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}]    
+            select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}]
+            select_choice.append({"optionValue": EquipState.DISPONIBLE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]})
+            select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
+            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})    
         elif int(action) == EquipAction.CONSTATER_DEFAUT:
             select_choice = [{"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]}]
             select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
@@ -179,6 +185,17 @@ def xhr_equip_state(request):
     # If you want to prevent non XHR calls
     else:
         return HttpResponse(status=400)
+
+def station_last_state(station):
+    """
+    Function to obtain the last state of a station
+    """
+    result = 0
+    last_station_state = IntervStation.objects.filter(intervention__station__id=station,station_state__isnull=False).order_by('-intervention__intervention_date')
+    if last_station_state:
+        for last in last_station_state:
+            result = last.station_state
+    return result
 
 def equip_last_state(equip):
     """
@@ -233,25 +250,31 @@ def xhr_equipment(request):
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
         action=request.GET.get('action', '')
-        date=request.GET.get('date', '')
+        date_intervention=request.GET.get('date', '')
+        heure_intervention=request.GET.get('heure', '')
         station=request.GET.get('station', '')
+
+        date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
+        date_intervention = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
+
+
         Liste = []
         equipments = Equipment.objects.all()
        # Install only available equip
         if int(action) == EquipAction.INSTALLER:
             for equip in equipments:
+                # TODO Obtain the state at moment T
                 #Obtain the last state of all equipment
-                last_equip_state = IntervEquip.objects.filter(equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
                 if last_equip_state:
                     for last in last_equip_state:
                         Liste.append(last.id)
             equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.DISPONIBLE ,id__in=Liste).order_by('-intervention__intervention_date')
-       #     print equip_dispo
        # Receive only equip En transit
         elif int(action) == EquipAction.RECEVOIR:
             for equip in equipments:
                 #Obtain the last state of all equipment
-                last_equip_state = IntervEquip.objects.filter(equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
                 if last_equip_state:
                     for last in last_equip_state:
                         Liste.append(last.id)
@@ -260,7 +283,7 @@ def xhr_equipment(request):
         else:
             for equip in equipments:
                 #Obtain the last place of all equipment
-                last_equip_place = IntervEquip.objects.filter(equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+                last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
                 if last_equip_place:
                     for last in last_equip_place:
                         Liste.append(last.id)
@@ -268,7 +291,8 @@ def xhr_equipment(request):
             equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('-intervention__intervention_date')
        #     print station
        #     print equip_dispo
-        select_choice = [] 
+        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
+       # select_choice.append(({"optionValue": "", "optionDisplay": "------"}))
         for equip in equip_dispo:
             select_choice.append(({"optionValue": equip.equip.id, "optionDisplay": equip.equip.__unicode__()}))
         data = simplejson.dumps(select_choice)
@@ -325,9 +349,16 @@ def xhr_built(request):
         action=request.GET.get('action', '')
         date=request.GET.get('date', '')
         station=request.GET.get('station', '')
+        
+        #built_dispo = Built.objects.filter(station__id=station).order_by('station_code')
+        built_dispo = Built.objects.filter(station__id=station)
 
-        built_dispo = Built.objects.filter(station=station).order_by('station_code')
-    #    print built_dispo
+        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
+        for built in built_dispo:
+            select_choice.append(({"optionValue": built.id, "optionDisplay": built.__unicode__()}))
+        data = simplejson.dumps(select_choice)
+
+        return HttpResponse(data)
     # If you want to prevent non XHR calls
     else:
         return HttpResponse(status=400)

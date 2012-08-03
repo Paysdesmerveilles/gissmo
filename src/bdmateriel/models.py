@@ -90,7 +90,7 @@ class Built(models.Model):
     """
     Built on site that contain at least an equipment
     """
-    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    station = models.ForeignKey("StationSite", verbose_name=_("site"))
     built_type = models.ForeignKey("BuiltType", verbose_name=_("type de bati"))
     built_short_desc =  models.CharField(max_length=40, null=True, blank=True, verbose_name=_("courte description"))
     built_note = models.TextField(null=True, blank=True, verbose_name=_("note"))
@@ -174,7 +174,7 @@ class Equipment(models.Model):
     owner = models.ForeignKey("Actor", default=get_defaut_owner, verbose_name=_("proprietaire"))
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
-
+   
     class Meta:
         unique_together = ("equip_supertype", "equip_type", "equip_model", "serial_number")
         verbose_name = _("equipement")
@@ -182,6 +182,15 @@ class Equipment(models.Model):
 
     def __unicode__(self):
         return u'%s : %s : %s' % (self.equip_type, self.equip_model, self.serial_number)
+
+#def update_equipment(instance, **kwargs):
+#    print instance
+#    c = instance.equipment
+#    c.last_state = equip_last_state(c)
+#    c.save()
+
+#models.signals.post_save.connect(update_equipment, sender="IntervEquip") 
+#models.signals.post_delete.connect(update_equipment, sender="IntervEquip")
 
 ####
 #
@@ -228,11 +237,11 @@ class StationAction(models.Model):
         (CREER, 'Créer code station'),
         (INSTALLER, 'Installer station'),
         (OPERER, 'Mettre en opération'),
+        (CONSTATER_DEFAUT, 'Constater défaillance'),
         (MAINT_PREV_DISTANTE, 'Effectuer maintenance préventive à distance'),
         (MAINT_CORR_DISTANTE, 'Effectuer maintenance corrective à distance'),
         (MAINT_PREV_SITE, 'Effectuer maintenance préventive sur site'),
         (MAINT_CORR_SITE, 'Effectuer maintenance corrective sur site'),
-        (CONSTATER_DEFAUT, 'Constater défaillance'),
         (DEMANTELER, 'Démanteler'),
         (AUTRE, 'Autre'),
     )
@@ -362,8 +371,8 @@ class StationSite(models.Model):
     )
    
     site_type = models.IntegerField(choices=SITE_CHOICES, default=STATION, verbose_name=_("Type de site"))
-    station_code = models.CharField(max_length=40, unique=True, verbose_name=_("code station"))
-    station_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom station"))
+    station_code = models.CharField(max_length=40, unique=True, verbose_name=_("code"))
+    station_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom site"))
     latitude = models.DecimalField(null=True, blank=True, verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
     longitude = models.DecimalField(null=True, blank=True, verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
     elevation = models.DecimalField(null=True, blank=True, verbose_name=_("elevation (m)"), max_digits=5, decimal_places=1)
@@ -379,8 +388,8 @@ class StationSite(models.Model):
 
     class Meta:
         ordering = ['station_code']
-        verbose_name = _("station")
-        verbose_name_plural = _("A1. Stations")
+        verbose_name = _("site")
+        verbose_name_plural = _("A1. Sites")
 
     def __unicode__(self):
         return self.station_code
@@ -388,7 +397,7 @@ class StationSite(models.Model):
 # Management of intervention
 
 class Intervention(models.Model):
-    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    station = models.ForeignKey("StationSite", verbose_name=_("site"))
     intervention_date = models.DateTimeField(verbose_name=_("date (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
@@ -416,7 +425,7 @@ class IntervStation(models.Model):
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
-        verbose_name_plural = _("Actions au niveau des stations")
+        verbose_name_plural = _("Actions sur le site")
 
     def __unicode__(self):
         return u'%s' % (self.intervention)
@@ -426,12 +435,12 @@ class IntervEquip(models.Model):
     equip_action = models.IntegerField(choices=EquipAction.EQUIP_ACTIONS, verbose_name=_("action"))
     equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
     equip_state = models.IntegerField(choices=EquipState.EQUIP_STATES, verbose_name=_("etat"))
-    station = models.ForeignKey("StationSite", null=True, blank=True, verbose_name=_("station"))
+    station = models.ForeignKey("StationSite", null=True, blank=True, verbose_name=_("site"))
     built = models.ForeignKey("Built", null=True, blank=True, verbose_name=_("bati"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
-        verbose_name_plural = _("Actions sur equipements disponible")
+        verbose_name_plural = _("Actions sur les equipements")
 
     def __unicode__(self):
         return u'%s' % (self.intervention)
@@ -442,7 +451,7 @@ def stationdoc_file_name(self, filename):
         return 'stations/%s_%s/%s' % (self.station.id, self.station.station_code, filename)
 
 class StationDoc(models.Model):
-    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    station = models.ForeignKey("StationSite", verbose_name=_("site"))
     owner = models.ForeignKey(User)
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
     inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
@@ -450,8 +459,8 @@ class StationDoc(models.Model):
 
     class Meta:
         unique_together = ("station", "document_title", "inscription_date")
-        verbose_name = _("Document de la station")
-        verbose_name_plural = _("G1. Documents des stations")
+        verbose_name = _("Document concernant le site")
+        verbose_name_plural = _("G1. Documents concernants le site")
 
     def __unicode__(self):
         return u'%s %s %s' % (self.station.station_code, self.document_title, self.inscription_date)

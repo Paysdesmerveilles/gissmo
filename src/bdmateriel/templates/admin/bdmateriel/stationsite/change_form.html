@@ -6,7 +6,6 @@
 {% block extrahead %}{{ block.super }}
 {% url 'admin:jsi18n' as jsi18nurl %}
 <script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/" }}"></script>
-<script type="text/javascript" src="/static/my_ajax_function.js"></script>
 {{ media }}
 {% endblock %}
 
@@ -64,11 +63,11 @@
 
 {% submit_row %}
 
-{% if object_id %}{% display_station_states object_id %}{% endif %}
-
-{% if object_id %}{% display_station_actions object_id %}{% endif %}
+{% if object_id %}{% display_station_interventions object_id %}{% endif %}
 
 {% if object_id %}{% display_equip_last_location object_id %}{% endif %}
+
+{% if object_id %}{% display_hist_equip_station object_id %}{% endif %}
 
 {% if adminform and add %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
