@@ -44,14 +44,17 @@ class SpecialOrderingChangeList(ChangeList):
     def apply_special_ordering(self, queryset):
         order_type, order_by = [self.params.get(param, None) for param in ('ot', 'o')]
 
-        ordering_attr = self.model_admin.ordering or self.model._meta.ordering
+#        ordering_attr = self.model_admin.ordering or self.model._meta.ordering
 
-        if order_type is None and order_by is None and ordering_attr != []:
-            order_type = 'desc' if ordering_attr[0] == '-' else 'asc'
-            order_by = self.model_admin.list_display.index(ordering_attr[0])
+#        if order_type is None and order_by is None and ordering_attr != []:
+#            order_type = 'desc' if ordering_attr[0] == '-' else 'asc'
+#            order_by = self.model_admin.list_display.index(ordering_attr[0])
 
         special_ordering = self.model_admin.special_ordering
         if special_ordering and order_type and order_by:
+            print special_ordering
+            print order_type
+            print order_by
             try:
                 order_field = self.list_display[int(order_by)]
                 ordering = special_ordering[order_field]
@@ -374,9 +377,18 @@ class IntervEquipInline(admin.TabularInline):
 class InterventionAdmin(admin.ModelAdmin):
     list_display = ['station', 'intervention_date',]
     list_filter = ['station',]
+    ordering = ['-intervention_date',]
     form = InterventionForm
 
     inlines = [IntervActorInline, IntervStationInline, IntervEquipInline]
+
+# Version 1.4 changing
+    special_ordering = {'station': ('station', '-intervention_date'),}
+ 
+# Version 1.4 changing
+    def get_changelist(self, request, **kwargs):
+        return SpecialOrderingChangeList
+#
 
     class Media:
         js = ["js/my_ajax_function.js"]

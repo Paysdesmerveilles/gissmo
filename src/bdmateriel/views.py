@@ -326,7 +326,10 @@ def xhr_station(request):
             station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')            
        # Stop tracking the equipment
         elif int(action) == EquipAction.METTRE_AU_REBUT:
-            station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')            
+            station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')
+       # Out of service but can stay in the station or place to a observatory or nowhere
+        elif int(action) == EquipAction.METTRE_HORS_USAGE:
+            station_dispo = StationSite.objects.filter(Q(id=station) | Q(site_type=StationSite.OBSERVATOIRE) | Q(site_type=StationSite.NEANT)).order_by('station_code')
        # Make action only on equip installed in the station
         else:
             station_dispo = StationSite.objects.filter(id=station)
