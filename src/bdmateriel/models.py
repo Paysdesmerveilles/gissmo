@@ -62,6 +62,7 @@ class Actor(models.Model):
     actor_note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
+        ordering = ['actor_name']
         verbose_name = _("intervenant")
         verbose_name_plural = _("E1. Intervenants")
 
@@ -121,7 +122,7 @@ class EquipType(models.Model):
     equip_type_name = models.CharField(max_length=40, verbose_name=_("type d'equipement"))
 
     class Meta:
-        ordering = ['equip_supertype__equip_supertype_name','equip_type_name']
+        ordering = ['equip_type_name',]
         verbose_name = _("type d'equipement")
         verbose_name_plural = _("types des equipements")
 
@@ -142,6 +143,7 @@ class EquipModel(models.Model):
     equip_model_name = models.CharField(max_length=50, verbose_name=_("modele d'equipement"))
 
     class Meta:
+        ordering = ['equip_model_name',]
         verbose_name = _("modele d'equipement")
         verbose_name_plural = _("C1. Modeles des equipements")
 
@@ -614,3 +616,22 @@ class EquipDoc(models.Model):
 #### 
 ####     def __unicode__(self):
 ####         return u'%s : %s : %s : %s' % (self.network, self.acquisition_chain, self.channel_code, self.sample_rate)
+
+#from django.db.models.signals import post_save, post_delete
+#from django.dispatch import receiver
+#from views import equip_last_state, equip_last_place
+
+#@receiver(post_save, sender=IntervEquip)
+#def IntervEquip_post_save_handler(sender, **kwargs):
+#    obj = kwargs['instance']
+#    print("Post save finished!", obj.equip.id)
+#    print(EquipState.EQUIP_STATES[equip_last_state(obj.equip.id)-1][1])
+#    print(equip_last_place(obj.equip.id))
+
+#@receiver(post_delete, sender=IntervEquip)
+#def IntervEquip_post_delete_handler(sender, **kwargs):
+#    obj = kwargs['instance']
+#    print("Post delete finished!", obj.equip.id)
+#    print(EquipState.EQUIP_STATES[equip_last_state(obj.equip.id)-1][1])
+#    print(equip_last_place(obj.equip.id))
+

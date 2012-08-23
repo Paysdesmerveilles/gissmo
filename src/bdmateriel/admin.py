@@ -24,6 +24,9 @@ from django.contrib.admin import widgets
 from django.shortcuts import render_to_response, get_object_or_404
 from django.utils.functional import curry
 
+# Ajout pour custom filter
+from django.contrib.admin import SimpleListFilter
+# Fin de l'ajout pour custom filter
 """
 Usage:
 
@@ -44,17 +47,20 @@ class SpecialOrderingChangeList(ChangeList):
     def apply_special_ordering(self, queryset):
         order_type, order_by = [self.params.get(param, None) for param in ('ot', 'o')]
 
-#        ordering_attr = self.model_admin.ordering or self.model._meta.ordering
-
-#        if order_type is None and order_by is None and ordering_attr != []:
-#            order_type = 'desc' if ordering_attr[0] == '-' else 'asc'
-#            order_by = self.model_admin.list_display.index(ordering_attr[0])
+        ordering_attr = self.model_admin.ordering or self.model._meta.ordering
+ 
+        if order_type is None and order_by is None and ordering_attr != []:
+            order_type = 'desc' if ordering_attr[0][0] == '-' else 'asc'
+            if ordering_attr[0][0] == '-':         
+                order_by = self.model_admin.list_display.index(ordering_attr[0][1:])
+            else:
+                order_by = self.model_admin.list_display.index(ordering_attr[0])
 
         special_ordering = self.model_admin.special_ordering
         if special_ordering and order_type and order_by:
-            print special_ordering
-            print order_type
-            print order_by
+            #print special_ordering
+            #print order_type
+            #print order_by
             try:
                 order_field = self.list_display[int(order_by)]
                 ordering = special_ordering[order_field]
@@ -67,10 +73,17 @@ class SpecialOrderingChangeList(ChangeList):
                 return queryset
         return queryset
 
+# Version 1.4 changing (not work for me for the moment)
+#    def get_query_set(self, request=None):
+#        queryset = super(SpecialOrderingChangeList, self).get_query_set(request)
+#        queryset = self.apply_special_ordering(queryset)
+#        return queryset
+
     def get_query_set(self):
         queryset = super(SpecialOrderingChangeList, self).get_query_set()
         queryset = self.apply_special_ordering(queryset)
         return queryset
+
 
 ####
 # 
@@ -91,7 +104,7 @@ class SpecialOrderingChangeList(ChangeList):
 ####
 class ActorAdmin(admin.ModelAdmin):
     list_display = ['actor_type', 'actor_name',]
-    ordering = ['actor_name',]
+    ordering = ['actor_type', 'actor_name',]
     search_fields = ['actor_name',]
 #    exclude = ['actor_type',]
 
@@ -105,12 +118,12 @@ class BuiltAdmin(admin.ModelAdmin):
     ordering = ['station',]
     search_fields = ['station__station_code',]
 
-# Version 1.4 changing
-    special_ordering = {'station': ('station__station_code', 'built_type__built_type_name')}
+# Version 1.4 changing (not work for me for the moment)
+#    special_ordering = {'station': ('station__station_code', 'built_type__built_type_name')}
  
 # Version 1.4 changing
-    def get_changelist(self, request, **kwargs):
-        return SpecialOrderingChangeList
+#    def get_changelist(self, request, **kwargs):
+#        return SpecialOrderingChangeList
 #
 
 ####
@@ -124,9 +137,61 @@ class EquipModelDocInline(admin.TabularInline):
     exclude = ['equip_supertype', 'equip_type','owner',]
     extra = 1
 
+"""
+Custom filter for the equipment model change list
+"""
+class EquipModelFilter(SimpleListFilter):
+   # Human-readable title which will be displayed in the
+   # right admin sidebar just above the filter options.
+   title = _('Supertype or Type')
+
+   # Parameter for the filter that will be used in the URL query.
+   # I use cf as the parameter_name for the custom filter
+   parameter_name = 'cf'
+
+   template = "model_filter.html"
+
+   def lookups(self, request, model_admin):
+       """
+       Returns a list of tuples. The first element in each
+       tuple is the coded value for the option that will
+       appear in the URL query. The second element is the
+       human-readable name for the option that will appear
+       in the right sidebar.
+       """
+       Liste = []
+       Equip_Supertype = EquipSupertype.objects.all().order_by('equip_supertype_name')
+       
+
+       """
+       Tree presentation of the filter choice.
+       Indentation by space character unichr(160) and to distinguish
+       the equipment type we enclose it by <>
+       and equipment model by []
+       """
+       for equip_supertype in Equip_Supertype:
+           Liste.append(('Stype_'+str(equip_supertype.id), _(equip_supertype.equip_supertype_name)))
+           Equip_Type = EquipType.objects.filter(equip_supertype=equip_supertype).order_by('equip_type_name')
+           for equip_type in Equip_Type:
+               Liste.append(('Type__'+str(equip_type.id), _(equip_type.equip_type_name)))
+       return Liste
+
+   def queryset(self, request, queryset):
+       """
+       Returns the filtered queryset based on the value
+       provided in the query string and retrievable via
+       `self.value()`.
+       """
+       if self.value():
+           if self.value()[:5] == 'Stype':
+               return queryset.filter(equip_supertype__id__exact=self.value()[6:])
+           if self.value()[:5] == 'Type_':
+               return queryset.filter(equip_type__id__exact=self.value()[6:])
+
 class EquipModelAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model_name',]
-    list_filter = ['equip_supertype', 'equip_type',]
+    list_filter = [EquipModelFilter,]
+    ordering = ['equip_supertype', 'equip_type', 'equip_model_name',]
     search_fields = ['equip_model_name',]
 
     fieldsets = [('', {'fields': [('equip_supertype', 'equip_type', 'equip_model_name')]}),]
@@ -154,15 +219,73 @@ class EquipDocInline(admin.TabularInline):
     extra = 1
     ordering = ['-inscription_date']
 
+"""
+Custom filter for the equipment change list
+"""
+class EquipFilter(SimpleListFilter):
+   # Human-readable title which will be displayed in the
+   # right admin sidebar just above the filter options.
+   title = _('Supertype, Type or Model')
+
+   # Parameter for the filter that will be used in the URL query.
+   # I use cf as the parameter_name for the custom filter
+   parameter_name = 'cf'
+
+   template = "equip_filter.html"
+
+   def lookups(self, request, model_admin):
+       """
+       Returns a list of tuples. The first element in each
+       tuple is the coded value for the option that will
+       appear in the URL query. The second element is the
+       human-readable name for the option that will appear
+       in the right sidebar.
+       """
+       Liste = []
+       Equip_Supertype = EquipSupertype.objects.all().order_by('equip_supertype_name')
+       
+
+       """
+       Tree presentation of the filter choice.
+       Indentation by space character unichr(160) and to distinguish
+       the equipment type we enclose it by <>
+       and equipment model by []
+       """
+       for equip_supertype in Equip_Supertype:
+           Liste.append(('Stype_'+str(equip_supertype.id), _(equip_supertype.equip_supertype_name)))
+           Equip_Type = EquipType.objects.filter(equip_supertype=equip_supertype).order_by('equip_type_name')
+           for equip_type in Equip_Type:
+               Liste.append(('Type__'+str(equip_type.id), _(equip_type.equip_type_name)))
+               Equip_Model = EquipModel.objects.filter(equip_supertype=equip_supertype,equip_type=equip_type).order_by('equip_model_name')
+               for equip_model in Equip_Model:
+                   Liste.append(('Model_'+str(equip_model.id), _(equip_model.equip_model_name)))
+       return Liste
+
+   def queryset(self, request, queryset):
+       """
+       Returns the filtered queryset based on the value
+       provided in the query string and retrievable via
+       `self.value()`.
+       """
+       if self.value():
+           if self.value()[:5] == 'Stype':
+               return queryset.filter(equip_supertype__id__exact=self.value()[6:])
+           if self.value()[:5] == 'Type_':
+               return queryset.filter(equip_type__id__exact=self.value()[6:])
+           if self.value()[:5] == 'Model':
+               return queryset.filter(equip_model__id__exact=self.value()[6:])
+
 class EquipmentAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model', 'serial_number', 'get_last_state', 'get_last_place', 'owner',]
-    list_filter = ['equip_supertype', 'equip_type', 'equip_model',]
-    ordering = ['equip_supertype',]
+    list_display_links = ['serial_number',]
+#    list_filter = ['equip_supertype', 'equip_type', 'equip_model',]
+    list_filter = [EquipFilter,]
+    ordering = ['equip_supertype', 'equip_type', 'equip_model', 'serial_number',]
     search_fields = ['equip_model__equip_model_name', 'serial_number',]
     form = EquipmentForm
 
 # Version 1.4 changing
-    special_ordering = {'equip_supertype': ('equip_supertype__equip_supertype_name', 'equip_type__equip_type_name', 'equip_model__equip_model_name','serial_number'), 'equip_type': ('equip_type__equip_type_name', 'equip_model__equip_model_name','serial_number'), 'equip_model': ('equip_model__equip_model_name','serial_number')}
+#    special_ordering = {'equip_supertype': ('equip_supertype__equip_supertype_name', 'equip_type__equip_type_name', 'equip_model__equip_model_name','serial_number'), 'equip_type': ('equip_type__equip_type_name', 'equip_model__equip_model_name','serial_number'), 'equip_model': ('equip_model__equip_model_name','serial_number')}
  
     fieldsets = [('Equipements', {'fields': [('equip_supertype', 'equip_type', 'equip_model', 'serial_number','owner','purchase_date','stockage_site')]}),
                  ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
@@ -179,8 +302,8 @@ class EquipmentAdmin(admin.ModelAdmin):
     get_last_place.short_description = 'Emplacement'
 
 # Version 1.4 changing
-    def get_changelist(self, request, **kwargs):
-        return SpecialOrderingChangeList
+#    def get_changelist(self, request, **kwargs):
+#        return SpecialOrderingChangeList
 
     def save_model(self, request, obj, form, change):
         """
@@ -253,9 +376,51 @@ class StationDocInline(admin.TabularInline):
     extra = 0
     ordering = ['-inscription_date',]
 
+"""
+Custom filter for the stationsite change list
+"""
+class StationSiteFilter(SimpleListFilter):
+   # Human-readable title which will be displayed in the
+   # right admin sidebar just above the filter options.
+   title = _('Operateur')
+
+   # Parameter for the filter that will be used in the URL query.
+   # I use cf as the parameter_name for the custom filter
+   parameter_name = 'operator'
+
+   def lookups(self, request, model_admin):
+       """
+       Returns a list of tuples. The first element in each
+       tuple is the coded value for the option that will
+       appear in the URL query. The second element is the
+       human-readable name for the option that will appear
+       in the right sidebar.
+       """
+       Liste = []
+       Operator_station = StationSite.objects.values_list('operator',flat=True)
+       liste_val_distinct_triee = list(sorted(set(Operator_station)))
+
+       Operator = Actor.objects.filter(id__in=liste_val_distinct_triee).order_by('actor_name')
+
+       """
+       Tree presentation of the filter choice.
+       """
+       for operator in Operator:
+           Liste.append(((str(operator.id)), _(operator.actor_name)))
+       return Liste
+
+   def queryset(self, request, queryset):
+       """
+       Returns the filtered queryset based on the value
+       provided in the query string and retrievable via
+       `self.value()`.
+       """
+       if self.value():
+           return queryset.filter(operator__id__exact=self.value())
+
 class StationSiteAdmin(admin.ModelAdmin):
     list_display = ('station_code', 'station_name', 'operator', 'get_last_state', 'site_type', 'latitude', 'longitude', 'elevation',)
-    list_filter = ['operator',  'site_type',]
+    list_filter = [StationSiteFilter,  'site_type',]
     ordering = ['station_code',]
     search_fields = ['station_code',]
     form = StationSiteForm
@@ -358,14 +523,15 @@ class IntervEquipInline(admin.TabularInline):
         station = request.GET.get('station', '') 
         equip = request.GET.get('equip', '') 
         initial = []
-        if obj is not None:
-            kwargs['extra'] = 0
-        else:
-            kwargs['extra'] = 1
-            """
-            Pre-populating formset using GET params
-            """
-            initial.append(equip)
+        initial.append(equip)
+#        if obj is not None:
+#            kwargs['extra'] = 0
+#        else:
+#            kwargs['extra'] = 1
+#            """
+#            Pre-populating formset using GET params
+#            """
+#            initial.append(equip)
         formset = super(IntervEquipInline, self).get_formset(request, obj, **kwargs)
         formset.__init__ = curry(formset.__init__, initial=initial)
         return formset
@@ -383,11 +549,11 @@ class InterventionAdmin(admin.ModelAdmin):
     inlines = [IntervActorInline, IntervStationInline, IntervEquipInline]
 
 # Version 1.4 changing
-    special_ordering = {'station': ('station', '-intervention_date'),}
+#    special_ordering = {'station': ('station', '-intervention_date'),}
  
 # Version 1.4 changing
-    def get_changelist(self, request, **kwargs):
-        return SpecialOrderingChangeList
+#    def get_changelist(self, request, **kwargs):
+#        return SpecialOrderingChangeList
 #
 
     class Media:

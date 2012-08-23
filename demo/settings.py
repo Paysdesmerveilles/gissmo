@@ -1,8 +1,8 @@
 # Django settings for monsitedev project.
 import os
 
-#import sys
-#sys.path.insert(0, "/home/mdutil/gitclone/bdmatos/src")
+import sys
+sys.path.insert(0, "/home/mdutil/gitclone/bdmatos/src")
 #PROJECT_PATH = os.path.abspath(os.path.curdir)
 #(filepath, filename) = os.path.split(PROJECT_PATH)
 #APP_PATH = os.path.join(filepath, 'bdmateriel')
@@ -27,10 +27,24 @@ MANAGERS = ADMINS
 #    }
 #}
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+#        'NAME': 'sismat',                      # Or path to database file if using sqlite3.
+#        'USER': 'root',                      # Not used with sqlite3.
+#        'PASSWORD': 'django',                  # Not used with sqlite3.
+#        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+#        'PORT': '3306',                      # Set to empty string for default. Not used with sqlite3.
+#        'OPTIONS' : {
+#	       "init_command": "SET storage_engine=INNODB",
+#	}
+#    }
+#}
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'mydb',                      # Or path to database file if using sqlite3.
+        'NAME': 'mabase',                      # Or path to database file if using sqlite3.
         'USER': 'mdutil',                      # Not used with sqlite3.
         'PASSWORD': 'mdutil',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -45,7 +59,7 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'Europe/Paris'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -83,7 +97,7 @@ STATIC_URL = '/static/'
 # URL prefix for admin static files -- CSS, JavaScript and images.
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = '/static/admin/'
+#ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (

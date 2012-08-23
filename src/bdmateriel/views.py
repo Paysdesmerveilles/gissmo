@@ -138,6 +138,7 @@ def xhr_equip_state(request):
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
         action=request.GET.get('action', '')
+
         select_choice = [({"optionValue" : c[0], "optionDisplay" : c[1]}) for c in EquipState.EQUIP_STATES]
         select_choice.insert(0, ({"optionValue": '', "optionDisplay": '-- choisir une action en premier --'}))
         if int(action) == EquipAction.ACHETER:
@@ -173,8 +174,8 @@ def xhr_equip_state(request):
             select_choice = [{"optionValue": EquipState.DISPARU, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DISPARU-1][1]}]
         elif int(action) == EquipAction.RETROUVER:
             select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}] 
-        elif int(action) == EquipAction.METTRE_AU_REBUS:
-            select_choice = [{"optionValue": EquipState.AU_REBUS, "optionDisplay": EquipState.EQUIP_STATES[EquipState.AU_REBUS-1][1]}]
+        elif int(action) == EquipAction.METTRE_AU_REBUT:
+            select_choice = [{"optionValue": EquipState.AU_REBUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.AU_REBUT-1][1]}]
         elif int(action) == EquipAction.AUTRE:
             pass
         else:
@@ -256,7 +257,6 @@ def xhr_equipment(request):
 
         date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
         date_intervention = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
-
 
         Liste = []
         equipments = Equipment.objects.all()

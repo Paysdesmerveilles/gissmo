@@ -46,6 +46,21 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
     var date_intervention = document.getElementById('id_intervention_date_0').value;
     var heure_intervention = document.getElementById('id_intervention_date_1').value;
 
+
+    /*
+    Check that the station, date and time are filled
+    else the call to the ajax while not work as expected
+    */
+    if (! station_id) {
+       alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements')  
+       }
+    if (! date_intervention) {
+       alert('Il est préférable d\'inscrire une date d\'intervention avant toutes actions sur les équipements')  
+       }
+    if (! heure_intervention) {
+       alert('Il est préférable d\'inscrire une heure d\'intervention avant toutes actions sur les équipements')  
+       }
+
     var equipment = document.getElementById('id_intervequip_set-'+singleValues+'-equip');
     var equip_id = equipment.options[equipment.options.selectedIndex].value;
 

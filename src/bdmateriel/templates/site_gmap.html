@@ -1,14 +1,14 @@
 {% extends "admin/base_site.html" %}
-
 {% load i18n %}
+{% load url from future %}
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        <a href="{% url admin:index %}">{% trans 'Home' %}</a> &rsaquo;
-        <a href="{% url admin:app_list 'bdmateriel' %}">{% trans 'Bdmateriel' %}</a> &rsaquo;
-        <a href="{% url admin:bdmateriel_stationsite_changelist %}">{% trans 'A1. Stations' %}</a> &rsaquo;
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+        <a href="{% url 'admin:app_list' 'bdmateriel' %}">{% trans 'Bdmateriel' %}</a> &rsaquo;
+        <a href="{% url 'admin:bdmateriel_stationsite_changelist' %}">{% trans 'A1. Stations' %}</a> &rsaquo;
         {% if StationUnique %}
-          <a href="{% url admin:bdmateriel_stationsite_change StationUnique.id %}">{{StationUnique.station_code}}</a> &rsaquo;
+          <a href="{% url 'admin:bdmateriel_stationsite_change' StationUnique.id %}">{{StationUnique.station_code}}</a> &rsaquo;
         {% endif %}
         Carte des stations
     </div>
@@ -69,7 +69,7 @@
     {% else %}
       sites.push(["{{i.intervention.station.station_name}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state}}, 1]);
     {% endif %}
-    url.push({% url admin:index %} + "bdmateriel/stationsite/" + {{i.intervention.station.id}} + "/");
+    url.push({% url 'admin:index' %} + "bdmateriel/stationsite/" + {{i.intervention.station.id}} + "/");
     information.push("{{i.intervention.station.station_code}}");    
   {% endfor %}
 
