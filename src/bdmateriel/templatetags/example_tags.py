@@ -170,3 +170,18 @@ def equip_last_station(equip_id):
         station = StationSite.objects.get(station_code='NEANT')
         Liste.append(station.id)
     return { 'locations': Liste }
+
+@register.inclusion_tag('channel_link.html')
+def channel_link(intervention_id):
+    """
+    """
+    Liste = []
+    intervention = Intervention.objects.get(id=intervention_id)
+    return { 'station': intervention.station.id }
+
+@register.inclusion_tag('station_channels.html')
+def display_station_channels(station_id):
+    channels = []
+    channels = Channel.objects.filter(station__id=station_id).order_by('-start_date')
+    return { 'channels': channels }
+

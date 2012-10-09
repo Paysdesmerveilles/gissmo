@@ -49,9 +49,9 @@ class Actor(models.Model):
     INCONNU = 6
     AUTRE = 7
     ACTOR_TYPE_CHOICES = (
-        (OBSERVATOIRE, 'Observatoire'),
-        (INSTRUMENTALISTE, 'Instrumentaliste'),
-        (ORGANISME, 'Organisme'),
+        (OBSERVATOIRE, 'Observatoire/Laboratoire'),
+        (INSTRUMENTALISTE, 'Ingénieur/Technicien'),
+        (ORGANISME, 'Réseau'),
         (ENTREPRISE, 'Entreprise'),
         (ENTREPRISE_SAV, 'Entreprise SAV'),
         (INCONNU, 'Inconnu'),
@@ -211,11 +211,14 @@ class Network(models.Model):
         (FR, 'RESIF LB'),
         (G, 'Géoscope'),
         (RA, 'RAP'),
-        (RD, 'CEA'),
+        (RD, 'CEA/LDG'),
         (AUTRE, 'Autre'),
     )
     network_code = models.CharField(max_length=5, verbose_name=_("code reseau"))
     network_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom du reseau"))
+
+    def __unicode__(self):
+        return self.network_code
 
 ####
 #
@@ -405,6 +408,8 @@ class Intervention(models.Model):
 
     class Meta:
         unique_together = ("station", "intervention_date")
+        verbose_name = _("Intervention")
+        verbose_name_plural = _("Z3. Interventions")
 
     def __unicode__(self):
         return u'%s : %s' % (self.station.station_code, self.intervention_date)
@@ -616,6 +621,54 @@ class EquipDoc(models.Model):
 #### 
 ####     def __unicode__(self):
 ####         return u'%s : %s : %s : %s' % (self.network, self.acquisition_chain, self.channel_code, self.sample_rate)
+
+
+class Channel(models.Model) :
+    station = models.ForeignKey("StationSite", verbose_name=_("station"))
+    network = models.ForeignKey('Network', verbose_name=_("reseau"))
+    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=[('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),])
+    location_code = models.CharField(max_length=2, verbose_name=_("code localisation"))
+    latitude = models.DecimalField(verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
+    longitude = models.DecimalField(verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
+    elevation = models.DecimalField(verbose_name=_("elevation (m)"), max_digits=5, decimal_places=1)
+    depth = models.DecimalField(verbose_name=_("profondeur (m)"), max_digits=4, decimal_places=1)
+    azimuth = models.DecimalField(verbose_name=_("azimut"), max_digits=4, decimal_places=1)
+    dip = models.DecimalField(verbose_name=_("angle d'inclinaison"), max_digits=3, decimal_places=1)
+    sample_rate =  models.FloatField(verbose_name=_("frequence (Hz)"))
+
+    start_date = models.DateTimeField(verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateTimeField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
+
+    class Meta:
+        unique_together = ("station", "network", "channel_code", "location_code", "start_date")
+        verbose_name = _("Canal d'acquisition")
+        verbose_name_plural = _("Z1. Canaux d'acquisition")
+
+    def __unicode__(self):
+        return u'%s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s' % (self.station, self.network, self.location_code, self.channel_code, self.latitude, self.longitude, self.elevation, self.depth, self.dip, self.azimuth, self.sample_rate, self.start_date, self.end_date)
+
+#class ProtoChannelChain(models.Model) :
+#    channel = models.ForeignKey('ProtoChannel', verbose_name=_("canal"))
+#    chain = models.ForeignKey('ProtoChain', verbose_name=_("chaine d'acquisition"))
+
+class Chain(models.Model) :
+#    name = models.CharField(max_length=50, verbose_name=_("Nom de chaine"))
+    channel = models.ForeignKey('Channel', verbose_name=_("canal"))
+    order = models.IntegerField(choices=[(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], null=False, blank=False, verbose_name=_("ordre"))
+    equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
+
+    class Meta:
+        verbose_name = _("Composante de la chaine d'acqui")
+        verbose_name_plural = _("Z2. Composantes des chaines d'acqui")
+
+    def __unicode__(self):
+        return u'%s : %s : %s' % (self.channel, self.order, self.equip)
+
+class ChainConfig(models.Model) :
+    chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition"))
+    parameter = models.CharField(max_length=50, verbose_name=_("parametre"))
+    value = models.CharField(max_length=20, verbose_name=_("valeur"))
+
 
 #from django.db.models.signals import post_save, post_delete
 #from django.dispatch import receiver

@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 
 from datetime import datetime
 
-from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc
+from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel
 
 # TODO Voir a deplacer dans un autre fichier
 from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate
@@ -225,8 +225,18 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             equip = get_object_or_404(Equipment, id=self.__initial[0])
             form.fields['equip'].initial = equip
 
-        ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-        ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+        """
+        Hack to check if the formset is already filled
+	to present the complete list of actions
+        else the list exclude the action of buying (Acheter)
+        """ 
+        if index != None:
+            ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
+            ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+        else :
+            ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS[1:]]
+            ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+
         STATE_CHOICES = [(c[0], c[1]) for c in EquipState.EQUIP_STATES]
         STATE_CHOICES.insert(0, ('', '-- choisir une action en premier --'))
 
@@ -234,7 +244,11 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         url2 = reverse('xhr_equipment')
         url3 = reverse('xhr_station')
         url4 = reverse('xhr_built')
-
+  
+#        if index != None:
+#            form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');', 'disabled':'disabled'})
+#            form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES, attrs={'disabled':'disabled'})
+#        else:
         form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'})
         form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
 
@@ -308,9 +322,9 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                     errors += 1
                 if equip_action == EquipAction.TESTER and (equip_state != EquipState.A_TESTER and equip_state != EquipState.DISPONIBLE and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.INSTALLER and equip_state != EquipState.OPERATION:
+                if equip_action == EquipAction.INSTALLER and (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.DESINSTALLER and equip_state != EquipState.A_TESTER:
+                if equip_action == EquipAction.DESINSTALLER and (equip_state != EquipState.A_TESTER and equip_state != EquipState.DISPONIBLE and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
                 if equip_action == EquipAction.CONSTATER_DEFAUT and (equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
@@ -395,7 +409,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                      raise forms.ValidationError('On doit effectuer cette action (%s) et expedier vers OSU, SAV ou Autre et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], target_station))
 
                 if (equip_action == EquipAction.CONSTATER_DISPARITION or equip_action == EquipAction.METTRE_AU_REBUT) and target_station.site_type != StationSite.NEANT:
-                     raise forms.ValidationError('On doit effectuer cette action (%s) et indiquer un lieu indetermine et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], target_station))
+                     raise forms.ValidationError('On doit effectuer cette action (%s) et indiquer un lieu indetermine (NEANT) et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], target_station))
 
         # Check that there is no more than one action per equip
         if not (len(set(Liste_equip)) == len(Liste_equip)):
@@ -405,8 +419,18 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
     def add_fields(self, form, index):
         super(IntervStationInlineFormset, self).add_fields(form, index)
 
-        ACTION_CHOICES = [(c[0], c[1]) for c in StationAction.STATION_ACTIONS]
-        ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+        """
+        Hack to check if the formset is already filled
+	to present the complete list of actions
+        else the list exclude the action of creating (Creer code station)
+        """ 
+        if index != None:
+            ACTION_CHOICES = [(c[0], c[1]) for c in StationAction.STATION_ACTIONS]
+            ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+        else:
+            ACTION_CHOICES = [(c[0], c[1]) for c in StationAction.STATION_ACTIONS[1:]]
+            ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+
         STATE_CHOICES = [(c[0], c[1]) for c in StationState.STATION_STATES]
         STATE_CHOICES.insert(0, ('', '-- choisir une action en premier --'))
 
@@ -452,3 +476,66 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
 
                 if errors != 0:  
                      raise forms.ValidationError('Etat (%s) invalide pour l\'action choisi  (%s)' % (StationState.STATION_STATES[station_state-1][1], StationAction.STATION_ACTIONS[station_action-1][1]))
+
+
+class ChainInlineFormset(forms.models.BaseInlineFormSet):
+
+    def __init__(self, *args, **kwargs):
+        
+#        Grabs the curried initial values and stores them into a 'private'
+#        variable. Note: the use of self.__initial is important, using
+#        self.initial or self._initial will be erased by a parent class
+        
+        self.__initial = kwargs.pop('initial', [])
+        super(ChainInlineFormset, self).__init__(*args, **kwargs)
+
+    def add_fields(self, form, index):
+        super(ChainInlineFormset, self).add_fields(form, index)
+      
+        # TODO Ameliorer cette comparaison
+        if self.__initial and self.__initial != ['']:
+            station = get_object_or_404(StationSite, id=self.__initial[0])
+            form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.all())
+
+        url = reverse('xhr_equip_oper')
+
+#        form.fields['order'].widget = forms.Select(choices=[('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], attrs={'onchange': 'alert("order change");'})
+        form.fields['order'].widget = forms.Select(choices=[('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
+
+class ChannelForm(forms.ModelForm):
+    """
+    Obtain the latitude, longitude and elevation of the station
+    the first time we add channel via the site form
+    """
+    class Meta:
+        model = Channel
+
+    def __init__(self, *args, **kwargs):        
+        super(ChannelForm, self).__init__(*args, **kwargs)
+        station_label = ""   
+        if 'initial' in kwargs:
+            initial = kwargs['initial'] 
+            if 'station' in initial:
+                station = get_object_or_404(StationSite, id=initial['station'])            
+                self.fields['latitude'].initial = station.latitude
+                self.fields['longitude'].initial = station.longitude
+                self.fields['elevation'].initial = station.elevation
+                self.fields['station'].initial = station.id
+                station_label += station.station_code
+        else:
+            instance = getattr(self, 'instance', None)
+            if instance and instance.id:
+                station_label += unicode(instance.station)
+
+        url = reverse('xhr_station_position')
+
+        self.fields['location_code'].initial = '00'
+        self.fields['location_code'].required = True
+        self.fields['channel_code'].widget = forms.Select(choices=[('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),], attrs={'onchange':'get_dip_azimut_value(this);'})
+        self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
+#        self.fields['station'].widget.attrs['onchange'] = 'alert("Test");'
+#        self.fields['station'].widget.attrs['onchange'] = 'get_station_position(this,\'' + url + '\');'
+        self.fields['station'].label = station_label
+        self.fields['station'].widget = forms.HiddenInput()
+
+

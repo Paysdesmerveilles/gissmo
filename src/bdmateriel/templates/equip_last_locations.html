@@ -9,6 +9,7 @@
          <th>Modèle</th>
          <th>No série</th>
          <th>Dernier état connu</th>
+         <th>Date (approximative)</th>
          <th>Built</th>
          <th>Note</th>
          <th></th>
@@ -34,6 +35,10 @@
 
         <td class="state">
           <p>{{ location.get_equip_state_display }}</p>
+        </td>
+
+        <td class="state">
+          <p>{{ location.intervention.intervention_date|date:"Y-m-d H:i:s" }}</p>
         </td>
 
         <td class="built">

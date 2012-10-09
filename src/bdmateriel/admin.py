@@ -21,7 +21,7 @@ from django.utils.translation import ugettext as _
 from django.utils.encoding import force_unicode
 
 from django.contrib.admin import widgets
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404, HttpResponseRedirect
 from django.utils.functional import curry
 
 # Ajout pour custom filter
@@ -104,6 +104,7 @@ class SpecialOrderingChangeList(ChangeList):
 ####
 class ActorAdmin(admin.ModelAdmin):
     list_display = ['actor_type', 'actor_name',]
+    list_display_links = ['actor_name',]
     ordering = ['actor_type', 'actor_name',]
     search_fields = ['actor_name',]
 #    exclude = ['actor_type',]
@@ -149,7 +150,7 @@ class EquipModelFilter(SimpleListFilter):
    # I use cf as the parameter_name for the custom filter
    parameter_name = 'cf'
 
-   template = "model_filter.html"
+   template = "model_filter2.html"
 
    def lookups(self, request, model_admin):
        """
@@ -190,6 +191,7 @@ class EquipModelFilter(SimpleListFilter):
 
 class EquipModelAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model_name',]
+    list_display_links = ['equip_model_name',]
     list_filter = [EquipModelFilter,]
     ordering = ['equip_supertype', 'equip_type', 'equip_model_name',]
     search_fields = ['equip_model_name',]
@@ -243,7 +245,6 @@ class EquipFilter(SimpleListFilter):
        """
        Liste = []
        Equip_Supertype = EquipSupertype.objects.all().order_by('equip_supertype_name')
-       
 
        """
        Tree presentation of the filter choice.
@@ -428,7 +429,8 @@ class StationSiteAdmin(admin.ModelAdmin):
     fieldsets = [
         ('Information sur le site' , {'fields': [('site_type','station_code','station_name','operator','creation_date'),('latitude','longitude','elevation')]}),
         ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
-        ('Adresse du site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country'),('note')], 'classes': ['collapse']}),]
+        ('Adresse du site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country')], 'classes': ['collapse']}),
+        ('Autre information pertinente' , {'fields': [('note')], 'classes': ['collapse']}),]
 
     inlines = [BuiltInline, StationDocInline,]
 
@@ -517,6 +519,7 @@ class IntervEquipInline(admin.TabularInline):
     model = IntervEquip
     extra = 0
     formset = IntervEquipInlineFormset
+#    readonly_fields=['equip', 'station', 'built', 'note',]
 
     def get_formset(self, request, obj=None, **kwargs):
         """ Pourquoi est-ce que station est necessaire """
@@ -612,6 +615,67 @@ class InterventionAdmin(admin.ModelAdmin):
 
 ######## class ChannelAdmin(admin.ModelAdmin):
 ######## list_display = ['network', 'acquisition_chain', 'channel_code', 'dip', 'azimuth', 'sample_rate', 'start_date']
+
+
+class ChainInline(admin.TabularInline):
+    model = Chain
+    extra = 0
+    formset = ChainInlineFormset
+
+    readonly_fields = ['configuration']
+
+    def configuration(self, obj):
+        if obj.id:
+            url = reverse('admin:bdmateriel_chain_change', args=[obj.id])
+            return mark_safe("<a href='%s'>config</a>" % url)
+
+    def get_formset(self, request, obj=None, **kwargs):
+#       Pourquoi est-ce que station est necessaire
+        station = request.GET.get('station', '') 
+        initial = []
+        initial.append(station)
+        formset = super(ChainInline, self).get_formset(request, obj, **kwargs)
+        formset.__init__ = curry(formset.__init__, initial=initial)
+        return formset
+
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows':1})},
+    }
+
+# from django.contrib import messages
+
+class ChannelAdmin(admin.ModelAdmin):
+    model = Channel
+    save_as = True
+    form = ChannelForm
+
+    fieldsets = [
+        ('' , {'fields': [('station','latitude','longitude','elevation'),('network','channel_code','location_code','depth', 'azimuth', 'dip'),('sample_rate', 'start_date', 'end_date')]}),]
+
+    inlines = [ChainInline,]
+
+    class Media:
+        js = ["js/my_ajax_function.js"]
+
+##    def response_add(self, request, obj, post_url_continue=None):
+###        This makes the response go to the newly created model's change page
+###        without using reverse
+##        messages.success( request, 'Test successful' )
+##        return HttpResponseRedirect("../%s" % obj.id)
+
+class ChainConfigInline(admin.TabularInline):
+    model = ChainConfig
+    extra = 0
+
+class ChainAdmin(admin.ModelAdmin):
+    model = Chain
+
+    inlines = [ChainConfigInline,]
+
+admin.site.register(Channel, ChannelAdmin)
+admin.site.register(Chain, ChainAdmin)
+#admin.site.register(ProtoConfig)
+
 
 admin.site.register(Actor, ActorAdmin)
 #admin.site.register(Built, BuiltAdmin)

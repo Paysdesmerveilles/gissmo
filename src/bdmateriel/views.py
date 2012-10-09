@@ -6,6 +6,7 @@ import mimetypes
 from datetime import datetime
 from django.db.models import Q
 from models import *
+from tools import DecimalEncoder
 
 from django.template import RequestContext
 from django.shortcuts import render_to_response, redirect, get_object_or_404, HttpResponseRedirect, HttpResponse
@@ -360,6 +361,55 @@ def xhr_built(request):
         for built in built_dispo:
             select_choice.append(({"optionValue": built.id, "optionDisplay": built.__unicode__()}))
         data = simplejson.dumps(select_choice)
+
+        return HttpResponse(data)
+    # If you want to prevent non XHR calls
+    else:
+        return HttpResponse(status=400)
+
+def xhr_equip_oper(request):
+    """
+        Request that return the possible equipment in operation for a station 
+    """
+    # Check that it's an ajax request and that the method is GET
+    if request.is_ajax() and request.method == 'GET':
+        station=request.GET.get('station', '')
+
+        Liste = []
+        equipments = Equipment.objects.all()
+
+        for equip in equipments:
+            #Obtain the last place of all equipment
+            last_equip_place = IntervEquip.objects.filter(equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+            if last_equip_place:
+                for last in last_equip_place:
+                    Liste.append(last.id)
+
+        equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('-intervention__intervention_date')
+
+        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
+        for equip in equip_dispo:
+            select_choice.append(({"optionValue": equip.equip.id, "optionDisplay": equip.equip.__unicode__()}))
+        data = simplejson.dumps(select_choice)
+
+        return HttpResponse(data)
+    # If you want to prevent non XHR calls
+    else:
+        return HttpResponse(status=400)
+
+def xhr_station_position(request):
+    """
+        Request that return the position for a station 
+    """
+    # Check that it's an ajax request and that the method is GET
+    if request.is_ajax() and request.method == 'GET':
+        station=request.GET.get('station', '')
+
+        instance = get_object_or_404(StationSite, pk=station)
+
+        select_choice = [{"latitude": instance.latitude, "longitude": instance.longitude, "elevation": instance.elevation}]
+       
+        data = simplejson.dumps(select_choice, cls=DecimalEncoder)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls

@@ -1,0 +1,78 @@
+{% load url from future %}
+
+<fieldset class="module aligned collapse">
+  <h2>Canaux du site</h2>
+   <table>
+     <thead><tr>
+         <th>Location code</th>
+         <th>Code du canal</th>
+         <th>Latitude</th>
+         <th>Longitude</th>
+         <th>Elevation</th>
+         <th>Profondeur</th>
+         <th>Azimut</th>
+         <th>Inclinaison</th>
+         <th>Fréquence</th>
+         <th>Date début</th>
+         <th>Date fin</th>
+         <th></th>
+     </tr></thead>
+     <tbody>
+     {% for channel in channels %}
+        <tr>
+        <td class="location_code">
+          <p>{{ channel.location_code }}</p>
+        </td>
+
+        <td class="channel_code">
+          <p>{{ channel.get_channel_code_display }}</p>
+        </td>
+
+        <td class="channel_latitude">
+          <p>{{ channel.latitude }}</p>
+        </td>
+
+        <td class="channel_longitude">
+          <p>{{ channel.longitude }}</p>
+        </td>
+
+        <td class="channel_elevation">
+          <p>{{ channel.elevation }}</p>
+        </td>
+
+        <td class="channel_depth">
+          <p>{{ channel.depth }}</p>
+        </td>
+
+        <td class="channel_azimuth">
+          <p>{{ channel.azimuth }}</p>
+        </td>
+
+        <td class="channel_dip">
+          <p>{{ channel.dip }}</p>
+        </td>
+
+        <td class="channel_sample_rate">
+          <p>{{ channel.sample_rate }}</p>
+        </td>
+
+        <td class="channel_start_date">
+          <input readonly="readonly" value="{{ channel.start_date|date:"Y-m-d H:i:s" }}" type="text" size="20" />
+        </td>
+
+        <td class="channel_end_date">
+          <input readonly="readonly" value="{{ channel.end_date|date:"Y-m-d H:i:s" }}" type="text" size="20" />
+        </td>
+
+        <td class="configuration">
+          <a href="{% url 'admin:bdmateriel_channel_change' channel.id %}">Edit</a>
+        </td>
+
+        </tr>
+     {% endfor %}
+     </tbody>
+   </table>
+</fieldset>
+
+
+
