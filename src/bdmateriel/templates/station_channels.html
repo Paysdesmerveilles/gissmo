@@ -15,10 +15,11 @@
          <th>Fréquence</th>
          <th>Date début</th>
          <th>Date fin</th>
+         <th>Chaîne acquisition</th>
          <th></th>
      </tr></thead>
      <tbody>
-     {% for channel in channels %}
+     {% for channel, equipment in channels %}
         <tr>
         <td class="location_code">
           <p>{{ channel.location_code }}</p>
@@ -62,6 +63,10 @@
 
         <td class="channel_end_date">
           <input readonly="readonly" value="{{ channel.end_date|date:"Y-m-d H:i:s" }}" type="text" size="20" />
+        </td>
+
+        <td class="acquisition_chain">
+          <textarea readonly="readonly" rows="1" cols="40">{% for equip in equipment %}{{ equip }}{% if forloop.last %}.{% else %},&#13;{% endif %}{% endfor %}</textarea>
         </td>
 
         <td class="configuration">

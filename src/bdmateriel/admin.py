@@ -13,10 +13,6 @@ from django import forms
 from django.forms import Textarea
 # Fin de l'ajout pour limiter la taille d'un champ Textfield
 
-# Ajout pour ordering by multiple fields in a column sort
-from django.contrib.admin.views.main import ChangeList
-# Fin de l'ajout pour ordering by multiple fields in a column sort
-
 from django.utils.translation import ugettext as _
 from django.utils.encoding import force_unicode
 
@@ -34,68 +30,6 @@ import time
 Afin d'avoir un changement dans les formsets de EquipModelDocInline
 """
 import time
-
-####
-#
-# Debut de l'ajout to order by multiple fields in a column sort
-#
-####
-class SpecialOrderingChangeList(ChangeList):
-    """
-    SpecialOrderindChangeList
-    """
-    def apply_special_ordering(self, queryset):
-        order_type, order_by = [self.params.get(param, None) for param in ('ot', 'o')]
-
-        ordering_attr = self.model_admin.ordering or self.model._meta.ordering
- 
-        if order_type is None and order_by is None and ordering_attr != []:
-            order_type = 'desc' if ordering_attr[0][0] == '-' else 'asc'
-            if ordering_attr[0][0] == '-':         
-                order_by = self.model_admin.list_display.index(ordering_attr[0][1:])
-            else:
-                order_by = self.model_admin.list_display.index(ordering_attr[0])
-
-        special_ordering = self.model_admin.special_ordering
-        if special_ordering and order_type and order_by:
-            #print special_ordering
-            #print order_type
-            #print order_by
-            try:
-                order_field = self.list_display[int(order_by)]
-                ordering = special_ordering[order_field]
-                if order_type == 'desc':
-                    ordering = ['-' + field for field in ordering]
-                queryset = queryset.order_by(*ordering)
-            except IndexError:
-                return queryset
-            except KeyError:
-                return queryset
-        return queryset
-
-# Version 1.4 changing (not work for me for the moment)
-#    def get_query_set(self, request=None):
-#        queryset = super(SpecialOrderingChangeList, self).get_query_set(request)
-#        queryset = self.apply_special_ordering(queryset)
-#        return queryset
-
-    def get_query_set(self):
-        queryset = super(SpecialOrderingChangeList, self).get_query_set()
-        queryset = self.apply_special_ordering(queryset)
-        return queryset
-
-
-####
-# 
-# Ajouter a l'admin de la classe qui comportera un tri sur champ multiple (voir EquipmentAdmin)
-#
-#     special_ordering = {}
-#
-#     def get_changelist(self, request, **kwargs):
-#         return SpecialOrderingChangeList
-#
-# Fin de l'ajout to order by multiple fields in a column sort
-####
 
 ####
 #
@@ -118,14 +52,6 @@ class BuiltAdmin(admin.ModelAdmin):
     list_display = ['station', 'built_type', 'built_short_desc',]
     ordering = ['station',]
     search_fields = ['station__station_code',]
-
-# Version 1.4 changing (not work for me for the moment)
-#    special_ordering = {'station': ('station__station_code', 'built_type__built_type_name')}
- 
-# Version 1.4 changing
-#    def get_changelist(self, request, **kwargs):
-#        return SpecialOrderingChangeList
-#
 
 ####
 #
@@ -285,9 +211,6 @@ class EquipmentAdmin(admin.ModelAdmin):
     search_fields = ['equip_model__equip_model_name', 'serial_number',]
     form = EquipmentForm
 
-# Version 1.4 changing
-#    special_ordering = {'equip_supertype': ('equip_supertype__equip_supertype_name', 'equip_type__equip_type_name', 'equip_model__equip_model_name','serial_number'), 'equip_type': ('equip_type__equip_type_name', 'equip_model__equip_model_name','serial_number'), 'equip_model': ('equip_model__equip_model_name','serial_number')}
- 
     fieldsets = [('Equipements', {'fields': [('equip_supertype', 'equip_type', 'equip_model', 'serial_number','owner','purchase_date','stockage_site')]}),
                  ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
                  ('Informations complementaires' , {'fields': [('note')], 'classes': ['collapse']}),]
@@ -301,10 +224,6 @@ class EquipmentAdmin(admin.ModelAdmin):
     def get_last_place(self, obj):
         return '%s'%(equip_last_place(obj.id))
     get_last_place.short_description = 'Emplacement'
-
-# Version 1.4 changing
-#    def get_changelist(self, request, **kwargs):
-#        return SpecialOrderingChangeList
 
     def save_model(self, request, obj, form, change):
         """
@@ -430,7 +349,7 @@ class StationSiteAdmin(admin.ModelAdmin):
         ('Information sur le site' , {'fields': [('site_type','station_code','station_name','operator','creation_date'),('latitude','longitude','elevation')]}),
         ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
         ('Adresse du site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country')], 'classes': ['collapse']}),
-        ('Autre information pertinente' , {'fields': [('note')], 'classes': ['collapse']}),]
+        ('Autre information pertinente' , {'fields': [('note'),('private_link')], 'classes': ['collapse']}),]
 
     inlines = [BuiltInline, StationDocInline,]
 
@@ -551,14 +470,6 @@ class InterventionAdmin(admin.ModelAdmin):
 
     inlines = [IntervActorInline, IntervStationInline, IntervEquipInline]
 
-# Version 1.4 changing
-#    special_ordering = {'station': ('station', '-intervention_date'),}
- 
-# Version 1.4 changing
-#    def get_changelist(self, request, **kwargs):
-#        return SpecialOrderingChangeList
-#
-
     class Media:
         js = ["js/my_ajax_function.js"]
 
@@ -650,7 +561,7 @@ class ChannelAdmin(admin.ModelAdmin):
     form = ChannelForm
 
     fieldsets = [
-        ('' , {'fields': [('station','latitude','longitude','elevation'),('network','channel_code','location_code','depth', 'azimuth', 'dip'),('sample_rate', 'start_date', 'end_date')]}),]
+        ('' , {'fields': [('station','latitude','longitude','elevation','depth', 'azimuth', 'dip'),('network','channel_code','location_code'),('sample_rate', 'start_date', 'end_date')]}),]
 
     inlines = [ChainInline,]
 

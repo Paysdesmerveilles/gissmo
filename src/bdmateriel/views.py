@@ -270,7 +270,7 @@ def xhr_equipment(request):
                 if last_equip_state:
                     for last in last_equip_state:
                         Liste.append(last.id)
-            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.DISPONIBLE ,id__in=Liste).order_by('-intervention__intervention_date')
+            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.DISPONIBLE ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
        # Receive only equip En transit
         elif int(action) == EquipAction.RECEVOIR:
             for equip in equipments:
@@ -279,7 +279,7 @@ def xhr_equipment(request):
                 if last_equip_state:
                     for last in last_equip_state:
                         Liste.append(last.id)
-            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.EN_TRANSIT ,id__in=Liste).order_by('-intervention__intervention_date')
+            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.EN_TRANSIT ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
        # Make action only on equip installed in the station
         else:
             for equip in equipments:
@@ -289,7 +289,8 @@ def xhr_equipment(request):
                     for last in last_equip_place:
                         Liste.append(last.id)
        #     print Liste
-            equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('-intervention__intervention_date')
+#            equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('-intervention__intervention_date')
+            equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
        #     print station
        #     print equip_dispo
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
@@ -385,7 +386,7 @@ def xhr_equip_oper(request):
                 for last in last_equip_place:
                     Liste.append(last.id)
 
-        equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('-intervention__intervention_date')
+        equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:

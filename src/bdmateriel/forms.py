@@ -530,7 +530,7 @@ class ChannelForm(forms.ModelForm):
         url = reverse('xhr_station_position')
 
         self.fields['location_code'].initial = '00'
-        self.fields['location_code'].required = True
+        self.fields['location_code'].required = False
         self.fields['channel_code'].widget = forms.Select(choices=[('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),], attrs={'onchange':'get_dip_azimut_value(this);'})
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
 #        self.fields['station'].widget.attrs['onchange'] = 'alert("Test");'

@@ -8,10 +8,11 @@
          <th>Etat</th>
          <th>Date et heure</th>
          <th>Note</th>
+         <th>Intervenants</th>
          <th></th>
      </tr></thead>
      <tbody>
-     {% for interv in intervs %}
+     {% for interv, actor in intervs %}
         <tr>
         <td class="station_interv">
           <p>{{ interv.get_station_action_display }}</p>
@@ -27,6 +28,10 @@
 
         <td class="note">
           <textarea readonly="readonly" rows="1" cols="40">{{ interv.note }}</textarea>
+        </td>
+
+        <td class="intervenant">
+          <textarea readonly="readonly" rows="1" cols="40">{% for act in actor %}{{ act }}{% if forloop.last %}.{% else %}, {% endif %}{% endfor %}</textarea>
         </td>
 
         <td class="intervention">

@@ -390,6 +390,7 @@ class StationSite(models.Model):
     zip_code = models.CharField(max_length=15, null=True, blank=True, verbose_name=_("code postal"))
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+    private_link = models.URLField(null=True, blank=True, verbose_name=_("Lien outil interne"))
 
     class Meta:
         ordering = ['station_code']
@@ -625,9 +626,9 @@ class EquipDoc(models.Model):
 
 class Channel(models.Model) :
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
-    network = models.ForeignKey('Network', verbose_name=_("reseau"))
+    network = models.ForeignKey('Network', verbose_name=_("code reseau"))
     channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=[('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),])
-    location_code = models.CharField(max_length=2, verbose_name=_("code localisation"))
+    location_code = models.CharField(null=True, blank=True, max_length=2, verbose_name=_("code localisation"))
     latitude = models.DecimalField(verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
     longitude = models.DecimalField(verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
     elevation = models.DecimalField(verbose_name=_("elevation (m)"), max_digits=5, decimal_places=1)

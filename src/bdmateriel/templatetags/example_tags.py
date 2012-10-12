@@ -21,9 +21,19 @@ def display_station_actions(station_id):
 
 @register.inclusion_tag('station_interventions.html')
 def display_station_interventions(station_id):
+    liste = []
     intervs = []
     intervs = IntervStation.objects.filter(intervention__station__id=station_id).order_by('-intervention__intervention_date')
-    return { 'intervs': intervs}
+    "Find the actors for each station intervention"
+    if intervs:
+        for interv in intervs:
+            intervactors = IntervActor.objects.filter(intervention_id=interv.intervention_id)   
+            liste_actors = []
+            if intervactors:
+                for intervactor in intervactors:
+                     liste_actors.append(intervactor.actor)
+            liste.append([interv, liste_actors])
+    return { 'intervs': liste}
 
 @register.inclusion_tag('equip_states.html')
 def display_equip_states(equip_id):
@@ -161,27 +171,37 @@ def display_hist_equip_station(station_id):
 def equip_last_station(equip_id):
     """
     """
-    Liste = []
+    liste = []
     last_equip_location = IntervEquip.objects.filter(equip=equip_id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
     if last_equip_location:
         for last in last_equip_location:
-            Liste.append(last.station.id)
+            liste.append(last.station.id)
     else:
         station = StationSite.objects.get(station_code='NEANT')
-        Liste.append(station.id)
-    return { 'locations': Liste }
+        liste.append(station.id)
+    return { 'locations': liste }
 
 @register.inclusion_tag('channel_link.html')
 def channel_link(intervention_id):
     """
     """
-    Liste = []
+    liste = []
     intervention = Intervention.objects.get(id=intervention_id)
     return { 'station': intervention.station.id }
 
 @register.inclusion_tag('station_channels.html')
 def display_station_channels(station_id):
+    liste = []
     channels = []
     channels = Channel.objects.filter(station__id=station_id).order_by('-start_date')
-    return { 'channels': channels }
+    "Find the equipments of the acquisition chain"
+    if channels:
+        for channel in channels:
+            chains = Chain.objects.filter(channel_id=channel.id).order_by('order')   
+            liste_equipments = []
+            if chains:
+                for chain in chains:
+                     liste_equipments.append(chain.equip)
+            liste.append([channel, liste_equipments])
+    return { 'channels': liste }
 
