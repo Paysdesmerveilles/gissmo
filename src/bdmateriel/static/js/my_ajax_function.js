@@ -41,6 +41,32 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
     var xhr_built = urlparm4;
 
     /*
+    As soon as we have an action change the BUY action must disappear
+    */
+    $("#id_intervequip_set-"+singleValues+"-equip_action option[value='1']").remove();
+    /*
+    Check that the action is nothing
+    */
+    if (actiontypevalue == '') {
+       /*
+       Remove all associate error for that field
+       */
+       $("#intervequip_set-"+singleValues).find(".errorlist").remove();
+       /*
+       Initiate all other field to nothing
+       */
+       var equipselect = 'select#id_intervequip_set-'+singleValues+'-equip';
+       $(equipselect).html('<option value= ""> -- choisir une action -- </option>');
+       var equipstateselect = 'select#id_intervequip_set-'+singleValues+'-equip_state';
+       $(equipstateselect).html('<option value= ""> -- choisir une action -- </option>');
+       var stationselect = 'select#id_intervequip_set-'+singleValues+'-station';
+       $(stationselect).html('<option value= ""> -- choisir une action -- </option>');
+       var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
+       $(builtselect).html('<option value= ""> -- choisir une action -- </option>');
+       var note = $('textarea#id_intervequip_set-'+singleValues+'-note').val('');
+       }
+
+    /*
     Check that the action is not buying
     */
     if (actiontypevalue == 1) {
@@ -119,9 +145,34 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
             options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
           }
           $(stationselect).html(options);
+
+          /*
+          Obtain the built if we have only one site as destination 
+          else display that they must choose a site first
+          */
+          var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
+          if (data.length == 1)             
+             {
+              station_id = data[0].optionValue;
+              $.ajax({
+                type: "GET",
+                url: xhr_built,
+                data: { action: actiontypevalue, station : station_id, date : date_intervention, heure : heure_intervention},
+                dataType: "json",
+                success: function(data) {
+                    var options = '';
+                    for (var i = 0; i < data.length; i++) {
+                      options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
+                    }
+                    $(builtselect).html(options);
+                }
+              });
+             }
+          else
+             $(builtselect).html('<option value= ""> -- choisir un site -- </option>');
       }
     });
-
+/*
     var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
     $.ajax({
       type: "GET",
@@ -136,7 +187,7 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
           $(builtselect).html(options);
       }
     });
-
+*/
 }
 
 /*
@@ -239,3 +290,39 @@ function get_station_position(selectBox, urlparm1){
     });
 }
 
+
+/*
+Function that list the built for a site
+when we describe the intervention 
+The trigger is the field station
+*/
+function get_site_built(selectBox, urlparm1){
+    var singleValues = selectBox.id.split("-")[1];
+    var stationvalue = selectBox.options[selectBox.options.selectedIndex].value;
+    var xhr_built_url = urlparm1;
+
+    var station_id = stationvalue;
+
+    /*
+    Check that the station is filled
+    else the call to the ajax while not work as expected
+    */
+    if (! station_id) {
+       alert('Il est préférable d\'inscrire le site résultant de l\'action avant de sélectionner un bâti')  
+       }
+ 
+    var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
+    $.ajax({
+      type: "GET",
+      url: xhr_built_url,
+      data: { station : station_id},
+      dataType: "json",
+      success: function(data) {
+          var options = '';
+          for (var i = 0; i < data.length; i++) {
+            options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
+          }
+          $(builtselect).html(options);
+      }
+    });
+}

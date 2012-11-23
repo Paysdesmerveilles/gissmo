@@ -161,8 +161,13 @@ def xhr_equip_state(request):
         elif int(action) == EquipAction.CONSTATER_DEFAUT:
             select_choice = [{"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]}]
             select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
-        elif int(action) == EquipAction.MAINT_PREV_DISTANTE or int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_PREV_SITE or int(action) == EquipAction.MAINT_CORR_SITE:
+        elif int(action) == EquipAction.MAINT_PREV_DISTANTE or int(action) == EquipAction.MAINT_CORR_DISTANTE:
             select_choice = [{"optionValue": EquipState.OPERATION, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]}]
+            select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
+            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.PANNE-1][1]}) 
+        elif int(action) == EquipAction.MAINT_PREV_SITE or int(action) == EquipAction.MAINT_CORR_SITE:
+            select_choice = [{"optionValue": EquipState.DISPONIBLE, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]}]
+            select_choice.append({"optionValue": EquipState.OPERATION, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]})
             select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
             select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.PANNE-1][1]}) 
         elif int(action) == EquipAction.EXPEDIER:
@@ -336,7 +341,12 @@ def xhr_station(request):
         else:
             station_dispo = StationSite.objects.filter(id=station)
 
-        select_choice = [] 
+       # If action return only one site this is the only choice possible else
+       # we have to select a site 
+        if station_dispo.count() == 1:
+            select_choice = []
+        else:
+            select_choice = [{"optionValue": "", "optionDisplay": "-- choisir un site --"}]
         for station in station_dispo:
             select_choice.append(({"optionValue": station.id, "optionDisplay": station.__unicode__()}))
         data = simplejson.dumps(select_choice)

@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 
 from datetime import datetime
 
-from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel
+from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel, Built
 
 # TODO Voir a deplacer dans un autre fichier
 from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate
@@ -106,7 +106,7 @@ class InterventionForm(forms.ModelForm):
 
 class EquipmentForm(forms.ModelForm):
     """
-    Add of fields to obtain the date of purchase and stockage_site only when it'a new station 
+    Add of fields to obtain the date of purchase and stockage_site only when it'a new equipment 
     else hide the field and the label
     Only the site of type OBSERVATOIRE can be a stockage site
     """
@@ -219,38 +219,95 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
     def add_fields(self, form, index):
         super(IntervEquipInlineFormset, self).add_fields(form, index)
-        
+
+        url1 = reverse('xhr_equip_state')
+        url2 = reverse('xhr_equipment')
+        url3 = reverse('xhr_station')
+        url4 = reverse('xhr_built')
+
         # TODO Ameliorer cette comparaison
         if self.__initial and self.__initial != ['']:
             equip = get_object_or_404(Equipment, id=self.__initial[0])
             form.fields['equip'].initial = equip
+
+
+        STATE_CHOICES = []
+        STATE_CHOICES.insert(0, ('', '-- choisir une action en premier --'))
+
+        """
+        Initialize form.fields 
+        """
+        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --")
+        form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
+        form.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.none(), widget=forms.Select(attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}), empty_label="-- choisir une action en premier --")
+        form.fields['built'] = forms.ModelChoiceField(queryset = Built.objects.none(), empty_label="-- choisir une action en premier --", required=False)
 
         """
         Hack to check if the formset is already filled
 	to present the complete list of actions
         else the list exclude the action of buying (Acheter)
         """ 
+
         if index != None:
-            ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-            ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+            """ 
+            Obtain the value for each field of a line of a formset
+            """
+            action_id = form['equip_action'].value()
+            equip_id = form['equip'].value()
+            equip_state_id = form['equip_state'].value()
+            station_id = form['station'].value()
+            built_id = form['built'].value()
+
+            """ 
+            All actions can be display
+            """
+            if action_id != None and action_id != '' and int(action_id) == 1:
+                ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
+                ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+            else:
+                ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS[1:]]
+                ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
+
+            """ 
+            Filtering the queryset depending of the value
+            """
+            if equip_id != None and equip_id != '':
+                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(id=equip_id), empty_label=None)
+
+            if equip_state_id != None and equip_state_id != '':
+                for c in EquipState.EQUIP_STATES:
+                    if int(c[0]) == int(equip_state_id):
+                        STATE_CHOICES = [(c[0], c[1])]
+                form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
+
+            if station_id != None and station_id != '':
+                form.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.filter(id=station_id), widget=forms.Select(attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}), empty_label=None)
+
+            if built_id != None and built_id != '':
+                form.fields['built'] = forms.ModelChoiceField(queryset = Built.objects.filter(id=built_id), empty_label=None, required=False)
+
         else :
+            """ 
+            The BUY action is not permit
+            """
             ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS[1:]]
             ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
 
-        STATE_CHOICES = [(c[0], c[1]) for c in EquipState.EQUIP_STATES]
-        STATE_CHOICES.insert(0, ('', '-- choisir une action en premier --'))
-
-        url1 = reverse('xhr_equip_state')
-        url2 = reverse('xhr_equipment')
-        url3 = reverse('xhr_station')
-        url4 = reverse('xhr_built')
+            """
+            Special case if we came from a specifiq equipment
+            """ 
+            if self.__initial and self.__initial != ['']:
+                equip = get_object_or_404(Equipment, id=self.__initial[0])
+                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(id=self.__initial[0]), empty_label="-- choisir une action en premier --", initial=equip)
+            else:
+                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --")
   
-#        if index != None:
-#            form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');', 'disabled':'disabled'})
-#            form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES, attrs={'disabled':'disabled'})
-#        else:
         form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'})
-        form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
+
+#        form.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all(), widget=forms.Select(attrs={'onchange': 'alert("order change");'}), empty_label="-- choisir une action en premier --")
+##        form.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all(), widget=forms.Select(attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}), empty_label="-- choisir une action en premier --")
+##        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.all(), empty_label="-- choisir une action en premier --")
+##        form.fields['built'] = forms.ModelChoiceField(queryset = Built.objects.all(), empty_label="-- choisir une action en premier --", required=False)
 
     def clean(self):
         if any(self.errors):
@@ -332,9 +389,9 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                     errors += 1
                 if equip_action == EquipAction.MAINT_CORR_DISTANTE and (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.MAINT_PREV_SITE and (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.MAINT_PREV_SITE and (equip_state != EquipState.DISPONIBLE and equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.MAINT_CORR_SITE and (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.MAINT_CORR_SITE and (equip_state != EquipState.DISPONIBLE and equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
                 if equip_action == EquipAction.EXPEDIER and equip_state != EquipState.EN_TRANSIT:
                     errors += 1
