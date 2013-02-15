@@ -373,7 +373,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     form = StationSiteForm
 
     fieldsets = [
-        ('Information sur le site' , {'fields': [('site_type','station_code','station_name', 'station_parent', 'operator','creation_date'),('latitude','longitude','elevation')]}),
+        ('Information sur le site' , {'fields': [('site_type','station_code','station_name', 'operator','creation_date'),('latitude','longitude','elevation')]}),
         ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
         ('Adresse du site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country')], 'classes': ['collapse']}),
         ('Autre information pertinente' , {'fields': [('note'),('private_link')], 'classes': ['collapse']}),]
