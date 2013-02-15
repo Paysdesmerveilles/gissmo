@@ -30,15 +30,34 @@ from django.contrib.auth.models import User
 # Actor
 class Actor(models.Model):
     """
-    Actor is the person who make the intervention
-    
-    Observatoire : OSU
-    Instrumentaliste : Personne qui effectue une action sur une station
-    Organisme :
-    Entreprise : Unite economique de production de biens ou de services a but commercial
-    Entreprise SAV : Unite economique de production de biens ou de services a but commercial qui est opérateur d'un site de type SAV
-    Inconnu : 
-    Autre :     
+    **Description :** Personne ou entité morale qui est soit opérateur d'une station ou propriétaire d'un équipement ou impliquée lors d'une intervention
+            
+    **Attributes :**
+  
+    actor_type : integer
+        Type d'acteur comme décrit ci-dessous
+
+        **Choices :**
+
+            1 : Observatoire/Laboratoire : OSU
+
+            2 : Instrumentaliste : Personne qui effectue une action sur une station
+
+            3 : Organisme : Réseau
+
+            4 : Entreprise : Unite economique de production de biens ou de services a but commercial
+
+            5 : Entreprise SAV : Unite economique de production de biens ou de services a but commercial qui est opérateur d'un site de type SAV
+
+            6 : Inconnu : Inconnu
+
+            7 : Autre : Autre
+
+    actor_name : char(50)
+        Nom d'usage donné à l'acteur
+  
+    actor_note : text
+        Champ libre afin d'ajouter des informations supplémentaires
     """
 
     OBSERVATOIRE = 1
@@ -60,6 +79,7 @@ class Actor(models.Model):
     actor_type = models.IntegerField(choices=ACTOR_TYPE_CHOICES, default=AUTRE, verbose_name=_("Type d\'intervenant"))
     actor_name = models.CharField(max_length=50, unique=True, verbose_name=_("nom"))
     actor_note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+    actor_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("Groupe d\'appartenance"))
 
     class Meta:
         ordering = ['actor_name']
@@ -76,6 +96,15 @@ class Actor(models.Model):
 ####
 # Type of the built
 class BuiltType(models.Model):
+    """
+    **Description :** Type de bâti
+    
+    **Attributes :**
+
+    built_type_name : char(40)
+        Nom que l'on donne au type de bâti 
+    """
+
     built_type_name = models.CharField(max_length=40, verbose_name=_("type de bati"))
 
     class Meta:
@@ -89,7 +118,21 @@ class BuiltType(models.Model):
 # Builts on the site of a station
 class Built(models.Model):
     """
-    Built on site that contain at least an equipment
+    **Description :** Bâti que l'on retrouvre sur le site et qui contient au moins un équipement
+
+    **Attributes :**
+
+    station : integer (fk)
+        Site ou station sur lequel le bâti est présent
+
+    built_type : integer (fk)
+        Type de bâti
+
+    built_short_desc : char(40)
+        Courte description du bâti afin de nous permettre de distinguer celui-ci d'un autre bâti
+
+    built_note : text
+        Champ libre afin d'ajouter des informations supplémentaires
     """
     station = models.ForeignKey("StationSite", verbose_name=_("site"))
     built_type = models.ForeignKey("BuiltType", verbose_name=_("type de bati"))
@@ -106,6 +149,14 @@ class Built(models.Model):
 
 # Supertype or category of equipment
 class EquipSupertype(models.Model):
+    """
+    **Description :** Catégorie ou supertype auquel est associé l'équipement
+
+    **Attributes :**
+
+    equip_supertype_name : char(40)
+        Nom donné à la catégorie ou supertype
+    """
     equip_supertype_name = models.CharField(max_length=40, verbose_name=_("supertype d'equipement"))
 
     class Meta:
@@ -118,6 +169,17 @@ class EquipSupertype(models.Model):
 
 ## Type of equipment
 class EquipType(models.Model):
+    """
+    **Description :** Sous catégorie ou type auquel est associé l'équipement
+
+    **Attributes :**
+
+    equip_supertype : integer (fk)
+        Catégorie ou supertype auquel appartient le type d'équipement
+
+    equip_type_name : char(40)
+        Nom donné à la sous catégorie ou type
+    """
     equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
     equip_type_name = models.CharField(max_length=40, verbose_name=_("type d'equipement"))
 
@@ -131,6 +193,20 @@ class EquipType(models.Model):
 
 # Models of equipment
 class EquipModel(models.Model):
+    """
+    **Description :** Modèle de l'équipement attribué par son constructeur ou nom d'usage utilisé par la communauté des instrumentalistes
+
+    **Attributes :**
+
+    equip_supertype : integer (fk)
+        Catégorie ou supertype auquel appartient le modèle d'équipement
+
+    equip_type : integer (fk)
+        Sous-catégorie ou type auquel appartient le modèle d'équipement
+
+    equip_model_name : char(50)
+        Nom du modèle de l'équipment
+    """
     equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
     equip_type = ChainedForeignKey(
         EquipType,
@@ -150,11 +226,61 @@ class EquipModel(models.Model):
     def __unicode__(self):
         return self.equip_model_name
 
+# Parameters 
+class ParamEquipModel(models.Model):
+    equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
+    parameter_name = models.CharField(max_length=50, verbose_name=_("nom du parametre"))
+    default_value = models.CharField(max_length=50, verbose_name=_("valeur par défaut"))
+
+    class Meta:
+        unique_together = ("equip_model", "parameter_name")
+        verbose_name = _("parametre d'equipement")
+
+    def __unicode__(self):
+        return u'%s : %s' % (self.equip_model.equip_model_name, self.parameter_name)
+
+#class ParamValue(models.Model):
+#    parameter = models.ForeignKey("ParamEquipModel", verbose_name=_("Parametre modele d'equipement"))
+#    value = models.CharField(max_length=50, verbose_name=_("valeur"))
+#
+#    class Meta:
+#        unique_together = ("parameter", "value")
+#        verbose_name = _("valeur du parametre")
+#
+#    def __unicode__(self):
+#        return u'%s : %s' % (self.parameter, self.value)
+
 def get_defaut_owner():
     return Actor.objects.get(actor_name='DT INSU')
 
 # Equipments
 class Equipment(models.Model):
+    """
+    **Description :** Tout appareil installé dans une station sismologique ou conserver dans l'inventaire des OSU
+
+    **Attributes :**
+
+    equip_supertype : integer (fk)
+        Catégorie ou supertype auquel appartient l'équipement
+
+    equip_type : integer (fk)
+        Sous-catégorie ou type auquel appartient l'équipement
+
+    equip_model : integer (fk)
+        Modèle auquel appartient l'équipment
+
+    serial_number : char(50)
+        Numéro de série, numéro de produit ou numéro d'inventaire de l'équipment
+
+    owner : integer (fk)
+        Propriétaire de l'équipement
+
+    contact : text
+        Champ libre afin d'ajouter des informations sur les contacts
+
+    note : text
+        Champ libre afin d'ajouter des informations supplémentaires
+    """
     equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
     equip_type = ChainedForeignKey(
         EquipType,
@@ -202,6 +328,27 @@ class Equipment(models.Model):
 
 # Network
 class Network(models.Model):
+    """
+    **Description :** Réseau 
+
+        1 : FR : RESIF LB
+
+        2 : G : Géoscope
+
+        3 : RA : RAP
+
+        4 : RD : CEA/LDG
+
+        5 : AUTRE : Autre
+
+    **Attributes :**
+
+    network_code : char(5)
+        Code qui est atribué au réseau
+
+    network_name : char(50)
+        Nom d'usage que l'on utilise pour dénommer le réseau
+    """
     FR = 1
     G = 2
     RA = 3
@@ -228,6 +375,40 @@ class Network(models.Model):
 
 # Type of action that occur on station
 class StationAction(models.Model):
+    """
+    **Description :** Action qui peut survenir sur une station
+
+    **Choices :**
+
+        1 : CREER : Créer code station
+
+        2 : INSTALLER : Installer station
+
+        3 : OPERER : Mettre en opération
+
+        4 : CONSTATER DEFAUT : Constater défaillance
+
+        5 : MAINT_PREV_DISTANTE : Effectuer maintenance préventive à distance
+
+        6 : MAINT_CORR_DISTANTE : Effectuer maintenance corrective à distance
+
+        7 : MAINT_PREV_SITE : Effectuer maintenance préventive sur site
+
+        8 : MAINT_CORR_SITE : Effectuer maintenance corrective sur site
+
+        9 : DEMANTELER : Démanteler
+
+        10 : AUTRE : Autre
+
+        11 : DEBUTER_TEST : Débuter test
+
+        12 : TERMINER_TEST : Terminer test
+
+    **Attributes :**
+
+    station_action_name : char(50)
+        Nom utilise pour décrire l'action effectuée
+    """
     CREER = 1
     INSTALLER = 2
     OPERER = 3
@@ -238,9 +419,13 @@ class StationAction(models.Model):
     MAINT_CORR_SITE = 8
     DEMANTELER = 9
     AUTRE = 10
+    DEBUTER_TEST = 11
+    TERMINER_TEST = 12
     STATION_ACTIONS = (
         (CREER, 'Créer code station'),
         (INSTALLER, 'Installer station'),
+        (DEBUTER_TEST, 'Débuter test'),
+        (TERMINER_TEST, 'Terminer test'),
         (OPERER, 'Mettre en opération'),
         (CONSTATER_DEFAUT, 'Constater défaillance'),
         (MAINT_PREV_DISTANTE, 'Effectuer maintenance préventive à distance'),
@@ -255,14 +440,40 @@ class StationAction(models.Model):
 
 # Possible state of a station
 class StationState(models.Model):
+    """
+    **Description :** Etat dans lequel une station peut se retrouver
+
+    **Choices :**
+
+        1 : INSTALLATION : En installation
+
+        2 : OPERATION : En opération
+
+        3 : DEFAUT : En défaillance
+
+        4 : PANNE : En panne 
+
+        5 : FERMEE : Fermée
+
+        6 : AUTRE : Autre
+
+        7 : EN_TEST : En test
+
+    **Attributes :**
+
+    station_state_name : char(50)
+        Nom utilisé pour décrire l'état d'une station
+    """
     INSTALLATION = 1
     OPERATION = 2
     DEFAUT = 3
     PANNE = 4
     FERMEE = 5
     AUTRE = 6
+    EN_TEST = 7
     STATION_STATES = (
         (INSTALLATION, 'En installation'),
+        (EN_TEST, 'En test'),
         (OPERATION, 'En opération'),
         (DEFAUT, 'En défaillance'),
         (PANNE, 'En panne'),
@@ -272,6 +483,48 @@ class StationState(models.Model):
     station_state_name = models.CharField(max_length=50, null=True, blank=True)
 
 class EquipAction(models.Model):
+    """
+    **Description :** Action qui peut survenir sur un équipement
+
+    **Choices :**
+
+        1 : ACHETER : Acheter
+
+        2 : TESTER : Tester
+
+        3 : INSTALLER : Installer
+
+        4 : DESINSTALLER : Désinstaller
+
+        5 : CONSTATER_DEFAUT : Constater défaut
+
+        6 : MAINT_PREV_DISTANTE : Effectuer maintenance préventive à distance
+
+        7 : MAINT_CORR_DISTANTE : Effectuer maintenance corrective à distance
+
+        8 : MAINT_PREV_SITE : Effectuer maintenance préventive sur site
+
+        9 : MAINT_CORR_SITE : Effectuer maintenance corrective sur site
+
+        10 : EXPEDIER : Expédier
+
+        11 : RECEVOIR : Recevoir
+
+        12 : METTRE_HORS_USAGE : Mettre hors usage
+
+        13 : CONSTATER_DISPARITION : Constater disparition
+
+        14 : RETROUVER : Retrouver suite à une disparition
+
+        15 : METTRE_AU_REBUT : Mettre au rebut
+
+        16 : AUTRE : Autre
+
+    **Attributes :**
+
+    equip_action_name : char(50)
+        Nom utilisé pour décrire l'action effectuée
+    """
     ACHETER = 1
     TESTER = 2
     INSTALLER = 3
@@ -310,6 +563,36 @@ class EquipAction(models.Model):
 
 # Possible state of an equipment
 class EquipState(models.Model):
+    """
+    **Description :** Etat dans lequel un équipement peut se retrouver
+
+    **Choices :**
+
+        1 : OPERATION : En opération
+
+        2 : A_TESTER : A tester
+
+        3 : DISPONIBLE : Disponible
+
+        4 : DEFAUT : En défaillance
+
+        5 : PANNE : En panne
+
+        6 : EN_TRANSIT : En transit
+
+        7 : HORS_USAGE : Hors d'usage
+
+        8 : DISPARU : Disparu
+
+        9 : AU_REBUT : Au rebut
+
+        10 : AUTRE : Autre               
+
+    **Attributes :**
+
+    equip_state_name : char(50)
+        Nom utilisé pour décrire l'état d'un équipement
+    """
     OPERATION = 1
     A_TESTER = 2
     DISPONIBLE = 3
@@ -339,6 +622,71 @@ def get_defaut_operator():
 
 # Station or site 
 class StationSite(models.Model):
+    """
+    **Description :** Site ou station d'intérêt dans le cadre du CLB Resif
+             
+    **Attributes :**
+
+    site_type : integer (choice)
+        Type de site
+
+        **Choices :**
+
+            1 : STATION : 
+
+            2 : OBSERVATOIRE : Personne qui effectue une action sur une station
+
+            3 : SAV : Réseau
+
+            4 : NEANT : Unite economique de production de biens ou de services a but commercial
+
+            7 : AUTRE : Autre
+
+    station_code : char(40)
+        Code attribué au site ou à la station lors de sa création 
+
+    station_name : char(50) 
+        Nom d'usage attribué au site ou à la station. On y retrouve souvent le nom de la commune à proximité.
+
+    latitude : decimal(8,6)
+        Latitude de la station
+
+    longitude : decimal(9,6)
+        Longitude de la station
+
+    elevation : decimal(5,1)
+        Elevation de la station par rapport au niveau de la mer
+
+    operator : integer (fk)
+        Observatoite/Laboratoire ayant la charge d'opérer la station ou le site
+
+    address : char(100)
+        Adresse civique du lieu où est située la station
+
+    city : char(100)
+        Commune où est située la station
+
+    department : char(100)
+        Département où est située la station
+
+    region : char(100)
+        Région où est située la station
+
+    country : char(50)
+        Pays où est située la station
+
+    zip_code : char(15)
+        Code postal 
+
+    contact : text
+        Champ libre afin d'ajouter des informations sur les contacts
+
+    note : text
+        Champ libre afin d'ajouter des informations supplémentaires
+
+    private_link : char(200) -- URLFIELD
+        Champ dans lequel on peut inscrire un lien vers un outil interne (wiki, etc.)
+    """
     DT_INSU = 1
     EOST = 2
     IPGP = 3
@@ -367,15 +715,17 @@ class StationSite(models.Model):
     SAV = 3
     NEANT = 4
     AUTRE = 5
+    SITE_TEST = 6
     SITE_CHOICES = (
         (STATION, 'Station sismologique'),
+        (SITE_TEST, 'Site de test'),
         (OBSERVATOIRE, 'Observatoire'),
         (SAV, 'Lieu de service après vente'),
         (NEANT, 'Lieu indéterminé'),
         (AUTRE, 'Autre'),
     )
    
-    site_type = models.IntegerField(choices=SITE_CHOICES, default=STATION, verbose_name=_("Type de site"))
+    site_type = models.IntegerField(choices=SITE_CHOICES, default=STATION, verbose_name=_("type de site"))
     station_code = models.CharField(max_length=40, unique=True, verbose_name=_("code"))
     station_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom site"))
     latitude = models.DecimalField(null=True, blank=True, verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
@@ -390,7 +740,8 @@ class StationSite(models.Model):
     zip_code = models.CharField(max_length=15, null=True, blank=True, verbose_name=_("code postal"))
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
-    private_link = models.URLField(null=True, blank=True, verbose_name=_("Lien outil interne"))
+    private_link = models.URLField(null=True, blank=True, verbose_name=_("lien outil interne"))
+    station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("station referente"))
 
     class Meta:
         ordering = ['station_code']
@@ -403,6 +754,20 @@ class StationSite(models.Model):
 # Management of intervention
 
 class Intervention(models.Model):
+    """
+    **Description :** Intervention ayant eu lieu dans le cadre de CLB Resif
+             
+    **Attributes :**
+
+    station : integer (fk)
+        Site ou station où a eu lieu l'intervention
+
+    intervention_date : timestamp
+        Date et heure à laquelle l'intervention s'est produit
+
+    note : text
+        Champ libre afin d'ajouter des informations supplémentaires
+    """
     station = models.ForeignKey("StationSite", verbose_name=_("site"))
     intervention_date = models.DateTimeField(verbose_name=_("date (aaaa-mm-jj)"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
@@ -416,6 +781,20 @@ class Intervention(models.Model):
         return u'%s : %s' % (self.station.station_code, self.intervention_date)
 
 class IntervActor(models.Model):
+    """
+    **Description :** Acteurs ayant effectués ou présents lors de l'intervention
+             
+    **Attributes :**
+
+    intervention : integer (fk)
+        Intervention à laquelle les intervenants ont participé
+
+    actor : integer (fk)
+        Intervenant ayant effectué l'intervention ou présent lors de celle-ci
+
+    note : text
+        Champ libre afin d'ajouter des informations supplémentaires
+    """
     intervention = models.ForeignKey("Intervention", verbose_name=_("intervention"))
     actor = models.ForeignKey("Actor", verbose_name=_("intervenant"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
@@ -427,6 +806,23 @@ class IntervActor(models.Model):
         return u'%s : %s' % (self.intervention, self.actor)
 
 class IntervStation(models.Model):
+    """
+    **Description :** Détail de l'intervention qui s'est effectuée sur la station
+             
+    **Attributes :**
+
+    intervention : integer (fk)
+        Intervention pour laquelle l'action sur la station est répertoriée
+
+    station_action : integer (fk)
+        Action principale effectuée lors de l'intervention sur la station
+
+    station_state : integer (fk)
+        Etat dans lequel se retrouve la station à la fin de l'intervention
+
+    note : text
+        Champ libre afin d'ajouter des informations supplémentaires
+    """
     intervention = models.ForeignKey("Intervention", verbose_name=_("intervention"))
     station_action = models.IntegerField(choices=StationAction.STATION_ACTIONS, verbose_name=_("action"))
     station_state = models.IntegerField(choices=StationState.STATION_STATES, null=True, blank=True, verbose_name=_("etat"))
@@ -439,6 +835,32 @@ class IntervStation(models.Model):
         return u'%s' % (self.intervention)
 
 class IntervEquip(models.Model):
+    """
+    **Description :** Détail de l'intervention qui s'est effectuée sur l'équipement
+             
+    **Attributes :**
+
+    intervention : integer (fk)
+        Intervention pour laquelle les actions sur les équipement sont répertoriées
+
+    equip_action : integer (choice)
+        Action principale effectuée sur un équipement lors de l'intervention
+
+    equip : integer (fk)
+        Equipement sur lequel l'action s'est effectuée lors de l'intervention
+
+    equip_state : integer (choice)
+        Etat dans lequel se retrouve l'équipement à la fin de l'intervention
+
+    station : integer (fk)
+        Station où se retrouve l'équipement à la fin de l'intervention
+
+    built : integer (fk)
+        Bâti dans lequel se retrouve l'équipement à la fin de l'intervention
+
+    note : text
+        Champ libre afin d'ajouter des informations supplémentaires
+    """
     intervention = models.ForeignKey("Intervention", verbose_name=_("intervention"))
     equip_action = models.IntegerField(choices=EquipAction.EQUIP_ACTIONS, verbose_name=_("action"))
     equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
@@ -454,16 +876,44 @@ class IntervEquip(models.Model):
         return u'%s' % (self.intervention)
 
 # Management of station document
+class StationDocType(models.Model):
+    stationdoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
+
+    def __unicode__(self):
+        return u'%s' % (self.stationdoc_type_name)
 
 def stationdoc_file_name(self, filename):
         return 'stations/%s_%s/%s' % (self.station.id, self.station.station_code, filename)
 
 class StationDoc(models.Model):
+    """
+    **Description :** Documents relatifs à la station
+             
+    **Attributes :**
+
+    station : integer (fk)
+        Station à laquelle se rapporte le document déposé
+
+    owner : integer (fk)
+        Utilisateur ayant déposer le document
+
+    document_title : char(40)
+        Titre attribué au document
+
+    inscription_date : date
+        Date à laquelle le document a été déposé
+
+    document_station : char(100) -- FILEFIELD
+        Champ qui contient le chemin d'accès au document
+    """
+
     station = models.ForeignKey("StationSite", verbose_name=_("site"))
     owner = models.ForeignKey(User)
+    document_type = models.ForeignKey(StationDocType, null=True, blank=True, verbose_name=_("type de document"))
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
     inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
-    document_station = models.FileField(storage=fs, verbose_name=_("document"), upload_to=stationdoc_file_name)
+    document_station = models.FileField(storage=fs, verbose_name=_("document"), upload_to=stationdoc_file_name, blank=True)
+    private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
 
     class Meta:
         unique_together = ("station", "document_title", "inscription_date")
@@ -474,11 +924,42 @@ class StationDoc(models.Model):
         return u'%s %s %s' % (self.station.station_code, self.document_title, self.inscription_date)
 
 # Management of equipment model document
+class EquipModelDocType(models.Model):
+    equipmodeldoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
+
+    def __unicode__(self):
+        return u'%s' % (self.equipmodeldoc_type_name)
 
 def equipmodeldoc_file_name(self, filename):
     return 'equipments/%s_%s/%s' % (self.equip_model.id, self.equip_model.equip_model_name, filename)
 
 class EquipModelDoc(models.Model):
+    """
+    **Description :** Documents relatifs à un modèle d'équipement
+             
+    **Attributes :**
+
+    equip_supertype : integer (fk)
+        Catégorie ou supertype auquel appartient le modèle d'équipement
+
+    equip_type : integer (fk)
+        Sous-catégorie ou type auquel appartient le modèle d'équipement
+
+    equip_model : integer (fk)
+        Modèle de l'équipment auquel se rapporte le document
+
+    owner : integer (fk)
+        Utilisateur ayant déposer le document déposé
+
+    document_title : char(40)
+        Titre attribué au document
+
+    inscription_date : date
+        Date à laquelle le document a été déposé
+
+    document_equip_model : char(100) -- FILEFIELD
+        Champ qui contient le chemin d'accès au document
+    """
     equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
     equip_type = ChainedForeignKey(
         EquipType,
@@ -497,9 +978,11 @@ class EquipModelDoc(models.Model):
         verbose_name=_("modele d'equipement")
     )
     owner = models.ForeignKey(User)
+    document_type = models.ForeignKey(EquipModelDocType, null=True, blank=True, verbose_name=_("type de document"))
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
     inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
-    document_equip_model = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipmodeldoc_file_name)
+    document_equip_model = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipmodeldoc_file_name, blank=True)
+    private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
 
     class Meta:
         unique_together = ("equip_model", "document_title", "inscription_date")
@@ -510,11 +993,45 @@ class EquipModelDoc(models.Model):
         return u'%s %s %s' % (self.equip_model.equip_model_name, self.document_title, self.inscription_date)
 
 # Management of equipment document
+class EquipDocType(models.Model):
+    equipdoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
+
+    def __unicode__(self):
+        return u'%s' % (self.equipdoc_type_name)
 
 def equipdoc_file_name(self, filename):
         return 'equipments/%s_%s/%s_%s_%s/%s' % (self.equip.equip_model.id, self.equip.equip_model.equip_model_name, self.equip.id, self.equip.equip_model.equip_model_name, self.equip.serial_number, filename)
 
 class EquipDoc(models.Model):
+    """
+    **Description :** Documents relatifs à un équipement
+             
+    **Attributes :**
+
+    equip_supertype : integer (fk)
+        Catégorie ou supertype auquel appartient l'équipement
+
+    equip_type : integer (fk)
+        Sous-catégorie ou type auquel appartient l'équipement
+
+    equip_model : integer (fk)
+        Modèle auquel appartient l'équipment
+
+    equip : integer (fk)
+        Equipement auquel se rapporte le document déposé
+
+    owner : integer (fk)
+        Utilisateur ayant déposer le document
+
+    document_title : char(40)
+        Titre attribué au document
+
+    inscription_date : date
+        Date à laquelle le document a été déposé
+
+    document_equip : char(100) -- FILEFIELD
+        Champ qui contient le chemin d'accès au document
+    """
     equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
     equip_type = ChainedForeignKey(
         EquipType,
@@ -541,9 +1058,11 @@ class EquipDoc(models.Model):
         verbose_name=_("equipement")
     )
     owner = models.ForeignKey(User)
+    document_type = models.ForeignKey(EquipDocType, null=True, blank=True, verbose_name=_("type de document"))
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
     inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
-    document_equip = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipdoc_file_name)
+    document_equip = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipdoc_file_name, blank=True)
+    private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
 
     class Meta:
         unique_together = ("equip", "document_title", "inscription_date")
@@ -668,8 +1187,10 @@ class Chain(models.Model) :
 class ChainConfig(models.Model) :
     chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition"))
     parameter = models.CharField(max_length=50, verbose_name=_("parametre"))
-    value = models.CharField(max_length=20, verbose_name=_("valeur"))
+    value = models.CharField(max_length=20, null=True, blank=True, verbose_name=_("valeur"))
 
+    def __unicode__(self):
+        return u'%s : %s : %s' % (self.chain, self.parameter, self.value)
 
 #from django.db.models.signals import post_save, post_delete
 #from django.dispatch import receiver

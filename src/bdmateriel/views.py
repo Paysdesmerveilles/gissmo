@@ -1,6 +1,7 @@
 # coding=utf-8
 
 # Create your views here.
+import csv
 import os.path
 import mimetypes
 from datetime import datetime
@@ -13,6 +14,7 @@ from django.shortcuts import render_to_response, redirect, get_object_or_404, Ht
 from django.core.exceptions import PermissionDenied
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import admin
+from django.contrib.auth.models import User
 from django.db.models import get_model
 
 from django.utils import simplejson
@@ -79,12 +81,19 @@ def itineraire_maps(request):
 itineraire_maps = staff_member_required(itineraire_maps)
 
 def get_file(request, app_label, model_name, field_name, identifier):
+    """
+    Function that check if the user can open the file and do so
+    The request user must not be anonymous, authenticated and be the owner of the file or be in the same group of the owner
+    """
     mimetypes.init()
 
+    #Obtain the model on which we work : StationDoc, EquipDoc or EquipModelDoc
     model = get_model(app_label, model_name)
+
+    #Obtain the instance
     instance = get_object_or_404(model, pk=identifier)
 
-    if (not request.user.is_anonymous()) and request.user.is_authenticated() and instance.owner.pk == request.user.pk:
+    if (not request.user.is_anonymous()) and request.user.is_authenticated() and ((instance.owner.pk == request.user.pk) or (set(instance.owner.groups.all()) == set(request.user.groups.all()))):
         path = getattr(instance, field_name).file.name
         file_name = os.path.basename(path)
         mime_type_guess = mimetypes.guess_type(file_name)
@@ -99,7 +108,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
 # TODO fonction qui selon station_action choisi retourne station_state possible
 def xhr_station_state(request):
     """
-        Request that return the possible states for a station according to the action done
+    Request that return the possible states for a station according to the action done
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -108,18 +117,24 @@ def xhr_station_state(request):
         select_choice = [({"optionValue" : c[0], "optionDisplay" : c[1]}) for c in StationState.STATION_STATES]
         select_choice.insert(0, ({"optionValue": '', "optionDisplay": '-- choisir une action en premier --'}))
         if int(action) == StationAction.CREER or int(action) == StationAction.INSTALLER:
-            select_choice = [{"optionValue": StationState.INSTALLATION, "optionDisplay": StationState.STATION_STATES[StationState.INSTALLATION-1][1]}] 
+            select_choice = [{"optionValue": StationState.INSTALLATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.INSTALLATION]}] 
+        elif int(action) == StationAction.DEBUTER_TEST:
+            select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
+            select_choice.append({"optionValue": StationState.EN_TEST, "optionDisplay": dict(StationState.STATION_STATES)[StationState.EN_TEST]})
+        elif int(action) == StationAction.TERMINER_TEST:
+            select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
+            select_choice.append({"optionValue": StationState.FERMEE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.FERMEE]})   
         elif int(action) == StationAction.OPERER:
-            select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": StationState.STATION_STATES[StationState.OPERATION-1][1]}]
+            select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
         elif int(action) == StationAction.CONSTATER_DEFAUT:
-            select_choice = [{"optionValue": StationState.DEFAUT, "optionDisplay": StationState.STATION_STATES[StationState.DEFAUT-1][1]}]
-            select_choice.append({"optionValue": StationState.PANNE, "optionDisplay": StationState.STATION_STATES[StationState.PANNE-1][1]})            
+            select_choice = [{"optionValue": StationState.DEFAUT, "optionDisplay": dict(StationState.STATION_STATES)[StationState.DEFAUT]}]
+            select_choice.append({"optionValue": StationState.PANNE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.PANNE]})            
         elif int(action) == StationAction.MAINT_PREV_DISTANTE or int(action) == StationAction.MAINT_CORR_DISTANTE or int(action) == StationAction.MAINT_PREV_SITE or int(action) == StationAction.MAINT_CORR_SITE:
-            select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": StationState.STATION_STATES[StationState.OPERATION-1][1]}]
-            select_choice.append({"optionValue": StationState.DEFAUT, "optionDisplay": StationState.STATION_STATES[StationState.DEFAUT-1][1]})
-            select_choice.append({"optionValue": StationState.PANNE, "optionDisplay": StationState.STATION_STATES[StationState.PANNE-1][1]})          
+            select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
+            select_choice.append({"optionValue": StationState.DEFAUT, "optionDisplay": dict(StationState.STATION_STATES)[StationState.DEFAUT]})
+            select_choice.append({"optionValue": StationState.PANNE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.PANNE]})          
         elif int(action) == StationAction.DEMANTELER:
-            select_choice = [{"optionValue": StationState.FERMEE, "optionDisplay": StationState.STATION_STATES[StationState.FERMEE-1][1]}]
+            select_choice = [{"optionValue": StationState.FERMEE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.FERMEE]}]
         elif int(action) == StationAction.AUTRE:
             pass
         else:
@@ -134,7 +149,7 @@ def xhr_station_state(request):
 # TODO fonction qui selon equip_action choisi retourne equip_state possible
 def xhr_equip_state(request):
     """
-        Request that return the possible states for a station according to the action done
+    Request that return the possible states for a station according to the action done
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -145,7 +160,8 @@ def xhr_equip_state(request):
         if int(action) == EquipAction.ACHETER:
             select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}] 
         elif int(action) == EquipAction.TESTER:
-            select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}]
+            select_choice = [{"optionValue": EquipState.OPERATION, "optionDisplay": EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]}]
+            select_choice.append({"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]})
             select_choice.append({"optionValue": EquipState.DISPONIBLE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]})
             select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
             select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
@@ -197,23 +213,21 @@ def station_last_state(station):
     """
     Function to obtain the last state of a station
     """
-    result = 0
     last_station_state = IntervStation.objects.filter(intervention__station__id=station,station_state__isnull=False).order_by('-intervention__intervention_date')
     if last_station_state:
-        for last in last_station_state:
-            result = last.station_state
-    return result
+        return dict(StationState.STATION_STATES)[last_station_state[0].station_state]
+    else:
+        return 'Inconnu'
 
 def equip_last_state(equip):
     """
     Function to obtain the last state of an equipment
     """
-    result = 0
     last_equip_state = IntervEquip.objects.filter(equip__id=equip, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
     if last_equip_state:
-        for last in last_equip_state:
-            result = last.equip_state
-    return result
+        return EquipState.EQUIP_STATES[last_equip_state[0].equip_state-1][1]
+    else:
+        return 'Inconnu'
 
 def equip_state_todate(equip, date):
     """
@@ -230,12 +244,11 @@ def equip_last_place(equip):
     """
     Function to obtain the last place where an equipment is
     """
-    result = 0
     last_equip_place = IntervEquip.objects.filter(equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]
     if last_equip_place:
-        for last in last_equip_place:
-            result = last.station
-    return result
+        return last_equip_place[0].station
+    else:
+        return 'Inconnu'
 
 def equip_place_todate(equip, date):
     """
@@ -250,9 +263,9 @@ def equip_place_todate(equip, date):
 
 def xhr_equipment(request):
     """
-        Request that return the possible equipment for a station according to the action done
-        equipment available
-        equipment on site
+    Request that return the possible equipment for a station according to the action done
+    equipment available
+    equipment on site
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -285,6 +298,24 @@ def xhr_equipment(request):
                     for last in last_equip_state:
                         Liste.append(last.id)
             equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.EN_TRANSIT ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+       # Retreive only equip Disparu
+        elif int(action) == EquipAction.RETROUVER:
+            for equip in equipments:
+                #Obtain the last state of all equipment
+                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+                if last_equip_state:
+                    for last in last_equip_state:
+                        Liste.append(last.id)
+            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.DISPARU ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+       # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE 
+        elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
+            for equip in equipments:
+                #Obtain the last state of all equipment
+                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+                if last_equip_state:
+                    for last in last_equip_state:
+                        Liste.append(last.id)
+            equip_dispo = IntervEquip.objects.filter(Q(equip_state=EquipState.DEFAUT) | Q(equip_state=EquipState.PANNE) ,id__in=Liste, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
        # Make action only on equip installed in the station
         else:
             for equip in equipments:
@@ -313,7 +344,7 @@ def xhr_equipment(request):
 
 def xhr_station(request):
     """
-        Request that return the possible station according to the action done
+    Request that return the possible station according to the action done
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -358,7 +389,7 @@ def xhr_station(request):
 
 def xhr_built(request):
     """
-        Request that return the possible built according to the station
+    Request that return the possible built according to the station
     """
     if request.is_ajax() and request.method == 'GET':
         action=request.GET.get('action', '')
@@ -380,7 +411,7 @@ def xhr_built(request):
 
 def xhr_equip_oper(request):
     """
-        Request that return the possible equipment in operation for a station 
+    Request that return the possible equipment in operation for a station 
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -410,7 +441,7 @@ def xhr_equip_oper(request):
 
 def xhr_station_position(request):
     """
-        Request that return the position for a station 
+    Request that return the position for a station 
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -427,3 +458,95 @@ def xhr_station_position(request):
     else:
         return HttpResponse(status=400)
 
+def dictfetchall(cursor):
+    "Returns all rows from a cursor as a dict"
+    desc = cursor.description
+    return [
+        dict(zip([col[0] for col in desc], row))
+        for row in cursor.fetchall()
+    ]
+
+def dataless(request):
+    from django.db import connection, transaction
+    cursor = connection.cursor()
+
+    query = request.GET.get('Station','')
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(mimetype='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="dataless.csv"'
+
+    cursor.execute('''SELECT
+  CASE WHEN substr(bdmateriel_channel.channel_code,3,1)='2' THEN 'N' 
+  WHEN substr(bdmateriel_channel.channel_code,3,1)='3' THEN 'E' 
+  ELSE substr(bdmateriel_channel.channel_code,3,1) END AS "Composante", 
+  bdmateriel_channel.channel_code AS "Code du canal",
+  bdmateriel_stationsite.station_code  AS "Code du site",
+  bdmateriel_channel.latitude AS "Latitude",
+  bdmateriel_channel.longitude AS "Longitude",
+  bdmateriel_channel.elevation AS "Elevation",
+  bdmateriel_channel.depth AS "Profondeur",
+  bdmateriel_channel.start_date,
+  bdmateriel_channel.end_date,
+  bdmateriel_channel.dip AS "Dip",
+  bdmateriel_channel.azimuth AS "Azimuth",
+  bdmateriel_network.network_code AS "Reseau",
+  bdmateriel_actor.actor_name AS "Observatoire",
+  (SELECT 
+    bdmateriel_equipmodel.equip_model_name || '-' || bdmateriel_equipment.serial_number 
+   FROM 
+    public.bdmateriel_chain,
+    public.bdmateriel_equipment,
+    public.bdmateriel_equipmodel
+   WHERE
+    bdmateriel_chain."order" = 1 AND
+    bdmateriel_chain.equip_id = bdmateriel_equipment.id AND
+    bdmateriel_equipment.equip_model_id = bdmateriel_equipmodel.id AND
+    bdmateriel_chain.channel_id = bdmateriel_channel.id
+  ) AS "Capteur S/N",
+  (SELECT 
+    bdmateriel_equipmodel.equip_model_name || '-' || bdmateriel_equipment.serial_number 
+   FROM 
+    public.bdmateriel_chain,
+    public.bdmateriel_equipment,
+    public.bdmateriel_equipmodel
+   WHERE
+    bdmateriel_chain."order" = 2 AND
+    bdmateriel_chain.equip_id = bdmateriel_equipment.id AND
+    bdmateriel_equipment.equip_model_id = bdmateriel_equipmodel.id AND
+    bdmateriel_chain.channel_id = bdmateriel_channel.id
+  ) AS "Numeriseur S/N",
+  bdmateriel_channel.sample_rate AS "Fréquence"
+FROM 
+  public.bdmateriel_channel,
+  public.bdmateriel_stationsite,
+  public.bdmateriel_network,
+  public.bdmateriel_actor
+WHERE 
+  bdmateriel_channel.station_id = bdmateriel_stationsite.id AND
+  bdmateriel_channel.network_id = bdmateriel_network.id AND
+  bdmateriel_stationsite.operator_id = bdmateriel_actor.id AND
+  bdmateriel_stationsite.id = %s
+ORDER BY 
+  bdmateriel_channel.start_date,
+  bdmateriel_channel.location_code,
+  "Composante" DESC
+''', [query])
+    dictrow = dictfetchall(cursor)
+    writer = csv.writer(response)
+    writer.writerow(["Composante","Code du canal","Code du site","Latitude", \
+                    "Longitude","Elevation","Profondeur","start_date", \
+                    "end_date","Dip","Azimuth","Reseau","Observatoire","Capteur S/N", \
+                    "Numeriseur S/N","Fréquence"])
+    for row in dictrow:
+        writer.writerow([row["Composante"],row["Code du canal"],row["Code du site"],row["Latitude"], \
+                         row["Longitude"],row["Elevation"],row["Profondeur"],row["start_date"], \
+                         row["end_date"],row["Dip"],row["Azimuth"],row["Reseau"],row["Observatoire"], \
+                         row["Capteur S/N"],row["Numeriseur S/N"],row["Fréquence"]])
+    return response
+
+def station_xml(request):
+
+    return render_to_response("station_xml.html", {
+    },
+         RequestContext(request, {}), mimetype="application/xhtml+xml") 
+station_xml = staff_member_required(station_xml)

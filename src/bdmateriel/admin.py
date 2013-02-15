@@ -31,6 +31,20 @@ Afin d'avoir un changement dans les formsets de EquipModelDocInline
 """
 import time
 
+# Ajout pour custom URLFieldWidget
+from django.contrib.admin.widgets import AdminURLFieldWidget
+from django.db.models import URLField
+from django.utils.safestring import mark_safe
+# Fin de l'ajout pour custom URLFieldWidget
+
+class URLFieldWidget(AdminURLFieldWidget):
+    def render(self, name, value, attrs=None):
+        widget = super(URLFieldWidget, self).render(name, value, attrs)
+        return mark_safe(u'%s&nbsp;&nbsp;<input type="button" '
+                         u'value="View Link" onclick="window.'
+                         u'open(document.getElementById(\'%s\')'
+                         u'.value)" />' % (widget, attrs['id']))
+
 ####
 #
 # ActorAdmin's section
@@ -218,7 +232,7 @@ class EquipmentAdmin(admin.ModelAdmin):
     inlines = [EquipDocInline,]
 
     def get_last_state(self, obj):
-        return '%s'%(EquipState.EQUIP_STATES[equip_last_state(obj.id)-1][1])
+        return '%s'%(equip_last_state(obj.id))
     get_last_state.short_description = 'Etat'
 
     def get_last_place(self, obj):
@@ -338,7 +352,20 @@ class StationSiteFilter(SimpleListFilter):
        if self.value():
            return queryset.filter(operator__id__exact=self.value())
 
+#import copy
+
+#def copy_stationsite(modeladmin, request, queryset):
+#    # sd is an instance of StationSite
+#    for sd in queryset:
+#        sd_copy = copy.copy(sd) # (2) django copy object
+#        sd_copy.id = None   # (3) set 'id' to None to create new object
+#        sd_copy.station_code = sd.station_code + '_NEW' 
+#        sd_copy.save()    # initial save
+#
+#    copy_stationsite.short_description = "Make a Copy of StationSite"
+
 class StationSiteAdmin(admin.ModelAdmin):
+#    actions = [copy_stationsite]
     list_display = ('station_code', 'station_name', 'operator', 'get_last_state', 'site_type', 'latitude', 'longitude', 'elevation',)
     list_filter = [StationSiteFilter,  'site_type',]
     ordering = ['station_code',]
@@ -346,7 +373,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     form = StationSiteForm
 
     fieldsets = [
-        ('Information sur le site' , {'fields': [('site_type','station_code','station_name','operator','creation_date'),('latitude','longitude','elevation')]}),
+        ('Information sur le site' , {'fields': [('site_type','station_code','station_name', 'station_parent', 'operator','creation_date'),('latitude','longitude','elevation')]}),
         ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
         ('Adresse du site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country')], 'classes': ['collapse']}),
         ('Autre information pertinente' , {'fields': [('note'),('private_link')], 'classes': ['collapse']}),]
@@ -355,7 +382,7 @@ class StationSiteAdmin(admin.ModelAdmin):
 
     def get_last_state(self, obj):
         """ To display the last state of the station in the change_list """
-        return '%s'%(StationState.STATION_STATES[station_last_state(obj.id)-1][1])
+        return '%s'%(station_last_state(obj.id))
     get_last_state.short_description = 'Etat'
 
     def save_model(self, request, obj, form, change):
@@ -390,6 +417,10 @@ class StationSiteAdmin(admin.ModelAdmin):
                 instance.save()
             else:
                 formset.save()
+
+    formfield_overrides = {
+        models.URLField: {'widget': URLFieldWidget},
+    }
 
 ####
 #
@@ -473,6 +504,20 @@ class InterventionAdmin(admin.ModelAdmin):
     class Media:
         js = ["js/my_ajax_function.js"]
 
+    def response_change(self, request, obj):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement modifié' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+        else:
+            return super(InterventionAdmin, self).response_change(request, obj)
+
+    def response_add(self, request, obj, post_url_continue="../%s/"):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement ajouté' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+        else:
+            return super(InterventionAdmin, self).response_add(request, obj, post_url_continue)
+
 ######## class ChainComponentInlineFormset(forms.models.BaseInlineFormSet):
 ########  
 ########    def clean(self):
@@ -553,7 +598,7 @@ class ChainInline(admin.TabularInline):
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
     }
 
-# from django.contrib import messages
+from django.contrib import messages
 
 class ChannelAdmin(admin.ModelAdmin):
     model = Channel
@@ -565,24 +610,66 @@ class ChannelAdmin(admin.ModelAdmin):
 
     inlines = [ChainInline,]
 
+# a lot of todo 
+# blinder la generation automatique de parametre de config selon modele equip
+# empecher tout changement
+# generer l'ordre automatiquement
+
+    def save_formset(self, request, form, formset, change):
+        """ Reference du code
+            http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
+        instances = formset.save(commit=False)
+        
+        for instance in instances:
+            if isinstance(instance, Chain): #Check if it is the correct type of inline
+                instance.save()
+                parameters = ParamEquipModel.objects.filter(equip_model_id=instance.equip.equip_model.id).order_by('pk')
+                for parameter in parameters:
+                    chainconfig = ChainConfig(chain=instance,parameter=parameter.parameter_name, value=parameter.default_value)
+                    chainconfig.save()
+            else:
+                formset.save()               
+
     class Media:
         js = ["js/my_ajax_function.js"]
 
-##    def response_add(self, request, obj, post_url_continue=None):
-###        This makes the response go to the newly created model's change page
-###        without using reverse
-##        messages.success( request, 'Test successful' )
-##        return HttpResponseRedirect("../%s" % obj.id)
+    def response_change(self, request, obj):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement modifié' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+        else:
+            if '_saveasnew' in request.POST:
+                messages.success( request, 'Enregistrement modifié' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(ChannelAdmin, self).response_change(request, obj)
+
+    def response_add(self, request, obj, post_url_continue="../%s/"):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement ajouté' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+        else:
+##        This makes the response go to the newly created model's change page
+##        without using reverse
+            if '_saveasnew' in request.POST:              
+                messages.success( request, 'Enregistrement ajouté' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(ChannelAdmin, self).response_add(request, obj, post_url_continue)
 
 class ChainConfigInline(admin.TabularInline):
     model = ChainConfig
     extra = 0
 
+    fields = ('parameter', 'value')
+
 class ChainAdmin(admin.ModelAdmin):
     model = Chain
 
-    inlines = [ChainConfigInline,]
+    readonly_fields = ['channel','order','equip']
 
+    inlines = [ChainConfigInline,]
+        
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
 #admin.site.register(ProtoConfig)

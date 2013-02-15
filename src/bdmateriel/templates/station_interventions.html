@@ -1,41 +1,96 @@
 {% load url from future %}
 
 <fieldset class="module aligned collapse">
-  <h2>Interventions concernants le site (Dernier état : {{ intervs.0.get_station_state_display }})</h2>
+  <h2>Interventions concernants le site (Dernier état : {{ intervs.0.5 }})</h2>
    <table>
      <thead><tr>
-         <th>Action</th>
-         <th>Etat</th>
          <th>Date et heure</th>
          <th>Note</th>
          <th>Intervenants</th>
-         <th></th>
+         <th>Action</th>
+         <th>Etat</th>
+         <th>Note</th>
+         <th>Equipement</th>
+         <th>Bati</th>
      </tr></thead>
      <tbody>
-     {% for interv, actor in intervs %}
+     {% for interv, actor, stationaction, equipaction, countaction in intervs %}
         <tr>
-        <td class="station_interv">
-          <p>{{ interv.get_station_action_display }}</p>
+        <td rowspan={{countaction}} class="start_date">
+          <input readonly="readonly" value="{{ interv.intervention_date|date:"Y-m-d H:i:s" }}" type="text" size="20" />
         </td>
 
+        <td rowspan={{countaction}} class="note">
+          <textarea readonly="readonly" rows="1" cols="20">{{ interv.note }}</textarea>
+        </td>
+
+        <td rowspan={{countaction}}  class="intervenant">
+          <textarea readonly="readonly" rows="1" cols="20">{% for act in actor %}{{ act }}{% if forloop.last %}.{% else %}, {% endif %}{% endfor %}</textarea>
+        </td>
+
+        {% for action in stationaction %}{% if forloop.first %}
+        <td class="station_action">
+          <input readonly="readonly" value="{{ action.get_station_action_display }}"/>
+        </td>
         <td class="station_state">
-          <p>{{ interv.get_station_state_display }}</p>
+          <input readonly="readonly" value="{{ action.get_station_state_display }}"/>
         </td>
-
-        <td class="start_date">
-          <input readonly="readonly" value="{{ interv.intervention.intervention_date|date:"Y-m-d H:i:s" }}" type="text" size="20" />
+        <td class="station_note">
+          <textarea readonly="readonly" rows="1" cols="20">{{ action.note }}</textarea>
         </td>
-
-        <td class="note">
-          <textarea readonly="readonly" rows="1" cols="40">{{ interv.note }}</textarea>
+        </tr>
+        {% else %}
+        <tr>
+        <td class="station_action">
+          <input readonly="readonly" value="{{ action.get_station_action_display }}"/>
+        <td class="station_state">
+          <input readonly="readonly" value="{{ action.get_station_state_display }}"/>
         </td>
-
-        <td class="intervenant">
-          <textarea readonly="readonly" rows="1" cols="40">{% for act in actor %}{{ act }}{% if forloop.last %}.{% else %}, {% endif %}{% endfor %}</textarea>
+        <td class="station_note">
+          <textarea readonly="readonly" rows="1" cols="20">{{ action.note }}</textarea>
         </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
 
-        <td class="intervention">
-          <a href="{% url 'admin:bdmateriel_intervention_change' interv.intervention.id %}">Edit</a>
+        {% for equip_action in equipaction %}{% if forloop.first %}
+        <td class="equip_action">
+          <input readonly="readonly" value="{{ equip_action.get_equip_action_display }}"/>
+        </td>
+        <td class="equip_state">
+          <input readonly="readonly" value="{{ equip_action.get_equip_state_display }}"/>
+        </td>
+        <td class="equip_note">
+          <textarea readonly="readonly" rows="1" cols="20">{{ equip_action.note }}</textarea>
+        </td>
+        <td class="equip_equipment">
+          <input readonly="readonly" size="40" value="{{ equip_action.equip }}"/>
+        </td>
+        <td class="equip_built">
+          <input readonly="readonly" value="{{ equip_action.built }}"/>
+        </td>
+        </tr>
+        {% else %}
+        <tr>
+        <td class="equip_action">
+          <input readonly="readonly" value="{{ equip_action.get_equip_action_display }}"/>
+        </td>
+        <td class="equip_state">
+          <input readonly="readonly" value="{{ equip_action.get_equip_state_display }}"/>
+        <td class="equip_note">
+          <textarea readonly="readonly" rows="1" cols="20">{{ equip_action.note }}</textarea>
+        </td>
+        <td class="equip_equipment">
+          <input readonly="readonly" size="40" value="{{ equip_action.equip }}"/>
+        </td>
+        <td class="equip_built">
+          <input readonly="readonly" value="{{ equip_action.built }}"/>
+        </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+        <td colspan=8 class="intervention">
+          <a href="{% url 'admin:bdmateriel_intervention_change' interv.id %}">Edit</a>
         </td>
         </tr>
      {% endfor %}

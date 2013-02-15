@@ -168,6 +168,22 @@ class StationSiteForm(forms.ModelForm):
     class Meta:
         model = StationSite
 
+    def clean(self):
+        cleaned_data = super(StationSiteForm, self).clean()
+        site_type = cleaned_data.get("site_type")
+        latitude = cleaned_data.get("latitude")
+        longitude = cleaned_data.get("longitude")
+        elevation = cleaned_data.get("elevation")
+
+        """
+        Check that the latitude, longitude and elevation are filled for a seismic station
+        """
+        if site_type == StationSite.STATION and (latitude == None or longitude == None or elevation == None):
+            raise forms.ValidationError('Les champs latitude, longitude et elevation sont obligatoires pour une station sismologique')
+
+        # Always return the full collection of cleaned data.
+        return cleaned_data
+
 class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
@@ -265,6 +281,9 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
                 ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
             else:
+                """ 
+                The BUY action is not display
+                """
                 ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS[1:]]
                 ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
 
@@ -371,13 +390,77 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 #print "equip_last_state : %s" % EquipState.EQUIP_STATES[equip_last_state(equip.id)-1][1]
                 #print "equip_state_todate : %s" % EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1]
 
+
+                """
+                Validation of equip_action and possible equipment
+                We do the action only for the equipment on the site
+                """
+                errors = 0
+                Actions = []
+                Actions.append(EquipAction.TESTER)
+                Actions.append(EquipAction.DESINSTALLER)
+                Actions.append(EquipAction.CONSTATER_DEFAUT)
+                Actions.append(EquipAction.MAINT_PREV_DISTANTE)
+                Actions.append(EquipAction.MAINT_CORR_DISTANTE)
+                Actions.append(EquipAction.MAINT_PREV_SITE)
+                Actions.append(EquipAction.MAINT_CORR_SITE)
+                Actions.append(EquipAction.EXPEDIER)
+                Actions.append(EquipAction.METTRE_HORS_USAGE)
+                Actions.append(EquipAction.CONSTATER_DISPARITION)
+                Actions.append(EquipAction.METTRE_AU_REBUT)
+
+                for action in Actions:
+                    if equip_action == action and equip_place_todate(equip.id, intervention_date) != intervention_station:
+                        errors += 1
+
+                if errors != 0:
+                     raise forms.ValidationError('Equipement non present (%s) pour cette station (%s)' % (equip, intervention_station))
+
+
+                """
+                The action TESTER is valid only if the state were OPERATION, A_TESTER, DISPONIBLE, DEFAUT, PANNE or AUTRE before
+                """ 
+                if equip_action == EquipAction.TESTER and \
+                   (equip_state_todate(equip.id, intervention_date) != EquipState.OPERATION and \
+                    equip_state_todate(equip.id, intervention_date) != EquipState.A_TESTER and \
+                    equip_state_todate(equip.id, intervention_date) != EquipState.DISPONIBLE and \
+                    equip_state_todate(equip.id, intervention_date) != EquipState.DEFAUT and \
+                    equip_state_todate(equip.id, intervention_date) != EquipState.PANNE and \
+                    equip_state_todate(equip.id, intervention_date) != EquipState.AUTRE):
+                     raise forms.ValidationError('Equipement (%s) non dans un etat possible (%s) pour cette action (%s)' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
+
+                """
+                The action INSTALLER is valid only if the state was DISPONIBLE before
+                """ 
+                if equip_action == EquipAction.INSTALLER and equip_state_todate(equip.id, intervention_date) != EquipState.DISPONIBLE:
+                     raise forms.ValidationError('Equipement (%s) non dans un etat disponible (%s) pour cette action (%s)' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
+
+                """
+                The action RECEVOIR is valid only if the state was EN_TRANSIT before
+                """ 
+                if equip_action == EquipAction.RECEVOIR and equip_state_todate(equip.id, intervention_date) != EquipState.EN_TRANSIT:
+                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement en transit (%s) pour reception' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1]))
+
+                """
+                The action RETROUVER is valid only if the state was DISPARU before
+                """ 
+                if equip_action == EquipAction.RETROUVER and equip_state_todate(equip.id, intervention_date) != EquipState.DISPARU:
+                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement disparu (%s) pour etre retrouver' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1]))
+
+                """
+                The action MAINT_CORR_DISTANTE or MAINT_CORR_SITE is valid only if the state was DEFAUT or PANNE before
+                """
+                if (equip_action == EquipAction.MAINT_CORR_DISTANTE or equip_action == EquipAction.MAINT_CORR_SITE) and (equip_state_todate(equip.id, intervention_date) != EquipState.DEFAUT and equip_state_todate(equip.id, intervention_date) != EquipState.PANNE):
+                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement en defaillance ou en panne (%s) pour maintenance corrective' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1]))
+
                 # TODO vue de validation
                 # Validation of equip_action and target state
                 errors = 0
 
                 if equip_action == EquipAction.ACHETER and equip_state != EquipState.A_TESTER:
                     errors += 1
-                if equip_action == EquipAction.TESTER and (equip_state != EquipState.A_TESTER and equip_state != EquipState.DISPONIBLE and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.TESTER and \
+                   (equip_state != EquipState.OPERATION and equip_state != EquipState.A_TESTER and equip_state != EquipState.DISPONIBLE and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
                 if equip_action == EquipAction.INSTALLER and (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
@@ -407,35 +490,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                     errors += 1
 
                 if errors != 0:  
-                    raise forms.ValidationError('Etat final (%s) est invalide pour l\'action choisi  (%s)' % (EquipState.EQUIP_STATES[equip_state-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
-
-                # TODO
-                # Validation of equip_action and possible equip
-                if equip_action == EquipAction.INSTALLER and equip_state_todate(equip.id, intervention_date) != EquipState.DISPONIBLE:
-                     raise forms.ValidationError('Equipement (%s) non dans un etat disponible (%s) pour cet action (%s)' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
-
-                if equip_action == EquipAction.RECEVOIR and equip_state_todate(equip.id, intervention_date) != EquipState.EN_TRANSIT:
-                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement en transit (%s) pour reception' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1]))
-
-                # TODO
-                # Validation of equip_action and last place
-                errors = 0
-                Actions = []
-                Actions.append(EquipAction.TESTER)
-                Actions.append(EquipAction.DESINSTALLER)
-                Actions.append(EquipAction.CONSTATER_DEFAUT)
-                Actions.append(EquipAction.MAINT_PREV_DISTANTE)
-                Actions.append(EquipAction.MAINT_CORR_DISTANTE)
-                Actions.append(EquipAction.MAINT_PREV_SITE)
-                Actions.append(EquipAction.MAINT_CORR_SITE)
-                Actions.append(EquipAction.METTRE_HORS_USAGE)
-
-                for action in Actions:
-                    if equip_action == action and equip_place_todate(equip.id, intervention_date) != intervention_station:
-                        errors += 1
-
-                if errors != 0:
-                     raise forms.ValidationError('Equipement non present (%s) pour cette station (%s)' % (equip, intervention_station))
+                    raise forms.ValidationError('Etat final (%s) est invalide pour l\'action choisie  (%s)' % (EquipState.EQUIP_STATES[equip_state-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
 
                 # TODO
                 # Validation of equip_action and target place
@@ -457,16 +512,31 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                         errors += 1
 
                 if errors != 0: 
-                     raise forms.ValidationError('On doit effectuer cette action (%s) sur la station de l\'intervention (%s) et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], intervention_station, target_station))
+                     raise forms.ValidationError('On doit effectuer cette action (%s) sur le site de l\'intervention (%s) et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], intervention_station, target_station))
 
+                # The action DESINSTALLER is valid only if the target_station is an OSU
                 if equip_action == EquipAction.DESINSTALLER and target_station.site_type != StationSite.OBSERVATOIRE:
                      raise forms.ValidationError('On doit effectuer cette action (%s) et entreposer dans un OSU et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], target_station))
 
+                # The action EXPEDIER is valid only if the target_station is an OSU or SAV or AUTRE
                 if equip_action == EquipAction.EXPEDIER and (target_station.site_type != StationSite.OBSERVATOIRE and target_station.site_type != StationSite.SAV and target_station.site_type != StationSite.AUTRE):
                      raise forms.ValidationError('On doit effectuer cette action (%s) et expedier vers OSU, SAV ou Autre et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], target_station))
 
+                # The actions CONSTATER_DISPARITION and METTRE_AU_REBUT are valid only if the target_station is NEANT
                 if (equip_action == EquipAction.CONSTATER_DISPARITION or equip_action == EquipAction.METTRE_AU_REBUT) and target_station.site_type != StationSite.NEANT:
                      raise forms.ValidationError('On doit effectuer cette action (%s) et indiquer un lieu indetermine (NEANT) et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], target_station))
+
+                # The action ACHETER is valid only if the target_station is an OSU
+                if equip_action == EquipAction.ACHETER and target_station.site_type != StationSite.OBSERVATOIRE:
+                     raise forms.ValidationError('On doit effectuer cette action (%s) et indiquer un OSU et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], target_station))
+
+                # The state DISPONIBLE is valid only if the target_station is an OSU
+                if equip_state == EquipState.DISPONIBLE and target_station.site_type != StationSite.OBSERVATOIRE:
+                     raise forms.ValidationError('Un equipement est (%s) seulement dans un OSU et non dans une station (%s)' % (EquipState.EQUIP_STATES[equip_state-1][1], target_station))
+
+                # The state OPERATION is valid only if the target_station is an STATION_SISMOLOGIQUE
+                if equip_state == EquipState.OPERATION and (target_station.site_type != StationSite.STATION and target_station.site_type != StationSite.SITE_TEST) :
+                     raise forms.ValidationError('Un equipement est (%s) seulement dans une station et non dans un OSU (%s)' % (EquipState.EQUIP_STATES[equip_state-1][1], target_station))
 
         # Check that there is no more than one action per equip
         if not (len(set(Liste_equip)) == len(Liste_equip)):
@@ -534,7 +604,6 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
                 if errors != 0:  
                      raise forms.ValidationError('Etat (%s) invalide pour l\'action choisi  (%s)' % (StationState.STATION_STATES[station_state-1][1], StationAction.STATION_ACTIONS[station_action-1][1]))
 
-
 class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
@@ -556,8 +625,13 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
         url = reverse('xhr_equip_oper')
 
-#        form.fields['order'].widget = forms.Select(choices=[('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], attrs={'onchange': 'alert("order change");'})
         form.fields['order'].widget = forms.Select(choices=[('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
+
+        if index != None:
+            order_id = form['order'].value()
+            equip_id = form['equip'].value()
+            form.fields['order'].widget = forms.Select(choices=[(order_id,order_id)])
+            form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(pk=equip_id), empty_label=None)
 
 class ChannelForm(forms.ModelForm):
     """
@@ -569,7 +643,7 @@ class ChannelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):        
         super(ChannelForm, self).__init__(*args, **kwargs)
-        station_label = ""   
+#        station_label = ""   
         if 'initial' in kwargs:
             initial = kwargs['initial'] 
             if 'station' in initial:
@@ -578,21 +652,24 @@ class ChannelForm(forms.ModelForm):
                 self.fields['longitude'].initial = station.longitude
                 self.fields['elevation'].initial = station.elevation
                 self.fields['station'].initial = station.id
-                station_label += station.station_code
-        else:
-            instance = getattr(self, 'instance', None)
-            if instance and instance.id:
-                station_label += unicode(instance.station)
+#                station_label += station.station_code
+#        else:
+#            instance = getattr(self, 'instance', None)
+#            if instance and instance.id:
+#                station_label += unicode(instance.station)
 
         url = reverse('xhr_station_position')
 
+        self.fields['depth'].initial = '0'
+        split_widget = widgets.AdminSplitDateTime()
+        split_widget.widgets[0].attrs = {'class': 'vDateField', 'size': '10'}
+        split_widget.widgets[1].attrs = {'class': 'vTimeField', 'size': '8', 'value': '00:00:00'}
+        self.fields['start_date'].widget = split_widget
         self.fields['location_code'].initial = '00'
         self.fields['location_code'].required = False
         self.fields['channel_code'].widget = forms.Select(choices=[('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),], attrs={'onchange':'get_dip_azimut_value(this);'})
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
-#        self.fields['station'].widget.attrs['onchange'] = 'alert("Test");'
-#        self.fields['station'].widget.attrs['onchange'] = 'get_station_position(this,\'' + url + '\');'
-        self.fields['station'].label = station_label
-        self.fields['station'].widget = forms.HiddenInput()
+#        self.fields['station'].label = station_label
+#        self.fields['station'].widget = forms.HiddenInput()
 
 

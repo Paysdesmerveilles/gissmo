@@ -21,18 +21,55 @@ def display_station_actions(station_id):
 
 @register.inclusion_tag('station_interventions.html')
 def display_station_interventions(station_id):
+#    liste = []
+#    intervs = []
+#    intervs = IntervStation.objects.filter(intervention__station__id=station_id).order_by('-intervention__intervention_date')
+#    "Find the actors for each station intervention"
+#    if intervs:
+#        for interv in intervs:
+#            intervactors = IntervActor.objects.filter(intervention_id=interv.intervention_id)   
+#            liste_actors = []
+#            if intervactors:
+#                for intervactor in intervactors:
+#                     liste_actors.append(intervactor.actor)
+#            liste.append([interv, liste_actors])
+#    return { 'intervs': liste}
     liste = []
     intervs = []
-    intervs = IntervStation.objects.filter(intervention__station__id=station_id).order_by('-intervention__intervention_date')
+    intervs = Intervention.objects.filter(station_id=station_id).order_by('-intervention_date')
+
+# TODO add global function ti obtain thaht information
+    last_station_state = IntervStation.objects.filter(intervention__station__id=station_id,station_state__isnull=False).order_by('-intervention__intervention_date')
+    if last_station_state:
+        last_state = dict(StationState.STATION_STATES)[last_station_state[0].station_state]
+    else:
+        last_state = 'Inconnu'
+
     "Find the actors for each station intervention"
     if intervs:
         for interv in intervs:
-            intervactors = IntervActor.objects.filter(intervention_id=interv.intervention_id)   
+            intervactors = IntervActor.objects.filter(intervention_id=interv.id)
+            intervstations = IntervStation.objects.filter(intervention_id=interv.id)      
+            intervequips = IntervEquip.objects.filter(intervention_id=interv.id) 
             liste_actors = []
             if intervactors:
                 for intervactor in intervactors:
                      liste_actors.append(intervactor.actor)
-            liste.append([interv, liste_actors])
+            liste_stations = []
+            if intervstations:
+                for intervstation in intervstations:
+                     liste_stations.append(intervstation)
+            liste_equips = []
+            if intervequips:
+                for intervequip in intervequips:
+                     liste_equips.append(intervequip)
+
+            if intervstations.count() + intervequips.count() == 0:
+                nbrligne = 1
+            else:
+                nbrligne = intervstations.count() + intervequips.count()
+
+            liste.append([interv, liste_actors, liste_stations, liste_equips, nbrligne, last_state])
     return { 'intervs': liste}
 
 @register.inclusion_tag('equip_states.html')
@@ -193,7 +230,7 @@ def channel_link(intervention_id):
 def display_station_channels(station_id):
     liste = []
     channels = []
-    channels = Channel.objects.filter(station__id=station_id).order_by('-start_date')
+    channels = Channel.objects.filter(station__id=station_id).order_by('-start_date', 'location_code', '-channel_code')
     "Find the equipments of the acquisition chain"
     if channels:
         for channel in channels:

@@ -20,6 +20,8 @@ urlpatterns = patterns('bdmateriel.views',
     url(r'^xhr_built$', 'xhr_built', name='xhr_built'),
     url(r'^site_maps/$', 'site_maps', name='site_maps'),
     url(r'^itineraire_maps/$', 'itineraire_maps', name='itineraire_maps'),
+    url(r'^dataless/$', 'dataless', name='dataless'),
     url(r'^get_file/(?P<app_label>.+)/(?P<model_name>.+)/(?P<field_name>.+)/(?P<identifier>\d+)$', 'get_file', name='get_file'),
+    url(r'^station_xml/$', 'station_xml', name='station_xml'),
 )
 
