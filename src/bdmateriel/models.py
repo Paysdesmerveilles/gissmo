@@ -20,6 +20,8 @@ fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 from django.contrib.auth.models import User
 #from private_files import PrivateFileField
 # Fin de l'ajout pour securiser les fichiers uploader
+from django.core.mail import send_mail
+
 """
 ####
 #
@@ -88,6 +90,13 @@ class Actor(models.Model):
 
     def __unicode__(self):
         return self.actor_name
+
+#    def save(self, *args, **kw):
+#        if self.pk is not None:
+#            send_mail('Changement au niveau des intervenants', 'Il y a eu un changement au niveau des informations sur les intervenants', 'mdutil@unistra.fr',
+#            ['mdutil@unistra.fr'], fail_silently=False)
+#
+#        super(Actor, self).save(*args, **kw)
 
 ####
 #
@@ -716,9 +725,11 @@ class StationSite(models.Model):
     NEANT = 4
     AUTRE = 5
     SITE_TEST = 6
+    SITE_THEORIQUE = 7
     SITE_CHOICES = (
         (STATION, 'Station sismologique'),
         (SITE_TEST, 'Site de test'),
+        (SITE_THEORIQUE, 'Site théorique'),
         (OBSERVATOIRE, 'Observatoire'),
         (SAV, 'Lieu de service après vente'),
         (NEANT, 'Lieu indéterminé'),
@@ -741,7 +752,7 @@ class StationSite(models.Model):
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien outil interne"))
-    station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("station referente"))
+    station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("site theorique"))
 
     class Meta:
         ordering = ['station_code']
