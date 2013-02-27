@@ -23,19 +23,20 @@ from django.utils.encoding import smart_str
 def site_maps(request):
     query = request.GET.get('Station','')
     ResHistStations = []
-    ResState = []
     ResStationUnique = []
     StationUnique = ''
     Liste = []
 
-    Stations = StationSite.objects.all()
-
+    Stations = StationSite.objects.filter(site_type=1)
+ 
     for station in Stations:
         last_station_state = IntervStation.objects.filter(intervention__station=station, station_state__isnull=False).order_by('-intervention__intervention_date')[:1]
         if last_station_state:
             for last in last_station_state:
                 Liste.append(last.id)
 
+    ResStatTest = StationSite.objects.filter(site_type=6)
+    ResStatTheo = StationSite.objects.filter(site_type=7)
     ResHistStations = IntervStation.objects.filter(id__in=Liste)
 
     if query: 
@@ -45,8 +46,7 @@ def site_maps(request):
                 StationUnique = resstationunique.intervention.station
 
     return render_to_response("site_gmap.html", {
-        "ResHistStations": ResHistStations, "ResState": ResState, "query": query, "StationUnique": StationUnique
-    },
+        "ResHistStations": ResHistStations, "query": query, "StationUnique": StationUnique, "ResStatTheo": ResStatTheo, "ResStatTest": ResStatTest},
          RequestContext(request, {}),)
 site_maps = staff_member_required(site_maps)
 
@@ -550,3 +550,41 @@ def station_xml(request):
     },
          RequestContext(request, {}), mimetype="application/xhtml+xml") 
 station_xml = staff_member_required(station_xml)
+
+def station_dataless(request):
+    query = request.GET.get('Station','')
+
+    ResStation = StationSite.objects.get(pk=query)
+
+    ResChannel = Channel.objects.filter(station_id=query).order_by('-start_date','channel_code')
+
+    liste_channel = []
+    if ResChannel:
+        for channel in ResChannel:
+            ResChain = Chain.objects.filter(channel_id=channel.id).order_by('-order')
+            liste_chain = []
+            chain_count = ResChain.count()
+            config_count = 0
+            config_count_total = 0
+            if ResChain:
+                for chain in ResChain:
+                    ResChainconfig = ChainConfig.objects.filter(chain_id=chain.id)
+                    liste_config = []
+                    config_count = ResChainconfig.count()
+                    config_count_total += config_count
+                    if ResChainconfig:
+                        for chainconfig in ResChainconfig:
+                            liste_config.append(chainconfig)
+                    liste_chain.append([chain,liste_config,config_count])
+            if config_count_total > chain_count:
+                nbr_ligne = config_count_total
+            else: 
+                nbr_ligne = chain_count
+
+            liste_channel.append([channel,liste_chain,nbr_ligne])
+
+    return render_to_response("station_dataless.html", {
+        "query": query, "ResStation": ResStation, "ResChannel": liste_channel,},
+         RequestContext(request, {}),)
+site_maps = staff_member_required(site_maps)
+

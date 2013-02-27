@@ -752,7 +752,7 @@ class StationSite(models.Model):
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien outil interne"))
-    station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("site theorique"))
+    station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("site referant"))
 
     class Meta:
         ordering = ['station_code']
