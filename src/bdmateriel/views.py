@@ -119,11 +119,11 @@ def xhr_station_state(request):
         if int(action) == StationAction.CREER or int(action) == StationAction.INSTALLER:
             select_choice = [{"optionValue": StationState.INSTALLATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.INSTALLATION]}] 
         elif int(action) == StationAction.DEBUTER_TEST:
-            select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
-            select_choice.append({"optionValue": StationState.EN_TEST, "optionDisplay": dict(StationState.STATION_STATES)[StationState.EN_TEST]})
+            select_choice = [{"optionValue": StationState.EN_TEST, "optionDisplay": dict(StationState.STATION_STATES)[StationState.EN_TEST]}]
+            select_choice.append({"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]})
         elif int(action) == StationAction.TERMINER_TEST:
-            select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
-            select_choice.append({"optionValue": StationState.FERMEE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.FERMEE]})   
+            select_choice = [{"optionValue": StationState.FERMEE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.FERMEE]}]
+            select_choice.append({"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]})   
         elif int(action) == StationAction.OPERER:
             select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
         elif int(action) == StationAction.CONSTATER_DEFAUT:
@@ -160,9 +160,9 @@ def xhr_equip_state(request):
         if int(action) == EquipAction.ACHETER:
             select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}] 
         elif int(action) == EquipAction.TESTER:
-            select_choice = [{"optionValue": EquipState.OPERATION, "optionDisplay": EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]}]
+            select_choice = [{"optionValue": EquipState.DISPONIBLE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]}]
+            select_choice.append({"optionValue": EquipState.OPERATION, "optionDisplay": EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]})
             select_choice.append({"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]})
-            select_choice.append({"optionValue": EquipState.DISPONIBLE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]})
             select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
             select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
         elif int(action) == EquipAction.INSTALLER:
@@ -416,18 +416,23 @@ def xhr_equip_oper(request):
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
         station=request.GET.get('station', '')
+        date_debut=request.GET.get('date', '')
+        heure_debut=request.GET.get('heure', '')
+
+        date_heure_channel = u''.join([date_debut,u' ',heure_debut])
+        date_debut_channel = datetime.strptime(date_heure_channel,"%Y-%m-%d %H:%M:%S")
 
         Liste = []
         equipments = Equipment.objects.all()
 
         for equip in equipments:
             #Obtain the last place of all equipment
-            last_equip_place = IntervEquip.objects.filter(equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+            last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lte=date_debut_channel, equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
             if last_equip_place:
                 for last in last_equip_place:
                     Liste.append(last.id)
 
-        equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+        equip_dispo = IntervEquip.objects.filter(id__in=Liste, equip_state=EquipState.OPERATION, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:

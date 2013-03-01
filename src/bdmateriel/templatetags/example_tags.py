@@ -1,7 +1,24 @@
 from django import template
 from bdmateriel.models import *
+import operator
 
 register = template.Library()
+
+@register.inclusion_tag('network_comments.html')
+def display_network_comments(network_id):
+    liste = []
+    comments = []
+    comments = CommentNetwork.objects.filter(network__id=network_id).order_by('-begin_effective')
+    "Find the authors of the comment"
+    if comments:
+        for comment in comments:
+            authors = CommentNetworkAuthor.objects.filter(comment_network__id=comment.id)
+            liste_authors = []
+            if authors:
+                for author in authors:
+                     liste_authors.append(author.author.actor_name)
+            liste.append([comment, liste_authors])
+    return { 'comments': liste}
 
 @register.inclusion_tag('station_states.html')
 def display_station_states(station_id):
@@ -200,7 +217,9 @@ def display_hist_equip_station(station_id):
 #                if denombre != 1:
 #                    if station != equip.station.id:
 #                        liste.append(interv_equip.id) 
-    return { 'locations': liste }
+        """ Trie descendant sur date de fin """
+        liste_sorted = sorted(liste, key=operator.itemgetter(2), reverse=True)
+    return { 'locations': liste_sorted }
 
 
 

@@ -669,6 +669,25 @@ class ChainAdmin(admin.ModelAdmin):
     readonly_fields = ['channel','order','equip']
 
     inlines = [ChainConfigInline,]
+
+class CommentNetworkAuthorInline(admin.TabularInline):
+    model = CommentNetworkAuthor
+    extra = 0
+
+class CommentNetworkAdmin(admin.ModelAdmin):
+    model = CommentNetwork
+
+    fieldsets = [
+        ('' , {'fields': [('network','begin_effective','end_effective'),('value')]})]
+
+    inlines = [CommentNetworkAuthorInline,]
+
+class NetworkAdmin(admin.ModelAdmin):
+    model = Network
+
+    fieldsets = [
+        ('' , {'fields': [('code','start_date','end_date'),('description')]}),
+         ('Informations optionnelles' , {'fields': [('alternate_code','historical_code', 'restricted_status')], 'classes': ['collapse']}),]
         
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
@@ -692,3 +711,5 @@ admin.site.register(StationSite, StationSiteAdmin)
 ######## admin.site.register(Channel, ChannelAdmin)
 
 admin.site.register(Intervention, InterventionAdmin)
+admin.site.register(Network, NetworkAdmin)
+admin.site.register(CommentNetwork, CommentNetworkAdmin)

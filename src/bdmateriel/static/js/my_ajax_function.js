@@ -201,6 +201,8 @@ function get_equip_oper(selectBox, urlparm1){
 
     var station = document.getElementById('id_station');
     var station_id = station.value;
+    var start_date = document.getElementById('id_start_date_0').value;
+    var start_heure = document.getElementById('id_start_date_1').value;
 
     /*
     Check that the station is filled
@@ -209,12 +211,18 @@ function get_equip_oper(selectBox, urlparm1){
     if (! station_id) {
        alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements')  
        }
+    if (! start_date) {
+       alert('Il est préférable d\'inscrire une date de début pour le canal avant la description de la chaîne d\'acquisition')  
+       }
+    if (! start_heure) {
+       alert('Il est préférable d\'inscrire une heure de début pour le canal avant la description de la chaîne d\'acquisition')  
+       }
  
     var equipselect = 'select#id_chain_set-'+singleValues+'-equip';
     $.ajax({
       type: "GET",
       url: xhr_equip_oper_url,
-      data: { station : station_id},
+      data: { station : station_id, date : start_date, heure : start_heure},
       dataType: "json",
       success: function(data) {
           var options = '';

@@ -1,0 +1,43 @@
+{% load url from future %}
+
+<fieldset class="module aligned collapse">
+  <h2>Commentaires sur le réseau</h2>
+   <table>
+     <thead><tr>
+         <th>Commentaire</th>
+         <th>Début d'effectivité</th>
+         <th>Fin d'effectivité</th>
+         <th>Auteurs</th>
+         <th></th>
+     </tr></thead>
+     <tbody>
+     {% for comment, authors in comments %}
+        <tr>
+        <td class="comment">
+          <textarea readonly="readonly" rows="1" cols="40">{{ comment.value }}</textarea>
+        </td>
+
+        <td class="comment_begin_effective">
+          <input readonly="readonly" value="{{ comment.begin_effective|date:"Y-m-d H:i:s" }}" type="text" size="20" />
+        </td>
+
+        <td class="comment_begin_effective">
+          <input readonly="readonly" value="{{ comment.end_effective|date:"Y-m-d H:i:s" }}" type="text" size="20" />
+        </td>
+
+        <td class="authors">
+          <textarea readonly="readonly" rows="1" cols="40">{% for author in authors %}{{ author }}{% if forloop.last %}.{% else %},&#13;{% endif %}{% endfor %}</textarea>
+        </td>
+
+        <td class="edit">
+          <a href="{% url 'admin:bdmateriel_commentnetwork_change' comment.id %}">Edit</a>
+        </td>
+
+        </tr>
+     {% endfor %}
+     </tbody>
+   </table>
+</fieldset>
+
+
+

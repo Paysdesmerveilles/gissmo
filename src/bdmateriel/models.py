@@ -226,6 +226,7 @@ class EquipModel(models.Model):
         verbose_name=_("type d'equipement")
     )
     equip_model_name = models.CharField(max_length=50, verbose_name=_("modele d'equipement"))
+#    manufacturer = models.CharField(max_length=50, verbose_name=_("fabricant"))
 
     class Meta:
         ordering = ['equip_model_name',]
@@ -309,6 +310,7 @@ class Equipment(models.Model):
     )
     serial_number = models.CharField(max_length=50, verbose_name=_("numero de serie"))
     owner = models.ForeignKey("Actor", default=get_defaut_owner, verbose_name=_("proprietaire"))
+#    vendor = models.CharField(null=True, blank=True, max_length=50, verbose_name=_("vendeur"))
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
    
@@ -335,6 +337,16 @@ class Equipment(models.Model):
 #
 ####
 
+class CommentNetworkAuthor(models.Model):
+    comment_network = models.ForeignKey("CommentNetwork", verbose_name=_("commentaire"))
+    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
+
+class CommentNetwork(models.Model):
+    network = models.ForeignKey("Network", verbose_name=_("reseau"))
+    value = models.TextField(verbose_name=_("commentaire"))
+    begin_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+
 # Network
 class Network(models.Model):
     """
@@ -348,7 +360,9 @@ class Network(models.Model):
 
         4 : RD : CEA/LDG
 
-        5 : AUTRE : Autre
+        5 : XX : Site en test
+
+        6 : AUTRE : Autre
 
     **Attributes :**
 
@@ -362,16 +376,35 @@ class Network(models.Model):
     G = 2
     RA = 3
     RD = 4
-    AUTRE = 5
+    XX = 5
+    autre = 6
     NETWORK = (
         (FR, 'RESIF LB'),
         (G, 'Géoscope'),
         (RA, 'RAP'),
         (RD, 'CEA/LDG'),
-        (AUTRE, 'Autre'),
+        (XX, 'Site en test'),
+        (autre, 'autre'),
     )
+
+    OPEN = 1
+    CLOSE = 2
+    PARTIAL = 3
+    STATUS = (
+        (OPEN, 'Ouvert'),
+        (CLOSE, 'Ferme'),
+        (PARTIAL, 'Partiel'),
+    )
+
     network_code = models.CharField(max_length=5, verbose_name=_("code reseau"))
     network_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom du reseau"))
+    code = models.CharField(max_length=5, verbose_name=_("code reseau"))
+    start_date = models.DateTimeField(null=True, blank=True,verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateTimeField(null=True, blank=True,verbose_name=_("date fin (aaaa-mm-jj)"))
+    restricted_status = models.IntegerField(choices=STATUS,null=True, blank=True, verbose_name=_("etat restrictif"))
+    alternate_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code alternatif"))
+    historical_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code historique"))
+    description = models.TextField(null=True, blank=True, verbose_name=_("description"))
 
     def __unicode__(self):
         return self.network_code

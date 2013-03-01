@@ -6,7 +6,7 @@
     <div class="breadcrumbs">
         <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
         <a href="{% url 'admin:app_list' 'bdmateriel' %}">{% trans 'Bdmateriel' %}</a> &rsaquo;
-        <a href="{% url 'admin:bdmateriel_stationsite_changelist' %}">{% trans 'A1. Stations' %}</a> &rsaquo;
+        <a href="{% url 'admin:bdmateriel_stationsite_changelist' %}">{% trans 'A1. Sites' %}</a> &rsaquo;
         {% if StationUnique %}
           <a href="{% url 'admin:bdmateriel_stationsite_change' StationUnique.id %}">{{StationUnique.station_code}}</a> &rsaquo;
         {% endif %}
@@ -62,26 +62,32 @@
   
   var sites = [];
 
+  {% for i in ResHistStations %}
+      {% if i.intervention.station.latitude != None and i.intervention.station.longitude != None %}
+          {% if i.intervention.station.station_code == StationUnique.station_code %}
+            sites.push(["{{i.intervention.station.station_name}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state}}, 0]);
+          {% else %}
+            sites.push(["{{i.intervention.station.station_name}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state}}, 1]);
+          {% endif %}
+          url.push({% url 'admin:index' %} + "bdmateriel/stationsite/" + {{i.intervention.station.id}} + "/");
+          information.push("{{i.intervention.station.station_code}}");    
+      {% endif %}
+  {% endfor %}
+
   {% for j in ResStatTheo %}
-      sites.push(["{{j.station_name}}", {{j.latitude}}, {{j.longitude}}, 'Theo', 1]);
-      url.push({% url 'admin:index' %} + "bdmateriel/stationsite/" + {{j.id}} + "/");
-      information.push("{{j.station_code}}");    
+      {% if j.latitude != None and j.longitude != None %}
+          sites.push(["{{j.station_name}}", {{j.latitude}}, {{j.longitude}}, 'Theo', 1]);
+          url.push({% url 'admin:index' %} + "bdmateriel/stationsite/" + {{j.id}} + "/");
+          information.push("{{j.station_code}}");    
+      {% endif %}
   {% endfor %}
 
   {% for k in ResStatTest %}
-      sites.push(["{{k.station_name}}", {{k.latitude}}, {{k.longitude}}, 'Test', 1]);
-      url.push({% url 'admin:index' %} + "bdmateriel/stationsite/" + {{k.id}} + "/");
-      information.push("{{k.station_code}} : Site référant : {{k.station_parent.station_code}}");    
-  {% endfor %}
-
-  {% for i in ResHistStations %}
-    {% if i.intervention.station.station_code == StationUnique.station_code %}
-      sites.push(["{{i.intervention.station.station_name}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state}}, 0]);
-    {% else %}
-      sites.push(["{{i.intervention.station.station_name}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state}}, 1]);
-    {% endif %}
-    url.push({% url 'admin:index' %} + "bdmateriel/stationsite/" + {{i.intervention.station.id}} + "/");
-    information.push("{{i.intervention.station.station_code}}");    
+      {% if k.latitude != None and k.longitude != None %}
+          test = sites.push(["{{k.station_name}}", {{k.latitude}}, {{k.longitude}}, 'Test', 1]);
+          url.push({% url 'admin:index' %} + "bdmateriel/stationsite/" + {{k.id}} + "/");
+          information.push("{{k.station_code}} : Site référant : {{k.station_parent.station_code}}");
+      {% endif %}
   {% endfor %}
 
   function initialize() {
@@ -243,8 +249,8 @@
       <tr><td></td><td>Total</td><td><script type="text/javascript">document.write(denombre_station(1)+denombre_station(2)+denombre_station(3)+denombre_station(4)+denombre_station(5)+denombre_station(6))</script></td></tr>
   </table><br></br>
   <table border="1">
-      <tr><td><img src="{{ STATIC_URL }}img/placemark_square.png"/></td><td>Site Théorique</td></tr>
-      <tr><td><img src="{{ STATIC_URL }}img/placemark_square_highlight.png"/></td><td>Site de test</td></tr>
+      <tr><td><img src="{{ STATIC_URL }}img/placemark_square.png"/></td><td>Site Théorique</td><td><script type="text/javascript">document.write(denombre_station('Theo'))</script></td></tr>
+      <tr><td><img src="{{ STATIC_URL }}img/placemark_square_highlight.png"/></td><td>Site de test</td><td><script type="text/javascript">document.write(denombre_station('Test'))</script></td></tr>
   </table><br></br>
 </div>
 </body>

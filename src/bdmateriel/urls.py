@@ -23,5 +23,6 @@ urlpatterns = patterns('bdmateriel.views',
     url(r'^dataless/$', 'dataless', name='dataless'),
     url(r'^get_file/(?P<app_label>.+)/(?P<model_name>.+)/(?P<field_name>.+)/(?P<identifier>\d+)$', 'get_file', name='get_file'),
     url(r'^station_xml/$', 'station_xml', name='station_xml'),
+    url(r'^station_dataless/$', 'station_dataless', name='station_dataless'),
 )
 

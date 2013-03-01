@@ -1,0 +1,15 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_static admin_modify %}
+{% load url from future %}
+{% load admin_urls %}
+{% load example_tags %}
+
+{% block object-tools-items %}
+  <li><a href="{% url 'admin:bdmateriel_commentnetwork_add' %}?network={{ object_id }}">Add comment</a>
+  <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
+{% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+{% endblock %}
+
+{% block submit_buttons_bottom %}{% submit_row %}
+{% if object_id %}{% display_network_comments object_id %}{% endif %}
+{% endblock %}
