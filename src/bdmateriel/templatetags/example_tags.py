@@ -163,6 +163,7 @@ def display_hist_equip_station(station_id):
 
     locations = IntervEquip.objects.filter(station__id=station_id).order_by('-intervention__intervention_date')
     liste = []
+    liste_sorted = []
     for location in locations:
         liste.append(location.equip.id)
 
@@ -217,8 +218,8 @@ def display_hist_equip_station(station_id):
 #                if denombre != 1:
 #                    if station != equip.station.id:
 #                        liste.append(interv_equip.id) 
-        """ Trie descendant sur date de fin """
-        liste_sorted = sorted(liste, key=operator.itemgetter(2), reverse=True)
+    """ Trie descendant sur date de fin """
+    liste_sorted = sorted(liste, key=operator.itemgetter(2), reverse=True)
     return { 'locations': liste_sorted }
 
 
