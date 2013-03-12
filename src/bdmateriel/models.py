@@ -226,7 +226,7 @@ class EquipModel(models.Model):
         verbose_name=_("type d'equipement")
     )
     equip_model_name = models.CharField(max_length=50, verbose_name=_("modele d'equipement"))
-#    manufacturer = models.CharField(max_length=50, verbose_name=_("fabricant"))
+    manufacturer = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("manufacturier"))
 
     class Meta:
         ordering = ['equip_model_name',]
@@ -310,7 +310,7 @@ class Equipment(models.Model):
     )
     serial_number = models.CharField(max_length=50, verbose_name=_("numero de serie"))
     owner = models.ForeignKey("Actor", default=get_defaut_owner, verbose_name=_("proprietaire"))
-#    vendor = models.CharField(null=True, blank=True, max_length=50, verbose_name=_("vendeur"))
+    vendor = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("vendeur"))
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
    
@@ -786,6 +786,7 @@ class StationSite(models.Model):
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien outil interne"))
     station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("site referant"))
+    geology =  models.CharField(max_length=50, null=True, blank=True, verbose_name=_("formation geologique"))
 
     class Meta:
         ordering = ['station_code']
@@ -1187,7 +1188,41 @@ class EquipDoc(models.Model):
 ####         return u'%s : %s : %s : %s' % (self.network, self.acquisition_chain, self.channel_code, self.sample_rate)
 
 
+class CommentChannelAuthor(models.Model):
+    comment_channel = models.ForeignKey("CommentChannel", verbose_name=_("commentaire"))
+    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
+
+class CommentChannel(models.Model):
+    channel = models.ForeignKey("Channel", verbose_name=_("canal"))
+    value = models.TextField(verbose_name=_("commentaire"))
+    begin_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+
+
+class CalibrationUnit(models.Model) :
+    name = models.CharField(max_length=50, verbose_name=_("Nom unite"))
+    description = models.TextField(null=True, blank=True, verbose_name=_("description"))
+
+    def __unicode__(self):
+        return u'%s' % (self.name)
+
+class DataType(models.Model) :
+    type_description = models.CharField(max_length=50, verbose_name=_("Type de donnees"))
+
+    def __unicode__(self):
+        return u'%s' % (self.type_description)
+
 class Channel(models.Model) :
+
+    OPEN = 1
+    CLOSE = 2
+    PARTIAL = 3
+    STATUS = (
+        (OPEN, 'Ouvert'),
+        (CLOSE, 'Ferme'),
+        (PARTIAL, 'Partiel'),
+    )
+
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     network = models.ForeignKey('Network', verbose_name=_("code reseau"))
     channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=[('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),])
@@ -1202,6 +1237,15 @@ class Channel(models.Model) :
 
     start_date = models.DateTimeField(verbose_name=_("date debut (aaaa-mm-jj)"))
     end_date = models.DateTimeField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
+
+    restricted_status = models.IntegerField(choices=STATUS,null=True, blank=True, verbose_name=_("etat restrictif"))
+    alternate_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code alternatif"))
+    historical_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code historique"))
+    description = models.TextField(null=True, blank=True, verbose_name=_("description"))
+    storage_format = models.CharField(max_length=50,null=True, blank=True, verbose_name=_("format de donnees"))
+    clock_drift =  models.FloatField(null=True, blank=True, verbose_name=_("derive horloge (seconds/sample)"))
+    calibration_units = models.ForeignKey("CalibrationUnit", null=True, blank=True, verbose_name=_("unite de mesure"))
+    data_type = models.ManyToManyField("DataType", null=True, blank=True, verbose_name=_("donnees produites"))
 
     class Meta:
         unique_together = ("station", "network", "channel_code", "location_code", "start_date")

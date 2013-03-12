@@ -4,6 +4,22 @@ import operator
 
 register = template.Library()
 
+@register.inclusion_tag('channel_comments.html')
+def display_channel_comments(channel_id):
+    liste = []
+    comments = []
+    comments = CommentChannel.objects.filter(channel__id=channel_id).order_by('-begin_effective')
+    "Find the authors of the comment"
+    if comments:
+        for comment in comments:
+            authors = CommentChannelAuthor.objects.filter(comment_channel__id=comment.id)
+            liste_authors = []
+            if authors:
+                for author in authors:
+                     liste_authors.append(author.author.actor_name)
+            liste.append([comment, liste_authors])
+    return { 'comments': liste}
+
 @register.inclusion_tag('network_comments.html')
 def display_network_comments(network_id):
     liste = []

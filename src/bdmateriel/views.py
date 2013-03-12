@@ -550,9 +550,135 @@ ORDER BY
     return response
 
 def station_xml(request):
+    query = request.GET.get('Station','')
 
-    return render_to_response("station_xml.html", {
-    },
+    result = []
+
+    """Obtain the information about the station """
+    ResStation = StationSite.objects.get(pk=query)
+
+    """Obtain the date of creation for this station """
+    create_station = None
+    intervention_creation = IntervStation.objects.filter(intervention__station=query, station_action=StationAction.CREER).values('intervention')
+    if intervention_creation:
+        create_station = Intervention.objects.get(pk=intervention_creation)
+    
+    """Obtain the date of closure for this station """
+    terminate_station = None
+    intervention_terminate = IntervStation.objects.filter(intervention__station=query, station_action=StationAction.DEMANTELER).values('intervention')
+    if intervention_terminate:
+        terminate_station = Intervention.objects.get(pk=intervention_terminate)
+
+    """Obtain the channels for that station """
+    ResChannel = Channel.objects.filter(station_id=query).order_by('-start_date','channel_code')
+
+    """Obtain the networks of the channels"""
+    ChannelNetwork = Channel.objects.filter(station_id=query).distinct('network')
+
+    network_list = []
+    if ChannelNetwork:
+        for network in ChannelNetwork:
+            network_list.append(network.network.id)
+
+    ResNetwork = Network.objects.filter(id__in=network_list)
+
+    if ResNetwork:
+        for network in ResNetwork:
+            """ Obtain the number of stations for that network """
+            station_count = Channel.objects.filter(network_id=network.id).distinct('station').count()
+
+            """ Obtain the comment for the network """
+            ResCommentNetwork = CommentNetwork.objects.filter(network_id=network.id)
+
+            comment_list = []
+            for comment in ResCommentNetwork:
+                """ Obtain the authors for each comment """
+                author_list = []
+                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(comment_network_id=comment.id)                
+                comment_list.append([comment, ResCommentNetworkAuthor])
+
+            ResChannels = ResChannel.filter(network_id=network.id)
+
+            station_vault = None
+            channel_list = []
+            for channel in ResChannels:
+                """Obtain the equipment of the chain per channel """
+                sensor = []
+                sensor_installed = None
+                sensor_uninstalled = None
+                preamplifier = []
+                preamplifier_installed = None
+                preamplifier_uninstalled = None
+                datalogger = []
+                datalogger_installed = None
+                datalogger_uninstalled = None
+                ResChain = Chain.objects.filter(channel=channel.id)
+                for equipchain in ResChain:
+                    if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':  
+                        sensor = equipchain.equip
+                    else:
+                        if equipchain.equip.equip_type.equip_type_name == u'Numériseur':
+                            datalogger = equipchain.equip
+                """ Common queryset parameters """
+                equip_operation = IntervEquip.objects.filter(intervention__intervention_date__lte=channel.start_date, intervention__station=channel.station.id, equip_action=EquipAction.INSTALLER, equip_state=EquipState.OPERATION)
+                equip_removal = IntervEquip.objects.filter(intervention__intervention_date__gte=channel.start_date, intervention__station=channel.station.id, equip_action=EquipAction.DESINSTALLER)
+                if sensor != []:
+                    """ Sensor in operation during the channel life """
+                    sensor_operation = equip_operation.filter(equip__id=sensor.id).order_by('-intervention__intervention_date')[:1]
+                    if sensor_operation:
+                         """ Here we have 0 or 1 occurence """
+                         sensor_installed = sensor_operation[0].intervention.intervention_date 
+                    """ Sensor removal after the start of the channel life """
+                    sensor_removal = equip_removal.filter(equip__id=sensor.id).order_by('intervention__intervention_date')[:1]
+                    if sensor_removal:
+                         """ Here we have 0 or 1 occurence """
+                         sensor_uninstalled = sensor_removal[0].intervention.intervention_date 
+                if preamplifier != []:
+                    """ Preamplifier in operation during the channel life """
+                    preamplifier_operation = equip_operation.filter(equip__id=preamplifier.id).order_by('-intervention__intervention_date')[:1]
+                    if preamplifier_operation:
+                        """ Here we have 0 or 1 occurence """
+                        preamplifier_installed = preamplifier_operation[0].intervention.intervention_date
+                    """ Preamplifier removal after the start of the channel life """
+                    preamplifier_removal = equip_removal.filter(equip__id=preamplifier.id).order_by('intervention__intervention_date')[:1]
+                    if preamplifier_removal:
+                         """ Here we have 0 or 1 occurence """
+                         preamplifier_uninstalled = preamplifier_removal[0].intervention.intervention_date  
+                if datalogger != []:
+                    """ Datalogger in operation during the channel life """
+                    datalogger_operation = equip_operation.filter(equip__id=datalogger.id).order_by('-intervention__intervention_date')[:1]
+                    if datalogger_operation:
+                        """ Here we have 0 or 1 occurence """
+                        datalogger_installed = datalogger_operation[0].intervention.intervention_date
+                    """ Datalogger removal after the start of the channel life """
+                    datalogger_removal = equip_removal.filter(equip__id=datalogger.id).order_by('intervention__intervention_date')[:1]
+                    if datalogger_removal:
+                         """ Here we have 0 or 1 occurence """
+                         datalogger_uninstalled = datalogger_removal[0].intervention.intervention_date
+
+                """ Obtain the comment for the channel """
+                ResCommentChannel = CommentChannel.objects.filter(channel_id=channel.id)
+
+                comment_list = []
+                for comment in ResCommentChannel:
+                    """ Obtain the authors for each comment """
+                    author_list = []
+                    ResCommentChannelAuthor = CommentChannelAuthor.objects.filter(comment_channel_id=comment.id)                
+                    comment_list.append([comment, ResCommentChannelAuthor])
+
+                channel_list.append([channel, sensor, sensor_installed, sensor_uninstalled, preamplifier, preamplifier_installed, preamplifier_uninstalled, datalogger, datalogger_installed, datalogger_uninstalled, comment_list])
+                """ Obtain the last built for the sensor according with the channel date """
+                """ WARNING only one built among possibly many """
+                if sensor != []:                   
+                    last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lte=channel.start_date, equip__id=sensor.id, station__id=channel.station.id).order_by('-intervention__intervention_date')[:1]
+                    """ Here we have 0 or 1 occurence """
+                    if last_equip_place:
+                        if last_equip_place[0].built:
+                            station_vault = last_equip_place[0].built.built_type.built_type_name[4:]
+            result.append([network, comment_list, station_count, ResStation, station_vault, ResChannels.count(), create_station, terminate_station, channel_list])
+
+    return render_to_response("station_xml.xml", {
+    "ResNetwork": result,},
          RequestContext(request, {}), mimetype="application/xhtml+xml") 
 station_xml = staff_member_required(station_xml)
 

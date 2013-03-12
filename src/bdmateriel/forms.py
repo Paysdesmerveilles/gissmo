@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 
 from datetime import datetime
 
-from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel, Built
+from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel, Built, DataType
 
 # TODO Voir a deplacer dans un autre fichier
 from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate
@@ -627,11 +627,15 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
         form.fields['order'].widget = forms.Select(choices=[('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
 
-        if index != None:
+        if index != None :
             order_id = form['order'].value()
             equip_id = form['equip'].value()
-            form.fields['order'].widget = forms.Select(choices=[(order_id,order_id)])
-            form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(pk=equip_id), empty_label=None)
+            if order_id != '':
+                form.fields['order'].widget = forms.Select(choices=[(order_id,order_id)])
+            if equip_id != '':
+                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(pk=equip_id), empty_label=None)
+
+from django.forms.widgets import CheckboxSelectMultiple
 
 class ChannelForm(forms.ModelForm):
     """
@@ -671,5 +675,6 @@ class ChannelForm(forms.ModelForm):
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
 #        self.fields['station'].label = station_label
 #        self.fields['station'].widget = forms.HiddenInput()
-
+        self.fields["data_type"].widget = CheckboxSelectMultiple()  
+        self.fields["data_type"].queryset = DataType.objects.all() 
 

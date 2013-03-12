@@ -136,7 +136,7 @@ class EquipModelAdmin(admin.ModelAdmin):
     ordering = ['equip_supertype', 'equip_type', 'equip_model_name',]
     search_fields = ['equip_model_name',]
 
-    fieldsets = [('', {'fields': [('equip_supertype', 'equip_type', 'equip_model_name')]}),]
+    fieldsets = [('', {'fields': [('equip_supertype', 'equip_type', 'equip_model_name', 'manufacturer')]}),]
 
     inlines = [EquipModelDocInline,]
 
@@ -226,7 +226,7 @@ class EquipmentAdmin(admin.ModelAdmin):
     form = EquipmentForm
 
     fieldsets = [('Equipements', {'fields': [('equip_supertype', 'equip_type', 'equip_model', 'serial_number','owner','purchase_date','stockage_site')]}),
-                 ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
+                 ('Information sur les contacts' , {'fields': [('vendor', 'contact')], 'classes': ['collapse']}),
                  ('Informations complementaires' , {'fields': [('note')], 'classes': ['collapse']}),]
 
     inlines = [EquipDocInline,]
@@ -373,7 +373,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     form = StationSiteForm
 
     fieldsets = [
-        ('Information sur le site' , {'fields': [('site_type','station_code','station_name','station_parent','operator','creation_date'),('latitude','longitude','elevation')]}),
+        ('Information sur le site' , {'fields': [('site_type','station_code','station_name','station_parent','operator','creation_date'),('latitude','longitude','elevation'),('geology')]}),
         ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
         ('Adresse du site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country')], 'classes': ['collapse']}),
         ('Autre information pertinente' , {'fields': [('note'),('private_link')], 'classes': ['collapse']}),]
@@ -606,9 +606,14 @@ class ChannelAdmin(admin.ModelAdmin):
     form = ChannelForm
 
     fieldsets = [
-        ('' , {'fields': [('station','latitude','longitude','elevation','depth', 'azimuth', 'dip'),('network','channel_code','location_code'),('sample_rate', 'start_date', 'end_date')]}),]
+        ('' , {'fields': [('station','latitude','longitude','elevation','depth','azimuth','dip'),('network','channel_code','location_code'),('sample_rate','start_date','end_date')]}),
+        ('Types des donnees produites', {'fields': [('data_type')], 'classes': ['collapse']}),
+        ('Informations complementaires' , {'fields': [('description'),('alternate_code','historical_code','restricted_status'),('storage_format','clock_drift','calibration_units')], 'classes': ['collapse']}),]
 
     inlines = [ChainInline,]
+
+    class Media:
+        js = ["js/my_ajax_function.js"]
 
 # a lot of todo 
 # blinder la generation automatique de parametre de config selon modele equip
@@ -629,9 +634,6 @@ class ChannelAdmin(admin.ModelAdmin):
                     chainconfig.save()
             else:
                 formset.save()               
-
-    class Media:
-        js = ["js/my_ajax_function.js"]
 
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
@@ -682,13 +684,74 @@ class CommentNetworkAdmin(admin.ModelAdmin):
 
     inlines = [CommentNetworkAuthorInline,]
 
+    def response_change(self, request, obj):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement modifié' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_network_change", args=(obj.network.id,)))
+        else:
+            if '_saveasnew' in request.POST:
+                messages.success( request, 'Enregistrement modifié' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(CommentNetworkAdmin, self).response_change(request, obj)
+
+    def response_add(self, request, obj, post_url_continue="../%s/"):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement ajouté' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_network_change", args=(obj.network.id,)))
+        else:
+##        This makes the response go to the newly created model's change page
+##        without using reverse
+            if '_saveasnew' in request.POST:              
+                messages.success( request, 'Enregistrement ajouté' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(CommentNetworkAdmin, self).response_add(request, obj, post_url_continue)
+
+
 class NetworkAdmin(admin.ModelAdmin):
     model = Network
 
     fieldsets = [
-        ('' , {'fields': [('code','start_date','end_date'),('description')]}),
-         ('Informations optionnelles' , {'fields': [('alternate_code','historical_code', 'restricted_status')], 'classes': ['collapse']}),]
+        ('' , {'fields': [('network_code','start_date','end_date'),('description')]}),
+        ('Informations complementaires' , {'fields': [('alternate_code','historical_code', 'restricted_status')], 'classes': ['collapse']}),]
         
+class CommentChannelAuthorInline(admin.TabularInline):
+    model = CommentChannelAuthor
+    extra = 0
+
+class CommentChannelAdmin(admin.ModelAdmin):
+    model = CommentChannel
+
+    fieldsets = [
+        ('' , {'fields': [('channel','begin_effective','end_effective'),('value')]})]
+
+    inlines = [CommentChannelAuthorInline,]
+
+    def response_change(self, request, obj):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement modifié' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_channel_change", args=(obj.channel.id,)))
+        else:
+            if '_saveasnew' in request.POST:
+                messages.success( request, 'Enregistrement modifié' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(CommentChannelAdmin, self).response_change(request, obj)
+
+    def response_add(self, request, obj, post_url_continue="../%s/"):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement ajouté' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_channel_change", args=(obj.channel.id,)))
+        else:
+##        This makes the response go to the newly created model's change page
+##        without using reverse
+            if '_saveasnew' in request.POST:              
+                messages.success( request, 'Enregistrement ajouté' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(CommentChannelAdmin, self).response_add(request, obj, post_url_continue)
+
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
 #admin.site.register(ProtoConfig)
@@ -713,3 +776,6 @@ admin.site.register(StationSite, StationSiteAdmin)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Network, NetworkAdmin)
 admin.site.register(CommentNetwork, CommentNetworkAdmin)
+admin.site.register(CommentChannel, CommentChannelAdmin)
+
+
