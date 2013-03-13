@@ -4,6 +4,34 @@
 {% load admin_urls %}
 {% load example_tags %}
 
+{% block extrahead %}{{ block.super }}
+<script type="text/javascript" src="{{ STATIC_URL }}admin/js/jquery.min.js"></script>
+<script type="text/javascript">
+    $(function(){
+        $("select+a.add-another").each(function(){
+            $(this).after("&nbsp;<a class='changelink' href='#' title='Edit selected item'></a>");
+            $(this).next().click(function(){
+                if($(this).prev().prev().attr('value')=='') return false;
+                var link = ($(this).prev().attr('href')+'../'+$(this).prev().prev().attr('value'));
+                var win = window.open(link + '?_popup=1', link, 'height=600,width=1000,resizable=yes,scrollbars=yes');
+                win.focus();
+                return false;
+            });
+        });
+        $("select+script+a.add-another").each(function(){
+            $(this).after("&nbsp;<a class='changelink' href='#' title='Edit selected item'></a>");
+            $(this).next().click(function(){
+                if($(this).prev().prev().prev().attr('value')=='') return false;
+                var link = ($(this).prev().attr('href')+'../'+$(this).prev().prev().prev().attr('value'));
+                var win = window.open(link + '?_popup=1', link, 'height=600,width=1000,resizable=yes,scrollbars=yes');
+                win.focus();
+                return false;
+            });
+        });
+    });
+</script>
+{% endblock %}
+
 {% block object-tools-items %}
   <li><a href="{% url 'admin:bdmateriel_intervention_add' %}?station={{ object_id }}">Add intervention</a>
   <li><a href="{% url 'admin:bdmateriel_channel_add' %}?station={{ object_id }}">Add channel</a>
