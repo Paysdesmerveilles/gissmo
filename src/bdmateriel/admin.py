@@ -635,6 +635,12 @@ class ChannelAdmin(admin.ModelAdmin):
             else:
                 formset.save()               
 
+#    def save_model(self, request, obj, form, change):
+#        # custom stuff here
+#        if '_saveasnew' in request.POST:
+#            print "I am saved_as new"
+#        obj.save()
+
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )

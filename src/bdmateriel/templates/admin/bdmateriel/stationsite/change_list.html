@@ -5,6 +5,7 @@
 
 {% block object-tools-items %}
   <li><a href="{% url 'site_maps' %}" class="">Carte des stations</a></li>
+  <li><a href="{% url 'test_site' %}" class="">Site de test to csv</a></li>
   <li>
     <a href="{% url cl.opts|admin_urlname:'add' %}{% if is_popup %}?_popup=1{% endif %}" class="addlink">
       {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}

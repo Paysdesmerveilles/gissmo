@@ -687,35 +687,156 @@ def station_dataless(request):
 
     ResStation = StationSite.objects.get(pk=query)
 
-    ResChannel = Channel.objects.filter(station_id=query).order_by('-start_date','channel_code')
+    ResChannel = Channel.objects.filter(station_id=query).extra(select={'component': "SUBSTR(channel_code, LENGTH(channel_code)-1, LENGTH(channel_code))",'channel':"SUBSTR(channel_code, 1, LENGTH(channel_code)-1)"}).order_by('-start_date','channel','-component')
 
+    """ New to accomodate PANDORA interface """
+    sensor_list = []
+    datalogger_list =[]
     liste_channel = []
+    liste_canaux = []
+
+    prev_channel_component = []
+    liste_voies = []
+    liste_azimuth = []
+    liste_dip = []
+    liste_component = []
+    channel_prec = []
+    liste_canal_prec = []
     if ResChannel:
         for channel in ResChannel:
-            ResChain = Chain.objects.filter(channel_id=channel.id).order_by('-order')
+            channel_component = [channel.network, channel.station, channel.location_code, channel.channel_code[:2], channel.sample_rate, channel.start_date, channel.end_date]
+
+#            if channel_component != prev_channel_component:
+#                """ First time initialisation """
+#                if prev_channel_component != []:
+##                    print prev_channel_component
+##                    print liste_azimuth
+##                    print liste_dip
+##                    print liste_component
+#                    liste_voies = []
+#                    liste_azimuth = []
+#                    liste_dip = []
+#                    liste_component = []
+
+#                prev_channel_component = channel_component
+
+#            liste_azimuth.append(channel.azimuth)
+#            liste_dip.append(channel.dip)
+#            liste_component.append(channel.channel_code[2:])
+
+            ResChain = Chain.objects.filter(channel_id=channel.id).order_by('order')
             liste_chain = []
-            chain_count = ResChain.count()
-            config_count = 0
-            config_count_total = 0
+#            chain_count = ResChain.count()
+#            config_count = 0
+#            config_count_total = 0
             if ResChain:
                 for chain in ResChain:
                     ResChainconfig = ChainConfig.objects.filter(chain_id=chain.id)
                     liste_config = []
-                    config_count = ResChainconfig.count()
-                    config_count_total += config_count
+#                    config_count = ResChainconfig.count()
+#                    config_count_total += config_count
                     if ResChainconfig:
                         for chainconfig in ResChainconfig:
                             liste_config.append(chainconfig)
-                    liste_chain.append([chain,liste_config,config_count])
-            if config_count_total > chain_count:
-                nbr_ligne = config_count_total
-            else: 
-                nbr_ligne = chain_count
+#                    liste_chain.append([chain,liste_config,config_count])
+                    liste_chain.append([chain.equip,liste_config])
+                    """ Built of the sensor and dataloger list """
+                    if chain.equip.equip_type.equip_type_name == u'Vélocimètre' or chain.equip.equip_type.equip_type_name == u'Accéléromètre':  
+                        sensor_list.append(chain.equip)
+                    else:
+                        if chain.equip.equip_type.equip_type_name == u'Numériseur':
+                            datalogger_list.append(chain.equip)
 
-            liste_channel.append([channel,liste_chain,nbr_ligne])
+#            if config_count_total > chain_count:
+#                nbr_ligne = config_count_total
+#            else: 
+#                nbr_ligne = chain_count
 
+#            liste_channel.append([channel,liste_chain,nbr_ligne])
+            
+            liste_channel.append([channel,liste_chain])
+
+#        print prev_channel_component
+#        print liste_azimuth
+#        print liste_dip
+#        print liste_component
+
+            liste_canal = [channel_component, liste_chain] 
+            if liste_canal_prec != liste_canal:
+                 """ First time initialisation """
+                 if liste_canal_prec != []:
+                     liste_canaux.append([channel_prec, liste_canal_prec[1], liste_component, liste_azimuth, liste_dip])
+#                     print liste_canal_prec
+#                     print liste_azimuth
+#                     print liste_dip
+#                     print liste_component
+                     liste_azimuth = []
+                     liste_dip = []
+                     liste_component = []
+                 liste_canal_prec = liste_canal
+                 channel_prec = channel
+            liste_azimuth.append(channel.azimuth)
+            liste_dip.append(channel.dip)
+            liste_component.append(channel.channel_code[2:])
+#        print liste_canal_prec
+        liste_canaux.append([channel_prec, liste_canal_prec[1], liste_component, liste_azimuth, liste_dip])
+#        print liste_canaux
     return render_to_response("station_dataless.html", {
-        "query": query, "ResStation": ResStation, "ResChannel": liste_channel,},
+        "query": query, "ResStation": ResStation, "SensorList": list(set(sensor_list)), "DataloggerList": list(set(datalogger_list)), "ResChannel": liste_canaux,},
          RequestContext(request, {}),)
 site_maps = staff_member_required(site_maps)
+
+def test_site(request):
+    from django.db import connection, transaction
+    cursor = connection.cursor()
+
+    query = request.GET.get('Station','')
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(mimetype='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="test_site.csv"'
+
+    cursor.execute('''SELECT DISTINCT
+  bdmateriel_stationsite.station_code AS "Code du site",
+  bdmateriel_stationsite.station_name AS "Nom du site",
+  bdmateriel_stationsite.address AS "Adresse",
+  bdmateriel_stationsite.city AS "Commune",
+  bdmateriel_stationsite.department AS "Departement",
+  bdmateriel_stationsite.region AS "Region",
+  bdmateriel_stationsite.country AS "Pays",
+  bdmateriel_stationsite.latitude AS "Latitude",
+  bdmateriel_stationsite.longitude AS "Longitude",
+  bdmateriel_stationsite.note AS "Note",
+  bdmateriel_stationdoc.private_link AS "Lien vers document prive",
+  (SELECT bdmateriel_stationstate.station_state_name
+   FROM 
+      public.bdmateriel_intervention,
+      public.bdmateriel_intervstation,
+      public.bdmateriel_stationstate
+   WHERE 
+      bdmateriel_intervention.station_id = bdmateriel_stationsite.id AND
+      bdmateriel_intervstation.intervention_id = bdmateriel_intervention.id AND
+      bdmateriel_intervstation.station_state IS NOT NULL AND
+      bdmateriel_intervstation.station_state = bdmateriel_stationstate.id
+   ORDER BY
+      bdmateriel_intervention.intervention_date DESC
+   LIMIT 1) AS "Statut"
+FROM 
+  public.bdmateriel_stationsite LEFT JOIN public.bdmateriel_stationdoc ON (bdmateriel_stationdoc.station_id = bdmateriel_stationsite.id)
+WHERE 
+  bdmateriel_stationsite.site_type = 6
+ORDER BY 
+  bdmateriel_stationsite.station_code
+''', [query])
+    dictrow = dictfetchall(cursor)
+    writer = csv.writer(response)
+    writer.writerow(["Code du site","Nom du site","Adresse", \
+                    "Commune","Departement","Region","Pays", \
+                    "Latitude","Longitude","Note","Lien vers document prive","Statut"])
+    for row in dictrow:
+        writer.writerow([unicode(s).encode("utf-8") for s in (
+                         row["Code du site"],row["Nom du site"],row["Adresse"],row["Commune"], \
+                         row["Departement"],row["Region"],row["Pays"],row["Latitude"], \
+                         row["Longitude"],row["Note"],row["Lien vers document prive"],row["Statut"])])
+    return response
+
 
