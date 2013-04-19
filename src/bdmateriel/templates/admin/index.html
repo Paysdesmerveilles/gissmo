@@ -18,7 +18,7 @@
         <table summary="{% blocktrans with name=app.name %}Models available in the {{ name }} application.{% endblocktrans %}">
         <caption><a href="{{ app.app_url }}" class="section">{% blocktrans with name=app.name %}{{ name }}{% endblocktrans %}</a></caption>
         {% for model in app.models %}
-            {% if app.name != "Bdmateriel" or app.name == "Bdmateriel" and model.name == 'A1. Sites' or app.name == "Bdmateriel" and model.name == 'C1. Modeles des equipements' or app.name == "Bdmateriel" and model.name == 'D1. Equipements' or app.name == "Bdmateriel" and model.name == 'E1. Intervenants' or app.name == "Bdmateriel" and model.name == 'Networks' %}    
+            {% if app.name != "Bdmateriel" or app.name == "Bdmateriel" and model.name == 'A1. Sites' or app.name == "Bdmateriel" and model.name == 'C1. Modeles des equipements' or app.name == "Bdmateriel" and model.name == 'D1. Equipements' or app.name == "Bdmateriel" and model.name == 'E1. Interventions' or app.name == "Bdmateriel" and model.name == 'F1. Intervenants' or app.name == "Bdmateriel" and model.name == 'N1. Reseaux' %}    
                 <tr>
                 {% if model.admin_url %}
                     <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>

@@ -45,15 +45,20 @@ class URLFieldWidget(AdminURLFieldWidget):
                          u'open(document.getElementById(\'%s\')'
                          u'.value)" />' % (widget, attrs['id']))
 
+'''
+Disabling the action "delete_selected" for all the site
+'''
+admin.site.disable_action('delete_selected')
+
 ####
 #
 # ActorAdmin's section
 #
 ####
 class ActorAdmin(admin.ModelAdmin):
-    list_display = ['actor_type', 'actor_name',]
+    list_display = ['actor_parent', 'actor_name', 'actor_type',]
     list_display_links = ['actor_name',]
-    ordering = ['actor_type', 'actor_name',]
+    ordering = ['actor_parent', 'actor_name',]
     search_fields = ['actor_name',]
 #    exclude = ['actor_type',]
 
@@ -494,9 +499,10 @@ class IntervEquipInline(admin.TabularInline):
     }
 
 class InterventionAdmin(admin.ModelAdmin):
-    list_display = ['station', 'intervention_date',]
+    list_display = ['station', 'format_date']
     list_filter = ['station',]
-    ordering = ['-intervention_date',]
+    ordering = ['station', '-intervention_date',]
+    search_fields = ['station__station_code', 'intervention_date',]
     form = InterventionForm
 
     inlines = [IntervActorInline, IntervStationInline, IntervEquipInline]
@@ -517,6 +523,11 @@ class InterventionAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
         else:
             return super(InterventionAdmin, self).response_add(request, obj, post_url_continue)
+
+    def format_date(self, obj):
+        return obj.intervention_date.strftime('%Y-%m-%d %H:%M')
+    format_date.short_description = 'Date (aaaa-mm-jj hh24:mi)'
+    format_date.admin_order_field = 'intervention_date'
 
 ######## class ChainComponentInlineFormset(forms.models.BaseInlineFormSet):
 ########  
@@ -758,6 +769,43 @@ class CommentChannelAdmin(admin.ModelAdmin):
             else:
                 return super(CommentChannelAdmin, self).response_add(request, obj, post_url_continue)
 
+class CommentStationSiteAuthorInline(admin.TabularInline):
+    model = CommentStationSiteAuthor
+    extra = 0
+
+class CommentStationSiteAdmin(admin.ModelAdmin):
+    model = CommentStationSite
+
+    fieldsets = [
+        ('' , {'fields': [('station','begin_effective','end_effective'),('value')]})]
+
+    inlines = [CommentStationSiteAuthorInline,]
+
+    def response_change(self, request, obj):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement modifié' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+        else:
+            if '_saveasnew' in request.POST:
+                messages.success( request, 'Enregistrement modifié' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(CommentStationSiteAdmin, self).response_change(request, obj)
+
+    def response_add(self, request, obj, post_url_continue="../%s/"):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement ajouté' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+        else:
+##        This makes the response go to the newly created model's change page
+##        without using reverse
+            if '_saveasnew' in request.POST:              
+                messages.success( request, 'Enregistrement ajouté' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(CommentStationSiteAdmin, self).response_add(request, obj, post_url_continue)
+
+
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
 #admin.site.register(ProtoConfig)
@@ -783,5 +831,6 @@ admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Network, NetworkAdmin)
 admin.site.register(CommentNetwork, CommentNetworkAdmin)
 admin.site.register(CommentChannel, CommentChannelAdmin)
+admin.site.register(CommentStationSite, CommentStationSiteAdmin)
 
 

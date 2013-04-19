@@ -86,7 +86,7 @@ class Actor(models.Model):
     class Meta:
         ordering = ['actor_name']
         verbose_name = _("intervenant")
-        verbose_name_plural = _("E1. Intervenants")
+        verbose_name_plural = _("F1. Intervenants")
 
     def __unicode__(self):
         return self.actor_name
@@ -396,7 +396,7 @@ class Network(models.Model):
         (PARTIAL, 'Partiel'),
     )
 
-    network_code = models.CharField(max_length=5, verbose_name=_("code reseau"))
+    network_code = models.CharField(max_length=5, verbose_name=_("network code"))
     network_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom du reseau"))
     code = models.CharField(max_length=5, verbose_name=_("code reseau"))
     start_date = models.DateTimeField(null=True, blank=True,verbose_name=_("date debut (aaaa-mm-jj)"))
@@ -405,6 +405,10 @@ class Network(models.Model):
     alternate_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code alternatif"))
     historical_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code historique"))
     description = models.TextField(null=True, blank=True, verbose_name=_("description"))
+
+    class Meta:
+        verbose_name = _("reseau")
+        verbose_name_plural = _("N1. Reseaux")
 
     def __unicode__(self):
         return self.network_code
@@ -659,6 +663,16 @@ class EquipState(models.Model):
     )
     equip_state_name = models.CharField(max_length=50, null=True, blank=True)
 
+class CommentStationSiteAuthor(models.Model):
+    comment_station = models.ForeignKey("CommentStationSite", verbose_name=_("commentaire"))
+    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
+
+class CommentStationSite(models.Model):
+    station = models.ForeignKey("StationSite", verbose_name=_("site"))
+    value = models.TextField(verbose_name=_("commentaire"))
+    begin_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+
 def get_defaut_operator():
     return Actor.objects.get(actor_name='Inconnu')
 
@@ -785,7 +799,7 @@ class StationSite(models.Model):
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien outil interne"))
-    station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("site referant"))
+    station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("site referent"))
     geology =  models.CharField(max_length=50, null=True, blank=True, verbose_name=_("formation geologique"))
 
     class Meta:
@@ -820,7 +834,7 @@ class Intervention(models.Model):
     class Meta:
         unique_together = ("station", "intervention_date")
         verbose_name = _("Intervention")
-        verbose_name_plural = _("Z3. Interventions")
+        verbose_name_plural = _("E1. Interventions")
 
     def __unicode__(self):
         return u'%s : %s' % (self.station.station_code, self.intervention_date)
@@ -1225,7 +1239,7 @@ class Channel(models.Model) :
 
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     network = models.ForeignKey('Network', verbose_name=_("code reseau"))
-    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=[('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),])
+    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=[('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),])
     location_code = models.CharField(null=True, blank=True, max_length=2, verbose_name=_("code localisation"))
     latitude = models.DecimalField(verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
     longitude = models.DecimalField(verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)

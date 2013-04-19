@@ -6,6 +6,7 @@ import os.path
 import mimetypes
 from datetime import datetime
 from django.db.models import Q
+from operator import itemgetter
 from models import *
 from tools import DecimalEncoder
 
@@ -411,7 +412,7 @@ def xhr_built(request):
 
 def xhr_equip_oper(request):
     """
-    Request that return the possible equipment in operation for a station 
+    Request that return the possible scientific equipment in operation for a station 
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -423,7 +424,9 @@ def xhr_equip_oper(request):
         date_debut_channel = datetime.strptime(date_heure_channel,"%Y-%m-%d %H:%M:%S")
 
         Liste = []
-        equipments = Equipment.objects.all()
+        # Not the best way to filter
+        # If the supertype name change we have to change the code too
+        equipments = Equipment.objects.filter(equip_supertype__equip_supertype_name="01. Scientifique")
 
         for equip in equipments:
             #Obtain the last place of all equipment
@@ -432,11 +435,22 @@ def xhr_equip_oper(request):
                 for last in last_equip_place:
                     Liste.append(last.id)
 
-        equip_dispo = IntervEquip.objects.filter(id__in=Liste, equip_state=EquipState.OPERATION, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+        equip_dispo = IntervEquip.objects.filter(id__in=Liste, equip_state=EquipState.OPERATION, station__id=station)
 
-        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
+        # TODO
+        # Hack to order the equipment by logical apparition in acqui chain
+        select_choice = [{"optionValue": "", "optionDisplay": "------", "orderfield": 0}]
         for equip in equip_dispo:
-            select_choice.append(({"optionValue": equip.equip.id, "optionDisplay": equip.equip.__unicode__()}))
+            if equip.equip.equip_type.equip_type_name == u'Vélocimètre' or equip.equip.equip_type.equip_type_name == u'Accéléromètre' or equip.equip.equip_type.equip_type_name == u'Capteur Temp/Hum/Pres':
+                orderfield = 1
+            elif equip.equip.equip_type.equip_type_name == u'Numériseur':
+                orderfield = 3
+            else :
+                orderfield = 6
+            select_choice.append(({"optionValue": equip.equip.id, "optionDisplay": equip.equip.__unicode__(), "orderfield": orderfield}))
+
+        select_choice = sorted(select_choice, key=itemgetter('orderfield')) 
+
         data = simplejson.dumps(select_choice)
 
         return HttpResponse(data)
@@ -819,7 +833,12 @@ def test_site(request):
       bdmateriel_intervstation.station_state = bdmateriel_stationstate.id
    ORDER BY
       bdmateriel_intervention.intervention_date DESC
-   LIMIT 1) AS "Statut"
+   LIMIT 1) AS "Etat",
+   (SELECT bdmateriel_actor.actor_name 
+    FROM
+       bdmateriel_actor
+    WHERE
+       bdmateriel_stationsite.operator_id = bdmateriel_actor.id) AS "Operateur"
 FROM 
   public.bdmateriel_stationsite LEFT JOIN public.bdmateriel_stationdoc ON (bdmateriel_stationdoc.station_id = bdmateriel_stationsite.id)
 WHERE 
@@ -831,12 +850,12 @@ ORDER BY
     writer = csv.writer(response)
     writer.writerow(["Code du site","Nom du site","Adresse", \
                     "Commune","Departement","Region","Pays", \
-                    "Latitude","Longitude","Note","Lien vers document prive","Statut"])
+                    "Latitude","Longitude","Note","Lien vers document prive","Etat","Operateur"])
     for row in dictrow:
         writer.writerow([unicode(s).encode("utf-8") for s in (
                          row["Code du site"],row["Nom du site"],row["Adresse"],row["Commune"], \
                          row["Departement"],row["Region"],row["Pays"],row["Latitude"], \
-                         row["Longitude"],row["Note"],row["Lien vers document prive"],row["Statut"])])
+                         row["Longitude"],row["Note"],row["Lien vers document prive"],row["Etat"],row["Operateur"])])
     return response
 
 

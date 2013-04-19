@@ -4,6 +4,7 @@
   <h2>Canaux du site</h2>
    <table>
      <thead><tr>
+         <th>Réseau</th>
          <th>Location code</th>
          <th>Code du canal</th>
          <th>Latitude</th>
@@ -21,6 +22,10 @@
      <tbody>
      {% for channel, equipment in channels %}
         <tr>
+        <td class="location_code">
+          <p>{{ channel.network }}</p>
+        </td>
+
         <td class="location_code">
           <p>{{ channel.location_code }}</p>
         </td>

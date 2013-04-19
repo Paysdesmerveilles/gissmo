@@ -35,6 +35,7 @@
 {% block object-tools-items %}
   <li><a href="{% url 'admin:bdmateriel_intervention_add' %}?station={{ object_id }}">Add intervention</a>
   <li><a href="{% url 'admin:bdmateriel_channel_add' %}?station={{ object_id }}">Add channel</a>
+  <li><a href="{% url 'admin:bdmateriel_commentstationsite_add' %}?station={{ object_id }}">Add comment</a>
   <li><a href="{% url 'itineraire_maps' %}?Station={{ object_id }}">Itinéraire</a></li>
   <li><a href="{% url 'site_maps' %}?Station={{ object_id }}">Carte des stations</a></li>
   <li><a href="{% url 'station_xml' %}?Station={{ object_id }}">Station XML</a></li>
@@ -44,6 +45,8 @@
 {% endblock %}
 
 {% block submit_buttons_bottom %}{% submit_row %}
+{% if object_id %}{% display_stationsite_comments object_id %}{% endif %}
+
 {% if object_id %}{% display_station_interventions object_id %}{% endif %}
 
 {% if object_id %}{% display_equip_last_location object_id %}{% endif %}

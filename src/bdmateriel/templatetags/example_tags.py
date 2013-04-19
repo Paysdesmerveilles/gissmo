@@ -20,6 +20,22 @@ def display_channel_comments(channel_id):
             liste.append([comment, liste_authors])
     return { 'comments': liste}
 
+@register.inclusion_tag('stationsite_comments.html')
+def display_stationsite_comments(station_id):
+    liste = []
+    comments = []
+    comments = CommentStationSite.objects.filter(station__id=station_id).order_by('-begin_effective')
+    "Find the authors of the comment"
+    if comments:
+        for comment in comments:
+            authors = CommentStationSiteAuthor.objects.filter(comment_station__id=comment.id)
+            liste_authors = []
+            if authors:
+                for author in authors:
+                     liste_authors.append(author.author.actor_name)
+            liste.append([comment, liste_authors])
+    return { 'comments': liste}
+
 @register.inclusion_tag('network_comments.html')
 def display_network_comments(network_id):
     liste = []

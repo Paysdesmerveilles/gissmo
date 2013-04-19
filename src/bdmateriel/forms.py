@@ -3,6 +3,7 @@
 from django import forms
 from django.contrib.admin import widgets
 from django.db.models import Q
+from django.forms.widgets import CheckboxSelectMultiple
 from django.shortcuts import render_to_response, redirect, get_object_or_404, HttpResponseRedirect, HttpResponse
 
 from django.core.urlresolvers import reverse
@@ -53,6 +54,18 @@ class AdminFileWidget(forms.FileInput):
                 (_('Currently:'), url, value.name.split('/')[-1], _('Change:')))
         output.append(super(AdminFileWidget, self).render(name, value, attrs))
         return mark_safe(u''.join(output))
+
+class CustomSelectAddWidget(forms.Select):
+
+    def render(self, name, value, attrs=None, choices=()):
+
+        url = reverse('admin:bdmateriel_equipment_add')
+        jquery = u'''
+        <input class="button def" type="button" value="Add" id="Add Equipment" onclick="var win=window.open('%s' + '?_popup=1', '%s', 'height=600,width=1000,resizable=yes,scrollbars=yes'); win.focus();"/>'''
+
+        output = super(CustomSelectAddWidget, self).render(name, value, attrs, choices)
+
+        return output + mark_safe(jquery % (url, url))
 
 class EquipModelDocInlineForm(forms.ModelForm):
     """ 
@@ -201,6 +214,11 @@ class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
         if self.__initial:
             actor = get_object_or_404(Actor, actor_name=self.__initial[0])
             form.fields['actor'].initial = actor
+
+        # Queryset to order by OSU and engineer to group them in the drop down box
+        # Hack with the extra to sort by agency and after by actor_name to bypass the agency actor_name
+        # TODO make custom widget for display a tree structure by agency, contact            
+        form.fields['actor'].queryset = Actor.objects.extra(select={"sortfield": "CASE WHEN id=actor_parent_id THEN actor_parent_id || '0' || actor_name ELSE actor_parent_id || '1' || actor_name END"}).order_by('sortfield')
     
     def clean(self):
         if any(self.errors):
@@ -603,7 +621,7 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
 
                 if errors != 0:  
                      raise forms.ValidationError('Etat (%s) invalide pour l\'action choisi  (%s)' % (StationState.STATION_STATES[station_state-1][1], StationAction.STATION_ACTIONS[station_action-1][1]))
-
+    
 class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
@@ -622,9 +640,15 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         if self.__initial and self.__initial != ['']:
             station = get_object_or_404(StationSite, id=self.__initial[0])
             form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.all())
+#            form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.all(), widget=CustomSelectAddWidget)
 
         url = reverse('xhr_equip_oper')
 
+        """
+        Initialize form.fields 
+        """
+#        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir un ordre en premier --", widget=CustomSelectAddWidget)
+        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir un ordre en premier --")
         form.fields['order'].widget = forms.Select(choices=[('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
 
         if index != None :
@@ -634,8 +658,6 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
                 form.fields['order'].widget = forms.Select(choices=[(order_id,order_id)])
             if equip_id != '':
                 form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(pk=equip_id), empty_label=None)
-
-from django.forms.widgets import CheckboxSelectMultiple
 
 class ChannelForm(forms.ModelForm):
     """
@@ -671,10 +693,11 @@ class ChannelForm(forms.ModelForm):
         self.fields['start_date'].widget = split_widget
         self.fields['location_code'].initial = '00'
         self.fields['location_code'].required = False
-        self.fields['channel_code'].widget = forms.Select(choices=[('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),], attrs={'onchange':'get_dip_azimut_value(this);'})
+        self.fields['channel_code'].widget = forms.Select(choices=[('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),], attrs={'onchange':'get_dip_azimut_value(this);'})
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
 #        self.fields['station'].label = station_label
 #        self.fields['station'].widget = forms.HiddenInput()
         self.fields["data_type"].widget = CheckboxSelectMultiple()  
-        self.fields["data_type"].queryset = DataType.objects.all() 
+        self.fields["data_type"].queryset = DataType.objects.all()       
+        self.fields["data_type"].initial = [t.pk for t in DataType.objects.filter(Q(type_description='CONTINUOUS')| Q(type_description='GEOPHYSICAL'))]
 
