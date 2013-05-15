@@ -371,17 +371,18 @@ class StationSiteFilter(SimpleListFilter):
 
 class StationSiteAdmin(admin.ModelAdmin):
 #    actions = [copy_stationsite]
-    list_display = ('station_code', 'station_name', 'operator', 'get_last_state', 'site_type', 'latitude', 'longitude', 'elevation',)
+    list_display = ('station_code', 'site_name', 'operator', 'get_last_state', 'site_type', 'latitude', 'longitude', 'elevation',)
     list_filter = [StationSiteFilter,  'site_type',]
     ordering = ['station_code',]
-    search_fields = ['station_code',]
+    search_fields = ['station_code']
     form = StationSiteForm
 
     fieldsets = [
-        ('Information sur le site' , {'fields': [('site_type','station_code','station_name','station_parent','operator','creation_date'),('latitude','longitude','elevation'),('geology')]}),
+        ('Information sur le site' , {'fields': [('site_type','station_code','site_name','station_parent','operator','creation_date'),('latitude','longitude','elevation'),('geology')]}),
         ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
-        ('Adresse du site' , {'fields': [('address', 'zip_code', 'city'),('department','region','country')], 'classes': ['collapse']}),
-        ('Autre information pertinente' , {'fields': [('note'),('private_link')], 'classes': ['collapse']}),]
+        ('Adresse du site' , {'fields': [('site_description'),('address', 'zip_code', 'town'),('county','region','country')], 'classes': ['collapse']}),
+        ('Autre information pertinente' , {'fields': [('note'),('private_link')], 'classes': ['collapse']}),
+        ('Informations complementaires' , {'fields': [('station_description'),('alternate_code','historical_code','restricted_status')], 'classes': ['collapse']}),]
 
     inlines = [BuiltInline, StationDocInline,]
 
@@ -617,7 +618,7 @@ class ChannelAdmin(admin.ModelAdmin):
     form = ChannelForm
 
     fieldsets = [
-        ('' , {'fields': [('station','latitude','longitude','elevation','depth','azimuth','dip'),('network','channel_code','location_code'),('sample_rate','start_date','end_date')]}),
+        ('' , {'fields': [('network','station','channel_code','location_code'),('latitude','longitude','elevation','depth','azimuth','dip'),('sample_rate','start_date','end_date')]}),
         ('Types des donnees produites', {'fields': [('data_type')], 'classes': ['collapse']}),
         ('Informations complementaires' , {'fields': [('description'),('alternate_code','historical_code','restricted_status'),('storage_format','clock_drift','calibration_units')], 'classes': ['collapse']}),]
 
@@ -635,10 +636,12 @@ class ChannelAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
-        
+
         for instance in instances:
             if isinstance(instance, Chain): #Check if it is the correct type of inline
                 instance.save()
+                # TODO Find how to access the previous channel to recuparate the config of some equipments.
+                # Actually we add the default config.
                 parameters = ParamEquipModel.objects.filter(equip_model_id=instance.equip.equip_model.id).order_by('pk')
                 for parameter in parameters:
                     chainconfig = ChainConfig(chain=instance,parameter=parameter.parameter_name, value=parameter.default_value)
@@ -649,8 +652,13 @@ class ChannelAdmin(admin.ModelAdmin):
 #    def save_model(self, request, obj, form, change):
 #        # custom stuff here
 #        if '_saveasnew' in request.POST:
-#            print "I am saved_as new"
-#        obj.save()
+#            print "I am saved_as new save"
+#            print obj
+#            print request
+#            obj.save()
+#        else:
+#            print "Other save method save"
+#            obj.save()
 
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
@@ -728,10 +736,11 @@ class CommentNetworkAdmin(admin.ModelAdmin):
 
 class NetworkAdmin(admin.ModelAdmin):
     model = Network
+    ordering = ['network_code',]
 
     fieldsets = [
-        ('' , {'fields': [('network_code','start_date','end_date'),('description')]}),
-        ('Informations complementaires' , {'fields': [('alternate_code','historical_code', 'restricted_status')], 'classes': ['collapse']}),]
+        ('' , {'fields': [('network_code','start_date','end_date'),]}),
+        ('Informations complementaires' , {'fields': [('description'), ('alternate_code','historical_code', 'restricted_status')], 'classes': ['collapse']}),]
         
 class CommentChannelAuthorInline(admin.TabularInline):
     model = CommentChannelAuthor
@@ -832,5 +841,4 @@ admin.site.register(Network, NetworkAdmin)
 admin.site.register(CommentNetwork, CommentNetworkAdmin)
 admin.site.register(CommentChannel, CommentChannelAdmin)
 admin.site.register(CommentStationSite, CommentStationSiteAdmin)
-
 

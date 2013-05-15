@@ -94,7 +94,8 @@ def get_file(request, app_label, model_name, field_name, identifier):
     #Obtain the instance
     instance = get_object_or_404(model, pk=identifier)
 
-    if (not request.user.is_anonymous()) and request.user.is_authenticated() and ((instance.owner.pk == request.user.pk) or (set(instance.owner.groups.all()) == set(request.user.groups.all()))):
+    if (not request.user.is_anonymous()) and request.user.is_authenticated():
+        # and ((instance.owner.pk == request.user.pk) or (set(instance.owner.groups.all()) == set(request.user.groups.all()))):
         path = getattr(instance, field_name).file.name
         file_name = os.path.basename(path)
         mime_type_guess = mimetypes.guess_type(file_name)

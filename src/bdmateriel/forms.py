@@ -20,6 +20,7 @@ from views import equip_last_state, equip_last_place, equip_state_todate, equip_
 # TODO Eliminer ou bonifier EquipAction, EquipState, StationAction, StationState
 from models import EquipAction, EquipState, StationAction, StationState
 
+import math
 
 """
 Usage:
@@ -321,6 +322,9 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 form.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.filter(id=station_id), widget=forms.Select(attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}), empty_label=None)
 
             if built_id != None and built_id != '':
+#                if station_id != None and station_id != '':
+#                    form.fields['built'] = forms.ModelChoiceField(queryset = Built.objects.filter(station__id=station_id), empty_label=None, required=False)
+#                else:
                 form.fields['built'] = forms.ModelChoiceField(queryset = Built.objects.filter(id=built_id), empty_label=None, required=False)
 
         else :
@@ -629,7 +633,6 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
 #        Grabs the curried initial values and stores them into a 'private'
 #        variable. Note: the use of self.__initial is important, using
 #        self.initial or self._initial will be erased by a parent class
-        
         self.__initial = kwargs.pop('initial', [])
         super(ChainInlineFormset, self).__init__(*args, **kwargs)
 
@@ -652,10 +655,10 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         form.fields['order'].widget = forms.Select(choices=[('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
 
         if index != None :
-            order_id = form['order'].value()
+#            order_id = form['order'].value()
             equip_id = form['equip'].value()
-            if order_id != '':
-                form.fields['order'].widget = forms.Select(choices=[(order_id,order_id)])
+#            if order_id != '':
+#                form.fields['order'].widget = forms.Select(choices=[(order_id,order_id)])
             if equip_id != '':
                 form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(pk=equip_id), empty_label=None)
 
@@ -664,12 +667,26 @@ class ChannelForm(forms.ModelForm):
     Obtain the latitude, longitude and elevation of the station
     the first time we add channel via the site form
     """
+#    distance_x = forms.DecimalField(required=False)
+#    distance_y = forms.DecimalField(required=False)
+#    distance_z = forms.DecimalField(required=False)
+
     class Meta:
         model = Channel
 
     def __init__(self, *args, **kwargs):        
         super(ChannelForm, self).__init__(*args, **kwargs)
-#        station_label = ""   
+#        instance = getattr(self, 'instance', None)
+#        if instance and instance.pk:
+#            station = get_object_or_404(StationSite, id=instance.station.id)  
+#            self.fields['distance_x'].initial = (float(instance.longitude) - float(station.longitude)) * (111.111 * math.cos(float(instance.latitude) * math.pi / 180))
+#            self.fields['distance_y'].initial = (float(instance.latitude) - float(station.latitude)) * 111.111
+#            self.fields['distance_z'].initial = float(instance.elevation) - float(station.elevation)
+#            self.fields['distance_x'].widget.attrs['readonly'] = True
+#            self.fields['distance_y'].widget.attrs['readonly'] = True
+#            self.fields['distance_z'].widget.attrs['readonly'] = True
+
+#        station_label = ""  
         if 'initial' in kwargs:
             initial = kwargs['initial'] 
             if 'station' in initial:

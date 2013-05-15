@@ -352,18 +352,6 @@ class Network(models.Model):
     """
     **Description :** Réseau 
 
-        1 : FR : RESIF LB
-
-        2 : G : Géoscope
-
-        3 : RA : RAP
-
-        4 : RD : CEA/LDG
-
-        5 : XX : Site en test
-
-        6 : AUTRE : Autre
-
     **Attributes :**
 
     network_code : char(5)
@@ -372,21 +360,6 @@ class Network(models.Model):
     network_name : char(50)
         Nom d'usage que l'on utilise pour dénommer le réseau
     """
-    FR = 1
-    G = 2
-    RA = 3
-    RD = 4
-    XX = 5
-    autre = 6
-    NETWORK = (
-        (FR, 'RESIF LB'),
-        (G, 'Géoscope'),
-        (RA, 'RAP'),
-        (RD, 'CEA/LDG'),
-        (XX, 'Site en test'),
-        (autre, 'autre'),
-    )
-
     OPEN = 1
     CLOSE = 2
     PARTIAL = 3
@@ -701,8 +674,8 @@ class StationSite(models.Model):
     station_code : char(40)
         Code attribué au site ou à la station lors de sa création 
 
-    station_name : char(50) 
-        Nom d'usage attribué au site ou à la station. On y retrouve souvent le nom de la commune à proximité.
+    site_name : char(50) 
+        Nom d'usage attribué au site. On y retrouve souvent le nom de la commune à proximité.
 
     latitude : decimal(8,6)
         Latitude de la station
@@ -783,16 +756,25 @@ class StationSite(models.Model):
         (AUTRE, 'Autre'),
     )
    
+    OPEN = 1
+    CLOSE = 2
+    PARTIAL = 3
+    STATUS = (
+        (OPEN, 'Ouvert'),
+        (CLOSE, 'Ferme'),
+        (PARTIAL, 'Partiel'),
+    )
+
     site_type = models.IntegerField(choices=SITE_CHOICES, default=STATION, verbose_name=_("type de site"))
     station_code = models.CharField(max_length=40, unique=True, verbose_name=_("code"))
-    station_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom site"))
+    site_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom site"))
     latitude = models.DecimalField(null=True, blank=True, verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
     longitude = models.DecimalField(null=True, blank=True, verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
     elevation = models.DecimalField(null=True, blank=True, verbose_name=_("elevation (m)"), max_digits=5, decimal_places=1)
     operator = models.ForeignKey("Actor", default=get_defaut_operator, verbose_name=_("operateur"))
     address = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("adresse"))
-    city = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("commune"))
-    department = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("departement"))
+    town = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("commune"))
+    county = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("departement"))
     region = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("region"))
     country =  models.CharField(max_length=50, null=True, blank=True, verbose_name=_("pays"))
     zip_code = models.CharField(max_length=15, null=True, blank=True, verbose_name=_("code postal"))
@@ -801,6 +783,11 @@ class StationSite(models.Model):
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien outil interne"))
     station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("site referent"))
     geology =  models.CharField(max_length=50, null=True, blank=True, verbose_name=_("formation geologique"))
+    restricted_status = models.IntegerField(choices=STATUS,null=True, blank=True, verbose_name=_("etat restrictif"))
+    alternate_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code alternatif"))
+    historical_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code historique"))
+    station_description = models.TextField(null=True, blank=True, verbose_name=_("description station"))
+    site_description = models.TextField(null=True, blank=True, verbose_name=_("description site"))
 
     class Meta:
         ordering = ['station_code']
@@ -1280,6 +1267,7 @@ class Chain(models.Model) :
     equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
 
     class Meta:
+        unique_together = ("channel", "order")
         verbose_name = _("Composante de la chaine d'acqui")
         verbose_name_plural = _("Z2. Composantes des chaines d'acqui")
 
