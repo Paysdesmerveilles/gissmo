@@ -625,7 +625,13 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
 
                 if errors != 0:  
                      raise forms.ValidationError('Etat (%s) invalide pour l\'action choisi  (%s)' % (StationState.STATION_STATES[station_state-1][1], StationAction.STATION_ACTIONS[station_action-1][1]))
-    
+
+class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
+
+    def __init__(self, *args, **kwargs):
+        self.__initial = kwargs.pop('initial', [])
+        super(ChainConfigInlineFormset, self).__init__(*args, **kwargs)
+
 class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):

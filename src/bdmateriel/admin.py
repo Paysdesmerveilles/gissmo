@@ -45,10 +45,13 @@ class URLFieldWidget(AdminURLFieldWidget):
                          u'open(document.getElementById(\'%s\')'
                          u'.value)" />' % (widget, attrs['id']))
 
-'''
-Disabling the action "delete_selected" for all the site
-'''
-admin.site.disable_action('delete_selected')
+class LabeledHiddenInput(forms.HiddenInput):
+    def render(self, name, value, attrs=None):
+
+        status  = self.choices.queryset.get(pk = value)
+        
+        h_input = super(LabeledHiddenInput, self).render( name, value, attrs=None)
+        return mark_safe("%s %s"%(status, h_input))
 
 ####
 #
@@ -79,9 +82,14 @@ class BuiltAdmin(admin.ModelAdmin):
 ####
 class EquipModelDocInline(admin.TabularInline):
     model = EquipModelDoc
+    fields = ('document_type', 'document_title', 'begin_effective', 'end_effective', 'document_equip_model', 'private_link')
     form = EquipModelDocInlineForm
     exclude = ['equip_supertype', 'equip_type','owner',]
     extra = 1
+
+class ParamEquipModelInline(admin.TabularInline):
+    model = ParamEquipModel
+    extra = 0
 
 """
 Custom filter for the equipment model change list
@@ -143,7 +151,7 @@ class EquipModelAdmin(admin.ModelAdmin):
 
     fieldsets = [('', {'fields': [('equip_supertype', 'equip_type', 'equip_model_name', 'manufacturer')]}),]
 
-    inlines = [EquipModelDocInline,]
+    inlines = [EquipModelDocInline, ParamEquipModelInline,]
 
     def save_formset(self, request, form, formset, change):
         """ Reference du code
@@ -161,6 +169,7 @@ class EquipModelAdmin(admin.ModelAdmin):
 
 class EquipDocInline(admin.TabularInline):
     model = EquipDoc
+    fields = ('document_type', 'document_title', 'begin_effective', 'end_effective', 'document_equip', 'private_link')
     form = EquipDocInlineForm
     exclude = ['equip_supertype', 'equip_type', 'equip_model','owner']
     extra = 1
@@ -310,6 +319,7 @@ class BuiltInline(admin.TabularInline):
 
 class StationDocInline(admin.TabularInline):
     model = StationDoc
+    fields = ('document_type', 'document_title', 'begin_effective', 'end_effective', 'document_station', 'private_link')
     form = StationDocInlineForm
     exclude = ['owner',]
     extra = 0
@@ -466,6 +476,8 @@ class IntervStationInline(admin.TabularInline):
     extra = 0
     max_num = 1
     formset = IntervStationInlineFormset
+#    Test of the modified tabular template to hide the Add at the inline
+#    template = 'tabulartest.html'
 
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
@@ -590,12 +602,23 @@ class ChainInline(admin.TabularInline):
     extra = 0
     formset = ChainInlineFormset
 
-    readonly_fields = ['configuration']
+    readonly_fields = ['configuration', 'delete']
+
+    def __init__(self, *args, **kwargs): 
+        super(ChainInline, self).__init__(*args, **kwargs) 
+        self.can_delete = False 
 
     def configuration(self, obj):
         if obj.id:
-            url = reverse('admin:bdmateriel_chain_change', args=[obj.id])
+            # Hack to obtain the channel ID to be able to pass it to the config link as parameter
+            channel = get_object_or_404(Chain, pk=obj.id).channel.id
+            url = reverse('admin:bdmateriel_chain_change', args=[obj.id]) + '?channel=' +str(channel)
             return mark_safe("<a href='%s'>config</a>" % url)
+
+    def delete(self, obj):
+        if obj.id:
+            url = reverse('admin:bdmateriel_chain_change', args=[obj.id]) + 'delete/'
+            return mark_safe("<a href='%s'>delete</a>" % url)
 
     def get_formset(self, request, obj=None, **kwargs):
 #       Pourquoi est-ce que station est necessaire
@@ -612,17 +635,54 @@ class ChainInline(admin.TabularInline):
 
 from django.contrib import messages
 
+class ChainConfigInline(admin.TabularInline):
+    model = ChainConfig
+    extra = 0
+#    formset = ChainConfigInlineFormset
+
+    fields = ('parameter', 'value')
+
+    # Hack to pass the channel id to the formset
+#    def get_formset(self, request, obj=None, **kwargs):
+#        channel = request.GET.get('channel', '') 
+#        initial = []
+#        initial.append(channel)
+#        formset = super(ChainConfigInline, self).get_formset(request, obj, **kwargs)
+#        formset.__init__ = curry(formset.__init__, initial=initial)
+#        return formset
+
+class ChannelChainInline(admin.TabularInline):
+    model = ChainConfig
+    extra = 0
+    max_num = 0
+
+#    readonly_fields = ['chain']
+    fields = ('chain', 'parameter', 'value')
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'chain': #on suppose que le modele a un champ image
+            kwargs['widget'] = forms.TextInput(attrs={'readonly':'readonly','style':'width: 1px'})
+#            kwargs['widget'] = forms.HiddenInput()
+            kwargs.pop('request', None) #erreur sinon
+            return db_field.formfield(**kwargs)
+        return super(ChannelChainInline,self).formfield_for_dbfield(db_field, **kwargs)
+
+
+
 class ChannelAdmin(admin.ModelAdmin):
     model = Channel
     save_as = True
     form = ChannelForm
+
+    actions = ['delete_selected']
 
     fieldsets = [
         ('' , {'fields': [('network','station','channel_code','location_code'),('latitude','longitude','elevation','depth','azimuth','dip'),('sample_rate','start_date','end_date')]}),
         ('Types des donnees produites', {'fields': [('data_type')], 'classes': ['collapse']}),
         ('Informations complementaires' , {'fields': [('description'),('alternate_code','historical_code','restricted_status'),('storage_format','clock_drift','calibration_units')], 'classes': ['collapse']}),]
 
-    inlines = [ChainInline,]
+    inlines = [ChainInline, ChannelChainInline]
+#    inlines = [ChainInline,]
 
     class Media:
         js = ["js/my_ajax_function.js"]
@@ -636,18 +696,26 @@ class ChannelAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
-
-        for instance in instances:
+        for instance in instances:      
             if isinstance(instance, Chain): #Check if it is the correct type of inline
                 instance.save()
                 # TODO Find how to access the previous channel to recuparate the config of some equipments.
                 # Actually we add the default config.
-                parameters = ParamEquipModel.objects.filter(equip_model_id=instance.equip.equip_model.id).order_by('pk')
-                for parameter in parameters:
-                    chainconfig = ChainConfig(chain=instance,parameter=parameter.parameter_name, value=parameter.default_value)
-                    chainconfig.save()
+                if not '_saveasnew' in request.POST:
+                    parameters = ParamEquipModel.objects.filter(equip_model_id=instance.equip.equip_model.id).order_by('pk')
+                    for parameter in parameters:
+                        channel = get_object_or_404(Channel, pk=instance.channel.id) # Hack to inline in channel
+                        chainconfig = ChainConfig(channel=channel,chain=instance,parameter=parameter.parameter_name, value=parameter.default_value)
+                        chainconfig.save()
             else:
-                formset.save()               
+                if isinstance(instance, ChainConfig): #Check if it is the correct type of inline
+                    old_chain = get_object_or_404(Chain, pk=instance.chain.id) # Hack to inline in channel
+                    new_chain = Chain.objects.filter(channel=instance.channel.id, order=old_chain.order, equip=old_chain.equip) # Hack to inline in channel
+                    if new_chain:
+                        instance.chain = new_chain[0]
+                    instance.save()
+                else:
+                    formset.save()               
 
 #    def save_model(self, request, obj, form, change):
 #        # custom stuff here
@@ -684,18 +752,26 @@ class ChannelAdmin(admin.ModelAdmin):
             else:
                 return super(ChannelAdmin, self).response_add(request, obj, post_url_continue)
 
-class ChainConfigInline(admin.TabularInline):
-    model = ChainConfig
-    extra = 0
-
-    fields = ('parameter', 'value')
-
 class ChainAdmin(admin.ModelAdmin):
     model = Chain
 
     readonly_fields = ['channel','order','equip']
 
     inlines = [ChainConfigInline,]
+
+    # This put the channel into the ChainConfig instance according with the channel value pass through the URL
+    def save_formset(self, request, form, formset, change):
+        """ Reference du code
+            http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
+        instances = formset.save(commit=False)
+ 
+        for instance in instances:
+            if isinstance(instance, ChainConfig): #Check if it is the correct type of inline
+                if not instance.pk:
+                    instance.channel = instance.chain.channel
+                instance.save()
+            else:
+                formset.save()
 
 class CommentNetworkAuthorInline(admin.TabularInline):
     model = CommentNetworkAuthor
@@ -815,6 +891,12 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
                 return super(CommentStationSiteAdmin, self).response_add(request, obj, post_url_continue)
 
 
+'''
+Disabling the action "delete_selected" for all the site
+'''
+admin.site.disable_action('delete_selected')
+
+
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
 #admin.site.register(ProtoConfig)
@@ -836,8 +918,13 @@ admin.site.register(StationSite, StationSiteAdmin)
 ######## admin.site.register(ChainComponent)
 ######## admin.site.register(Channel, ChannelAdmin)
 
-admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Network, NetworkAdmin)
+admin.site.register(ParamEquipModel)
+admin.site.register(EquipModelDocType)
+admin.site.register(EquipDocType)
+admin.site.register(StationDocType)
+
+admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(CommentNetwork, CommentNetworkAdmin)
 admin.site.register(CommentChannel, CommentChannelAdmin)
 admin.site.register(CommentStationSite, CommentStationSiteAdmin)

@@ -41,17 +41,35 @@
          {% endfor %}
          <TotalNumberStations>{{ station_count }}</TotalNumberStations>
          <SelectedNumberStations>1</SelectedNumberStations>
-         <Station code="{{ station.station_code }}">
-           <Latitude>{{ station.latitude }}</Latitude>
-           <Longitude>{{ station.longitude }}</Longitude>
-           <Elevation>{{ station.elevation }}</Elevation>
+         <Station code="{{ station.station_code }}"
+             {% if station.restricted_status %} 
+                 restrictedStatus="{{ station.restricted_status }}"
+             {% endif %} 
+             {% if station.alternate_code %} 
+                 alternateCode="{{ station.alternate_code }}"
+             {% endif %}
+             {% if station.alternate_code %} 
+                 historicalCode="{{ station.historical_code }}"
+             {% endif %}>
+           <Latitude
+               {% if station.latitude_unit %} 
+                   unit="{{ station.latitude_unit }}"
+               {% endif %}>{{ station.latitude }}</Latitude>
+           <Longitude
+               {% if station.longitude_unit %} 
+                   unit="{{ station.longitude_unit }}"
+               {% endif %}>{{ station.longitude }}</Longitude>
+           <Elevation
+               {% if station.elevation_unit %} 
+                   unit="{{ station.elevation_unit }}"
+               {% endif %}>{{ station.elevation }}</Elevation>
            <Site>
-             <Name>{{ station.station_name }}</Name>
+             <Name>{{ station.site_name }}</Name>
              {% if station.city %} 
-               <Town>{{ station.city }}</Town>
+               <Town>{{ station.town }}</Town>
              {% endif %}
              {% if station.department %}  
-               <County>{{ station.department }}</County>
+               <County>{{ station.county }}</County>
              {% endif %}
              {% if station.region %}  
                <Region>{{ station.region }}</Region>
@@ -82,12 +100,20 @@
            {% for channel, sensor, sensor_installed, sensor_uninstalled, preamplifier, preamplifier_installed, preamplifier_uninstalled, datalogger, datalogger_installed, datalogger_uninstalled, comments in channels %}
              <Channel code="{{ channel.channel_code }}" locationCode="{{ channel.location_code }}"
              {% if channel.start_date %} 
-             startDate="{{ channel.start_date|date:"c" }}"
+                 startDate="{{ channel.start_date|date:"c" }}"
              {% endif %} 
              {% if channel.end_date %} 
-             endDate="{{ channel.end_date|date:"c" }}"
+                 endDate="{{ channel.end_date|date:"c" }}"
+             {% endif %}
+             {% if channel.restricted_status %} 
+                 restrictedStatus="{{ channel.restricted_status }}"
              {% endif %} 
-             >
+             {% if channel.alternate_code %} 
+                 alternateCode="{{ channel.alternate_code }}"
+             {% endif %}
+             {% if channel.alternate_code %} 
+                 historicalCode="{{ channel.historical_code }}"
+             {% endif %}>
              {% for comment, authors in comments %}
                  <Comment>
                    <Value>{{ comment.value }}</Value>
@@ -104,23 +130,59 @@
                    {% endfor %}
                  </Comment>
              {% endfor %}
-             <Latitude>{{ channel.latitude }}</Latitude>
-             <Longitude>{{ channel.longitude }}</Longitude>
-             <Elevation>{{ channel.elevation }}</Elevation>
-             <Depth>{{ channel.depth }}</Depth>
+             <Latitude
+                 {% if channel.latitude_unit %} 
+                     unit="{{ channel.latitude_unit }}"
+                 {% endif %}>{{ channel.latitude }}</Latitude>
+             <Longitude
+                 {% if channel.longitude_unit %} 
+                     unit="{{ channel.longitude_unit }}"
+                 {% endif %}>{{ channel.longitude }}</Longitude>
+             <Elevation
+                 {% if channel.elevation_unit %} 
+                     unit="{{ channel.elevation_unit }}"
+                 {% endif %}>{{ channel.elevation }}</Elevation>
+             <Depth
+                 {% if channel.depth_unit %} 
+                     unit="{{ channel.depth_unit }}"
+                 {% endif %}>{{ channel.depth }}</Depth>
              {% if channel.azimuth != None %}  
-               <Azimuth>{{ channel.azimuth }}</Azimuth>
+               <Azimuth
+                   {% if channel.azimuth_unit %} 
+                       unit="{{ channel.azimuth_unit }}"
+                   {% endif %}>{{ channel.azimuth }}</Azimuth>
              {% endif %}
              {% if channel.dip  != None %}  
-               <Dip>{{ channel.dip }}</Dip>
+               <Dip
+                   {% if channel.dip_unit %} 
+                       unit="{{ channel.dip_unit }}"
+                   {% endif %}>{{ channel.dip }}</Dip>
              {% endif %}
              {% for datatype in channel.data_type.all %}
                  <Type>{{ datatype }}</Type>
              {% endfor %}
              {% if channel.sample_rate != None %}
                <SampleRateGroup>   
-               <SampleRate>{{ channel.sample_rate }}</SampleRate>
+               <SampleRate
+                   {% if channel.sample_rate_unit %} 
+                       unit="{{ channel.sample_rate_unit }}"
+                   {% endif %}>{{ channel.sample_rate }}</SampleRate>
                </SampleRateGroup>   
+             {% endif %}
+             {% if channel.storage_format != None %}
+                 <StorageFormat>{{channel.storage_format}}</StorageFormat>   
+             {% endif %}
+             {% if channel.clock_drift != None %}
+                 <ClockDrift
+                     {% if channel.clock_drift_unit %}
+                       unit="{{ channel.clock_drift_unit }}"
+                     {% endif %}>{{channel.clock_drift}}</ClockDrift>   
+             {% endif %}
+             {% if channel.calibration_units.id != None %}
+                 <CalibrationUnits>
+                   <Name>{{ channel.calibration_units.name }}</Name>
+                   <Description>{{ channel.calibration_units.description }}</Description>
+                 </CalibrationUnits>
              {% endif %}
              {% if sensor.id != None %}
                <Sensor>

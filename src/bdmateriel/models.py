@@ -240,11 +240,12 @@ class EquipModel(models.Model):
 class ParamEquipModel(models.Model):
     equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
     parameter_name = models.CharField(max_length=50, verbose_name=_("nom du parametre"))
-    default_value = models.CharField(max_length=50, verbose_name=_("valeur par défaut"))
+    default_value = models.CharField(max_length=50, verbose_name=_("valeur par defaut"))
 
     class Meta:
         unique_together = ("equip_model", "parameter_name")
-        verbose_name = _("parametre d'equipement")
+        verbose_name = _("parametre")
+        verbose_name_plural = _("P1. Parametres")
 
     def __unicode__(self):
         return u'%s : %s' % (self.equip_model.equip_model_name, self.parameter_name)
@@ -788,6 +789,18 @@ class StationSite(models.Model):
     historical_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code historique"))
     station_description = models.TextField(null=True, blank=True, verbose_name=_("description station"))
     site_description = models.TextField(null=True, blank=True, verbose_name=_("description site"))
+    latitude_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
+    latitude_pluserror = models.FloatField(null=True, blank=True)
+    latitude_minuserror = models.FloatField(null=True, blank=True)
+    latitude_datum = models.CharField(max_length=15, null=True, blank=True, default="WSG84")
+    longitude_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
+    longitude_pluserror = models.FloatField(null=True, blank=True)
+    longitude_minuserror = models.FloatField(null=True, blank=True)
+    longitude_datum = models.CharField(max_length=15, null=True, blank=True, default="WSG84")
+    elevation_unit = models.CharField(max_length=15, null=True, blank=True, default="METERS")
+    elevation_pluserror = models.FloatField(null=True, blank=True)
+    elevation_minuserror = models.FloatField(null=True, blank=True)
+
 
     class Meta:
         ordering = ['station_code']
@@ -925,6 +938,9 @@ class IntervEquip(models.Model):
 class StationDocType(models.Model):
     stationdoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
 
+    class Meta:
+        verbose_name_plural = _("S1. Types of document (station)")
+
     def __unicode__(self):
         return u'%s' % (self.stationdoc_type_name)
 
@@ -960,6 +976,8 @@ class StationDoc(models.Model):
     inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_station = models.FileField(storage=fs, verbose_name=_("document"), upload_to=stationdoc_file_name, blank=True)
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
+    begin_effective = models.DateField(null=True, blank=True, verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateField(null=True, blank=True, verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
     class Meta:
         unique_together = ("station", "document_title", "inscription_date")
@@ -972,6 +990,9 @@ class StationDoc(models.Model):
 # Management of equipment model document
 class EquipModelDocType(models.Model):
     equipmodeldoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
+
+    class Meta:
+        verbose_name_plural = _("Q1. Types of document (equip. model)")
 
     def __unicode__(self):
         return u'%s' % (self.equipmodeldoc_type_name)
@@ -1029,6 +1050,8 @@ class EquipModelDoc(models.Model):
     inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_equip_model = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipmodeldoc_file_name, blank=True)
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
+    begin_effective = models.DateField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
     class Meta:
         unique_together = ("equip_model", "document_title", "inscription_date")
@@ -1041,6 +1064,9 @@ class EquipModelDoc(models.Model):
 # Management of equipment document
 class EquipDocType(models.Model):
     equipdoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
+
+    class Meta:
+        verbose_name_plural = _("R1. Types of document (equipment)")
 
     def __unicode__(self):
         return u'%s' % (self.equipdoc_type_name)
@@ -1109,6 +1135,8 @@ class EquipDoc(models.Model):
     inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_equip = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipdoc_file_name, blank=True)
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
+    begin_effective = models.DateField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
     class Meta:
         unique_together = ("equip", "document_title", "inscription_date")
@@ -1247,6 +1275,32 @@ class Channel(models.Model) :
     clock_drift =  models.FloatField(null=True, blank=True, verbose_name=_("derive horloge (seconds/sample)"))
     calibration_units = models.ForeignKey("CalibrationUnit", null=True, blank=True, verbose_name=_("unite de mesure"))
     data_type = models.ManyToManyField("DataType", null=True, blank=True, verbose_name=_("donnees produites"))
+    latitude_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
+    latitude_pluserror = models.FloatField(null=True, blank=True)
+    latitude_minuserror = models.FloatField(null=True, blank=True)
+    latitude_datum = models.CharField(max_length=15, null=True, blank=True, default="WSG84")
+    longitude_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
+    longitude_pluserror = models.FloatField(null=True, blank=True)
+    longitude_minuserror = models.FloatField(null=True, blank=True)
+    longitude_datum = models.CharField(max_length=15, null=True, blank=True, default="WSG84")
+    elevation_unit = models.CharField(max_length=15, null=True, blank=True, default="METERS")
+    elevation_pluserror = models.FloatField(null=True, blank=True)
+    elevation_minuserror = models.FloatField(null=True, blank=True)
+    depth_unit = models.CharField(max_length=15, null=True, blank=True, default="METERS")
+    depth_pluserror = models.FloatField(null=True, blank=True)
+    depth_minuserror = models.FloatField(null=True, blank=True)
+    azimuth_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
+    azimuth_pluserror = models.FloatField(null=True, blank=True)
+    azimuth_minuserror = models.FloatField(null=True, blank=True)
+    dip_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
+    dip_pluserror = models.FloatField(null=True, blank=True)
+    dip_minuserror = models.FloatField(null=True, blank=True)
+    sample_rate_unit = models.CharField(max_length=15, null=True, blank=True, default="SAMPLES/S")
+    sample_rate_pluserror = models.FloatField(null=True, blank=True)
+    sample_rate_minuserror = models.FloatField(null=True, blank=True)
+    clock_drift_unit = models.CharField(max_length=15, null=True, blank=True, default="SECONDS/SAMPLE")
+    clock_drift_pluserror = models.FloatField(null=True, blank=True)
+    clock_drift_minuserror = models.FloatField(null=True, blank=True)
 
     class Meta:
         unique_together = ("station", "network", "channel_code", "location_code", "start_date")
@@ -1272,10 +1326,11 @@ class Chain(models.Model) :
         verbose_name_plural = _("Z2. Composantes des chaines d'acqui")
 
     def __unicode__(self):
-        return u'%s : %s : %s' % (self.channel, self.order, self.equip)
+        return u'%s : %s' % (self.order, self.equip)
 
 class ChainConfig(models.Model) :
-    chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition"))
+    channel = models.ForeignKey('Channel', verbose_name=_("canal")) # Hack to inline in channel
+    chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition")) 
     parameter = models.CharField(max_length=50, verbose_name=_("parametre"))
     value = models.CharField(max_length=20, null=True, blank=True, verbose_name=_("valeur"))
 

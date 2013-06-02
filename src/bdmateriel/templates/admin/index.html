@@ -18,7 +18,7 @@
         <table summary="{% blocktrans with name=app.name %}Models available in the {{ name }} application.{% endblocktrans %}">
         <caption><a href="{{ app.app_url }}" class="section">{% blocktrans with name=app.name %}{{ name }}{% endblocktrans %}</a></caption>
         {% for model in app.models %}
-            {% if app.name != "Bdmateriel" or app.name == "Bdmateriel" and model.name == 'A1. Sites' or app.name == "Bdmateriel" and model.name == 'C1. Modeles des equipements' or app.name == "Bdmateriel" and model.name == 'D1. Equipements' or app.name == "Bdmateriel" and model.name == 'E1. Interventions' or app.name == "Bdmateriel" and model.name == 'F1. Intervenants' or app.name == "Bdmateriel" and model.name == 'N1. Reseaux' %}    
+            {% if app.name != "Bdmateriel" %}    
                 <tr>
                 {% if model.admin_url %}
                     <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
@@ -38,6 +38,28 @@
                     <td>&nbsp;</td>
                 {% endif %}
                 </tr>
+            {% else %}
+                {% if model.name == 'A1. Sites' or model.name == 'C1. Modeles des equipements' or model.name == 'D1. Equipements' or model.name == 'E1. Interventions' or model.name == 'F1. Intervenants' or model.name == 'N1. Reseaux' or model.name == 'P1. Parametres des equipements' or model.name == 'Q1. Types of document (equip. model)' or model.name == 'R1. Types of document (equipment)' or model.name == 'S1. Types of document (station)' %}
+                    <tr>
+                    {% if model.admin_url %}
+                        <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+                    {% else %}
+                        <th scope="row">{{ model.name }}</th>
+                    {% endif %}
+
+                    {% if model.add_url %}
+                        <td><a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a></td>
+                    {% else %}
+                        <td>&nbsp;</td>
+                    {% endif %}
+
+                    {% if model.admin_url %}
+                        <td><a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a></td>
+                    {% else %}
+                        <td>&nbsp;</td>
+                    {% endif %}
+                    </tr>
+                {% endif %}                
             {% endif %}
         {% endfor %}
         </table>
