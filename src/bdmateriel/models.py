@@ -82,7 +82,7 @@ class Actor(models.Model):
     actor_name = models.CharField(max_length=50, unique=True, verbose_name=_("nom"))
     actor_note = models.TextField(null=True, blank=True, verbose_name=_("note"))
     actor_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("Groupe d\'appartenance"))
-
+   
     class Meta:
         ordering = ['actor_name']
         verbose_name = _("intervenant")
@@ -119,7 +119,7 @@ class BuiltType(models.Model):
     class Meta:
         ordering = ['built_type_name']
         verbose_name = _("type de bati")
-        verbose_name_plural = _("types des batis")
+        verbose_name_plural = _("T1. Types of building")
 
     def __unicode__(self):
         return self.built_type_name
@@ -973,7 +973,7 @@ class StationDoc(models.Model):
     owner = models.ForeignKey(User)
     document_type = models.ForeignKey(StationDocType, null=True, blank=True, verbose_name=_("type de document"))
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
+    inscription_date = models.DateField(null=True, blank=True, verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_station = models.FileField(storage=fs, verbose_name=_("document"), upload_to=stationdoc_file_name, blank=True)
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
     begin_effective = models.DateField(null=True, blank=True, verbose_name=_("debut effectivite (aaaa-mm-jj)"))
@@ -1047,7 +1047,7 @@ class EquipModelDoc(models.Model):
     owner = models.ForeignKey(User)
     document_type = models.ForeignKey(EquipModelDocType, null=True, blank=True, verbose_name=_("type de document"))
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
+    inscription_date = models.DateField(null=True, blank=True, verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_equip_model = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipmodeldoc_file_name, blank=True)
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
     begin_effective = models.DateField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
@@ -1132,7 +1132,7 @@ class EquipDoc(models.Model):
     owner = models.ForeignKey(User)
     document_type = models.ForeignKey(EquipDocType, null=True, blank=True, verbose_name=_("type de document"))
     document_title = models.CharField(max_length=40, verbose_name=_("titre document"))
-    inscription_date = models.DateField(verbose_name=_("date inscription (aaaa-mm-jj)"))
+    inscription_date = models.DateField(null=True, blank=True, verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_equip = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipdoc_file_name, blank=True)
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
     begin_effective = models.DateField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
@@ -1232,11 +1232,17 @@ class CalibrationUnit(models.Model) :
     name = models.CharField(max_length=50, verbose_name=_("Nom unite"))
     description = models.TextField(null=True, blank=True, verbose_name=_("description"))
 
+    class Meta:
+        verbose_name_plural = _("U1. Types of unit")
+
     def __unicode__(self):
         return u'%s' % (self.name)
 
 class DataType(models.Model) :
     type_description = models.CharField(max_length=50, verbose_name=_("Type de donnees"))
+
+    class Meta:
+        verbose_name_plural = _("V1. Types of collected data")
 
     def __unicode__(self):
         return u'%s' % (self.type_description)

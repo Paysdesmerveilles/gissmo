@@ -59,6 +59,7 @@ class LabeledHiddenInput(forms.HiddenInput):
 #
 ####
 class ActorAdmin(admin.ModelAdmin):
+    form = ActorForm
     list_display = ['actor_parent', 'actor_name', 'actor_type',]
     list_display_links = ['actor_name',]
     ordering = ['actor_parent', 'actor_name',]
@@ -85,7 +86,12 @@ class EquipModelDocInline(admin.TabularInline):
     fields = ('document_type', 'document_title', 'begin_effective', 'end_effective', 'document_equip_model', 'private_link')
     form = EquipModelDocInlineForm
     exclude = ['equip_supertype', 'equip_type','owner',]
-    extra = 1
+    extra = 0
+    ordering = ['-begin_effective',]
+
+    formfield_overrides = {
+        models.URLField: {'widget': URLFieldWidget},
+    }
 
 class ParamEquipModelInline(admin.TabularInline):
     model = ParamEquipModel
@@ -172,8 +178,12 @@ class EquipDocInline(admin.TabularInline):
     fields = ('document_type', 'document_title', 'begin_effective', 'end_effective', 'document_equip', 'private_link')
     form = EquipDocInlineForm
     exclude = ['equip_supertype', 'equip_type', 'equip_model','owner']
-    extra = 1
-    ordering = ['-inscription_date']
+    extra = 0
+    ordering = ['-begin_effective']
+
+    formfield_overrides = {
+        models.URLField: {'widget': URLFieldWidget},
+    }
 
 """
 Custom filter for the equipment change list
@@ -323,7 +333,11 @@ class StationDocInline(admin.TabularInline):
     form = StationDocInlineForm
     exclude = ['owner',]
     extra = 0
-    ordering = ['-inscription_date',]
+    ordering = ['-begin_effective',]
+
+    formfield_overrides = {
+        models.URLField: {'widget': URLFieldWidget},
+    }
 
 """
 Custom filter for the stationsite change list
@@ -677,7 +691,7 @@ class ChannelAdmin(admin.ModelAdmin):
     actions = ['delete_selected']
 
     fieldsets = [
-        ('' , {'fields': [('network','station','channel_code','location_code'),('latitude','longitude','elevation','depth','azimuth','dip'),('sample_rate','start_date','end_date')]}),
+        ('' , {'fields': [('network','station','channel_code','location_code'),('latitude','longitude','elevation','depth','azimuth','dip'),('sample_rate', 'accept_anyway', 'start_date','end_date')]}),
         ('Types des donnees produites', {'fields': [('data_type')], 'classes': ['collapse']}),
         ('Informations complementaires' , {'fields': [('description'),('alternate_code','historical_code','restricted_status'),('storage_format','clock_drift','calibration_units')], 'classes': ['collapse']}),]
 
@@ -705,6 +719,9 @@ class ChannelAdmin(admin.ModelAdmin):
                     parameters = ParamEquipModel.objects.filter(equip_model_id=instance.equip.equip_model.id).order_by('pk')
                     for parameter in parameters:
                         channel = get_object_or_404(Channel, pk=instance.channel.id) # Hack to inline in channel
+                        """
+                        Default physical channel according to the channel code and network code
+                        """
                         chainconfig = ChainConfig(channel=channel,chain=instance,parameter=parameter.parameter_name, value=parameter.default_value)
                         chainconfig.save()
             else:
@@ -772,6 +789,30 @@ class ChainAdmin(admin.ModelAdmin):
                 instance.save()
             else:
                 formset.save()
+
+    def response_change(self, request, obj):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement modifié' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_channel_change", args=(obj.channel.id,)))
+        else:
+            if '_saveasnew' in request.POST:
+                messages.success( request, 'Enregistrement modifié' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(ChainAdmin, self).response_change(request, obj)
+
+    def response_add(self, request, obj, post_url_continue="../%s/"):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement ajouté' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_channel_change", args=(obj.channel.id,)))
+        else:
+##        This makes the response go to the newly created model's change page
+##        without using reverse
+            if '_saveasnew' in request.POST:              
+                messages.success( request, 'Enregistrement ajouté' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(ChainAdmin, self).response_add(request, obj, post_url_continue)
 
 class CommentNetworkAuthorInline(admin.TabularInline):
     model = CommentNetworkAuthor
@@ -919,6 +960,9 @@ admin.site.register(StationSite, StationSiteAdmin)
 ######## admin.site.register(Channel, ChannelAdmin)
 
 admin.site.register(Network, NetworkAdmin)
+admin.site.register(BuiltType)
+admin.site.register(CalibrationUnit)
+admin.site.register(DataType)
 admin.site.register(ParamEquipModel)
 admin.site.register(EquipModelDocType)
 admin.site.register(EquipDocType)

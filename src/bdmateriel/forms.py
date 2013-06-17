@@ -2,6 +2,7 @@
 
 from django import forms
 from django.contrib.admin import widgets
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.forms.widgets import CheckboxSelectMultiple
 from django.shortcuts import render_to_response, redirect, get_object_or_404, HttpResponseRedirect, HttpResponse
@@ -67,6 +68,32 @@ class CustomSelectAddWidget(forms.Select):
         output = super(CustomSelectAddWidget, self).render(name, value, attrs, choices)
 
         return output + mark_safe(jquery % (url, url))
+
+class ActorForm(forms.ModelForm):
+
+    class Meta:
+        model = Actor
+
+    def clean(self):
+        cleaned_data = super(ActorForm, self).clean()
+        name = cleaned_data.get("actor_name")
+
+        # Check that an authenticated user via Auth.user will not change is actor_name in the Actor table
+        # The name is use for the default actor in intervention
+        #
+        # Check that the actor_name Inconnu will not change too
+        # The name is use for the default operator in site creation
+ 
+        if self.instance.id:
+            actor = get_object_or_404(Actor, id=self.instance.id)
+            if User.objects.filter(username=actor.actor_name).exists():
+                if actor.actor_name <> name:
+                    raise forms.ValidationError('The name for this actor must stay : %s' % actor.actor_name)
+            elif actor.actor_name == 'Inconnu' and name <> 'Inconnu':
+                raise forms.ValidationError('The name for this actor must stay : Inconnu')
+
+        # Always return the full collection of cleaned data.
+        return cleaned_data
 
 class EquipModelDocInlineForm(forms.ModelForm):
     """ 
@@ -190,10 +217,10 @@ class StationSiteForm(forms.ModelForm):
         elevation = cleaned_data.get("elevation")
 
         """
-        Check that the latitude, longitude and elevation are filled for a seismic station
+        Check that the latitude, longitude and elevation are filled for a station, test and theoric site
         """
-        if site_type == StationSite.STATION and (latitude == None or longitude == None or elevation == None):
-            raise forms.ValidationError('Les champs latitude, longitude et elevation sont obligatoires pour une station sismologique')
+        if site_type in (StationSite.STATION, StationSite.SITE_TEST, StationSite.SITE_THEORIQUE) and (latitude == None or longitude == None or elevation == None):
+            raise forms.ValidationError('Les champs latitude, longitude et elevation sont obligatoires pour ce type de site : %s' % dict(StationSite.SITE_CHOICES)[site_type])
 
         # Always return the full collection of cleaned data.
         return cleaned_data
@@ -680,8 +707,19 @@ class ChannelForm(forms.ModelForm):
     class Meta:
         model = Channel
 
+    # Hack field to show only if channel code and sample rate not fit
+    accept_anyway = forms.BooleanField(initial=False,required=False)
+
     def __init__(self, *args, **kwargs):        
         super(ChannelForm, self).__init__(*args, **kwargs)
+
+        # Hack to simulate warning message via raise Validationerror
+        if "accept_anyway" in self.errors:
+            self.fields['accept_anyway'].widget = forms.CheckboxInput()
+        else:
+            self.fields['accept_anyway'].widget = forms.HiddenInput()
+            self.fields['accept_anyway'].label = ""
+        
 #        instance = getattr(self, 'instance', None)
 #        if instance and instance.pk:
 #            station = get_object_or_404(StationSite, id=instance.station.id)  
@@ -724,3 +762,36 @@ class ChannelForm(forms.ModelForm):
         self.fields["data_type"].queryset = DataType.objects.all()       
         self.fields["data_type"].initial = [t.pk for t in DataType.objects.filter(Q(type_description='CONTINUOUS')| Q(type_description='GEOPHYSICAL'))]
 
+    def clean(self):
+
+        cleaned_data = super(ChannelForm, self).clean()
+        channel_code = cleaned_data.get("channel_code")
+        sample_rate = cleaned_data.get("sample_rate")
+        accept = cleaned_data.get("accept_anyway")
+
+        """
+        Check that the sample rate fit in the range for the channel code
+        """
+#        dict_channel_validation = {'H': "sample_rate < 80",
+#                                   'B': "sample_rate < 10 or sample_rate >= 80)",
+#                                   'L': "sample_rate <> 1",
+#                                   'V': "sample_rate <> 0.1",
+#                                   'U': "sample_rate <> 0.01"}
+
+        """
+        We can bypass this validation with the accept field
+        """
+        if channel_code and sample_rate:
+            if not accept and ((channel_code[0] == 'H' and sample_rate < 80) or \
+               (channel_code[0] == 'B' and (sample_rate < 10 or sample_rate >= 80)) or \
+               (channel_code[0] == 'L' and sample_rate <> 1) or \
+               (channel_code[0] == 'V' and sample_rate <> 0.1) or \
+               (channel_code[0] == 'U' and sample_rate <> 0.01)):
+                msg = u"Sample rate unexpected."
+                self._errors["sample_rate"] = self.error_class([msg])
+                msg = u"Bypass error."
+                self._errors["accept_anyway"] = self.error_class([msg])
+                raise forms.ValidationError('Sample rate (%s) not in the range for this channel code (%s)' % (sample_rate, channel_code))
+
+        # Always return the full collection of cleaned data.
+        return cleaned_data
