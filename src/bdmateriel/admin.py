@@ -151,7 +151,7 @@ class EquipModelFilter(SimpleListFilter):
 class EquipModelAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model_name',]
     list_display_links = ['equip_model_name',]
-    list_filter = [EquipModelFilter,]
+    list_filter = [EquipModelFilter, ]
     ordering = ['equip_supertype', 'equip_type', 'equip_model_name',]
     search_fields = ['equip_model_name',]
 
@@ -240,11 +240,41 @@ class EquipFilter(SimpleListFilter):
            if self.value()[:5] == 'Model':
                return queryset.filter(equip_model__id__exact=self.value()[6:])
 
+class OwnerFilter(SimpleListFilter):
+    # Human-readable title which will be displayed in the
+    # right admin sidebar just above the filter options.
+    title = _('owner')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'owner'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        lookup_list = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.INCONNU)).values_list('id', 'actor_name').distinct() 
+        return lookup_list
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        # Compare the requested value (either '80s' or 'other')
+        # to decide how to filter the queryset.
+        if self.value():
+            return queryset.filter(owner=self.value())
+
 class EquipmentAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model', 'serial_number', 'get_last_state', 'get_last_place', 'owner',]
     list_display_links = ['serial_number',]
 #    list_filter = ['equip_supertype', 'equip_type', 'equip_model',]
-    list_filter = [EquipFilter,]
+    list_filter = [EquipFilter, ]
     ordering = ['equip_supertype', 'equip_type', 'equip_model', 'serial_number',]
     search_fields = ['equip_model__equip_model_name', 'serial_number',]
     form = EquipmentForm
@@ -262,6 +292,16 @@ class EquipmentAdmin(admin.ModelAdmin):
     def get_last_place(self, obj):
         return '%s'%(equip_last_place(obj.id))
     get_last_place.short_description = 'Emplacement'
+
+    # Redefine queryset to show only equipment according to the user's project
+    def queryset(self, request):
+        qs = super(EquipmentAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        project_list = ProjectUser.objects.filter(user=request.user).values_list('project', flat=True)
+        station_list = Project.objects.filter(id__in=project_list).values_list('station', flat=True)
+        intervequip_list = IntervEquip.objects.filter(station_id__in=station_list).values_list('equip', flat=True).distinct()
+        return qs.filter(id__in=intervequip_list)
 
     def save_model(self, request, obj, form, change):
         """
@@ -402,7 +442,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     form = StationSiteForm
 
     fieldsets = [
-        ('Information sur le site' , {'fields': [('site_type','station_code','site_name','station_parent','operator','creation_date'),('latitude','longitude','elevation'),('geology')]}),
+        ('Information sur le site' , {'fields': [('site_type','station_code','site_name','station_parent','operator','creation_date','project'),('latitude','longitude','elevation'),('geology')]}),
         ('Information sur les contacts' , {'fields': [('contact')], 'classes': ['collapse']}),
         ('Adresse du site' , {'fields': [('site_description'),('address', 'zip_code', 'town'),('county','region','country')], 'classes': ['collapse']}),
         ('Autre information pertinente' , {'fields': [('note'),('private_link')], 'classes': ['collapse']}),
@@ -414,6 +454,20 @@ class StationSiteAdmin(admin.ModelAdmin):
         """ To display the last state of the station in the change_list """
         return '%s'%(station_last_state(obj.id))
     get_last_state.short_description = 'Etat'
+
+    def get_form(self, request, obj=None, **kwargs):
+         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
+         form.current_user = request.user
+         return form
+
+    # Redefine queryset to show only site according to the user's project
+    def queryset(self, request):
+        qs = super(StationSiteAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        project_list = ProjectUser.objects.filter(user=request.user).values_list('project', flat=True)
+        station_list = Project.objects.filter(id__in=project_list).values_list('station', flat=True)
+        return qs.filter(id__in=station_list)
 
     def save_model(self, request, obj, form, change):
         """
@@ -434,6 +488,10 @@ class StationSiteAdmin(admin.ModelAdmin):
             actor = get_object_or_404(Actor, actor_name=request.user.username)            
             interv_actor = IntervActor(intervention=intervention, actor=actor)
             interv_actor.save()
+
+            #Each new station will be store in Resif by default
+            project_object = get_object_or_404(Project, project_name='Resif')
+            project_object.station.add(obj.id)
         super(StationSiteAdmin, self).save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):
@@ -537,6 +595,15 @@ class InterventionAdmin(admin.ModelAdmin):
     class Media:
         js = ["js/my_ajax_function.js"]
 
+    # Redefine queryset to show only intervention according to the user's project
+    def queryset(self, request):
+        qs = super(InterventionAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        project_list = ProjectUser.objects.filter(user=request.user).values_list('project', flat=True)
+        station_list = Project.objects.filter(id__in=project_list).values_list('station', flat=True)
+        return qs.filter(station_id__in=station_list)
+
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
@@ -555,61 +622,6 @@ class InterventionAdmin(admin.ModelAdmin):
         return obj.intervention_date.strftime('%Y-%m-%d %H:%M')
     format_date.short_description = 'Date (aaaa-mm-jj hh24:mi)'
     format_date.admin_order_field = 'intervention_date'
-
-######## class ChainComponentInlineFormset(forms.models.BaseInlineFormSet):
-########  
-########    def clean(self):
-########        """Checks that equipment exist for the station."""
-########        if any(self.errors):
-########            # Don't bother validating the formset unless each form is valid on its own
-########            return
-######## 
-########        for i in range(0, self.total_form_count()):
-########            form = self.forms[i]
-######## #           print u'Cleaned_data : %s' % (form.cleaned_data)
-########            if form.cleaned_data != {}:
-########                acqui_chain = form.cleaned_data['acquisition_chain']
-########                L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=acqui_chain.station)]
-########                equip = form.cleaned_data['equip']
-########                if equip.id not in L:
-########                    raise forms.ValidationError("Equipement choisi non present dans la station.")
-
-######## class ChainComponentInline(admin.TabularInline):
-########     model = ChainComponent
-########     formset = ChainComponentInlineFormset
-########     extra = 0
-######## 
-########     def get_formset(self, request, obj=None, **kwargs):
-########         # Hack! Hook parent obj just in time to use in formfield_for_manytomany
-########         self.parent_obj = obj
-######## #        if self.parent_obj: 
-######## #            print obj.__class__.__name__
-########         return super(ChainComponentInline, self).get_formset(
-########             request, obj, **kwargs)
-########  
-######## """ 
-########     Pour limiter dans le choix du select de la FK que les equipements de la station 
-########     """
-######## 
-########     def formfield_for_dbfield(self, field, **kwargs):
-########         if field.name == 'equip':
-########             if self.parent_obj :
-########                 parent_station = self.parent_obj
-########                 L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=parent_station.station)]
-########                 contained_equip = Equipment.objects.filter(id__in = L)
-########                 return forms.ModelChoiceField(label="equipement",queryset=contained_equip, required=True)    
-########         return super(ChainComponentInline, self).formfield_for_dbfield(field, **kwargs)
-
-######## class ChannelInline(admin.TabularInline):
-########     model = Channel
-########     extra = 0
- 
-######## class AcquisitionChainAdmin(admin.ModelAdmin):
-########     inlines = [ChainComponentInline, ChannelInline]
-
-######## class ChannelAdmin(admin.ModelAdmin):
-######## list_display = ['network', 'acquisition_chain', 'channel_code', 'dip', 'azimuth', 'sample_rate', 'start_date']
-
 
 class ChainInline(admin.TabularInline):
     model = Chain
@@ -700,6 +712,17 @@ class ChannelAdmin(admin.ModelAdmin):
 
     class Media:
         js = ["js/my_ajax_function.js"]
+
+
+    def get_model_perms(self, request):
+        """
+        Return empty perms dict thus hiding the model from admin index.
+        """
+        gmp = super(ChannelAdmin, self).get_model_perms(request)
+        if request.user.is_superuser:
+            return gmp
+        else:
+            return {}
 
 # a lot of todo 
 # blinder la generation automatique de parametre de config selon modele equip
@@ -932,6 +955,52 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
                 return super(CommentStationSiteAdmin, self).response_add(request, obj, post_url_continue)
 
 
+class ProjectAdmin(admin.ModelAdmin):
+    model = Project
+    filter_horizontal = ['station',]
+    fields = ('project_name', 'manager','station')
+    
+    # Redefine queryset to show only intervention according to the user's project
+    def queryset(self, request):
+        qs = super(ProjectAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(manager_id=request.user.id)
+
+    def get_model_perms(self, request):
+        """
+        Return empty perms dict thus hiding the model from admin index.
+        """
+        gmp = super(ProjectAdmin, self).get_model_perms(request)
+        if request.user.is_superuser:
+            return gmp
+        else:
+            is_manager = Project.objects.filter(manager_id=request.user.id)
+            if not is_manager:
+                return {}
+            return gmp
+
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser:
+            return ('project_name', 'manager')
+        return self.readonly_fields
+
+class ProjectUserAdmin(admin.ModelAdmin):
+    model = ProjectUser
+    form = ProjectUserForm
+
+    formfield_overrides = {
+        models.ManyToManyField: {'widget': CheckboxSelectMultiple},
+    }
+
+    # Redefine queryset to show only intervention according to the user's project
+    def queryset(self, request):
+        qs = super(ProjectUserAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(user_id=request.user.id)
+
 '''
 Disabling the action "delete_selected" for all the site
 '''
@@ -968,8 +1037,12 @@ admin.site.register(EquipModelDocType)
 admin.site.register(EquipDocType)
 admin.site.register(StationDocType)
 
+admin.site.register(EquipType)
+
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(CommentNetwork, CommentNetworkAdmin)
 admin.site.register(CommentChannel, CommentChannelAdmin)
 admin.site.register(CommentStationSite, CommentStationSiteAdmin)
 
+admin.site.register(Project, ProjectAdmin)
+admin.site.register(ProjectUser, ProjectUserAdmin)

@@ -169,7 +169,9 @@ def display_equip_last_location(station_id):
         if last_equip_location:
             for last in last_equip_location:
                 liste.append(last.id)
-    locations = IntervEquip.objects.filter(station=station_id,id__in=liste).order_by('-intervention__intervention_date')
+#    Changing the order by fr presenting the equipment by supertype, type, model
+#    locations = IntervEquip.objects.filter(station=station_id,id__in=liste).order_by('-intervention__intervention_date')
+    locations = IntervEquip.objects.filter(station=station_id,id__in=liste).order_by('equip__equip_supertype', 'equip__equip_type', 'equip__equip_model')
     return { 'locations': locations }
 
 @register.inclusion_tag('hist_equip_station.html')

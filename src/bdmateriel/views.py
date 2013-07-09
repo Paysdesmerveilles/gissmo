@@ -10,7 +10,10 @@ from operator import itemgetter
 from models import *
 from tools import DecimalEncoder
 
+
+from django.template import loader, Context
 from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.shortcuts import render_to_response, redirect, get_object_or_404, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.contrib.admin.views.decorators import staff_member_required
@@ -148,62 +151,70 @@ def xhr_station_state(request):
     else:
         return HttpResponse(status=400)
 
-# TODO fonction qui selon equip_action choisi retourne equip_state possible
+def available_equip_state(action):
+    """
+    Function that return a list of state according to the action via the parameter
+    This is use on add_fields section of the IntervEquipInlineFormset and in xhr_equip_state function
+    """
+    select_choice = [(c[0],[1]) for c in EquipState.EQUIP_STATES]
+    select_choice.insert(0,('','-- choisir une action en premier --'))
+    if int(action) == EquipAction.ACHETER:
+        select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])] 
+    elif int(action) == EquipAction.TESTER:
+        select_choice = [(EquipState.DISPONIBLE, EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1])]
+        select_choice.append((EquipState.OPERATION, EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]))
+        select_choice.append((EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]))
+        select_choice.append((EquipState.DEFAUT, EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]))
+        select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))
+    elif int(action) == EquipAction.INSTALLER:
+        select_choice = [(EquipState.OPERATION, EquipState.EQUIP_STATES[EquipState.OPERATION-1][1])]
+        select_choice.append((EquipState.DEFAUT, EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]))
+        select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))
+    elif int(action) == EquipAction.DESINSTALLER:
+        select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])]
+        select_choice.append((EquipState.DISPONIBLE, EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]))
+        select_choice.append((EquipState.DEFAUT, EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]))
+        select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))    
+    elif int(action) == EquipAction.CONSTATER_DEFAUT:
+        select_choice = [(EquipState.DEFAUT, EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1])]
+        select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))
+    elif int(action) == EquipAction.MAINT_PREV_DISTANTE or int(action) == EquipAction.MAINT_CORR_DISTANTE:
+        select_choice = [(EquipState.OPERATION, EquipState.EQUIP_STATES[EquipState.OPERATION-1][1])]
+        select_choice.append((EquipState.DEFAUT, EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]))
+        select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))
+    elif int(action) == EquipAction.MAINT_PREV_SITE or int(action) == EquipAction.MAINT_CORR_SITE:
+        select_choice = [(EquipState.DISPONIBLE, EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1])]
+        select_choice.append((EquipState.OPERATION, EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]))
+        select_choice.append((EquipState.DEFAUT, EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]))
+        select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))
+    elif int(action) == EquipAction.EXPEDIER:
+        select_choice = [(EquipState.EN_TRANSIT, EquipState.EQUIP_STATES[EquipState.EN_TRANSIT-1][1])]
+    elif int(action) == EquipAction.RECEVOIR:
+        select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])]
+    elif int(action) == EquipAction.METTRE_HORS_USAGE:
+        select_choice = [(EquipState.HORS_USAGE, EquipState.EQUIP_STATES[EquipState.HORS_USAGE-1][1])]
+    elif int(action) == EquipAction.CONSTATER_DISPARITION:
+        select_choice = [(EquipState.DISPARU, EquipState.EQUIP_STATES[EquipState.DISPARU-1][1])]
+    elif int(action) == EquipAction.RETROUVER:
+        select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])] 
+    elif int(action) == EquipAction.METTRE_AU_REBUT:
+        select_choice = [(EquipState.AU_REBUT, EquipState.EQUIP_STATES[EquipState.AU_REBUT-1][1])]
+    elif int(action) == EquipAction.AUTRE:
+        pass
+    else:
+        pass
+    return select_choice
+
 def xhr_equip_state(request):
     """
     Request that return the possible states for a station according to the action done
+    This is use onchange event 
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
         action=request.GET.get('action', '')
 
-        select_choice = [({"optionValue" : c[0], "optionDisplay" : c[1]}) for c in EquipState.EQUIP_STATES]
-        select_choice.insert(0, ({"optionValue": '', "optionDisplay": '-- choisir une action en premier --'}))
-        if int(action) == EquipAction.ACHETER:
-            select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}] 
-        elif int(action) == EquipAction.TESTER:
-            select_choice = [{"optionValue": EquipState.DISPONIBLE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]}]
-            select_choice.append({"optionValue": EquipState.OPERATION, "optionDisplay": EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]})
-            select_choice.append({"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]})
-            select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
-            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
-        elif int(action) == EquipAction.INSTALLER:
-            select_choice = [{"optionValue": EquipState.OPERATION, "optionDisplay": EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]}]
-            select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
-            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
-        elif int(action) == EquipAction.DESINSTALLER:
-            select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}]
-            select_choice.append({"optionValue": EquipState.DISPONIBLE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]})
-            select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
-            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})    
-        elif int(action) == EquipAction.CONSTATER_DEFAUT:
-            select_choice = [{"optionValue": EquipState.DEFAUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]}]
-            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.PANNE-1][1]})
-        elif int(action) == EquipAction.MAINT_PREV_DISTANTE or int(action) == EquipAction.MAINT_CORR_DISTANTE:
-            select_choice = [{"optionValue": EquipState.OPERATION, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]}]
-            select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
-            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.PANNE-1][1]}) 
-        elif int(action) == EquipAction.MAINT_PREV_SITE or int(action) == EquipAction.MAINT_CORR_SITE:
-            select_choice = [{"optionValue": EquipState.DISPONIBLE, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]}]
-            select_choice.append({"optionValue": EquipState.OPERATION, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]})
-            select_choice.append({"optionValue": EquipState.DEFAUT, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]})
-            select_choice.append({"optionValue": EquipState.PANNE, "optionDisplay":  EquipState.EQUIP_STATES[EquipState.PANNE-1][1]}) 
-        elif int(action) == EquipAction.EXPEDIER:
-            select_choice = [{"optionValue": EquipState.EN_TRANSIT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.EN_TRANSIT-1][1]}]
-        elif int(action) == EquipAction.RECEVOIR:
-            select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}]
-        elif int(action) == EquipAction.METTRE_HORS_USAGE:
-            select_choice = [{"optionValue": EquipState.HORS_USAGE, "optionDisplay": EquipState.EQUIP_STATES[EquipState.HORS_USAGE-1][1]}]
-        elif int(action) == EquipAction.CONSTATER_DISPARITION:
-            select_choice = [{"optionValue": EquipState.DISPARU, "optionDisplay": EquipState.EQUIP_STATES[EquipState.DISPARU-1][1]}]
-        elif int(action) == EquipAction.RETROUVER:
-            select_choice = [{"optionValue": EquipState.A_TESTER, "optionDisplay": EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1]}] 
-        elif int(action) == EquipAction.METTRE_AU_REBUT:
-            select_choice = [{"optionValue": EquipState.AU_REBUT, "optionDisplay": EquipState.EQUIP_STATES[EquipState.AU_REBUT-1][1]}]
-        elif int(action) == EquipAction.AUTRE:
-            pass
-        else:
-            pass
+        select_choice = [({"optionValue" : c[0], "optionDisplay" : c[1]}) for c in available_equip_state(action)]
         data = simplejson.dumps(select_choice)
 
         return HttpResponse(data)
@@ -252,6 +263,13 @@ def equip_last_place(equip):
     else:
         return 'Inconnu'
 
+
+# 
+# TODO eliminate one of this function 
+#
+# equip_place_todate return the station object
+# equip_place_todate_id return the station id
+#
 def equip_place_todate(equip, date):
     """
     Function to obtain the place of an equipment at a precise moment
@@ -263,6 +281,50 @@ def equip_place_todate(equip, date):
             result = last.station
     return result
 
+def equip_place_todate_id(equip, date):
+    """
+    Function to obtain the place of an equipment at a precise moment
+    This function return the id of the site
+    """
+    result = 0
+    last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+    if last_equip_place:
+        for last in last_equip_place:
+            result = last.station.id
+    return result
+
+def available_equipment(action, station, date):
+    # Install only available equip
+    equipment_list = []
+    equipments = Equipment.objects.all()
+    if int(action) == EquipAction.INSTALLER:
+        for equip in equipments:
+            if equip_state_todate(equip.id, date) == EquipState.DISPONIBLE:
+                equipment_list.append(equip.id)
+    # Receive only equip En transit
+    elif int(action) == EquipAction.RECEVOIR:
+        for equip in equipments:
+            if equip_state_todate(equip.id, date) == EquipState.EN_TRANSIT:
+                equipment_list.append(equip.id)
+    # Retreive only equip Disparu
+    elif int(action) == EquipAction.RETROUVER:
+        for equip in equipments:
+            if equip_state_todate(equip.id, date) == EquipState.DISPARU:
+                equipment_list.append(equip.id)
+    # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE 
+    elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
+        for equip in equipments:
+            if int(equip_place_todate_id(equip.id, date)) == int(station):
+                if equip_state_todate(equip.id, date) == EquipState.DEFAUT or equip_state_todate(equip.id, date) == EquipState.PANNE:
+                    equipment_list.append(equip.id)
+    # Make action only on equip installed in the station
+    else:
+        for equip in equipments:
+            if int(equip_place_todate_id(equip.id, date)) == int(station):
+                equipment_list.append(equip.id)
+    equip_dispo = Equipment.objects.filter(id__in=equipment_list).order_by('equip_supertype','equip_type','equip_model','serial_number')
+    return equip_dispo
+
 def xhr_equipment(request):
     """
     Request that return the possible equipment for a station according to the action done
@@ -272,69 +334,73 @@ def xhr_equipment(request):
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
         action=request.GET.get('action', '')
+        station=request.GET.get('station', '')
         date_intervention=request.GET.get('date', '')
         heure_intervention=request.GET.get('heure', '')
-        station=request.GET.get('station', '')
 
         date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
         date_intervention = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
 
-        Liste = []
-        equipments = Equipment.objects.all()
-       # Install only available equip
-        if int(action) == EquipAction.INSTALLER:
-            for equip in equipments:
-                # TODO Obtain the state at moment T
-                #Obtain the last state of all equipment
-                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
-                if last_equip_state:
-                    for last in last_equip_state:
-                        Liste.append(last.id)
-            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.DISPONIBLE ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
-       # Receive only equip En transit
-        elif int(action) == EquipAction.RECEVOIR:
-            for equip in equipments:
-                #Obtain the last state of all equipment
-                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
-                if last_equip_state:
-                    for last in last_equip_state:
-                        Liste.append(last.id)
-            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.EN_TRANSIT ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
-       # Retreive only equip Disparu
-        elif int(action) == EquipAction.RETROUVER:
-            for equip in equipments:
-                #Obtain the last state of all equipment
-                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
-                if last_equip_state:
-                    for last in last_equip_state:
-                        Liste.append(last.id)
-            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.DISPARU ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
-       # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE 
-        elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
-            for equip in equipments:
-                #Obtain the last state of all equipment
-                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
-                if last_equip_state:
-                    for last in last_equip_state:
-                        Liste.append(last.id)
-            equip_dispo = IntervEquip.objects.filter(Q(equip_state=EquipState.DEFAUT) | Q(equip_state=EquipState.PANNE) ,id__in=Liste, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+
+#        Liste = []
+#        equipments = Equipment.objects.all()
+#       # Install only available equip
+#        if int(action) == EquipAction.INSTALLER:
+#            for equip in equipments:
+#                # TODO Obtain the state at moment T
+#                #Obtain the last state of all equipment
+#                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+#                if last_equip_state:
+#                    for last in last_equip_state:
+#                        Liste.append(last.id)
+#            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.DISPONIBLE ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+#       # Receive only equip En transit
+#        elif int(action) == EquipAction.RECEVOIR:
+#            for equip in equipments:
+#                #Obtain the last state of all equipment
+#                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+#                if last_equip_state:
+#                    for last in last_equip_state:
+#                        Liste.append(last.id)
+#            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.EN_TRANSIT ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+#       # Retreive only equip Disparu
+#        elif int(action) == EquipAction.RETROUVER:
+#            for equip in equipments:
+#                #Obtain the last state of all equipment
+#                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+#                if last_equip_state:
+#                    for last in last_equip_state:
+#                        Liste.append(last.id)
+#            equip_dispo = IntervEquip.objects.filter(equip_state=EquipState.DISPARU ,id__in=Liste).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+#       # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE 
+#        elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
+#            for equip in equipments:
+#                #Obtain the last state of all equipment
+#                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+#                if last_equip_state:
+#                    for last in last_equip_state:
+#                        Liste.append(last.id)
+#            equip_dispo = IntervEquip.objects.filter(Q(equip_state=EquipState.DEFAUT) | Q(equip_state=EquipState.PANNE) ,id__in=Liste, station__id=station).order_by#('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number'
        # Make action only on equip installed in the station
-        else:
-            for equip in equipments:
-                #Obtain the last place of all equipment
-                last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
-                if last_equip_place:
-                    for last in last_equip_place:
-                        Liste.append(last.id)
+#        else:
+#            for equip in equipments:
+#                #Obtain the last place of all equipment
+#                last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lt=date_intervention, equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+#                if last_equip_place:
+#                    for last in last_equip_place:
+#                        Liste.append(last.id)
        #     print Liste
 #            equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('-intervention__intervention_date')
-            equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
+#            equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
        #     print station
        #     print equip_dispo
+
+
+        equip_dispo = available_equipment(action, station, date_intervention)
+
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
-       # select_choice.append(({"optionValue": "", "optionDisplay": "------"}))
         for equip in equip_dispo:
-            select_choice.append(({"optionValue": equip.equip.id, "optionDisplay": equip.equip.__unicode__()}))
+            select_choice.append(({"optionValue": equip.id, "optionDisplay": equip.__unicode__()}))
         data = simplejson.dumps(select_choice)
 
         return HttpResponse(data)
@@ -343,6 +409,31 @@ def xhr_equipment(request):
         return HttpResponse(status=400)
 
 # TODO fonction qui selon equip_action choisi retourne emplacement possible stations, bati, equipement hote
+def available_station(action, station):
+    """
+    Function that return a queryset of station according to the action and station on which the intervention occur
+    This is use on add_fields section of the IntervEquipInlineFormset and in xhr_station function
+    """
+    # Send equipment somewhere SAV, OSU or Other
+    if int(action) == EquipAction.EXPEDIER:
+        station_dispo = StationSite.objects.filter(Q(site_type=StationSite.OBSERVATOIRE) | Q(site_type=StationSite.SAV) | Q(site_type=StationSite.AUTRE)).order_by('station_code') 
+    # Uninstall and put the equip in OSU or in the station of the intervention
+    elif int(action) == EquipAction.DESINSTALLER:
+        station_dispo = StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE).order_by('station_code')              
+    # Not able to know where is the equipment
+    elif int(action) == EquipAction.CONSTATER_DISPARITION:
+        station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')            
+    # Stop tracking the equipment
+    elif int(action) == EquipAction.METTRE_AU_REBUT:
+        station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')
+    # Out of service but can stay in the station or place to a observatory or nowhere
+    elif int(action) == EquipAction.METTRE_HORS_USAGE:
+        station_dispo = StationSite.objects.filter(Q(id=station) | Q(site_type=StationSite.OBSERVATOIRE) | Q(site_type=StationSite.NEANT)).order_by('station_code')
+    # Make action only on equip installed in the station
+    else:
+        station_dispo = StationSite.objects.filter(id=station)
+    
+    return station_dispo
 
 def xhr_station(request):
     """
@@ -351,31 +442,11 @@ def xhr_station(request):
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
         action=request.GET.get('action', '')
-        date=request.GET.get('date', '')
         station=request.GET.get('station', '')
 
-        station_dispo = StationSite.objects.all().order_by('station_code')
-       # Send equipment somewhere SAV, OSU or Other
-        if int(action) == EquipAction.EXPEDIER:
-            station_dispo = StationSite.objects.filter(Q(site_type=StationSite.OBSERVATOIRE) | Q(site_type=StationSite.SAV) | Q(site_type=StationSite.AUTRE)).order_by('station_code') 
-       # Uninstall and put the equip in OSU or in the station of the intervention
-        elif int(action) == EquipAction.DESINSTALLER:
-            station_dispo = StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE).order_by('station_code')              
-       # Not able to know where is the equipment
-        elif int(action) == EquipAction.CONSTATER_DISPARITION:
-            station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')            
-       # Stop tracking the equipment
-        elif int(action) == EquipAction.METTRE_AU_REBUT:
-            station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')
-       # Out of service but can stay in the station or place to a observatory or nowhere
-        elif int(action) == EquipAction.METTRE_HORS_USAGE:
-            station_dispo = StationSite.objects.filter(Q(id=station) | Q(site_type=StationSite.OBSERVATOIRE) | Q(site_type=StationSite.NEANT)).order_by('station_code')
-       # Make action only on equip installed in the station
-        else:
-            station_dispo = StationSite.objects.filter(id=station)
-
        # If action return only one site this is the only choice possible else
-       # we have to select a site 
+       # we have to select a site
+        station_dispo = available_station(action, station)
         if station_dispo.count() == 1:
             select_choice = []
         else:
@@ -389,17 +460,23 @@ def xhr_station(request):
     else:
         return HttpResponse(status=400)
 
+def available_built(station):
+    """
+    Function that return a queryset of building according to the station on which the action occur
+    This is use on add_fields section of the IntervEquipInlineFormset and in xhr_built function
+    """
+    built_dispo = Built.objects.filter(station__id=station)
+
+    return built_dispo
+
 def xhr_built(request):
     """
     Request that return the possible built according to the station
     """
     if request.is_ajax() and request.method == 'GET':
-        action=request.GET.get('action', '')
-        date=request.GET.get('date', '')
         station=request.GET.get('station', '')
         
-        #built_dispo = Built.objects.filter(station__id=station).order_by('station_code')
-        built_dispo = Built.objects.filter(station__id=station)
+        built_dispo = available_built(station)
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for built in built_dispo:
@@ -410,6 +487,24 @@ def xhr_built(request):
     # If you want to prevent non XHR calls
     else:
         return HttpResponse(status=400)
+
+def available_equipment_scioper(station, date):
+    """
+    Function that return a queryset of scientific equipment in place at the station for the date specify
+    This is use on add_fields section of the ChainInlineFormset and in xhr_equip_oper function
+    """
+    equipment_list = []
+    # TODO find a better way to filter
+    # Not the best way to filter
+    # If the supertype name change we have to change the code too
+    equipments = Equipment.objects.filter(equip_supertype__equip_supertype_name="01. Scientifique")
+
+    for equip in equipments:
+        if int(equip_place_todate_id(equip.id, date)) == int(station):
+            equipment_list.append(equip.id)
+
+    equip_dispo = Equipment.objects.filter(id__in=equipment_list).order_by('equip_supertype','equip_type__presentation_rank','equip_model','serial_number')
+    return equip_dispo
 
 def xhr_equip_oper(request):
     """
@@ -424,34 +519,38 @@ def xhr_equip_oper(request):
         date_heure_channel = u''.join([date_debut,u' ',heure_debut])
         date_debut_channel = datetime.strptime(date_heure_channel,"%Y-%m-%d %H:%M:%S")
 
-        Liste = []
-        # Not the best way to filter
-        # If the supertype name change we have to change the code too
-        equipments = Equipment.objects.filter(equip_supertype__equip_supertype_name="01. Scientifique")
+#        Liste = []
+#        # Not the best way to filter
+#        # If the supertype name change we have to change the code too
+#        equipments = Equipment.objects.filter(equip_supertype__equip_supertype_name="01. Scientifique")
+#
+#        for equip in equipments:
+#            #Obtain the last place of all equipment
+#            last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lte=date_debut_channel, equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+#            if last_equip_place:
+#                for last in last_equip_place:
+#                    Liste.append(last.id)
+#
+#        equip_dispo = IntervEquip.objects.filter(id__in=Liste, equip_state=EquipState.OPERATION, station__id=station)
+#
+#        # TODO
+#        # Hack to order the equipment by logical apparition in acqui chain
+#        select_choice = [{"optionValue": "", "optionDisplay": "------", "orderfield": 0}]
+#        for equip in equip_dispo:
+#            if equip.equip.equip_type.equip_type_name == u'Vélocimètre' or equip.equip.equip_type.equip_type_name == u'Accéléromètre' or equip.equip.equip_type.equip_type_name == u'Capteur Temp/Hum/Pres':
+#                orderfield = 1
+#            elif equip.equip.equip_type.equip_type_name == u'Numériseur':
+#                orderfield = 3
+#            else :
+#                orderfield = 6
+#            select_choice.append(({"optionValue": equip.equip.id, "optionDisplay": equip.equip.__unicode__(), "orderfield": orderfield}))
+#
+#        select_choice = sorted(select_choice, key=itemgetter('orderfield')) 
+        equip_dispo = available_equipment_scioper(station, date_debut_channel)
 
-        for equip in equipments:
-            #Obtain the last place of all equipment
-            last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lte=date_debut_channel, equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
-            if last_equip_place:
-                for last in last_equip_place:
-                    Liste.append(last.id)
-
-        equip_dispo = IntervEquip.objects.filter(id__in=Liste, equip_state=EquipState.OPERATION, station__id=station)
-
-        # TODO
-        # Hack to order the equipment by logical apparition in acqui chain
-        select_choice = [{"optionValue": "", "optionDisplay": "------", "orderfield": 0}]
+        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:
-            if equip.equip.equip_type.equip_type_name == u'Vélocimètre' or equip.equip.equip_type.equip_type_name == u'Accéléromètre' or equip.equip.equip_type.equip_type_name == u'Capteur Temp/Hum/Pres':
-                orderfield = 1
-            elif equip.equip.equip_type.equip_type_name == u'Numériseur':
-                orderfield = 3
-            else :
-                orderfield = 6
-            select_choice.append(({"optionValue": equip.equip.id, "optionDisplay": equip.equip.__unicode__(), "orderfield": orderfield}))
-
-        select_choice = sorted(select_choice, key=itemgetter('orderfield')) 
-
+            select_choice.append(({"optionValue": equip.id, "optionDisplay": equip.__unicode__()}))
         data = simplejson.dumps(select_choice)
 
         return HttpResponse(data)
@@ -696,6 +795,142 @@ def station_xml(request):
     "ResNetwork": result,},
          RequestContext(request, {}), mimetype="application/xhtml+xml") 
 station_xml = staff_member_required(station_xml)
+
+def network_xml(request):
+    response = HttpResponse(mimetype='application/xhtml+xml')
+    response['Content-Disposition'] = 'attachment; filename="somefilename.xhtml"'
+
+    query = request.GET.get('Network','')
+
+    result = []
+
+    """Obtain the information about the network """
+    network = Network.objects.get(pk=query)
+
+    if network:
+            """ Obtain the stations for that network """
+            ResStations = Channel.objects.filter(network_id=network.id).distinct('station').order_by('station.station_code')
+
+            """ Obtain the number of stations for that network """
+            station_count = ResStations.count()
+
+            station_list = []
+            if ResStations:
+                for station in ResStations:
+                    """Obtain the information about the station """
+                    ResStation = StationSite.objects.get(pk=station.station_id)
+
+                    """Obtain the date of creation for this station """
+                    create_station = None
+                    intervention_creation = IntervStation.objects.filter(intervention__station=ResStation.id, station_action=StationAction.CREER).values('intervention')
+                    if intervention_creation:
+                        create_station = Intervention.objects.get(pk=intervention_creation)
+    
+                    """Obtain the date of closure for this station """
+                    terminate_station = None
+                    intervention_terminate = IntervStation.objects.filter(intervention__station=ResStation.id, station_action=StationAction.DEMANTELER).values('intervention')
+                    if intervention_terminate:
+                        terminate_station = Intervention.objects.get(pk=intervention_terminate)
+
+                    """Obtain the channels for that station """
+                    ResChannels = Channel.objects.filter(station_id=ResStation.id,network_id=network.id).order_by('-start_date','channel_code')
+
+                    station_vault = None
+
+                    channel_list = []
+                    for channel in ResChannels:
+                        """Obtain the equipment of the chain per channel """
+                        sensor = []
+                        sensor_installed = None
+                        sensor_uninstalled = None
+                        preamplifier = []
+                        preamplifier_installed = None
+                        preamplifier_uninstalled = None
+                        datalogger = []
+                        datalogger_installed = None
+                        datalogger_uninstalled = None
+                        ResChain = Chain.objects.filter(channel=channel.id)
+                        for equipchain in ResChain:
+                            if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':  
+                                sensor = equipchain.equip
+                            else:
+                                if equipchain.equip.equip_type.equip_type_name == u'Numériseur':
+                                    datalogger = equipchain.equip
+                        """ Common queryset parameters """
+                        equip_operation = IntervEquip.objects.filter(intervention__intervention_date__lte=channel.start_date, intervention__station=channel.station.id, equip_action=EquipAction.INSTALLER,        equip_state=EquipState.OPERATION)
+                        equip_removal = IntervEquip.objects.filter(intervention__intervention_date__gte=channel.start_date, intervention__station=channel.station.id, equip_action=EquipAction.DESINSTALLER)
+                        if sensor != []:
+                            """ Sensor in operation during the channel life """
+                            sensor_operation = equip_operation.filter(equip__id=sensor.id).order_by('-intervention__intervention_date')[:1]
+                            if sensor_operation:
+                                 """ Here we have 0 or 1 occurence """
+                                 sensor_installed = sensor_operation[0].intervention.intervention_date 
+                            """ Sensor removal after the start of the channel life """
+                            sensor_removal = equip_removal.filter(equip__id=sensor.id).order_by('intervention__intervention_date')[:1]
+                            if sensor_removal:
+                                 """ Here we have 0 or 1 occurence """
+                                 sensor_uninstalled = sensor_removal[0].intervention.intervention_date 
+                        if preamplifier != []:
+                            """ Preamplifier in operation during the channel life """
+                            preamplifier_operation = equip_operation.filter(equip__id=preamplifier.id).order_by('-intervention__intervention_date')[:1]
+                            if preamplifier_operation:
+                                """ Here we have 0 or 1 occurence """
+                                preamplifier_installed = preamplifier_operation[0].intervention.intervention_date
+                            """ Preamplifier removal after the start of the channel life """
+                            preamplifier_removal = equip_removal.filter(equip__id=preamplifier.id).order_by('intervention__intervention_date')[:1]
+                            if preamplifier_removal:
+                                 """ Here we have 0 or 1 occurence """
+                                 preamplifier_uninstalled = preamplifier_removal[0].intervention.intervention_date  
+                        if datalogger != []:
+                            """ Datalogger in operation during the channel life """
+                            datalogger_operation = equip_operation.filter(equip__id=datalogger.id).order_by('-intervention__intervention_date')[:1]
+                            if datalogger_operation:
+                                """ Here we have 0 or 1 occurence """
+                                datalogger_installed = datalogger_operation[0].intervention.intervention_date
+                            """ Datalogger removal after the start of the channel life """
+                            datalogger_removal = equip_removal.filter(equip__id=datalogger.id).order_by('intervention__intervention_date')[:1]
+                            if datalogger_removal:
+                                 """ Here we have 0 or 1 occurence """
+                                 datalogger_uninstalled = datalogger_removal[0].intervention.intervention_date
+        
+                        """ Obtain the comment for the channel """
+                        ResCommentChannel = CommentChannel.objects.filter(channel_id=channel.id)
+        
+                        comment_list = []
+                        for comment in ResCommentChannel:
+                            """ Obtain the authors for each comment """
+                            author_list = []
+                            ResCommentChannelAuthor = CommentChannelAuthor.objects.filter(comment_channel_id=comment.id)                
+                            comment_list.append([comment, ResCommentChannelAuthor])
+        
+                        channel_list.append([channel, sensor, sensor_installed, sensor_uninstalled, preamplifier, preamplifier_installed, preamplifier_uninstalled, datalogger, datalogger_installed, datalogger_uninstalled, comment_list])
+                    station_list.append([ResStation, station_vault, ResChannels.count(), create_station, terminate_station, channel_list])
+
+            """ Obtain the comment for the network """
+            ResCommentNetwork = CommentNetwork.objects.filter(network_id=network.id)
+
+            comment_list = []
+            for comment in ResCommentNetwork:
+                """ Obtain the authors for each comment """
+                author_list = []
+                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(comment_network_id=comment.id)                
+                comment_list.append([comment, ResCommentNetworkAuthor])
+            result.append([network, comment_list, station_count, station_list])
+#            result.append([network, comment_list, station_count, ResStation, station_vault, ResChannels.count(), create_station, terminate_station, channel_list])
+
+#    return render_to_response("network_xml.xml", {
+#    "ResNetwork": result,},
+#         RequestContext(request, {}), mimetype="application/xhtml+xml")
+    t = loader.get_template('network_xml.xml')
+    c = Context({
+        "ResNetwork": result,
+    })
+    response.write(t.render(c))
+    return response
+#    return render_to_string("network_xml.xml", {
+#    "ResNetwork": result,},
+#         RequestContext(request, {}))
+#network_xml = staff_member_required(network_xml)
 
 def station_dataless(request):
     query = request.GET.get('Station','')

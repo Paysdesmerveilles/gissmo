@@ -22,6 +22,9 @@ from django.contrib.auth.models import User
 # Fin de l'ajout pour securiser les fichiers uploader
 from django.core.mail import send_mail
 
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
 """
 ####
 #
@@ -167,6 +170,7 @@ class EquipSupertype(models.Model):
         Nom donné à la catégorie ou supertype
     """
     equip_supertype_name = models.CharField(max_length=40, verbose_name=_("supertype d'equipement"))
+    presentation_rank = models.IntegerField()
 
     class Meta:
         ordering = ['equip_supertype_name']
@@ -191,6 +195,7 @@ class EquipType(models.Model):
     """
     equip_supertype = models.ForeignKey("EquipSupertype", verbose_name=_("supertype d'equipement"))
     equip_type_name = models.CharField(max_length=40, verbose_name=_("type d'equipement"))
+    presentation_rank = models.IntegerField()
 
     class Meta:
         ordering = ['equip_type_name',]
@@ -801,15 +806,30 @@ class StationSite(models.Model):
     elevation_pluserror = models.FloatField(null=True, blank=True)
     elevation_minuserror = models.FloatField(null=True, blank=True)
 
-
     class Meta:
         ordering = ['station_code']
         verbose_name = _("site")
         verbose_name_plural = _("A1. Sites")
 
+#
+#    Code test to keep the old value et compare if diff in new value
+#
+#    def __init__(self, *args, **kw): 
+#        super(StationSite, self).__init__(*args, **kw)
+#        self._old = dict([(field.name,field.value_to_string(self)) for field in StationSite._meta.fields])
+#
+#    def save(self, *args, **kwargs):        
+#        print "StationSite save"
+#        old_value_dict = self._old
+#        new_value_dict = dict([(field.name,field.value_to_string(self)) for field in StationSite._meta.fields])
+#        diff = [(key, old_value_dict[key], val1) for key, val1 in new_value_dict.iteritems() if val1 != old_value_dict[key]]
+#        print old_value_dict
+#        print diff
+#        super(StationSite, self).save(*args, **kwargs)
+
     def __unicode__(self):
         return self.station_code
-
+    
 # Management of intervention
 
 class Intervention(models.Model):
@@ -1146,77 +1166,6 @@ class EquipDoc(models.Model):
     def __unicode__(self):
         return u'%s %s %s %s' % (self.equip.equip_model.equip_model_name, self.equip.serial_number, self.document_title, self.inscription_date)
 
-# Acquisition chain
-
-#### class AcquisitionChain(models.Model) :
-####     station = models.ForeignKey("StationSite", verbose_name=_("station"))
-####     location_code = models.CharField(max_length=2, verbose_name=_("code localisation"))
-####     latitude = models.FloatField(null=True, blank=True, verbose_name=_("latitude"))
-####     longitude = models.FloatField(null=True, blank=True, verbose_name=_("longitude"))
-####     elevation = models.FloatField(null=True, blank=True, verbose_name=_("elevation"))
-####     depth = models.FloatField(null=True, blank=True, verbose_name=_("profondeur"))
-#### 
-####     class Meta:
-####         verbose_name = _("Chaine d'acquisition")
-####         verbose_name_plural = _("H1. Chaines d'acquisition")
-####     
-####     def __unicode__(self):
-####         return u'%s : %s' % (self.station.station_code, self.location_code)
-
-#### class ChainComponent(models.Model) :
-####     acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
-####     equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
-####     order = models.IntegerField(null=True, blank=True, verbose_name=_("ordre"))
-####     start_date = models.DateField(verbose_name=_("date debut"))
-####     end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
-#### 
-####     class Meta:
-####         verbose_name = _("Composante de la chaine d'acqui")
-####         verbose_name_plural = _("H2. Composantes des chaines d'acqui")
-
-##    def clean(self):
-##        """
-##        Makes sure the equipment is in the station
-##        """
-##        if any(self.errors):
-##            # Don't bother validating the formset unless each form is valid on its own
-##            return
-###        print self
-##        if not self.acquisition_chain == None:
-#            print self.acquisition_chain
-#            print self.order
-#            print self.end_date
-#            if not self.equip == None:
-#                print self.equip
-##            L = [equip.equip_id for equip in HistoricStationEquip.objects.filter(station=self.acquisition_chain.station.id)]
-#            print L
-#            if not self.equip == None:
-#                print self.equip
-#                if not self.equip.id == None and self.equip.id not in L:
-##            if self.equip.id not in L:
-##                    raise ValidationError('L\'equipment inscrit n\'est pas installe dans la station.')
-
-####     def __unicode__(self):
-####         return u'%s : %s : %s : %s : %s' % (self.acquisition_chain, self.equip.equip_model.equip_model_name, self.equip.serial_number, self.start_date, self.end_date)
-
-#### class Channel(models.Model) :
-####     network = models.ForeignKey('Network', verbose_name=_("reseau"))
-####     acquisition_chain = models.ForeignKey('AcquisitionChain', verbose_name=_("chaine d'acquisition"))
-####     channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"))
-####     dip = models.FloatField(null=True, blank=True, max_length=5, verbose_name=_("angle d'inclinaison"))
-####     azimuth = models.FloatField(null=True, blank=True, max_length=5, verbose_name=_("azimut"))
-####     sample_rate =  models.FloatField(verbose_name=_("frequence (Hz)"))
-####     start_date = models.DateField(verbose_name=_("date debut"))
-####     end_date = models.DateField(null=True, blank=True, verbose_name=_("date fin"))
-#### 
-####     class Meta:
-####         verbose_name = _("Canal d'acquisition")
-####         verbose_name_plural = _("H3. Canaux d'acquisition")
-#### 
-####     def __unicode__(self):
-####         return u'%s : %s : %s : %s' % (self.network, self.acquisition_chain, self.channel_code, self.sample_rate)
-
-
 class CommentChannelAuthor(models.Model):
     comment_channel = models.ForeignKey("CommentChannel", verbose_name=_("commentaire"))
     author = models.ForeignKey("Actor", verbose_name=_("auteur"))
@@ -1260,7 +1209,7 @@ class Channel(models.Model) :
 
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     network = models.ForeignKey('Network', verbose_name=_("code reseau"))
-    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=[('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),])
+    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=[('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'),('DPE','DPE'),('DPN','DPN'),('DPZ','DPZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),])
     location_code = models.CharField(null=True, blank=True, max_length=2, verbose_name=_("code localisation"))
     latitude = models.DecimalField(verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
     longitude = models.DecimalField(verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
@@ -1360,4 +1309,23 @@ class ChainConfig(models.Model) :
 #    print("Post delete finished!", obj.equip.id)
 #    print(EquipState.EQUIP_STATES[equip_last_state(obj.equip.id)-1][1])
 #    print(equip_last_place(obj.equip.id))
+
+class Project(models.Model) :
+    project_name = models.CharField(max_length=50)
+    manager = models.ForeignKey(User)
+    station = models.ManyToManyField('StationSite', null=True, blank=True)
+
+    def __unicode__(self):
+        return u'%s' % (self.project_name)
+
+class ProjectUser(models.Model) :
+    user = models.ForeignKey(User)
+    project = models.ManyToManyField('Project')
+
+    class Meta:
+        verbose_name = _("Registered project")
+        verbose_name_plural = _("Registered projects")
+
+    def __unicode__(self):
+        return u'%s' % (self.user)
 

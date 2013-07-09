@@ -248,16 +248,16 @@ function get_dip_azimut_value(selectBox){
 
     switch(channel_value.substring(2)){
     case 'E':
-       dip.value = '0';
-       azimuth.value = '90';
+       dip.value = '0.0';
+       azimuth.value = '90.0';
        break;
     case 'N':
-       dip.value = '0';
-       azimuth.value = '0';
+       dip.value = '0.0';
+       azimuth.value = '0.0';
        break;
     case 'Z':
-       dip.value = '-90';
-       azimuth.value = '0';
+       dip.value = '-90.0';
+       azimuth.value = '0.0';
        break;
     }
 }
