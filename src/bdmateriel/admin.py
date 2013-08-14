@@ -207,7 +207,7 @@ class EquipFilter(SimpleListFilter):
        human-readable name for the option that will appear
        in the right sidebar.
        """
-       Liste = []
+       liste = []
        Equip_Supertype = EquipSupertype.objects.all().order_by('equip_supertype_name')
 
        """
@@ -217,14 +217,14 @@ class EquipFilter(SimpleListFilter):
        and equipment model by []
        """
        for equip_supertype in Equip_Supertype:
-           Liste.append(('Stype_'+str(equip_supertype.id), _(equip_supertype.equip_supertype_name)))
+           liste.append(('Stype_'+str(equip_supertype.id), _(equip_supertype.equip_supertype_name)))
            Equip_Type = EquipType.objects.filter(equip_supertype=equip_supertype).order_by('equip_type_name')
            for equip_type in Equip_Type:
-               Liste.append(('Type__'+str(equip_type.id), _(equip_type.equip_type_name)))
+               liste.append(('Type__'+str(equip_type.id), _(equip_type.equip_type_name)))
                Equip_Model = EquipModel.objects.filter(equip_supertype=equip_supertype,equip_type=equip_type).order_by('equip_model_name')
                for equip_model in Equip_Model:
-                   Liste.append(('Model_'+str(equip_model.id), _(equip_model.equip_model_name)))
-       return Liste
+                   liste.append(('Model_'+str(equip_model.id), _(equip_model.equip_model_name)))
+       return liste
 
    def queryset(self, request, queryset):
        """
@@ -269,6 +269,8 @@ class OwnerFilter(SimpleListFilter):
         # to decide how to filter the queryset.
         if self.value():
             return queryset.filter(owner=self.value())
+        else:
+            return queryset
 
 class EquipmentAdmin(admin.ModelAdmin):
     list_display = ['equip_supertype', 'equip_type', 'equip_model', 'serial_number', 'get_last_state', 'get_last_place', 'owner',]
@@ -1046,3 +1048,4 @@ admin.site.register(CommentStationSite, CommentStationSiteAdmin)
 
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectUser, ProjectUserAdmin)
+admin.site.register(LoggedActions)

@@ -1,6 +1,7 @@
 # coding=utf-8
 
 from django.db import models
+#from hstore_field import fields
 from django.utils.translation import ugettext_lazy as _
 
 # Ajout pour definir un lien entre des champs FK. Ce qui limitera le choix du drop down select d'un champ FK
@@ -1329,3 +1330,27 @@ class ProjectUser(models.Model) :
     def __unicode__(self):
         return u'%s' % (self.user)
 
+
+class LoggedActions(models.Model):
+    event_id = models.BigIntegerField(primary_key=True)
+    schema_name = models.TextField()
+    table_name = models.TextField()
+    relid = models.TextField() # This field type is a guess.
+    session_user_name = models.TextField(blank=True)
+    action_tstamp_tx = models.DateTimeField()
+    action_tstamp_stm = models.DateTimeField()
+    action_tstamp_clk = models.DateTimeField()
+    transaction_id = models.BigIntegerField(null=True, blank=True)
+    application_name = models.TextField(blank=True)
+    client_addr = models.GenericIPAddressField(null=True, blank=True)
+    client_port = models.IntegerField(null=True, blank=True)
+    client_query = models.TextField()
+    action = models.TextField()
+    row_data = models.TextField()
+    changed_fields = models.TextField()
+    statement_only = models.BooleanField()
+
+    class Meta:
+        managed = False
+        db_table = 'logged_actions'
+        verbose_name_plural = _("Logged actions")

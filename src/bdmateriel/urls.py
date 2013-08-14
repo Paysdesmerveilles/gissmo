@@ -26,5 +26,6 @@ urlpatterns = patterns('bdmateriel.views',
     url(r'^network_xml/$', 'network_xml', name='network_xml'),
     url(r'^station_dataless/$', 'station_dataless', name='station_dataless'),
     url(r'^test_site/$', 'test_site', name='test_site'),
+    url(r'^test_dbchange/$', 'test_dbchange', name='test_dbchange'),
 )
 

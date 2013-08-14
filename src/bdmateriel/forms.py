@@ -310,14 +310,13 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         """
         Initialize form.fields 
         """
-        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --")
+        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --", widget=forms.Select(attrs={'onfocus': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'}))
         form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
         form.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.none(), widget=forms.Select(attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}), empty_label="-- choisir une action en premier --")
         form.fields['built'] = forms.ModelChoiceField(queryset = Built.objects.none(), empty_label="-- choisir une action en premier --", required=False)
 
         """
-        Hack to check if the formset is already filled
-	to present the complete list of actions
+        Hack to check if the formset is already filled to present the complete list of actions
         else the list exclude the action of buying (Acheter)
         """ 
 
@@ -333,6 +332,13 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
             intervention_station_id = self.instance.station.id
             intervention_date = self.instance.intervention_date
+            """
+            06/08/2013 Add to keep the intervention number when we change the intervention date of an existing one
+            This trick permit us to exclude the intervention from the function equip_state_todate and equip_place_todate_id
+            We need this trick because the functions look in the DB for the state and place for a date before the change occur
+            and if the date of the intervention change this interfere. Thus we have to exclude this from the query only if the date change
+            """
+            intervention_id = self.instance.id
             """ 
             All actions can be display
             """
@@ -348,13 +354,14 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
             """ 
             Filtering the queryset depending of the value
-            """
+            """        
             if action_id != None and action_id != '':
                 form.fields['equip_state'].widget = forms.Select(choices=available_equip_state(action_id))
                 if intervention_station_id != None and intervention_station_id != '':
                     form.fields['station'] = forms.ModelChoiceField(queryset = available_station(action_id, intervention_station_id), widget=forms.Select(attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}), empty_label=None)
                     if intervention_date != None and intervention_date != '':
-                        form.fields['equip'] = forms.ModelChoiceField(queryset = available_equipment(action_id, intervention_station_id, intervention_date), empty_label=None)
+                        """ Permit the empty label because if the date of the intervention change the available_equipment can return to the queryset choices without the ancient value """
+                        form.fields['equip'] = forms.ModelChoiceField(queryset = available_equipment(action_id, intervention_station_id, intervention_date, intervention_id), widget=forms.Select(attrs={'onfocus': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'}))
 
             if station_id != None and station_id != '':
                 form.fields['built'] = forms.ModelChoiceField(queryset = available_built(station_id), required=False)
@@ -371,13 +378,14 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             """ 
             if self.__initial and self.__initial != ['']:
                 equip = get_object_or_404(Equipment, id=self.__initial[0])
-                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(id=self.__initial[0]), empty_label="-- choisir une action en premier --", initial=equip)
+                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(id=self.__initial[0]), empty_label="-- choisir une action en premier --", initial=equip, widget=forms.Select(attrs={'onfocus': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'}))
             else:
-                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --")
+                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --", widget=forms.Select(attrs={'onfocus': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'}))
   
         form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'})
 
     def clean(self):
+
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return 
@@ -386,6 +394,8 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
         # Obtain the information from the form needed for the validation
         intervention_station_id = self.data.get('station')
+        intervention_id = self.instance.id
+        
         if intervention_station_id:
             try:
                 intervention_station = StationSite.objects.get(id=intervention_station_id)
@@ -444,7 +454,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 Actions.append(EquipAction.METTRE_AU_REBUT)
 
                 for action in Actions:
-                    if equip_action == action and equip_place_todate_id(equip.id, intervention_date) != intervention_station_id:
+                    if equip_action == action and equip_place_todate_id(equip.id, intervention_date, int(intervention_id)) != int(intervention_station_id):
                         errors += 1
 
                 if errors != 0:
@@ -455,37 +465,37 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 The action TESTER is valid only if the state were OPERATION, A_TESTER, DISPONIBLE, DEFAUT, PANNE or AUTRE before
                 """ 
                 if equip_action == EquipAction.TESTER and \
-                   (equip_state_todate(equip.id, intervention_date) != EquipState.OPERATION and \
-                    equip_state_todate(equip.id, intervention_date) != EquipState.A_TESTER and \
-                    equip_state_todate(equip.id, intervention_date) != EquipState.DISPONIBLE and \
-                    equip_state_todate(equip.id, intervention_date) != EquipState.DEFAUT and \
-                    equip_state_todate(equip.id, intervention_date) != EquipState.PANNE and \
-                    equip_state_todate(equip.id, intervention_date) != EquipState.AUTRE):
-                     raise forms.ValidationError('Equipement (%s) non dans un etat possible (%s) pour cette action (%s)' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
+                   (equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.OPERATION and \
+                    equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.A_TESTER and \
+                    equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.DISPONIBLE and \
+                    equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.DEFAUT and \
+                    equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.PANNE and \
+                    equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.AUTRE):
+                     raise forms.ValidationError('Equipement (%s) non dans un etat possible (%s) pour cette action (%s)' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date, int(intervention_id))-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
 
                 """
                 The action INSTALLER is valid only if the state was DISPONIBLE before
                 """ 
-                if equip_action == EquipAction.INSTALLER and equip_state_todate(equip.id, intervention_date) != EquipState.DISPONIBLE:
-                     raise forms.ValidationError('Equipement (%s) non dans un etat disponible (%s) pour cette action (%s)' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
+                if equip_action == EquipAction.INSTALLER and equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.DISPONIBLE:
+                     raise forms.ValidationError('Equipement (%s) non dans un etat disponible (%s) pour cette action (%s)' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date, int(intervention_id))-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
 
                 """
                 The action RECEVOIR is valid only if the state was EN_TRANSIT before
                 """ 
-                if equip_action == EquipAction.RECEVOIR and equip_state_todate(equip.id, intervention_date) != EquipState.EN_TRANSIT:
-                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement en transit (%s) pour reception' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1]))
+                if equip_action == EquipAction.RECEVOIR and equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.EN_TRANSIT:
+                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement en transit (%s) pour reception' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date, int(intervention_id))-1][1]))
 
                 """
                 The action RETROUVER is valid only if the state was DISPARU before
                 """ 
-                if equip_action == EquipAction.RETROUVER and equip_state_todate(equip.id, intervention_date) != EquipState.DISPARU:
-                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement disparu (%s) pour etre retrouver' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1]))
+                if equip_action == EquipAction.RETROUVER and equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.DISPARU:
+                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement disparu (%s) pour etre retrouver' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date, int(intervention_id))-1][1]))
 
                 """
                 The action MAINT_CORR_DISTANTE or MAINT_CORR_SITE is valid only if the state was DEFAUT or PANNE before
                 """
-                if (equip_action == EquipAction.MAINT_CORR_DISTANTE or equip_action == EquipAction.MAINT_CORR_SITE) and (equip_state_todate(equip.id, intervention_date) != EquipState.DEFAUT and equip_state_todate(equip.id, intervention_date) != EquipState.PANNE):
-                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement en defaillance ou en panne (%s) pour maintenance corrective' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date)-1][1]))
+                if (equip_action == EquipAction.MAINT_CORR_DISTANTE or equip_action == EquipAction.MAINT_CORR_SITE) and (equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.DEFAUT and equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.PANNE):
+                     raise forms.ValidationError('Equipement (%s) n\'est pas actuellement en defaillance ou en panne (%s) pour maintenance corrective' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date, int(intervention_id))-1][1]))
 
                 # TODO vue de validation
                 # Validation of equip_action and target state

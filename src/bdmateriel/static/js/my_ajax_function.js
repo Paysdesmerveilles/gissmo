@@ -33,12 +33,20 @@ when we describe the intervention
 The trigger is the field equip_action
 */
 function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
-    var actiontypevalue = selectBox.options[selectBox.options.selectedIndex].value;
+    /*var actiontypevalue = selectBox.options[selectBox.options.selectedIndex].value;*/
     var singleValues = selectBox.id.split("-")[1];
     var xhr_equip_state_url = urlparm1;
     var xhr_equipment_url = urlparm2;
     var xhr_station_url = urlparm3;
     var xhr_built = urlparm4;
+
+    /*
+    We obtain the actiontypevalue by the document.getElementById and not by
+    selectBox.options[selectBox.options.selectedIndex].value because we call this function
+    from two places : onchange on equip_action and onfocus on equip
+    The last one to reflect the change on intervention date 
+    */
+    var actiontypevalue = document.getElementById('id_intervequip_set-'+singleValues+'-equip_action').value;
 
     /*
     As soon as we have an action change the BUY action must disappear
@@ -92,7 +100,13 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
     var station_id = station.options[station.options.selectedIndex].value;
     var date_intervention = document.getElementById('id_intervention_date_0').value;
     var heure_intervention = document.getElementById('id_intervention_date_1').value;
-
+    /* 
+    06/08/2013 Add to keep the intervention number when we change the intervention date of an existing one
+    This trick permit us to exclude the intervention from the function equip_state_todate and equip_place_todate_id
+    We need this trick because the functions look in the DB for the state and place for a date before the change occur
+    and if the date of the intervention change this interfere. Thus we have to exclude this from the query only if the date change
+    */
+    var intervention_id = document.getElementById('id_intervequip_set-'+singleValues+'-intervention').value;
 
     /*
     Check that the station, date and time are filled
@@ -102,7 +116,7 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
        alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements')  
        }
     if (! date_intervention) {
-       alert('Il est préférable d\'inscrire une date d\'intervention avant toutes actions sur les équipements')  
+       alert('Il est préférable d\'inscrire une date d\'intervention avant toutes actions sur les équipements')
        }
     if (! heure_intervention) {
        alert('Il est préférable d\'inscrire une heure d\'intervention avant toutes actions sur les équipements')  
@@ -111,25 +125,39 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
     var equipment = document.getElementById('id_intervequip_set-'+singleValues+'-equip');
     var equip_id = equipment.options[equipment.options.selectedIndex].value;
 
-    var equipselect = 'select#id_intervequip_set-'+singleValues+'-equip';
+    var equipselect = "select#id_intervequip_set-"+singleValues+"-equip";
+    
+    var myselect = $("select#id_intervequip_set-"+singleValues+"-equip");
+
     $.ajax({
       type: "GET",
       url: xhr_equipment_url,
-      data: { action: actiontypevalue, station : station_id, date : date_intervention, heure : heure_intervention},
+      data: { action: actiontypevalue, station : station_id, date : date_intervention, heure : heure_intervention, intervention : intervention_id},
       dataType: "json",
       success: function(data) {
           var options = '';
           for (var i = 0; i < data.length; i++) {
             if (data[i].optionValue == equip_id)
                {
-                options += '<option value="' + data[i].optionValue + '" selected="selected">' + data[i].optionDisplay + '</option>';
+                /*options += '<option value="' + data[i].optionValue + '" selected="selected">' + data[i].optionDisplay + '</option>';*/
+                options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
                }               
             else
                { 
                 options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
                }  
           }
-          $(equipselect).html(options);
+          /*
+          We select the options by two methods
+          1) Via .val
+          2) Get the index value (set by .val in point 1), put this in the selectedIndex and refresh
+          All this to obtain the good value in the box of the select in FireFox
+          */
+          $(equipselect).empty().append(options);
+          $(equipselect).val(equip_id);
+          var selection = $(equipselect).attr("selectedIndex");
+          myselect[0].selectedIndex = selection;
+          myselect.selectmenu("refresh", true);
       }
     });
 

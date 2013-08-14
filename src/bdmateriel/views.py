@@ -23,6 +23,7 @@ from django.db.models import get_model
 
 from django.utils import simplejson
 from django.utils.encoding import smart_str
+from django.utils.encoding import force_unicode
 
 def site_maps(request):
     query = request.GET.get('Station','')
@@ -242,12 +243,24 @@ def equip_last_state(equip):
     else:
         return 'Inconnu'
 
-def equip_state_todate(equip, date):
+def equip_state_todate(equip, date, intervention_id):
     """
     Function to obtain the state of an equipment at a precise moment
     """
     result = 0
-    last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+    if intervention_id:
+        """
+        Check that the date of the intervention has not changed
+        If yes, we must exclude the intervention form the search
+        """
+        intervention = get_object_or_404(Intervention, pk=intervention_id)
+        if date != intervention.intervention_date:
+            last_equip_state = IntervEquip.objects.exclude(intervention__pk=intervention_id).filter(intervention__intervention_date__lt=date, equip__id=equip, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+        else:
+            last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+    else:           
+        last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+
     if last_equip_state:
         for last in last_equip_state:
             result = last.equip_state
@@ -281,46 +294,58 @@ def equip_place_todate(equip, date):
             result = last.station
     return result
 
-def equip_place_todate_id(equip, date):
+def equip_place_todate_id(equip, date, intervention_id):
     """
     Function to obtain the place of an equipment at a precise moment
     This function return the id of the site
     """
     result = 0
-    last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+    if intervention_id:
+        """
+        Check that the date of the intervention has not changed
+        If yes, we must exclude the intervention form the search
+        """
+        intervention = get_object_or_404(Intervention, pk=intervention_id)
+        if date != intervention.intervention_date:
+            last_equip_place = IntervEquip.objects.exclude(intervention__pk=intervention_id).filter(intervention__intervention_date__lt=date, equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+        else:
+            last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]
+    else:
+        last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]                    
+
     if last_equip_place:
         for last in last_equip_place:
             result = last.station.id
     return result
 
-def available_equipment(action, station, date):
+def available_equipment(action, station, date, intervention_id):
     # Install only available equip
     equipment_list = []
     equipments = Equipment.objects.all()
     if int(action) == EquipAction.INSTALLER:
         for equip in equipments:
-            if equip_state_todate(equip.id, date) == EquipState.DISPONIBLE:
+            if equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.DISPONIBLE:
                 equipment_list.append(equip.id)
     # Receive only equip En transit
     elif int(action) == EquipAction.RECEVOIR:
         for equip in equipments:
-            if equip_state_todate(equip.id, date) == EquipState.EN_TRANSIT:
+            if equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.EN_TRANSIT:
                 equipment_list.append(equip.id)
     # Retreive only equip Disparu
     elif int(action) == EquipAction.RETROUVER:
         for equip in equipments:
-            if equip_state_todate(equip.id, date) == EquipState.DISPARU:
+            if equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.DISPARU:
                 equipment_list.append(equip.id)
     # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE 
     elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
         for equip in equipments:
-            if int(equip_place_todate_id(equip.id, date)) == int(station):
-                if equip_state_todate(equip.id, date) == EquipState.DEFAUT or equip_state_todate(equip.id, date) == EquipState.PANNE:
+            if int(equip_place_todate_id(equip.id, date, int(intervention_id))) == int(station):
+                if equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.DEFAUT or equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.PANNE:
                     equipment_list.append(equip.id)
     # Make action only on equip installed in the station
     else:
         for equip in equipments:
-            if int(equip_place_todate_id(equip.id, date)) == int(station):
+            if int(equip_place_todate_id(equip.id, date, int(intervention_id))) == int(station):
                 equipment_list.append(equip.id)
     equip_dispo = Equipment.objects.filter(id__in=equipment_list).order_by('equip_supertype','equip_type','equip_model','serial_number')
     return equip_dispo
@@ -337,6 +362,7 @@ def xhr_equipment(request):
         station=request.GET.get('station', '')
         date_intervention=request.GET.get('date', '')
         heure_intervention=request.GET.get('heure', '')
+        intervention_id=request.GET.get('intervention', '')
 
         date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
         date_intervention = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
@@ -396,7 +422,7 @@ def xhr_equipment(request):
        #     print equip_dispo
 
 
-        equip_dispo = available_equipment(action, station, date_intervention)
+        equip_dispo = available_equipment(action, station, date_intervention, intervention_id)
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:
@@ -500,7 +526,7 @@ def available_equipment_scioper(station, date):
     equipments = Equipment.objects.filter(equip_supertype__equip_supertype_name="01. Scientifique")
 
     for equip in equipments:
-        if int(equip_place_todate_id(equip.id, date)) == int(station):
+        if int(equip_place_todate_id(equip.id, date, None)) == int(station):
             equipment_list.append(equip.id)
 
     equip_dispo = Equipment.objects.filter(id__in=equipment_list).order_by('equip_supertype','equip_type__presentation_rank','equip_model','serial_number')
@@ -1094,4 +1120,67 @@ ORDER BY
                          row["Longitude"],row["Note"],row["Lien vers document prive"],row["Etat"],row["Operateur"])])
     return response
 
+from pghstore import loads
 
+def test_dbchange(request):
+    asking_date = request.GET.get('Date','')
+
+    asking_datehour = u''.join([asking_date,u' ',"00:00:00"])
+    
+    ResChange = LoggedActions.objects.filter(action_tstamp_tx__lt=datetime.strptime(asking_datehour,"%Y-%m-%d %H:%M:%S")).order_by('action_tstamp_tx')
+
+    response = HttpResponse(mimetype='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="dbchange.txt"'
+
+    for change in ResChange:
+        # Insert
+        response.write("Table name    : %s \n" % change.table_name)
+        response.write("Date    : %s" % change.action_tstamp_tx)
+        response.write("\n")            
+        if change.action == "I":
+            response.write("Table action  : Insert\n")
+            response.write("Changed value : %-30s : %-30s\n" % ("FIELDS","VALUES"))
+            for key, value in loads(change.row_data).items():
+                response.write("                %-30s : %-30s\n" % (key, value))
+            response.write("\n")            
+        else:
+            # Delete
+            if change.action == "D":
+                response.write("Table action  : Delete\n")
+                response.write("Changed value : %-30s : %-30s\n" % ("FIELDS","VALUES"))
+                for key, value in loads(change.row_data).items():
+                    response.write("                %-30s : %-30s\n" % (key, value))
+                response.write("\n")            
+            else:
+                # Update
+                if change.action == "U":
+                    response.write("Table action  : Update\n")
+                    response.write("Changed value : %-30s : %-30s\n" % ("FIELDS","VALUES"))
+                    for key, value in loads(change.changed_fields).items():
+                        response.write("                %-30s : %-30s\n" % (key, value))
+                    response.write("\n")            
+                # Other action
+                else:
+                    response.write("Other\n")
+        response.write("\n")            
+    return response
+
+#
+#
+#  Ne pas oublier de mettre en place
+#
+#        Audit_trigger_91plus
+#
+#
+# Pour donner acces a la table d'audit logged_actions dans le schema audit
+# il faut modifier le role du user de l'aplplication Django (bdmateriel - Gissmo)
+#
+#        ALTER ROLE martin SET SEARCH_PATH to "$user",public,audit;
+#
+# Il faut ajouter le module pghstore pour convertir un champ hstore
+# dans un dictionnaire python
+#
+# This small module implements a formatter and a loader for hstore
+#
+#         pip install pghstore
+#
