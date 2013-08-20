@@ -310,7 +310,8 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         """
         Initialize form.fields 
         """
-        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --", widget=forms.Select(attrs={'onfocus': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'}))
+        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --", widget=forms.Select(attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
+        #form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --")
         form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
         form.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.none(), widget=forms.Select(attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}), empty_label="-- choisir une action en premier --")
         form.fields['built'] = forms.ModelChoiceField(queryset = Built.objects.none(), empty_label="-- choisir une action en premier --", required=False)
@@ -361,7 +362,8 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                     form.fields['station'] = forms.ModelChoiceField(queryset = available_station(action_id, intervention_station_id), widget=forms.Select(attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}), empty_label=None)
                     if intervention_date != None and intervention_date != '':
                         """ Permit the empty label because if the date of the intervention change the available_equipment can return to the queryset choices without the ancient value """
-                        form.fields['equip'] = forms.ModelChoiceField(queryset = available_equipment(action_id, intervention_station_id, intervention_date, intervention_id), widget=forms.Select(attrs={'onfocus': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'}))
+                        form.fields['equip'] = forms.ModelChoiceField(queryset = available_equipment(action_id, intervention_station_id, intervention_date, intervention_id), widget=forms.Select(attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
+                        #form.fields['equip'] = forms.ModelChoiceField(queryset = available_equipment(action_id, intervention_station_id, intervention_date, intervention_id))
 
             if station_id != None and station_id != '':
                 form.fields['built'] = forms.ModelChoiceField(queryset = available_built(station_id), required=False)
@@ -378,9 +380,11 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             """ 
             if self.__initial and self.__initial != ['']:
                 equip = get_object_or_404(Equipment, id=self.__initial[0])
-                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(id=self.__initial[0]), empty_label="-- choisir une action en premier --", initial=equip, widget=forms.Select(attrs={'onfocus': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'}))
+                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(id=self.__initial[0]), empty_label="-- choisir une action en premier --", initial=equip, widget=forms.Select(attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
+                #form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(id=self.__initial[0]), empty_label="-- choisir une action en premier --", initial=equip)
             else:
-                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --", widget=forms.Select(attrs={'onfocus': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'}))
+                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --", widget=forms.Select(attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
+                #form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --")
   
         form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'})
 
@@ -501,36 +505,55 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 # Validation of equip_action and target state
                 errors = 0
 
-                if equip_action == EquipAction.ACHETER and equip_state != EquipState.A_TESTER:
+                if equip_action == EquipAction.ACHETER and \
+                   equip_state != EquipState.A_TESTER:
                     errors += 1
                 if equip_action == EquipAction.TESTER and \
-                   (equip_state != EquipState.OPERATION and equip_state != EquipState.A_TESTER and equip_state != EquipState.DISPONIBLE and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                   (equip_state != EquipState.OPERATION and \
+                    equip_state != EquipState.A_TESTER and \
+                    equip_state != EquipState.DISPONIBLE and \
+                    equip_state != EquipState.DEFAUT and \
+                    equip_state != EquipState.PANNE
+                   ):
                     errors += 1
-                if equip_action == EquipAction.INSTALLER and (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.INSTALLER and \
+                   (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.DESINSTALLER and (equip_state != EquipState.A_TESTER and equip_state != EquipState.DISPONIBLE and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.DESINSTALLER and \
+                   (equip_state != EquipState.A_TESTER and equip_state != EquipState.DISPONIBLE and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.CONSTATER_DEFAUT and (equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.CONSTATER_DEFAUT and \
+                   (equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.MAINT_PREV_DISTANTE and (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.MAINT_PREV_DISTANTE and \
+                   (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.MAINT_CORR_DISTANTE and (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.MAINT_CORR_DISTANTE and \
+                   (equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.MAINT_PREV_SITE and (equip_state != EquipState.DISPONIBLE and equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.MAINT_PREV_SITE and \
+                   (equip_state != EquipState.DISPONIBLE and equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.MAINT_CORR_SITE and (equip_state != EquipState.DISPONIBLE and equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
+                if equip_action == EquipAction.MAINT_CORR_SITE and \
+                   (equip_state != EquipState.DISPONIBLE and equip_state != EquipState.OPERATION and equip_state != EquipState.DEFAUT and equip_state != EquipState.PANNE):
                     errors += 1
-                if equip_action == EquipAction.EXPEDIER and equip_state != EquipState.EN_TRANSIT:
+                if equip_action == EquipAction.EXPEDIER and \
+                   equip_state != EquipState.EN_TRANSIT:
                     errors += 1
-                if equip_action == EquipAction.RECEVOIR and equip_state != EquipState.A_TESTER:
+                if equip_action == EquipAction.RECEVOIR and \
+                   equip_state != EquipState.A_TESTER:
                     errors += 1
-                if equip_action == EquipAction.METTRE_HORS_USAGE and equip_state != EquipState.HORS_USAGE:
+                if equip_action == EquipAction.METTRE_HORS_USAGE and \
+                   equip_state != EquipState.HORS_USAGE:
                     errors += 1
-                if equip_action == EquipAction.CONSTATER_DISPARITION and equip_state != EquipState.DISPARU:
+                if equip_action == EquipAction.CONSTATER_DISPARITION and \
+                   equip_state != EquipState.DISPARU:
                     errors += 1
-                if equip_action == EquipAction.RETROUVER and equip_state != EquipState.A_TESTER:
+                if equip_action == EquipAction.RETROUVER and \
+                   equip_state != EquipState.A_TESTER:
                     errors += 1
-                if equip_action == EquipAction.METTRE_AU_REBUT and equip_state != EquipState.AU_REBUT:
+                if equip_action == EquipAction.METTRE_AU_REBUT and \
+                   equip_state != EquipState.AU_REBUT:
                     errors += 1
 
                 if errors != 0:  
@@ -627,26 +650,26 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
                 errors = 0
 
                 if station_action == StationAction.CREER and station_state != StationState.INSTALLATION:
-                     errors += 1
+                    errors += 1
                 if station_action == StationAction.INSTALLER and station_state != StationState.INSTALLATION:
-                     errors += 1
+                    errors += 1
                 if station_action == StationAction.OPERER and station_state != StationState.OPERATION:
-                     errors += 1
+                    errors += 1
                 if station_action == StationAction.CONSTATER_DEFAUT and (station_state != StationState.DEFAUT and station_state != StationState.PANNE):
-                     errors += 1
+                    errors += 1
                 if station_action == StationAction.MAINT_PREV_DISTANTE and (station_state != StationState.DEFAUT and station_state != StationState.PANNE and station_state != StationState.OPERATION):
-                     errors += 1
+                    errors += 1
                 if station_action == StationAction.MAINT_CORR_DISTANTE and (station_state != StationState.DEFAUT and station_state != StationState.PANNE and station_state != StationState.OPERATION):
-                     errors += 1
+                    errors += 1
                 if station_action == StationAction.MAINT_PREV_SITE and (station_state != StationState.DEFAUT and station_state != StationState.PANNE and station_state != StationState.OPERATION):
-                     errors += 1
+                    errors += 1
                 if station_action == StationAction.MAINT_CORR_SITE and (station_state != StationState.DEFAUT and station_state != StationState.PANNE and station_state != StationState.OPERATION):
-                     errors += 1
+                    errors += 1
                 if station_action == StationAction.DEMANTELER and station_state != StationState.FERMEE:
-                     errors += 1
+                    errors += 1
 
                 if errors != 0:  
-                     raise forms.ValidationError('Etat (%s) invalide pour l\'action choisi  (%s)' % (StationState.STATION_STATES[station_state-1][1], StationAction.STATION_ACTIONS[station_action-1][1]))
+                    raise forms.ValidationError('Etat (%s) invalide pour l\'action choisi  (%s)' % (StationState.STATION_STATES[station_state-1][1], StationAction.STATION_ACTIONS[station_action-1][1]))
 
 class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
 
@@ -678,9 +701,10 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         """
         Initialize form.fields 
         """
+        ORDER_CHOICES = [('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),]
 #        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir un ordre en premier --", widget=CustomSelectAddWidget)
         form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir un ordre en premier --")
-        form.fields['order'].widget = forms.Select(choices=[('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
+        form.fields['order'].widget = forms.Select(choices=ORDER_CHOICES, attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
 
         if index != None :
             channel_station_id = self.instance.station.id
@@ -753,7 +777,15 @@ class ChannelForm(forms.ModelForm):
         self.fields['start_date'].widget = split_widget
         self.fields['location_code'].initial = '00'
         self.fields['location_code'].required = False
-        self.fields['channel_code'].widget = forms.Select(choices=[('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'),('DPE','DPE'),('DPN','DPN'),('DPZ','DPZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),], attrs={'onchange':'get_dip_azimut_value(this);'})
+
+        CHANNEL_CHOICES = [('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('CHE','CHE'), \
+                            ('CHN','CHN'),('CHZ','CHZ'),('DPE','DPE'),('DPN','DPN'),('DPZ','DPZ'), \
+                            ('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'), \
+                            ('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'), \
+                            ('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'), \
+                            ('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'), \
+                            ('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),]
+        self.fields['channel_code'].widget = forms.Select(choices=CHANNEL_CHOICES, attrs={'onchange':'get_dip_azimut_value(this);'})
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
 #        self.fields['station'].label = station_label
 #        self.fields['station'].widget = forms.HiddenInput()

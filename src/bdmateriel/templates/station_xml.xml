@@ -97,7 +97,7 @@
            {% endif %}
            <TotalNumberChannels>{{ channels_count }}</TotalNumberChannels>
            <SelectedNumberChannels>{{ channels_count }}</SelectedNumberChannels>
-           {% for channel, sensor, sensor_installed, sensor_uninstalled, preamplifier, preamplifier_installed, preamplifier_uninstalled, datalogger, datalogger_installed, datalogger_uninstalled, comments in channels %}
+           {% for channel, sensor, sensor_installed, sensor_uninstalled, sensor_config, preamplifier, preamplifier_installed, preamplifier_uninstalled, preamplifier_config, datalogger, datalogger_installed, datalogger_uninstalled, datalogger_config, comments in channels %}
              <Channel code="{{ channel.channel_code }}" locationCode="{{ channel.location_code }}"
              {% if channel.start_date %} 
                  startDate="{{ channel.start_date|date:"c" }}"
@@ -195,6 +195,13 @@
                  <InstallationDate>{{ sensor_installed|date:"c" }}</InstallationDate>
                  <RemovalDate>{{ sensor_uninstalled|date:"c" }}</RemovalDate>
                  <CalibrationDate></CalibrationDate>
+                 <Configuration>
+                 {% for config in sensor_config %}
+                   {% if config.value != None and config.value != '' %}
+                     <{{ config.parameter|cut:" "|cut:"/" }}>{{ config.value }}</{{ config.parameter|cut:" "|cut:"/" }}>
+                   {% endif %}
+                 {% endfor %}
+                 </Configuration>
                </Sensor>
              {% endif %}
              {% if preamplifier.id != None %}
@@ -208,6 +215,13 @@
                  <InstallationDate>{{ preamplifier_installed|date:"c" }}</InstallationDate>
                  <RemovalDate>{{ preamplifier_uninstalled|date:"c" }}</RemovalDate>
                  <CalibrationDate></CalibrationDate>
+                 <Configuration>
+                 {% for config in preamplifier_config %}
+                   {% if config.value != None and config.value != '' %}
+                     <{{ config.parameter|cut:" "|cut:"/" }}>{{ config.value }}</{{ config.parameter|cut:" "|cut:"/" }}>
+                   {% endif %}
+                 {% endfor %}
+                 </Configuration>
                </PreAmplifier>
              {% endif %}
              {% if datalogger.id != None %}
@@ -221,6 +235,13 @@
                  <InstallationDate>{{ datalogger_installed|date:"c" }}</InstallationDate>
                  <RemovalDate>{{ datalogger_uninstalled|date:"c" }}</RemovalDate>
                  <CalibrationDate></CalibrationDate>
+                 <Configuration>
+                 {% for config in datalogger_config %}
+                   {% if config.value != None and config.value != '' %}
+                     <{{ config.parameter|cut:" "|cut:"/" }}>{{ config.value }}</{{ config.parameter|cut:" "|cut:"/" }}>
+                   {% endif %}
+                 {% endfor %}
+                 </Configuration>
                </DataLogger>
              {% endif %}
              </Channel>

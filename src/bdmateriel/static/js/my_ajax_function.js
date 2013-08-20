@@ -1,4 +1,36 @@
 /*
+Function that validate the date format yyyy-mm-dd and the value
+*/
+function isValidDate(date)
+{
+    var matches = /^(\d{4})[-](\d{2})[-](\d{2})$/.exec(date);
+    if (matches == null) return false;
+    var d = matches[3];
+    var m = matches[2] - 1;
+    var y = matches[1];
+    var composedDate = new Date(y, m, d);
+    return composedDate.getDate() == d &&
+            composedDate.getMonth() == m &&
+            composedDate.getFullYear() == y;
+}
+
+/*
+Function that validate the time format hh:mm:ss and the value
+*/
+function isValidTime(time)
+{
+    var matches = /^(\d{2})[:](\d{2})[:](\d{2})$/.exec(time);
+    if (matches == null) return false;
+    var hour = matches[1];
+    var minute = matches[2];
+    var second = matches[3];
+    if (hour < 0  || hour > 23) return false;
+    if (minute < 0 || minute > 59) return false;
+    if (second < 0 || second > 59) return false;
+    return true;
+}
+
+/*
 Function that list the possible state of a station
 according to the station action choice
 when we describe the intervention 
@@ -20,6 +52,117 @@ function get_station_state(selectBox, urlparm){
             options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
           }
           $(changeselect).html(options);
+      }
+    });
+}
+
+/*
+Function that list the possible equipment
+according to the equipment action choice
+when we describe the intervention 
+The trigger is the field equip
+*/
+function get_equip(selectBox, urlparm1){
+    var singleValues = selectBox.id.split("-")[1];
+    var xhr_equipment_url = urlparm1;
+    /*
+    We obtain the actiontypevalue by the document.getElementById and not by
+    selectBox.options[selectBox.options.selectedIndex].value because we call this function
+    from : onfocus on equip
+    The last one to reflect the change on intervention date 
+    */    
+    var actiontypevalue = document.getElementById('id_intervequip_set-'+singleValues+'-equip_action').value;
+    /*
+    Check that the action is nothing
+    */
+    if (actiontypevalue == '') {
+       /*
+       Remove all associate error for that field
+       */
+       $("#intervequip_set-"+singleValues).find(".errorlist").remove();
+       /*
+       Initiate all other field to nothing
+       */
+       var equipselect = 'select#id_intervequip_set-'+singleValues+'-equip';
+       $(equipselect).html('<option value= ""> -- choisir une action -- </option>');
+       var equipstateselect = 'select#id_intervequip_set-'+singleValues+'-equip_state';
+       $(equipstateselect).html('<option value= ""> -- choisir une action -- </option>');
+       var stationselect = 'select#id_intervequip_set-'+singleValues+'-station';
+       $(stationselect).html('<option value= ""> -- choisir une action -- </option>');
+       var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
+       $(builtselect).html('<option value= ""> -- choisir une action -- </option>');
+       var note = $('textarea#id_intervequip_set-'+singleValues+'-note').val('');
+       }
+
+    var station = document.getElementById('id_station');
+    var station_id = station.options[station.options.selectedIndex].value;
+    var date_intervention = document.getElementById('id_intervention_date_0').value;
+    var heure_intervention = document.getElementById('id_intervention_date_1').value;
+    /* 
+    06/08/2013 Add to keep the intervention number when we change the intervention date of an existing one
+    This trick permit us to exclude the intervention from the function equip_state_todate and equip_place_todate_id
+    We need this trick because the functions look in the DB for the state and place for a date before the change occur
+    and if the date of the intervention change this interfere. Thus we have to exclude this from the query only if the date change
+    */
+    var intervention_id = document.getElementById('id_intervequip_set-'+singleValues+'-intervention').value;
+
+    /*
+    Check that the station, date and time are filled
+    else the call to the ajax while not work as expected
+    */
+    if (! actiontypevalue) {
+       alert('Il est préférable d\'inscrire une action avant d\'accéder aux équipements');
+       return  
+       }
+    if (! station_id) {
+       alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements');
+       return  
+       }
+    if (! isValidDate(date_intervention)) {
+       alert('Il est préférable d\'inscrire une date d\'intervention valide avant toutes actions sur les équipements');
+       return
+       }
+    if (! isValidTime(heure_intervention)) {
+       alert('Il est préférable d\'inscrire une heure d\'intervention valide avant toutes actions sur les équipements');
+       return
+       }
+
+    var equipment = document.getElementById('id_intervequip_set-'+singleValues+'-equip');
+    var equip_id = equipment.options[equipment.options.selectedIndex].value;
+
+    var equipselect = "select#id_intervequip_set-"+singleValues+"-equip";
+    
+    var myselect = $("select#id_intervequip_set-"+singleValues+"-equip");
+
+    $.ajax({
+      type: "GET",
+      url: xhr_equipment_url,
+      data: { action: actiontypevalue, station : station_id, date : date_intervention, heure : heure_intervention, intervention : intervention_id},
+      dataType: "json",
+      success: function(data) {
+          var options = '';
+          for (var i = 0; i < data.length; i++) {
+            if (data[i].optionValue == equip_id)
+               {
+                /*options += '<option value="' + data[i].optionValue + '" selected="selected">' + data[i].optionDisplay + '</option>';*/
+                options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
+               }               
+            else
+               { 
+                options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
+               }  
+          }
+          /*
+          We select the options by two methods
+          1) Via .val
+          2) Get the index value (set by .val in point 1), put this in the selectedIndex and refresh
+          All this to obtain the good value in the box of the select in FireFox
+          */
+          $(equipselect).empty().append(options);
+          $(equipselect).val(equip_id);
+          var selection = $(equipselect).attr("selectedIndex");
+          myselect[0].selectedIndex = selection;
+          myselect.selectmenu("refresh", true);
       }
     });
 }
@@ -81,21 +224,6 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
        alert('Cette action n\'est pas autorisée dans ce contexte')  
        }
 
-    var equipstateselect = 'select#id_intervequip_set-'+singleValues+'-equip_state';
-    $.ajax({
-      type: "GET",
-      url: xhr_equip_state_url,
-      data: { action: actiontypevalue},
-      dataType: "json",
-      success: function(data) {
-          var options = '';
-          for (var i = 0; i < data.length; i++) {
-            options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
-          }
-          $(equipstateselect).html(options);
-      }
-    });
-
     var station = document.getElementById('id_station');
     var station_id = station.options[station.options.selectedIndex].value;
     var date_intervention = document.getElementById('id_intervention_date_0').value;
@@ -112,23 +240,23 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
     Check that the station, date and time are filled
     else the call to the ajax while not work as expected
     */
+    if (! actiontypevalue) {
+       return  
+       }
     if (! station_id) {
-       alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements')  
+       alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements');
+       return
        }
-    if (! date_intervention) {
-       alert('Il est préférable d\'inscrire une date d\'intervention avant toutes actions sur les équipements')
+    if (! isValidDate(date_intervention)) {
+       alert('Il est préférable d\'inscrire une date d\'intervention valide avant toutes actions sur les équipements');
+       return
        }
-    if (! heure_intervention) {
-       alert('Il est préférable d\'inscrire une heure d\'intervention avant toutes actions sur les équipements')  
+    if (! isValidTime(heure_intervention)) {
+       alert('Il est préférable d\'inscrire une heure d\'intervention valide avant toutes actions sur les équipements');
+       return
        }
-
-    var equipment = document.getElementById('id_intervequip_set-'+singleValues+'-equip');
-    var equip_id = equipment.options[equipment.options.selectedIndex].value;
 
     var equipselect = "select#id_intervequip_set-"+singleValues+"-equip";
-    
-    var myselect = $("select#id_intervequip_set-"+singleValues+"-equip");
-
     $.ajax({
       type: "GET",
       url: xhr_equipment_url,
@@ -137,27 +265,24 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
       success: function(data) {
           var options = '';
           for (var i = 0; i < data.length; i++) {
-            if (data[i].optionValue == equip_id)
-               {
-                /*options += '<option value="' + data[i].optionValue + '" selected="selected">' + data[i].optionDisplay + '</option>';*/
-                options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
-               }               
-            else
-               { 
-                options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
-               }  
+            options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
           }
-          /*
-          We select the options by two methods
-          1) Via .val
-          2) Get the index value (set by .val in point 1), put this in the selectedIndex and refresh
-          All this to obtain the good value in the box of the select in FireFox
-          */
-          $(equipselect).empty().append(options);
-          $(equipselect).val(equip_id);
-          var selection = $(equipselect).attr("selectedIndex");
-          myselect[0].selectedIndex = selection;
-          myselect.selectmenu("refresh", true);
+          $(equipselect).html(options);
+      }
+    });
+
+    var equipstateselect = 'select#id_intervequip_set-'+singleValues+'-equip_state';
+    $.ajax({
+      type: "GET",
+      url: xhr_equip_state_url,
+      data: { action: actiontypevalue},
+      dataType: "json",
+      success: function(data) {
+          var options = '';
+          for (var i = 0; i < data.length; i++) {
+            options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
+          }
+          $(equipstateselect).html(options);
       }
     });
 
@@ -179,6 +304,7 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
           else display that they must choose a site first
           */
           var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
+          
           if (data.length == 1)             
              {
               station_id = data[0].optionValue;
@@ -190,32 +316,16 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
                 success: function(data) {
                     var options = '';
                     for (var i = 0; i < data.length; i++) {
-                      options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
+                      {options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';}
                     }
                     $(builtselect).html(options);
                 }
               });
              }
           else
-             $(builtselect).html('<option value= ""> -- choisir un site -- </option>');
+              {$(builtselect).html('<option value= ""> -- choisir un site -- </option>');}
       }
     });
-/*
-    var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
-    $.ajax({
-      type: "GET",
-      url: xhr_built,
-      data: { action: actiontypevalue, station : station_id, date : date_intervention, heure : heure_intervention},
-      dataType: "json",
-      success: function(data) {
-          var options = '';
-          for (var i = 0; i < data.length; i++) {
-            options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
-          }
-          $(builtselect).html(options);
-      }
-    });
-*/
 }
 
 /*

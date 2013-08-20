@@ -319,6 +319,9 @@ def equip_place_todate_id(equip, date, intervention_id):
     return result
 
 def available_equipment(action, station, date, intervention_id):
+    # Check if intervention_id is set to something else put the value 0
+    if not intervention_id:
+        intervention_id = 0
     # Install only available equip
     equipment_list = []
     equipments = Equipment.objects.all()
@@ -420,7 +423,6 @@ def xhr_equipment(request):
 #            equip_dispo = IntervEquip.objects.filter(id__in=Liste, station__id=station).order_by('equip__equip_supertype','equip__equip_type','equip__equip_model','equip__serial_number')
        #     print station
        #     print equip_dispo
-
 
         equip_dispo = available_equipment(action, station, date_intervention, intervention_id)
 
@@ -746,19 +748,27 @@ def station_xml(request):
                 sensor = []
                 sensor_installed = None
                 sensor_uninstalled = None
+                sensor_config = []
                 preamplifier = []
                 preamplifier_installed = None
                 preamplifier_uninstalled = None
+                preamplifier_config = []
                 datalogger = []
                 datalogger_installed = None
                 datalogger_uninstalled = None
+                datalogger_config = []
                 ResChain = Chain.objects.filter(channel=channel.id)
                 for equipchain in ResChain:
                     if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':  
                         sensor = equipchain.equip
+                        """Obtain the config parameters and values for the sensor """
+                        sensor_config = ChainConfig.objects.filter(chain=equipchain.id)
                     else:
                         if equipchain.equip.equip_type.equip_type_name == u'Numériseur':
                             datalogger = equipchain.equip
+                            print datalogger
+                            """Obtain the config parameters and values for the datalogger """
+                            datalogger_config = ChainConfig.objects.filter(chain=equipchain.id)
                 """ Common queryset parameters """
                 equip_operation = IntervEquip.objects.filter(intervention__intervention_date__lte=channel.start_date, intervention__station=channel.station.id, equip_action=EquipAction.INSTALLER, equip_state=EquipState.OPERATION)
                 equip_removal = IntervEquip.objects.filter(intervention__intervention_date__gte=channel.start_date, intervention__station=channel.station.id, equip_action=EquipAction.DESINSTALLER)
@@ -806,7 +816,9 @@ def station_xml(request):
                     ResCommentChannelAuthor = CommentChannelAuthor.objects.filter(comment_channel_id=comment.id)                
                     comment_list.append([comment, ResCommentChannelAuthor])
 
-                channel_list.append([channel, sensor, sensor_installed, sensor_uninstalled, preamplifier, preamplifier_installed, preamplifier_uninstalled, datalogger, datalogger_installed, datalogger_uninstalled, comment_list])
+                channel_list.append([channel, sensor, sensor_installed, sensor_uninstalled, sensor_config, \
+                                     preamplifier, preamplifier_installed, preamplifier_uninstalled, preamplifier_config, \
+                                     datalogger, datalogger_installed, datalogger_uninstalled, datalogger_config, comment_list])
                 """ Obtain the last built for the sensor according with the channel date """
                 """ WARNING only one built among possibly many """
                 if sensor != []:                   
