@@ -137,6 +137,7 @@ function get_equip(selectBox, urlparm1){
     $.ajax({
       type: "GET",
       url: xhr_equipment_url,
+      async: false,
       data: { action: actiontypevalue, station : station_id, date : date_intervention, heure : heure_intervention, intervention : intervention_id},
       dataType: "json",
       success: function(data) {

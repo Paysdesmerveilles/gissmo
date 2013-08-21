@@ -1208,9 +1208,27 @@ class Channel(models.Model) :
         (PARTIAL, 'Partiel'),
     )
 
+    CHANNEL_CHOICES = (
+        ('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),
+        ('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'),
+        ('DPE','DPE'),('DPN','DPN'),('DPZ','DPZ'),
+        ('EHE','EHE'),('EHN','EHN'),('EHZ','EHZ'),
+        ('ELE','ELE'),('ELN','ELN'),('ELZ','ELZ'),
+        ('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),
+        ('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),
+        ('SHE','SHE'),('SHN','SHN'),('SHZ','SHZ'),
+        ('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),
+        ('LDI','LDI'),('LII','LII'),('LKI','LKI'),
+        ('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),
+        ('BH1','BH1'),('BH2','BH2'),
+        ('LH1','LH1'),('LH2','LH2'),
+        ('VH1','VH1'),('VH2','VH2'),
+        ('HN2','HN2'),('HN3','HN3'),
+    )
+
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     network = models.ForeignKey('Network', verbose_name=_("code reseau"))
-    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=[('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'),('DPE','DPE'),('DPN','DPN'),('DPZ','DPZ'),('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'),('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'),('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'),('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),])
+    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=CHANNEL_CHOICES)
     location_code = models.CharField(null=True, blank=True, max_length=2, verbose_name=_("code localisation"))
     latitude = models.DecimalField(verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
     longitude = models.DecimalField(verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)

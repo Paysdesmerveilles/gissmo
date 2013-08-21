@@ -778,13 +778,21 @@ class ChannelForm(forms.ModelForm):
         self.fields['location_code'].initial = '00'
         self.fields['location_code'].required = False
 
-        CHANNEL_CHOICES = [('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),('CHE','CHE'), \
-                            ('CHN','CHN'),('CHZ','CHZ'),('DPE','DPE'),('DPN','DPN'),('DPZ','DPZ'), \
-                            ('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'),('LHE','LHE'),('LHN','LHN'), \
-                            ('LHZ','LHZ'),('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'),('LDI','LDI'), \
-                            ('LII','LII'),('LKI','LKI'),('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'), \
-                            ('BH1','BH1'),('BH2','BH2'),('LH1','LH1'),('LH2','LH2'),('VH1','VH1'), \
-                            ('VH2','VH2'),('HN2','HN2'),('HN3','HN3'),]
+        CHANNEL_CHOICES = [('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'), \
+                            ('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'), \
+                            ('DPE','DPE'),('DPN','DPN'),('DPZ','DPZ'), \
+                            ('EHE','EHE'),('EHN','EHN'),('EHZ','EHZ'), \
+                            ('ELE','ELE'),('ELN','ELN'),('ELZ','ELZ'), \
+                            ('HHE','HHE'),('HHN','HHN'),('HHZ','HHZ'), \
+                            ('LHE','LHE'),('LHN','LHN'),('LHZ','LHZ'), \
+                            ('SHE','SHE'),('SHN','SHN'),('SHZ','SHZ'), \
+                            ('VHE','VHE'),('VHN','VHN'),('VHZ','VHZ'), \
+                            ('LDI','LDI'),('LII','LII'),('LKI','LKI'), \
+                            ('HNE','HNE'),('HNN','HNN'),('HNZ','HNZ'), \
+                            ('BH1','BH1'),('BH2','BH2'), \
+                            ('LH1','LH1'),('LH2','LH2'), \
+                            ('VH1','VH1'),('VH2','VH2'), \
+                            ('HN2','HN2'),('HN3','HN3'),]
         self.fields['channel_code'].widget = forms.Select(choices=CHANNEL_CHOICES, attrs={'onchange':'get_dip_azimut_value(this);'})
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
 #        self.fields['station'].label = station_label
