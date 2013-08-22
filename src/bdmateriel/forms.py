@@ -400,6 +400,10 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         intervention_station_id = self.data.get('station')
         intervention_id = self.instance.id
         
+        # Check if intervention_id is set to something else put the value 0
+        if not intervention_id:
+            intervention_id = 0
+
         if intervention_station_id:
             try:
                 intervention_station = StationSite.objects.get(id=intervention_station_id)
