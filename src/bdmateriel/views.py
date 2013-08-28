@@ -266,6 +266,32 @@ def equip_state_todate(equip, date, intervention_id):
             result = last.equip_state
     return result
 
+def equip_with_state_todate(date, intervention_id):
+    """
+    Function to obtain the state of an equipment at a precise moment
+    """
+    result = 0
+    liste = []
+    equipments = Equipment.objects.all()
+    for equip in equipments:
+        if intervention_id:
+            """
+            Check that the date of the intervention has not changed
+            If yes, we must exclude the intervention form the search
+            """
+            intervention = get_object_or_404(Intervention, pk=intervention_id)
+            if date != intervention.intervention_date:
+                last_equip_state = IntervEquip.objects.exclude(intervention__pk=intervention_id).filter(intervention__intervention_date__lt=date, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+            else:
+                last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+        else:           
+            last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
+
+        if last_equip_state:
+            if last_equip_state[0].equip_state == 3:
+                liste.append(equip)                
+    return liste
+
 def equip_last_place(equip):
     """
     Function to obtain the last place where an equipment is
@@ -275,7 +301,6 @@ def equip_last_place(equip):
         return last_equip_place[0].station
     else:
         return 'Inconnu'
-
 
 # 
 # TODO eliminate one of this function 
@@ -322,14 +347,33 @@ def available_equipment(action, station, date, intervention_id):
     # Check if intervention_id is set to something else put the value 0
     if not intervention_id:
         intervention_id = 0
-    # Install only available equip
+
     equipment_list = []
     equipments = Equipment.objects.all()
+    # Buy only equip with No state
+    if int(action) == EquipAction.ACHETER:
+        # Obtain all intervention with BUY as action
+        equip_purchased = IntervEquip.objects.exclude(intervention__pk=intervention_id).filter(equip_action=EquipAction.ACHETER)
+        list_equip_purchased = []
+        for equip in equip_purchased:
+            list_equip_purchased.append(equip.equip.id)
+
+        # Obtain all equip without BUY action
+        nobuy_equipments = Equipment.objects.exclude(id__in=list_equip_purchased)
+        for equip in nobuy_equipments:
+            equipment_list.append(equip.id)    
+    """        
+        for equip in equipments:
+            if equip_state_todate(equip.id, date, int(intervention_id)) == 0:
+                equipment_list.append(equip.id)
+    """                
+    # Install only equip DISPONIBLE or No state
     if int(action) == EquipAction.INSTALLER:
         for equip in equipments:
             if equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.DISPONIBLE:
                 equipment_list.append(equip.id)
-    # Receive only equip En transit
+        #equipment_list = equip_with_state_todate(date, int(intervention_id))
+    # Receive only equip En transit or No state
     elif int(action) == EquipAction.RECEVOIR:
         for equip in equipments:
             if equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.EN_TRANSIT:
@@ -343,7 +387,8 @@ def available_equipment(action, station, date, intervention_id):
     elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
         for equip in equipments:
             if int(equip_place_todate_id(equip.id, date, int(intervention_id))) == int(station):
-                if equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.DEFAUT or equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.PANNE:
+                equip_state = equip_state_todate(equip.id, date, int(intervention_id))
+                if equip_state == EquipState.DEFAUT or equip_state == EquipState.PANNE:
                     equipment_list.append(equip.id)
     # Make action only on equip installed in the station
     else:

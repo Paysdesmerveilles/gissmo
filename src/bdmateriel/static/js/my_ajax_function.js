@@ -195,7 +195,7 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
     /*
     As soon as we have an action change the BUY action must disappear
     */
-    $("#id_intervequip_set-"+singleValues+"-equip_action option[value='1']").remove();
+    /*$("#id_intervequip_set-"+singleValues+"-equip_action option[value='1']").remove();*/
     /*
     Check that the action is nothing
     */
@@ -221,9 +221,11 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
     /*
     Check that the action is not buying
     */
+    /*
     if (actiontypevalue == 1) {
        alert('Cette action n\'est pas autorisée dans ce contexte')  
        }
+    */
 
     var station = document.getElementById('id_station');
     var station_id = station.options[station.options.selectedIndex].value;
