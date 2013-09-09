@@ -97,6 +97,10 @@ class ParamEquipModelInline(admin.TabularInline):
     model = ParamEquipModel
     extra = 0
 
+class ParameterEquipInline(admin.TabularInline):
+    model = ParameterEquip
+    extra = 0
+
 """
 Custom filter for the equipment model change list
 """
@@ -157,7 +161,7 @@ class EquipModelAdmin(admin.ModelAdmin):
 
     fieldsets = [('', {'fields': [('equip_supertype', 'equip_type', 'equip_model_name', 'manufacturer')]}),]
 
-    inlines = [EquipModelDocInline, ParamEquipModelInline,]
+    inlines = [EquipModelDocInline, ParameterEquipInline,]
 
     def save_formset(self, request, form, formset, change):
         """ Reference du code
@@ -481,7 +485,7 @@ class StationSiteAdmin(admin.ModelAdmin):
         if not change:
             station = get_object_or_404(StationSite, pk=obj.id)
             intervention = Intervention(station=station,intervention_date=form.cleaned_data['creation_date'], note="Creation automatique")
-	    intervention.save()
+            intervention.save()
             
             intervention = get_object_or_404(Intervention, pk=intervention.id)
             interv_station = IntervStation(intervention=intervention, station_action=StationAction.CREER, station_state=StationState.INSTALLATION, note="Creation automatique")
@@ -492,7 +496,7 @@ class StationSiteAdmin(admin.ModelAdmin):
             interv_actor.save()
 
             #Each new station will be store in Resif by default
-            project_object = get_object_or_404(Project, project_name='Resif')
+            project_object = get_object_or_404(Project, project_name=form.cleaned_data['project'])
             project_object.station.add(obj.id)
         super(StationSiteAdmin, self).save_model(request, obj, form, change)
 
@@ -649,7 +653,7 @@ class ChainInline(admin.TabularInline):
             return mark_safe("<a href='%s'>delete</a>" % url)
 
     def get_formset(self, request, obj=None, **kwargs):
-#       Pourquoi est-ce que station est necessaire
+#       Pourquoi est-ce que station est necessairen
         station = request.GET.get('station', '') 
         initial = []
         initial.append(station)
@@ -663,6 +667,7 @@ class ChainInline(admin.TabularInline):
 
 from django.contrib import messages
 
+"""
 class ChainConfigInline(admin.TabularInline):
     model = ChainConfig
     extra = 0
@@ -678,7 +683,16 @@ class ChainConfigInline(admin.TabularInline):
 #        formset = super(ChainConfigInline, self).get_formset(request, obj, **kwargs)
 #        formset.__init__ = curry(formset.__init__, initial=initial)
 #        return formset
+"""
 
+class ChainConfigInline(admin.TabularInline):
+    model = ChainConfig
+    extra = 0
+    formset = ChainConfigInlineFormset
+
+    fields = ('parameter', 'value')
+
+"""
 class ChannelChainInline(admin.TabularInline):
     model = ChainConfig
     extra = 0
@@ -694,8 +708,24 @@ class ChannelChainInline(admin.TabularInline):
             kwargs.pop('request', None) #erreur sinon
             return db_field.formfield(**kwargs)
         return super(ChannelChainInline,self).formfield_for_dbfield(db_field, **kwargs)
+"""
 
+class ChannelChainInline(admin.TabularInline):
+    model = ChainConfig
+    extra = 0
+    max_num = 0
+    formset = ChannelChainInlineFormset
 
+#    readonly_fields = ['chain']
+    fields = ('chain', 'parameter', 'value')
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'chain': #on suppose que le modele a un champ image
+            kwargs['widget'] = forms.TextInput(attrs={'readonly':'readonly','style':'width: 1px'})
+#            kwargs['widget'] = forms.HiddenInput()
+            kwargs.pop('request', None) #erreur sinon
+            return db_field.formfield(**kwargs) 
+        return super(ChannelChainInline,self).formfield_for_dbfield(db_field, **kwargs)
 
 class ChannelAdmin(admin.ModelAdmin):
     model = Channel
@@ -735,19 +765,27 @@ class ChannelAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
-        for instance in instances:      
+        for instance in instances:
             if isinstance(instance, Chain): #Check if it is the correct type of inline
                 instance.save()
                 # TODO Find how to access the previous channel to recuparate the config of some equipments.
                 # Actually we add the default config.
                 if not '_saveasnew' in request.POST:
-                    parameters = ParamEquipModel.objects.filter(equip_model_id=instance.equip.equip_model.id).order_by('pk')
+                    #parameters = ParamEquipModel.objects.filter(equip_model_id=instance.equip.equip_model.id).order_by('pk')
+                    parameters = ParameterValue.objects.filter(parameter__equip_model_id=instance.equip.equip_model.id, default_value=True).order_by('pk')
+                    """
+                    for parameter in parameters:
+                        channel = get_object_or_404(Channel, pk=instance.channel.id) # Hack to inline in channel
+                        #Default physical channel according to the channel code and network code
+                        chainconfig = ChainConfig(channel=channel,chain=instance,parameter=parameter.parameter_name, value=parameter.default_value)
+                        chainconfig.save()
+                    """    
                     for parameter in parameters:
                         channel = get_object_or_404(Channel, pk=instance.channel.id) # Hack to inline in channel
                         """
-                        Default physical channel according to the channel code and network code
+                        Default value for config parameter
                         """
-                        chainconfig = ChainConfig(channel=channel,chain=instance,parameter=parameter.parameter_name, value=parameter.default_value)
+                        chainconfig = ChainConfig(channel=channel,chain=instance,parameter=parameter.parameter, value=parameter)
                         chainconfig.save()
             else:
                 if isinstance(instance, ChainConfig): #Check if it is the correct type of inline
@@ -758,6 +796,15 @@ class ChannelAdmin(admin.ModelAdmin):
                     instance.save()
                 else:
                     formset.save()               
+                """                    
+                else:
+                    if isinstance(instance, ChainConfigTest): #Check if it is the correct type of inline
+                        old_chain = get_object_or_404(Chain, pk=instance.chain.id) # Hack to inline in channel
+                        new_chain = Chain.objects.filter(channel=instance.channel.id, order=old_chain.order, equip=old_chain.equip) # Hack to inline in channel
+                        if new_chain:
+                            instance.chain = new_chain[0]
+                        instance.save()
+                """                        
 
 #    def save_model(self, request, obj, form, change):
 #        # custom stuff here
@@ -799,12 +846,16 @@ class ChainAdmin(admin.ModelAdmin):
 
     readonly_fields = ['channel','order','equip']
 
-    inlines = [ChainConfigInline,]
+    inlines = [ChainConfigInline, ]
+
+    class Media:
+        js = ["js/my_ajax_function.js"]
 
     # This put the channel into the ChainConfig instance according with the channel value pass through the URL
     def save_formset(self, request, form, formset, change):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
+
         instances = formset.save(commit=False)
  
         for instance in instances:
@@ -814,6 +865,13 @@ class ChainAdmin(admin.ModelAdmin):
                 instance.save()
             else:
                 formset.save()
+            """                
+            else:
+                if isinstance(instance, ChainConfigTest): #Check if it is the correct type of inline
+                    if not instance.pk:
+                        instance.channel = instance.chain.channel
+                    instance.save()
+            """                    
 
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
@@ -1003,6 +1061,54 @@ class ProjectUserAdmin(admin.ModelAdmin):
         else:
             return qs.filter(user_id=request.user.id)
 
+"""
+class ParamValueEquipModelAdmin(admin.ModelAdmin):
+    model = ParamValueEquipModel
+    save_as = True
+    list_display = ['equip_model', 'parameter_name', 'value', 'default_value',]
+    list_filter = ['equip_model', ]
+    search_fields = ['equip_model', ]
+
+    def response_add(self, request, obj, post_url_continue="../%s/"):
+        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
+            messages.success( request, 'Enregistrement ajouté' )
+            return HttpResponseRedirect(reverse("admin:bdmateriel_paramvalueequipmodel_change", args=(obj.station.id,)))
+        else:
+##        This makes the response go to the newly created model's change page
+##        without using reverse
+            if '_saveasnew' in request.POST:              
+                messages.success( request, 'Enregistrement ajouté' )
+                return HttpResponseRedirect("../%s" % obj.id)
+            else:
+                return super(ParamValueEquipModelAdmin, self).response_add(request, obj, post_url_continue)
+"""
+"""
+class ParamEquipModelAdmin(admin.ModelAdmin):
+    model = ParamEquipModel
+
+    inlines = [ParamValueInline,]
+"""    
+
+class ParameterValueInline(admin.TabularInline):
+    model = ParameterValue
+    extra = 0
+
+class ParameterEquipAdmin(admin.ModelAdmin):
+    model = ParameterEquip
+    search_fields = ['equip_model__equip_model_name', 'parameter_name', ]
+
+    list_display = ['equip_model', 'parameter_name',]
+
+    inlines = [ ParameterValueInline,]
+
+class ParameterValueAdmin(admin.ModelAdmin):
+    model = ParameterValue
+    list_filter = ['parameter', ]
+    search_fields = ['parameter__equip_model__equip_model_name', 'parameter__parameter_name', ]
+
+    list_display = ['parameter', 'value', 'default_value' ]
+    list_editable = ['default_value' ]
+
 '''
 Disabling the action "delete_selected" for all the site
 '''
@@ -1035,6 +1141,8 @@ admin.site.register(BuiltType)
 admin.site.register(CalibrationUnit)
 admin.site.register(DataType)
 admin.site.register(ParamEquipModel)
+#admin.site.register(ParamValueEquipModel, ParamValueEquipModelAdmin)
+#admin.site.register(ParamValue)
 admin.site.register(EquipModelDocType)
 admin.site.register(EquipDocType)
 admin.site.register(StationDocType)
@@ -1048,4 +1156,7 @@ admin.site.register(CommentStationSite, CommentStationSiteAdmin)
 
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectUser, ProjectUserAdmin)
-admin.site.register(LoggedActions)
+#admin.site.register(LoggedActions)
+admin.site.register(ParameterEquip, ParameterEquipAdmin)
+admin.site.register(ParameterValue, ParameterValueAdmin)
+#admin.site.register(ChainConfigTest)

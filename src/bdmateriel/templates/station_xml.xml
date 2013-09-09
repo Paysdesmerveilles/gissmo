@@ -25,7 +25,9 @@
          {% endif %}
          {% for comment, authors in comments %}
              <Comment>
-               <Value>{{ comment.value }}</Value>
+               {% if comment.value %}
+                 <Value>{{ comment.value }}</Value>
+               {% endif %}
                {% if comment.begin_effective %} 
                  <BeginEffectiveTime>{{ comment.begin_effective|date:"c" }}</BeginEffectiveTime>
                {% endif %}
@@ -34,7 +36,9 @@
                {% endif %}
                {% for author in authors %}
                    <Author>
-                   <Name>{{ author.author.actor_name }}</Name>
+                   {% if author.author.actor_name %} 
+                     <Name>{{ author.author.actor_name }}</Name>
+                   {% endif %}
                    </Author>
                {% endfor %}
              </Comment>
@@ -187,18 +191,32 @@
              {% if sensor.id != None %}
                <Sensor>
                  <Type>{{ sensor.equip_type.equip_type_name }}</Type>
-                 <Description></Description>
-                 <Manufacturer>{{ sensor.equip_model.manufacturer }}</Manufacturer>
-                 <Vendor>{{ sensor.vendor }}</Vendor>
-                 <Model>{{ sensor.equip_model.equip_model_name }}</Model>
-                 <SerialNumber>{{ sensor.serial_number }}</SerialNumber>
-                 <InstallationDate>{{ sensor_installed|date:"c" }}</InstallationDate>
-                 <RemovalDate>{{ sensor_uninstalled|date:"c" }}</RemovalDate>
-                 <CalibrationDate></CalibrationDate>
+                 {% if sensor.description != None %}
+                  <Description>{{ sensor.description }}</Description>
+                 {% endif %}
+                 {% if sensor.equip_model.manufacturer != None %}  
+                  <Manufacturer>{{ sensor.equip_model.manufacturer }}</Manufacturer>
+                 {% endif %}
+                 {% if sensor.vendor != None %} 
+                  <Vendor>{{ sensor.vendor }}</Vendor>
+                 {% endif %}
+                 {% if sensor.equip_model.equip_model_name != None %} 
+                  <Model>{{ sensor.equip_model.equip_model_name }}</Model>
+                 {% endif %} 
+                 {% if sensor.serial_number != None %} 
+                  <SerialNumber>{{ sensor.serial_number }}</SerialNumber>
+                 {% endif %}  
+                 {% if  sensor_installed != None %} 
+                  <InstallationDate>{{ sensor_installed|date:"c" }}</InstallationDate>
+                 {% endif %}
+                 {% if  sensor_uninstalled != None %}   
+                  <RemovalDate>{{ sensor_uninstalled|date:"c" }}</RemovalDate>
+                 {% endif %}
+                 {# <CalibrationDate></CalibrationDate> #}
                  <Configuration>
                  {% for config in sensor_config %}
                    {% if config.value != None and config.value != '' %}
-                     <{{ config.parameter|cut:" "|cut:"/" }}>{{ config.value }}</{{ config.parameter|cut:" "|cut:"/" }}>
+                     <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                  {% endfor %}
                  </Configuration>
@@ -207,18 +225,32 @@
              {% if preamplifier.id != None %}
                <PreAmplifier>
                  <Type>{{preamplifier.equip_type.equip_type_name }}</Type>
-                 <Description></Description>
-                 <Manufacturer>{{ preamplifier.equip_model.manufacturer }}</Manufacturer>
-                 <Vendor>{{ preamplifier.vendor }}</Vendor>
-                 <Model>{{ preamplifier.equip_model.equip_model_name }}</Model>
-                 <SerialNumber>{{ preamplifier.serial_number }}</SerialNumber>
-                 <InstallationDate>{{ preamplifier_installed|date:"c" }}</InstallationDate>
-                 <RemovalDate>{{ preamplifier_uninstalled|date:"c" }}</RemovalDate>
-                 <CalibrationDate></CalibrationDate>
+                 {% if preamplifier.description != None %}
+                  <Description>{{ preamplifier.description }}</Description>
+                 {% endif %}
+                 {% if preamplifier.equip_model.manufacturer != None %}
+                  <Manufacturer>{{ preamplifier.equip_model.manufacturer }}</Manufacturer>
+                 {% endif %}
+                 {% if preamplifier.vendor != None %}
+                  <Vendor>{{ preamplifier.vendor }}</Vendor>
+                 {% endif %}
+                 {% if preamplifier.equip_model.equip_model_name != None %}
+                  <Model>{{ preamplifier.equip_model.equip_model_name }}</Model>
+                 {% endif %}
+                 {% if preamplifier.serial_number != None %}
+                  <SerialNumber>{{ preamplifier.serial_number }}</SerialNumber>
+                 {% endif %}
+                 {% if preamplifier_installed != None %}
+                  <InstallationDate>{{ preamplifier_installed|date:"c" }}</InstallationDate>
+                 {% endif %}
+                 {% if preamplifier_uninstalled != None %}
+                  <RemovalDate>{{ preamplifier_uninstalled|date:"c" }}</RemovalDate>
+                 {% endif %}
+                 {# <CalibrationDate></CalibrationDate> #}
                  <Configuration>
                  {% for config in preamplifier_config %}
                    {% if config.value != None and config.value != '' %}
-                     <{{ config.parameter|cut:" "|cut:"/" }}>{{ config.value }}</{{ config.parameter|cut:" "|cut:"/" }}>
+                     <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                  {% endfor %}
                  </Configuration>
@@ -227,20 +259,34 @@
              {% if datalogger.id != None %}
                <DataLogger>
                  <Type>{{ datalogger.equip_type.equip_type_name }}</Type>
-                 <Description></Description>
-                 <Manufacturer>{{ datalogger.equip_model.manufacturer }}</Manufacturer>
-                 <Vendor>{{ datalogger.vendor }}</Vendor>
-                 <Model>{{ datalogger.equip_model.equip_model_name }}</Model>
-                 <SerialNumber>{{ datalogger.serial_number }}</SerialNumber>
-                 <InstallationDate>{{ datalogger_installed|date:"c" }}</InstallationDate>
-                 <RemovalDate>{{ datalogger_uninstalled|date:"c" }}</RemovalDate>
-                 <CalibrationDate></CalibrationDate>
+                 {% if datalogger.description != None %}
+                  <Description>{{ datalogger.description }}</Description>
+                 {% endif %}
+                 {% if datalogger.equip_model.manufacturer != None %}
+                  <Manufacturer>{{ datalogger.equip_model.manufacturer }}</Manufacturer>
+                 {% endif %}
+                 {% if datalogger.vendor != None %}
+                  <Vendor>{{ datalogger.vendor }}</Vendor>
+                 {% endif %}
+                 {% if datalogger.equip_model.equip_model_name != None %}
+                  <Model>{{ datalogger.equip_model.equip_model_name }}</Model>
+                 {% endif %}
+                 {% if datalogger.serial_number != None %}
+                  <SerialNumber>{{ datalogger.serial_number }}</SerialNumber>
+                 {% endif %}
+                 {% if datalogger_installed != None %}
+                  <InstallationDate>{{ datalogger_installed|date:"c" }}</InstallationDate>
+                 {% endif %}
+                 {% if datalogger_uninstalled != None %}
+                  <RemovalDate>{{ datalogger_uninstalled|date:"c" }}</RemovalDate>
+                 {% endif %}
+                 {# <CalibrationDate></CalibrationDate> #}
                  <Configuration>
                  {% for config in datalogger_config %}
                    {% if config.value != None and config.value != '' %}
-                     <{{ config.parameter|cut:" "|cut:"/" }}>{{ config.value }}</{{ config.parameter|cut:" "|cut:"/" }}>
+                     <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
-                 {% endfor %}
+                 {% endfor %} 
                  </Configuration>
                </DataLogger>
              {% endif %}

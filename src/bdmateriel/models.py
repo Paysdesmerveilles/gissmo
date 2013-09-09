@@ -256,16 +256,55 @@ class ParamEquipModel(models.Model):
     def __unicode__(self):
         return u'%s : %s' % (self.equip_model.equip_model_name, self.parameter_name)
 
-#class ParamValue(models.Model):
-#    parameter = models.ForeignKey("ParamEquipModel", verbose_name=_("Parametre modele d'equipement"))
-#    value = models.CharField(max_length=50, verbose_name=_("valeur"))
-#
-#    class Meta:
-#        unique_together = ("parameter", "value")
-#        verbose_name = _("valeur du parametre")
-#
-#    def __unicode__(self):
-#        return u'%s : %s' % (self.parameter, self.value)
+
+class ParameterEquip(models.Model):
+    equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
+    parameter_name = models.CharField(max_length=50, verbose_name=_("nom du parametre"))
+
+    class Meta:
+        unique_together = ("equip_model", "parameter_name")
+        verbose_name = _("parametre equip")
+        verbose_name_plural = _("W1. Parametres equip")
+
+    def __unicode__(self):
+        return u'%s : %s' % (self.equip_model, self.parameter_name)
+
+class ParameterValue(models.Model):
+    parameter = models.ForeignKey("ParameterEquip", verbose_name=_("Parametre modele d'equipement"))
+    value = models.CharField(max_length=50, verbose_name=_("valeur"))
+    default_value = models.BooleanField(verbose_name=_("valeur par defaut"))
+
+    class Meta:
+        unique_together = ("parameter", "value")
+        verbose_name = _("valeur du parametre")
+        verbose_name_plural = _("X1. Valeurs des parametres")
+
+    # Validation to check that there is only one value choose by default for a parameter
+    def clean(self):
+        if self.default_value:
+            c = ParameterValue.objects.exclude(pk=self.id).filter(parameter=self.parameter, default_value__exact=True)
+            if c:
+                raise ValidationError("The chosen one is already here! Too late")
+
+    def __unicode__(self):
+        return u'%s' % (self.value)
+
+"""
+# Parameters 
+class ParamValueEquipModel(models.Model):
+    equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
+    parameter_name = models.CharField(max_length=50, verbose_name=_("nom du parametre"))
+    value = models.CharField(max_length=50, verbose_name=_("valeur"))
+    default_value = models.BooleanField(verbose_name=_("valeur par defaut"))
+
+    class Meta:
+        unique_together = ("equip_model", "parameter_name", "value")
+        verbose_name = _("parametre et valeur")
+        verbose_name_plural = _("P1. Parametres et valeurs")
+
+    def __unicode__(self):
+        return u'%s : %s : %s' % (self.equip_model.equip_model_name, self.parameter_name, self.value)
+"""
 
 def get_defaut_owner():
     return Actor.objects.get(actor_name='DT INSU')
@@ -1302,6 +1341,8 @@ class Chain(models.Model) :
     def __unicode__(self):
         return u'%s : %s' % (self.order, self.equip)
 
+"""
+# Ancienne structure
 class ChainConfig(models.Model) :
     channel = models.ForeignKey('Channel', verbose_name=_("canal")) # Hack to inline in channel
     chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition")) 
@@ -1310,6 +1351,34 @@ class ChainConfig(models.Model) :
 
     def __unicode__(self):
         return u'%s : %s : %s' % (self.chain, self.parameter, self.value)
+"""
+
+# Nouvelle structure
+class ChainConfig(models.Model) :
+    channel = models.ForeignKey('Channel', verbose_name=_("canal")) # Hack to inline in channel
+    chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition"))
+    parameter =  models.ForeignKey('ParameterEquip', verbose_name=_("parametre"))
+    value =  models.ForeignKey('ParameterValue', verbose_name=_("value"))
+
+    class Meta:
+        unique_together = ("channel", "chain", "parameter")
+
+    def __unicode__(self):
+        return u'%s : %s : %s' % (self.chain, self.parameter, self.value)
+
+"""
+# Le nom des parametres devra respecte la nomenclature xml car ils seront transformes en tag dans la section config
+
+        Les noms peuvent contenir des lettres, des chiffres ou d'autres caractères.
+        Les noms ne peuvent débuter par un nombre ou un signe de ponctuation.
+        Les noms ne peuvent commencer par les lettres xml (ou XML ou Xml...).
+        Les noms ne peuvent contenir des espaces.
+        La longueur des noms est libre mais on conseille de rester raisonnable.
+        On évitera certains signes qui pourraient selon les logiciels, prêter à confusion comme "-", ";", ".", "<", ">", etc.
+
+        Ne pas utilser les caractères spéciaux (meme si en principe cela semble autorise)
+        Les caractères spéciaux pour nous francophones comme é, à, ê, ï, ù sont à priori permis mais pourraient être mal interprétés par certains programmes.
+""" 
 
 #from django.db.models.signals import post_save, post_delete
 #from django.dispatch import receiver

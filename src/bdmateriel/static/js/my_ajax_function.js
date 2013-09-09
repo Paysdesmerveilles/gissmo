@@ -259,7 +259,11 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
        return
        }
 
+    var equipment = document.getElementById('id_intervequip_set-'+singleValues+'-equip');
+    var equip_id = equipment.options[equipment.options.selectedIndex].value;
+
     var equipselect = "select#id_intervequip_set-"+singleValues+"-equip";
+
     $.ajax({
       type: "GET",
       url: xhr_equipment_url,
@@ -271,6 +275,7 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
             options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
           }
           $(equipselect).html(options);
+          $(equipselect).val(equip_id);
       }
     });
 
@@ -472,6 +477,43 @@ function get_site_built(selectBox, urlparm1){
             options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
           }
           $(builtselect).html(options);
+      }
+    });
+}
+
+/*
+Function that list the value for a parameter
+when we describe the chainconfig
+The trigger is the field parameter
+*/
+function get_parameter_value(selectBox, urlparm1){
+    var singleValues = selectBox.id.split("-")[1];
+    var parametervalue = document.getElementById('id_chainconfig_set-'+singleValues+'-parameter').value;
+    var xhr_parameter_value_url = urlparm1;
+    var parameter_id = parametervalue;
+
+
+    var value = document.getElementById('id_chainconfig_set-'+singleValues+'-value');
+    var value_id = value.options[value.options.selectedIndex].value;
+
+    var valueselect = 'select#id_chainconfig_set-'+singleValues+'-value';
+    var myselect = $("select#id_chainconfig_set-"+singleValues+"-value");
+
+    $.ajax({
+      type: "GET",
+      url: xhr_parameter_value_url,
+      data: { parameter : parameter_id},
+      dataType: "json",
+      success: function(data) {
+          var options = '';
+          for (var i = 0; i < data.length; i++) {
+            options += '<option value="' + data[i].optionValue + '">' + data[i].optionDisplay + '</option>';
+          }
+          $(valueselect).html(options);
+          $(valueselect).val(value_id);
+          var selection = $(valueselect).attr("selectedIndex");
+          myselect[0].selectedIndex = selection;
+          myselect.selectmenu("refresh", true);
       }
     });
 }

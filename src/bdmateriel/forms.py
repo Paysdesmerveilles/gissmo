@@ -13,7 +13,7 @@ from django.utils.safestring import mark_safe
 
 from datetime import datetime
 
-from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel, Built, DataType, EquipSupertype, EquipType, Project, ProjectUser
+from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel, Built, DataType, EquipSupertype, EquipType, Project, ProjectUser, ParameterEquip, ParameterValue
 
 # TODO Voir a deplacer dans un autre fichier
 from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate_id, available_equipment, available_equip_state, available_station, available_built, available_equipment_scioper
@@ -303,7 +303,6 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             equip = get_object_or_404(Equipment, id=self.__initial[0])
             form.fields['equip'].initial = equip
 
-
         STATE_CHOICES = []
         STATE_CHOICES.insert(0, ('', '-- choisir une action en premier --'))
 
@@ -573,7 +572,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                    equip_state != EquipState.EN_TRANSIT:
                     errors += 1
                 if equip_action == EquipAction.RECEVOIR and \
-                   equip_state != EquipState.A_TESTER:
+                   (equip_state != EquipState.A_TESTER and equip_state != EquipState.DISPONIBLE):
                     errors += 1
                 if equip_action == EquipAction.METTRE_HORS_USAGE and \
                    equip_state != EquipState.HORS_USAGE:
@@ -647,7 +646,7 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
 
         """
         Hack to check if the formset is already filled
-	to present the complete list of actions
+	    to present the complete list of actions
         else the list exclude the action of creating (Creer code station)
         """ 
         if index != None:
@@ -703,11 +702,13 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
                 if errors != 0:  
                     raise forms.ValidationError('Etat (%s) invalide pour l\'action choisi  (%s)' % (StationState.STATION_STATES[station_state-1][1], StationAction.STATION_ACTIONS[station_action-1][1]))
 
+"""
 class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
         self.__initial = kwargs.pop('initial', [])
         super(ChainConfigInlineFormset, self).__init__(*args, **kwargs)
+"""
 
 class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
@@ -739,17 +740,21 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         form.fields['order'].widget = forms.Select(choices=ORDER_CHOICES, attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
 
         if index != None :
-            channel_station_id = self.instance.station.id
-            channel_date = self.instance.start_date
-#
-# Ne sera plus necessaire apres l'utilisation de la fonction 
-# available_equipment_scioper
-#
-#            equip_id = form['equip'].value()
-#            if equip_id != '':
-#                form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(pk=equip_id), empty_label=None)
-            form.fields['equip'] = forms.ModelChoiceField(queryset = available_equipment_scioper(channel_station_id, channel_date), empty_label=None)
+            #
+            # Ne sera plus necessaire apres l'utilisation de la fonction 
+            # available_equipment_scioper
+            #
+            #equip_id = form['equip'].value()
+            #if equip_id != '':
+            #    form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(pk=equip_id), empty_label=None)
 
+            try:
+                channel_station_id = self.instance.station.id
+                channel_date = self.instance.start_date
+                form.fields['equip'] = forms.ModelChoiceField(queryset = available_equipment_scioper(channel_station_id, channel_date), empty_label=None)
+            except:
+                return
+        
 class ChannelForm(forms.ModelForm):
     """
     Obtain the latitude, longitude and elevation of the station
@@ -794,11 +799,6 @@ class ChannelForm(forms.ModelForm):
                 self.fields['longitude'].initial = station.longitude
                 self.fields['elevation'].initial = station.elevation
                 self.fields['station'].initial = station.id
-#                station_label += station.station_code
-#        else:
-#            instance = getattr(self, 'instance', None)
-#            if instance and instance.id:
-#                station_label += unicode(instance.station)
 
         url = reverse('xhr_station_position')
 
@@ -827,8 +827,6 @@ class ChannelForm(forms.ModelForm):
                             ('HN2','HN2'),('HN3','HN3'),]
         self.fields['channel_code'].widget = forms.Select(choices=CHANNEL_CHOICES, attrs={'onchange':'get_dip_azimut_value(this);'})
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
-#        self.fields['station'].label = station_label
-#        self.fields['station'].widget = forms.HiddenInput()
         self.fields["data_type"].widget = CheckboxSelectMultiple()  
         self.fields["data_type"].queryset = DataType.objects.all()       
         self.fields["data_type"].initial = [t.pk for t in DataType.objects.filter(Q(type_description='CONTINUOUS')| Q(type_description='GEOPHYSICAL'))]
@@ -840,18 +838,9 @@ class ChannelForm(forms.ModelForm):
         sample_rate = cleaned_data.get("sample_rate")
         accept = cleaned_data.get("accept_anyway")
 
-        """
-        Check that the sample rate fit in the range for the channel code
-        """
-#        dict_channel_validation = {'H': "sample_rate < 80",
-#                                   'B': "sample_rate < 10 or sample_rate >= 80)",
-#                                   'L': "sample_rate <> 1",
-#                                   'V': "sample_rate <> 0.1",
-#                                   'U': "sample_rate <> 0.01"}
 
-        """
-        We can bypass this validation with the accept field
-        """
+        # Check that the sample rate fit in the range for the channel code
+        # We can bypass this validation with the accept field
         if channel_code and sample_rate:
             if not accept and ((channel_code[0] == 'H' and sample_rate < 80) or \
                (channel_code[0] == 'B' and (sample_rate < 10 or sample_rate >= 80)) or \
@@ -874,3 +863,29 @@ class ProjectUserForm(forms.ModelForm):
 
         if self.instance.id:
             self.fields['user'] = forms.ModelChoiceField(queryset=User.objects.filter(pk=self.instance.user.id), empty_label=None)
+
+class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
+
+    def add_fields(self, form, index):
+        super(ChainConfigInlineFormset, self).add_fields(form, index)
+
+        url1 = reverse('xhr_parameter_value')
+
+        #form.fields['parameter'] = forms.ModelChoiceField(queryset = ParameterEquip.objects.filter(equip_model_id=self.instance.equip.equip_model.id), widget=forms.Select(attrs={'onchange': "alert('test');"}))
+        form.fields['parameter'] = forms.ModelChoiceField(queryset = ParameterEquip.objects.filter(equip_model_id=self.instance.equip.equip_model.id), widget=forms.Select(attrs={'onchange': 'get_parameter_value(this,\'' + url1 + '\');'}))
+        form.fields['value'] = forms.ModelChoiceField(queryset = ParameterValue.objects.all(), widget=forms.Select(attrs={'onfocus': 'get_parameter_value(this,\'' + url1 + '\');'}), empty_label="-- choisir un parametre en premier --")
+
+class ChannelChainInlineFormset(forms.models.BaseInlineFormSet):
+
+    def add_fields(self, form, index):
+        super(ChannelChainInlineFormset, self).add_fields(form, index)
+
+        if index != None:
+            """ 
+            Obtain the value for each field of a line of a formset
+            """
+            parameter_id = form['parameter'].value()
+
+            form.fields['parameter'] = forms.ModelChoiceField(queryset = ParameterEquip.objects.filter(pk=parameter_id), empty_label=None)
+            form.fields['value'] = forms.ModelChoiceField(queryset = ParameterValue.objects.filter(parameter_id=parameter_id), empty_label=None)
+
