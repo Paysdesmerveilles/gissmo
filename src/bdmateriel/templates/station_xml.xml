@@ -173,7 +173,7 @@
                    {% endif %}>{{ channel.sample_rate }}</SampleRate>
                </SampleRateGroup>   
              {% endif %}
-             {% if channel.storage_format != None %}
+             {% if channel.storage_format != None and channel.storage_format != '' %}
                  <StorageFormat>{{channel.storage_format}}</StorageFormat>   
              {% endif %}
              {% if channel.clock_drift != None %}
@@ -197,7 +197,7 @@
                  {% if sensor.equip_model.manufacturer != None %}  
                   <Manufacturer>{{ sensor.equip_model.manufacturer }}</Manufacturer>
                  {% endif %}
-                 {% if sensor.vendor != None %} 
+                 {% if sensor.vendor != None and sensor.vendor != '' %} 
                   <Vendor>{{ sensor.vendor }}</Vendor>
                  {% endif %}
                  {% if sensor.equip_model.equip_model_name != None %} 
@@ -212,14 +212,14 @@
                  {% if  sensor_uninstalled != None %}   
                   <RemovalDate>{{ sensor_uninstalled|date:"c" }}</RemovalDate>
                  {% endif %}
-                 {# <CalibrationDate></CalibrationDate> #}
-                 <Configuration>
-                 {% for config in sensor_config %}
-                   {% if config.value != None and config.value != '' %}
-                     <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
-                   {% endif %}
-                 {% endfor %}
-                 </Configuration>
+                 {# <CalibrationDate></CalibrationDate> #}                  
+                  {% for config in sensor_config %}
+                    {% if forloop.first %}<Configuration>{% endif %}
+                    {% if config.value != None and config.value != '' %}
+                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
+                    {% endif %}
+                    {% if forloop.last %}</Configuration>{% endif %}
+                  {% endfor %}
                </Sensor>
              {% endif %}
              {% if preamplifier.id != None %}
@@ -231,7 +231,7 @@
                  {% if preamplifier.equip_model.manufacturer != None %}
                   <Manufacturer>{{ preamplifier.equip_model.manufacturer }}</Manufacturer>
                  {% endif %}
-                 {% if preamplifier.vendor != None %}
+                 {% if preamplifier.vendor != None and preamplifier.vendor != '' %}
                   <Vendor>{{ preamplifier.vendor }}</Vendor>
                  {% endif %}
                  {% if preamplifier.equip_model.equip_model_name != None %}
@@ -247,11 +247,12 @@
                   <RemovalDate>{{ preamplifier_uninstalled|date:"c" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
-                 <Configuration>
                  {% for config in preamplifier_config %}
+                   {% if forloop.first %}<Configuration>{% endif %}
                    {% if config.value != None and config.value != '' %}
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
+                   {% if forloop.last %}</Configuration>{% endif %}
                  {% endfor %}
                  </Configuration>
                </PreAmplifier>
@@ -265,7 +266,7 @@
                  {% if datalogger.equip_model.manufacturer != None %}
                   <Manufacturer>{{ datalogger.equip_model.manufacturer }}</Manufacturer>
                  {% endif %}
-                 {% if datalogger.vendor != None %}
+                 {% if datalogger.vendor != None and datalogger.vendor != '' %}
                   <Vendor>{{ datalogger.vendor }}</Vendor>
                  {% endif %}
                  {% if datalogger.equip_model.equip_model_name != None %}
@@ -281,13 +282,13 @@
                   <RemovalDate>{{ datalogger_uninstalled|date:"c" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
-                 <Configuration>
                  {% for config in datalogger_config %}
+                   {% if forloop.first %}<Configuration>{% endif %}
                    {% if config.value != None and config.value != '' %}
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
+                   {% if forloop.last %}</Configuration>{% endif %}
                  {% endfor %} 
-                 </Configuration>
                </DataLogger>
              {% endif %}
              </Channel>
