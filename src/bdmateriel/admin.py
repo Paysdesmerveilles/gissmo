@@ -302,7 +302,9 @@ class EquipmentAdmin(admin.ModelAdmin):
     # Redefine queryset to show only equipment according to the user's project
     def queryset(self, request):
         qs = super(EquipmentAdmin, self).queryset(request)
-        if request.user.is_superuser:
+        check_forall = ProjectUser.objects.filter(user=request.user).values_list('project__project_name', flat=True)
+        # The name of the project must stay ALL
+        if request.user.is_superuser or u'ALL' in check_forall:
             return qs
         project_list = ProjectUser.objects.filter(user=request.user).values_list('project', flat=True)
         station_list = Project.objects.filter(id__in=project_list).values_list('station', flat=True)
@@ -469,7 +471,9 @@ class StationSiteAdmin(admin.ModelAdmin):
     # Redefine queryset to show only site according to the user's project
     def queryset(self, request):
         qs = super(StationSiteAdmin, self).queryset(request)
-        if request.user.is_superuser:
+        check_forall = ProjectUser.objects.filter(user=request.user).values_list('project__project_name', flat=True)
+        # The name of the project must stay ALL
+        if request.user.is_superuser or u'ALL' in check_forall:        
             return qs
         project_list = ProjectUser.objects.filter(user=request.user).values_list('project', flat=True)
         station_list = Project.objects.filter(id__in=project_list).values_list('station', flat=True)
@@ -604,7 +608,9 @@ class InterventionAdmin(admin.ModelAdmin):
     # Redefine queryset to show only intervention according to the user's project
     def queryset(self, request):
         qs = super(InterventionAdmin, self).queryset(request)
-        if request.user.is_superuser:
+        check_forall = ProjectUser.objects.filter(user=request.user).values_list('project__project_name', flat=True)
+        # The name of the project must stay ALL
+        if request.user.is_superuser or u'ALL' in check_forall:
             return qs
         project_list = ProjectUser.objects.filter(user=request.user).values_list('project', flat=True)
         station_list = Project.objects.filter(id__in=project_list).values_list('station', flat=True)
@@ -1023,12 +1029,19 @@ class ProjectAdmin(admin.ModelAdmin):
     filter_horizontal = ['station',]
     fields = ('project_name', 'manager','station')
     
-    # Redefine queryset to show only intervention according to the user's project
+    # Redefine queryset to show only project according to the user's project
     def queryset(self, request):
         qs = super(ProjectAdmin, self).queryset(request)
         if request.user.is_superuser:
             return qs
         return qs.filter(manager_id=request.user.id)
+
+    def delete_model(self, request, obj):
+        if obj.project_name == 'ALL':
+            messages.error( request, 'Delete of the project ALL is forbidden')            
+        else:
+            obj.delete()
+            return super(ProjectAdmin, self).delete_model(request, obj)
 
     def get_model_perms(self, request):
         """
@@ -1053,7 +1066,7 @@ class ProjectUserAdmin(admin.ModelAdmin):
     form = ProjectUserForm
 
     formfield_overrides = {
-        models.ManyToManyField: {'widget': CheckboxSelectMultiple},
+        models.ManyToManyField: {'widget': CheckboxSelectMultiple, 'queryset': Project.objects.all().order_by('project_name')},
     }
 
     # Redefine queryset to show only intervention according to the user's project

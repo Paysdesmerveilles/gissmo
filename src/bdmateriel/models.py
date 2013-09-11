@@ -23,6 +23,7 @@ from django.contrib.auth.models import User
 # Fin de l'ajout pour securiser les fichiers uploader
 from django.core.mail import send_mail
 
+from django.shortcuts import get_object_or_404
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
@@ -1328,9 +1329,31 @@ class Channel(models.Model) :
 #    chain = models.ForeignKey('ProtoChain', verbose_name=_("chaine d'acquisition"))
 
 class Chain(models.Model) :
+
+    SENSOR = 1
+    PREAMPLIFIER = 2
+    DATALOGGER = 3
+    EQUIPMENT = 4
+    OTHER_1 = 5
+    OTHER_2 = 6
+    OTHER_3 = 7
+    OTHER_4 = 7
+    OTHER_5 = 9
+    ORDER_CHOICES = (
+        (SENSOR, 'Sensor'),
+        (PREAMPLIFIER, 'PreAmplifier'),
+        (DATALOGGER, 'DataLogger'),
+        (EQUIPMENT, 'Equipment'),
+        (OTHER_1, 'Other_1'),
+        (OTHER_2, 'Other_2'),
+        (OTHER_3, 'Other_3'),
+        (OTHER_4, 'Other_4'),
+        (OTHER_5, 'Other_5'),
+    )
+
 #    name = models.CharField(max_length=50, verbose_name=_("Nom de chaine"))
     channel = models.ForeignKey('Channel', verbose_name=_("canal"))
-    order = models.IntegerField(choices=[(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),], null=False, blank=False, verbose_name=_("ordre"))
+    order = models.IntegerField(choices=ORDER_CHOICES, null=False, blank=False, verbose_name=_("ordre"))
     equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
 
     class Meta:
@@ -1402,6 +1425,15 @@ class Project(models.Model) :
     project_name = models.CharField(max_length=50)
     manager = models.ForeignKey(User)
     station = models.ManyToManyField('StationSite', null=True, blank=True)
+
+    # Validation to check that the name of the project ALL don't change
+    # It's needed in comparison to the admin.py module to filter station, equipment, intervention
+    # in the queryset
+    def clean(self):
+        if self.id:
+            project = get_object_or_404(Project, pk=self.id)
+            if project.project_name == 'ALL' and self.project_name <> 'ALL':
+                raise ValidationError("We can't change the name for the project ALL")
 
     def __unicode__(self):
         return u'%s' % (self.project_name)

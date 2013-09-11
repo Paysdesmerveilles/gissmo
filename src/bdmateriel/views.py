@@ -175,7 +175,7 @@ def available_equip_state(action):
         select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])]
         select_choice.append((EquipState.DISPONIBLE, EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1]))
         select_choice.append((EquipState.DEFAUT, EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1]))
-        select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))    
+        select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))
     elif int(action) == EquipAction.CONSTATER_DEFAUT:
         select_choice = [(EquipState.DEFAUT, EquipState.EQUIP_STATES[EquipState.DEFAUT-1][1])]
         select_choice.append((EquipState.PANNE, EquipState.EQUIP_STATES[EquipState.PANNE-1][1]))
@@ -808,17 +808,78 @@ def station_xml(request):
                 datalogger_installed = None
                 datalogger_uninstalled = None
                 datalogger_config = []
+                equipment = []
+                equipment_installed = None
+                equipment_uninstalled = None
+                equipment_config = []
+                other_1 = []
+                other_1_installed = None
+                other_1_uninstalled = None
+                other_1_config = []
+                other_2 = []
+                other_2_installed = None
+                other_2_uninstalled = None
+                other_2_config = []
+                other_3 = []
+                other_3_installed = None
+                other_3_uninstalled = None
+                other_3_config = []
+                other_4 = []
+                other_4_installed = None
+                other_4_uninstalled = None
+                other_4_config = []
+                other_5 = []
+                other_5_installed = None
+                other_5_uninstalled = None
+                other_5_config = []
                 ResChain = Chain.objects.filter(channel=channel.id)
+                # The type in define in then CHAIN.CHOICES_ORDER
                 for equipchain in ResChain:
-                    if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':  
+                    if equipchain.order == Chain.SENSOR:
                         sensor = equipchain.equip
                         """Obtain the config parameters and values for the sensor """
                         sensor_config = ChainConfig.objects.filter(chain=equipchain.id)
-                    else:
-                        if equipchain.equip.equip_type.equip_type_name == u'Numériseur':
-                            datalogger = equipchain.equip
-                            """Obtain the config parameters and values for the datalogger """
-                            datalogger_config = ChainConfig.objects.filter(chain=equipchain.id)
+                    if equipchain.order == Chain.PREAMPLIFIER:  
+                        preamplifier = equipchain.equip
+                        """Obtain the config parameters and values for the preamplifier """
+                        preamplifier_config = ChainConfig.objects.filter(chain=equipchain.id)                        
+                    if equipchain.order == Chain.DATALOGGER:  
+                        datalogger = equipchain.equip
+                        """Obtain the config parameters and values for the datalogger """
+                        datalogger_config = ChainConfig.objects.filter(chain=equipchain.id)                        
+                    if equipchain.order == Chain.EQUIPMENT:  
+                        equipment = equipchain.equip
+                        """Obtain the config parameters and values for the equipment """
+                        equipment_config = ChainConfig.objects.filter(chain=equipchain.id)                        
+                    if equipchain.order == Chain.OTHER_1:  
+                        other_1 = equipchain.equip
+                        """Obtain the config parameters and values for the equipment """
+                        other_1_config = ChainConfig.objects.filter(chain=equipchain.id) 
+                    if equipchain.order == Chain.OTHER_2:  
+                        other_2 = equipchain.equip
+                        """Obtain the config parameters and values for the equipment """
+                        other_2_config = ChainConfig.objects.filter(chain=equipchain.id) 
+                    if equipchain.order == Chain.OTHER_3:  
+                        other_3 = equipchain.equip
+                        """Obtain the config parameters and values for the equipment """
+                        other_3_config = ChainConfig.objects.filter(chain=equipchain.id) 
+                    if equipchain.order == Chain.OTHER_4:  
+                        other_4 = equipchain.equip
+                        """Obtain the config parameters and values for the equipment """
+                        other_4_config = ChainConfig.objects.filter(chain=equipchain.id) 
+                    if equipchain.order == Chain.OTHER_5:  
+                        other_5 = equipchain.equip
+                        """Obtain the config parameters and values for the equipment """
+                        other_5_config = ChainConfig.objects.filter(chain=equipchain.id) 
+                #    if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':  
+                #        sensor = equipchain.equip
+                #        """Obtain the config parameters and values for the sensor """
+                #        sensor_config = ChainConfig.objects.filter(chain=equipchain.id)
+                #    else:
+                #        if equipchain.equip.equip_type.equip_type_name == u'Numériseur':
+                #            datalogger = equipchain.equip
+                #            """Obtain the config parameters and values for the datalogger """
+                #            datalogger_config = ChainConfig.objects.filter(chain=equipchain.id)
                 """ Common queryset parameters """
                 equip_operation = IntervEquip.objects.filter(intervention__intervention_date__lte=channel.start_date, intervention__station=channel.station.id, equip_action=EquipAction.INSTALLER, equip_state=EquipState.OPERATION)
                 equip_removal = IntervEquip.objects.filter(intervention__intervention_date__gte=channel.start_date, intervention__station=channel.station.id, equip_action=EquipAction.DESINSTALLER)
@@ -855,7 +916,72 @@ def station_xml(request):
                     if datalogger_removal:
                          """ Here we have 0 or 1 occurence """
                          datalogger_uninstalled = datalogger_removal[0].intervention.intervention_date
-
+                if equipment != []:
+                    """ Equipment in operation during the channel life """
+                    equipment_operation = equip_operation.filter(equip__id=equipment.id).order_by('-intervention__intervention_date')[:1]
+                    if equipment_operation:
+                        """ Here we have 0 or 1 occurence """
+                        equipment_installed = equipment_operation[0].intervention.intervention_date
+                    """ Equipment removal after the start of the channel life """
+                    equipment_removal = equip_removal.filter(equip__id=equipment.id).order_by('intervention__intervention_date')[:1]
+                    if equipment_removal:
+                         """ Here we have 0 or 1 occurence """
+                         equipment_uninstalled = equipment_removal[0].intervention.intervention_date                         
+                if other_1 != []:
+                    """ Equipment in operation during the channel life """
+                    other_1_operation = equip_operation.filter(equip__id=other_1.id).order_by('-intervention__intervention_date')[:1]
+                    if other_1_operation:
+                        """ Here we have 0 or 1 occurence """
+                        other_1_installed = other_1_operation[0].intervention.intervention_date
+                    """ Equipment removal after the start of the channel life """
+                    other_1_removal = equip_removal.filter(equip__id=other_1.id).order_by('intervention__intervention_date')[:1]
+                    if other_1_removal:
+                         """ Here we have 0 or 1 occurence """
+                         other_1_uninstalled = other_1_removal[0].intervention.intervention_date
+                if other_2 != []:
+                    """ Equipment in operation during the channel life """
+                    other_2_operation = equip_operation.filter(equip__id=other_2.id).order_by('-intervention__intervention_date')[:1]
+                    if other_2_operation:
+                        """ Here we have 0 or 1 occurence """
+                        other_2_installed = other_2_operation[0].intervention.intervention_date
+                    """ Equipment removal after the start of the channel life """
+                    other_2_removal = equip_removal.filter(equip__id=other_2.id).order_by('intervention__intervention_date')[:1]
+                    if other_2_removal:
+                         """ Here we have 0 or 1 occurence """
+                         other_2_uninstalled = other_2_removal[0].intervention.intervention_date
+                if other_3 != []:
+                    """ Equipment in operation during the channel life """
+                    other_3_operation = equip_operation.filter(equip__id=other_3.id).order_by('-intervention__intervention_date')[:1]
+                    if other_3_operation:
+                        """ Here we have 0 or 1 occurence """
+                        other_3_installed = other_3_operation[0].intervention.intervention_date
+                    """ Equipment removal after the start of the channel life """
+                    other_3_removal = equip_removal.filter(equip__id=other_3.id).order_by('intervention__intervention_date')[:1]
+                    if other_3_removal:
+                         """ Here we have 0 or 1 occurence """
+                         other_3_uninstalled = other_3_removal[0].intervention.intervention_date
+                if other_4 != []:
+                    """ Equipment in operation during the channel life """
+                    other_4_operation = equip_operation.filter(equip__id=other_4.id).order_by('-intervention__intervention_date')[:1]
+                    if other_4_operation:
+                        """ Here we have 0 or 1 occurence """
+                        other_4_installed = other_4_operation[0].intervention.intervention_date
+                    """ Equipment removal after the start of the channel life """
+                    other_4_removal = equip_removal.filter(equip__id=other_4.id).order_by('intervention__intervention_date')[:1]
+                    if other_4_removal:
+                         """ Here we have 0 or 1 occurence """
+                         other_4_uninstalled = other_4_removal[0].intervention.intervention_date
+                if other_5 != []:
+                    """ Equipment in operation during the channel life """
+                    other_5_operation = equip_operation.filter(equip__id=other_5.id).order_by('-intervention__intervention_date')[:1]
+                    if other_5_operation:
+                        """ Here we have 0 or 1 occurence """
+                        other_5_installed = other_5_operation[0].intervention.intervention_date
+                    """ Equipment removal after the start of the channel life """
+                    other_5_removal = equip_removal.filter(equip__id=other_5.id).order_by('intervention__intervention_date')[:1]
+                    if other_5_removal:
+                         """ Here we have 0 or 1 occurence """
+                         other_5_uninstalled = other_5_removal[0].intervention.intervention_date
                 """ Obtain the comment for the channel """
                 ResCommentChannel = CommentChannel.objects.filter(channel_id=channel.id)
 
@@ -868,7 +994,14 @@ def station_xml(request):
 
                 channel_list.append([channel, sensor, sensor_installed, sensor_uninstalled, sensor_config, \
                                      preamplifier, preamplifier_installed, preamplifier_uninstalled, preamplifier_config, \
-                                     datalogger, datalogger_installed, datalogger_uninstalled, datalogger_config, comment_list])
+                                     datalogger, datalogger_installed, datalogger_uninstalled, datalogger_config, \
+                                     equipment, equipment_installed, equipment_uninstalled, equipment_config, \
+                                     other_1, other_1_installed, other_1_uninstalled, other_1_config, \
+                                     other_2, other_2_installed, other_2_uninstalled, other_2_config, \
+                                     other_3, other_3_installed, other_3_uninstalled, other_3_config, \
+                                     other_4, other_4_installed, other_4_uninstalled, other_4_config, \
+                                     other_5, other_5_installed, other_5_uninstalled, other_5_config, \
+                                     comment_list])
                 """ Obtain the last built for the sensor according with the channel date """
                 """ WARNING only one built among possibly many """
                 if sensor != []:                   

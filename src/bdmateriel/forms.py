@@ -57,18 +57,6 @@ class AdminFileWidget(forms.FileInput):
         output.append(super(AdminFileWidget, self).render(name, value, attrs))
         return mark_safe(u''.join(output))
 
-class CustomSelectAddWidget(forms.Select):
-
-    def render(self, name, value, attrs=None, choices=()):
-
-        url = reverse('admin:bdmateriel_equipment_add')
-        jquery = u'''
-        <input class="button def" type="button" value="Add" id="Add Equipment" onclick="var win=window.open('%s' + '?_popup=1', '%s', 'height=600,width=1000,resizable=yes,scrollbars=yes'); win.focus();"/>'''
-
-        output = super(CustomSelectAddWidget, self).render(name, value, attrs, choices)
-
-        return output + mark_safe(jquery % (url, url))
-
 class ActorForm(forms.ModelForm):
 
     class Meta:
@@ -727,16 +715,17 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         if self.__initial and self.__initial != ['']:
             station = get_object_or_404(StationSite, id=self.__initial[0])
             form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.all())
-#            form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.all(), widget=CustomSelectAddWidget)
 
         url = reverse('xhr_equip_oper')
 
         """
         Initialize form.fields 
         """
-        ORDER_CHOICES = [('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),]
-#        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir un ordre en premier --", widget=CustomSelectAddWidget)
-        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir un ordre en premier --")
+        ORDER_CHOICES = [(c[0], c[1]) for c in Chain.ORDER_CHOICES]
+        ORDER_CHOICES.insert(0, ('', '-- choisir un type en premier --'))
+
+        #ORDER_CHOICES = [('', '-- choisir un ordre en premier --'),(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),(8,8),(9,9),]
+        form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir un type en premier --")
         form.fields['order'].widget = forms.Select(choices=ORDER_CHOICES, attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
 
         if index != None :
