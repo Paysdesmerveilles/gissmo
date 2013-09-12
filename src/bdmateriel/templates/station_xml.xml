@@ -166,12 +166,12 @@
                  <Type>{{ datatype }}</Type>
              {% endfor %}
              {% if channel.sample_rate != None %}
-               <SampleRateGroup>   
+               {# <SampleRateGroup> #}
                <SampleRate
                    {% if channel.sample_rate_unit %} 
                        unit="{{ channel.sample_rate_unit }}"
                    {% endif %}>{{ channel.sample_rate }}</SampleRate>
-               </SampleRateGroup>   
+               {# </SampleRateGroup> #} 
              {% endif %}
              {% if channel.storage_format != None and channel.storage_format != '' %}
                  <StorageFormat>{{channel.storage_format}}</StorageFormat>   
@@ -194,7 +194,7 @@
                  {% if sensor.description != None %}
                   <Description>{{ sensor.description }}</Description>
                  {% endif %}
-                 {% if sensor.equip_model.manufacturer != None %}  
+                 {% if sensor.equip_model.manufacturer != None and sensor.equip_model.manufacturer != '' %}  
                   <Manufacturer>{{ sensor.equip_model.manufacturer }}</Manufacturer>
                  {% endif %}
                  {% if sensor.vendor != None and sensor.vendor != '' %} 

@@ -1125,9 +1125,15 @@ class ParameterValueAdmin(admin.ModelAdmin):
     list_display = ['parameter', 'value', 'default_value' ]
     list_editable = ['default_value' ]
 
-'''
+class ChannelCodeAdmin(admin.ModelAdmin):
+    model = ChannelCode
+    search_fields = ['channel_code', ]
+
+    list_display = ['channel_code', 'presentation_rank', ]
+
+"""
 Disabling the action "delete_selected" for all the site
-'''
+"""
 admin.site.disable_action('delete_selected')
 
 
@@ -1175,4 +1181,5 @@ admin.site.register(ProjectUser, ProjectUserAdmin)
 #admin.site.register(LoggedActions)
 admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
+admin.site.register(ChannelCode, ChannelCodeAdmin)
 #admin.site.register(ChainConfigTest)

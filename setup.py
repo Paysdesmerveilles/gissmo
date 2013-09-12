@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name = "bdmateriel",
-    version = "1.27r",
+    version = "1.28",
     author = "Martin Dutil",
     author_email = "mdutil@unistra.fr",
     description = "BD suivi materiel",

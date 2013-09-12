@@ -19,7 +19,7 @@ from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, Stati
 from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate_id, available_equipment, available_equip_state, available_station, available_built, available_equipment_scioper
 
 # TODO Eliminer ou bonifier EquipAction, EquipState, StationAction, StationState
-from models import EquipAction, EquipState, StationAction, StationState
+from models import EquipAction, EquipState, StationAction, StationState, ChannelCode
 
 import math
 
@@ -799,6 +799,7 @@ class ChannelForm(forms.ModelForm):
         self.fields['location_code'].initial = '00'
         self.fields['location_code'].required = False
 
+        """
         CHANNEL_CHOICES = [('', '---'),('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'), \
                             ('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'), \
                             ('DPE','DPE'),('DPN','DPN'),('DPZ','DPZ'), \
@@ -814,7 +815,9 @@ class ChannelForm(forms.ModelForm):
                             ('LH1','LH1'),('LH2','LH2'), \
                             ('VH1','VH1'),('VH2','VH2'), \
                             ('HN2','HN2'),('HN3','HN3'),]
-        self.fields['channel_code'].widget = forms.Select(choices=CHANNEL_CHOICES, attrs={'onchange':'get_dip_azimut_value(this);'})
+        """                            
+        #self.fields['channel_code'].widget = forms.Select(choices=CHANNEL_CHOICES, attrs={'onchange':'get_dip_azimut_value(this);'})
+        self.fields['channel_code'] = forms.ModelChoiceField(queryset = ChannelCode.objects.all().order_by('presentation_rank'), widget=forms.Select(attrs={'onchange':'get_dip_azimut_value(this);'}), empty_label='--')
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
         self.fields["data_type"].widget = CheckboxSelectMultiple()  
         self.fields["data_type"].queryset = DataType.objects.all()       
@@ -827,21 +830,27 @@ class ChannelForm(forms.ModelForm):
         sample_rate = cleaned_data.get("sample_rate")
         accept = cleaned_data.get("accept_anyway")
 
-
         # Check that the sample rate fit in the range for the channel code
         # We can bypass this validation with the accept field
-        if channel_code and sample_rate:
-            if not accept and ((channel_code[0] == 'H' and sample_rate < 80) or \
-               (channel_code[0] == 'B' and (sample_rate < 10 or sample_rate >= 80)) or \
-               (channel_code[0] == 'L' and sample_rate <> 1) or \
-               (channel_code[0] == 'V' and sample_rate <> 0.1) or \
-               (channel_code[0] == 'U' and sample_rate <> 0.01)):
-                msg = u"Sample rate unexpected."
-                self._errors["sample_rate"] = self.error_class([msg])
-                msg = u"Bypass error."
-                self._errors["accept_anyway"] = self.error_class([msg])
-                raise forms.ValidationError('Sample rate (%s) not in the range for this channel code (%s)' % (sample_rate, channel_code))
-
+        if channel_code:
+            if channel_code.channel_code and sample_rate:
+                if not accept and ((channel_code.channel_code[0] == 'H' and sample_rate < 80) or \
+                   (channel_code.channel_code[0] == 'B' and (sample_rate < 10 or sample_rate >= 80)) or \
+                   (channel_code.channel_code[0] == 'L' and sample_rate <> 1) or \
+                   (channel_code.channel_code[0] == 'V' and sample_rate <> 0.1) or \
+                    (channel_code.channel_code[0] == 'U' and sample_rate <> 0.01)):
+                    msg = u"Sample rate unexpected."
+                    self._errors["sample_rate"] = self.error_class([msg])
+                    msg = u"Bypass error."
+                    self._errors["accept_anyway"] = self.error_class([msg])
+                    raise forms.ValidationError('Sample rate (%s) not in the range for this channel code (%s)' % (sample_rate, channel_code.channel_code))
+                """
+                rule = get_object_or_404(ChannelCode, pk=channel_code.channel_code)
+                rule_string = 'if not(%s): msg = u"Sample rate unexpected." self._errors["sample_rate"] = self.error_class([msg]) msg = u"Bypass error." self._errors["accept_anyway"] = self.error_class([msg]) raise forms.ValidationError("Sample rate (%s)")' % (rule.validation_rule, sample_rate)
+                print rule_string
+                if not accept:
+                    exec(rule_string)
+                """
         # Always return the full collection of cleaned data.
         return cleaned_data
 

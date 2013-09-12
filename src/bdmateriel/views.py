@@ -378,7 +378,7 @@ def available_equipment_cursor(action, station, date, intervention_id):
     public.bdmateriel_intervention
     WHERE 
     bdmateriel_intervention.id != %s and
-    bdmateriel_intervention.intervention_date <= %s and
+    bdmateriel_intervention.intervention_date < %s and
     bdmateriel_intervequip.intervention_id = bdmateriel_intervention.id
     ) AS interv
     ORDER  BY interv.equip_id, interv.intervention_date DESC) AS it''', [intervention_id, date])

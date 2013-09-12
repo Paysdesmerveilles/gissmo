@@ -1229,7 +1229,7 @@ class CalibrationUnit(models.Model) :
         return u'%s' % (self.name)
 
 class DataType(models.Model) :
-    type_description = models.CharField(max_length=50, verbose_name=_("Type de donnees"))
+    type_description = models.CharField(max_length=50, verbose_name=_("type de donnees"))
 
     class Meta:
         verbose_name_plural = _("V1. Types of collected data")
@@ -1237,7 +1237,23 @@ class DataType(models.Model) :
     def __unicode__(self):
         return u'%s' % (self.type_description)
 
+"""
+New simple structure to permit to add channel_code by the super admin
+"""
+class ChannelCode(models.Model) :
+    channel_code = models.CharField(max_length=3, primary_key=True, verbose_name=_("code du canal"))
+    presentation_rank = models.IntegerField(null=True, blank=True)    
+    validation_rule = models.TextField(null=True, blank=True, verbose_name=_("regle validation"))
+
+    class Meta:
+        verbose_name = _("Code du canal")
+        verbose_name_plural = _("Z3. Codes des canaux")
+
+    def __unicode__(self):
+        return u'%s' % (self.channel_code)
+
 class Channel(models.Model) :
+
 
     OPEN = 1
     CLOSE = 2
@@ -1247,7 +1263,7 @@ class Channel(models.Model) :
         (CLOSE, 'Ferme'),
         (PARTIAL, 'Partiel'),
     )
-
+    """
     CHANNEL_CHOICES = (
         ('BHE','BHE'),('BHN','BHN'),('BHZ','BHZ'),
         ('CHE','CHE'),('CHN','CHN'),('CHZ','CHZ'),
@@ -1265,10 +1281,11 @@ class Channel(models.Model) :
         ('VH1','VH1'),('VH2','VH2'),
         ('HN2','HN2'),('HN3','HN3'),
     )
-
+    """
     station = models.ForeignKey("StationSite", verbose_name=_("station"))
     network = models.ForeignKey('Network', verbose_name=_("code reseau"))
-    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=CHANNEL_CHOICES)
+#    channel_code = models.CharField(max_length=3, verbose_name=_("code du canal"), choices=CHANNEL_CHOICES)
+    channel_code = models.ForeignKey('ChannelCode', verbose_name=_("code du canal"))
     location_code = models.CharField(null=True, blank=True, max_length=2, verbose_name=_("code localisation"))
     latitude = models.DecimalField(verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
     longitude = models.DecimalField(verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
@@ -1353,7 +1370,7 @@ class Chain(models.Model) :
 
 #    name = models.CharField(max_length=50, verbose_name=_("Nom de chaine"))
     channel = models.ForeignKey('Channel', verbose_name=_("canal"))
-    order = models.IntegerField(choices=ORDER_CHOICES, null=False, blank=False, verbose_name=_("ordre"))
+    order = models.IntegerField(choices=ORDER_CHOICES, null=False, blank=False, verbose_name=_("Type"))
     equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
 
     class Meta:
@@ -1448,7 +1465,6 @@ class ProjectUser(models.Model) :
 
     def __unicode__(self):
         return u'%s' % (self.user)
-
 
 class LoggedActions(models.Model):
     event_id = models.BigIntegerField(primary_key=True)
