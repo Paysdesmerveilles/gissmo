@@ -833,12 +833,18 @@ class ChannelForm(forms.ModelForm):
         # Check that the sample rate fit in the range for the channel code
         # We can bypass this validation with the accept field
         if channel_code:
-            if channel_code.channel_code and sample_rate:
-                if not accept and ((channel_code.channel_code[0] == 'H' and sample_rate < 80) or \
-                   (channel_code.channel_code[0] == 'B' and (sample_rate < 10 or sample_rate >= 80)) or \
-                   (channel_code.channel_code[0] == 'L' and sample_rate <> 1) or \
-                   (channel_code.channel_code[0] == 'V' and sample_rate <> 0.1) or \
-                    (channel_code.channel_code[0] == 'U' and sample_rate <> 0.01)):
+            if channel_code.channel_code and not(sample_rate == None):
+                if not accept and \
+                    ((channel_code.channel_code[0] == 'D' and not(sample_rate >= 250 and sample_rate < 1000)) or \
+                     (channel_code.channel_code[0] == 'C' and not(sample_rate >= 250 and sample_rate < 1000)) or \
+                     (channel_code.channel_code[0] == 'E' and not(sample_rate >= 80 and sample_rate < 250)) or \
+                     (channel_code.channel_code[0] == 'S' and not(sample_rate >= 10 and sample_rate < 80)) or \
+                     (channel_code.channel_code[0] == 'H' and not(sample_rate >= 80 and sample_rate < 250)) or \
+                     (channel_code.channel_code[0] == 'B' and not(sample_rate >= 10 and sample_rate < 80)) or \
+                     (channel_code.channel_code[0] == 'M' and not(sample_rate > 1 and sample_rate < 10)) or \
+                     (channel_code.channel_code[0] == 'L' and not(sample_rate == 1)) or \
+                     (channel_code.channel_code[0] == 'V' and not(sample_rate == 0.1)) or \
+                     (channel_code.channel_code[0] == 'U' and not(sample_rate == 0.01))):
                     msg = u"Sample rate unexpected."
                     self._errors["sample_rate"] = self.error_class([msg])
                     msg = u"Bypass error."
