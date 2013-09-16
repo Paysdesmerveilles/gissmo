@@ -23,6 +23,8 @@ from django.utils.functional import curry
 # Ajout pour custom filter
 from django.contrib.admin import SimpleListFilter
 # Fin de l'ajout pour custom filter
+
+from django.contrib.contenttypes.models import ContentType
 """
 Usage:
 
@@ -619,14 +621,18 @@ class InterventionAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
+            return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
             return super(InterventionAdmin, self).response_change(request, obj)
 
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
+            return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
             return super(InterventionAdmin, self).response_add(request, obj, post_url_continue)
 
@@ -648,14 +654,18 @@ class ChainInline(admin.TabularInline):
 
     def configuration(self, obj):
         if obj.id:
-            # Hack to obtain the channel ID to be able to pass it to the config link as parameter
+        	# Hack to obtain the channel ID to be able to pass it to the config link as parameter
             channel = get_object_or_404(Chain, pk=obj.id).channel.id
-            url = reverse('admin:bdmateriel_chain_change', args=[obj.id]) + '?channel=' +str(channel)
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)
+            url = reverse('admin:%s_chain_change' % (content_type.app_label), args=[obj.id]) + '?channel=' +str(channel)
             return mark_safe("<a href='%s'>config</a>" % url)
 
     def delete(self, obj):
         if obj.id:
-            url = reverse('admin:bdmateriel_chain_change', args=[obj.id]) + 'delete/'
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)
+            url = reverse('admin:%s_chain_change' % (content_type.app_label), args=[obj.id]) + 'delete/'
             return mark_safe("<a href='%s'>delete</a>" % url)
 
     def get_formset(self, request, obj=None, **kwargs):
@@ -829,7 +839,9 @@ class ChannelAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
             if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement modifié' )
@@ -840,7 +852,9 @@ class ChannelAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
@@ -885,7 +899,9 @@ class ChainAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_channel_change", args=(obj.channel.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)             
+            return HttpResponseRedirect(reverse("admin:%s_channel_change" % (content_type.app_label), args=(obj.channel.id,)))
         else:
             if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement modifié' )
@@ -896,7 +912,9 @@ class ChainAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_channel_change", args=(obj.channel.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)             
+            return HttpResponseRedirect(reverse("admin:%s_channel_change" % (content_type.app_label), args=(obj.channel.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
@@ -921,7 +939,9 @@ class CommentNetworkAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_network_change", args=(obj.network.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)             
+            return HttpResponseRedirect(reverse("admin:%s_network_change" % (content_type.app_label), args=(obj.network.id,)))
         else:
             if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement modifié' )
@@ -932,7 +952,9 @@ class CommentNetworkAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_network_change", args=(obj.network.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            return HttpResponseRedirect(reverse("admin:%s_network_change" % (content_type.app_label), args=(obj.network.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
@@ -966,7 +988,9 @@ class CommentChannelAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_channel_change", args=(obj.channel.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            return HttpResponseRedirect(reverse("admin:%s_channel_change" % (content_type.app_label), args=(obj.channel.id,)))
         else:
             if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement modifié' )
@@ -977,7 +1001,9 @@ class CommentChannelAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_channel_change", args=(obj.channel.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            return HttpResponseRedirect(reverse("admin:%s_channel_change" % (content_type.app_label), args=(obj.channel.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
@@ -1002,7 +1028,9 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
             if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement modifié' )
@@ -1013,7 +1041,9 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_stationsite_change", args=(obj.station.id,)))
+            # Trick to get the app label 
+            content_type = ContentType.objects.get_for_model(obj.__class__)         	            
+            return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
@@ -1076,34 +1106,6 @@ class ProjectUserAdmin(admin.ModelAdmin):
             return qs
         else:
             return qs.filter(user_id=request.user.id)
-
-"""
-class ParamValueEquipModelAdmin(admin.ModelAdmin):
-    model = ParamValueEquipModel
-    save_as = True
-    list_display = ['equip_model', 'parameter_name', 'value', 'default_value',]
-    list_filter = ['equip_model', ]
-    search_fields = ['equip_model', ]
-
-    def response_add(self, request, obj, post_url_continue="../%s/"):
-        if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
-            messages.success( request, 'Enregistrement ajouté' )
-            return HttpResponseRedirect(reverse("admin:bdmateriel_paramvalueequipmodel_change", args=(obj.station.id,)))
-        else:
-##        This makes the response go to the newly created model's change page
-##        without using reverse
-            if '_saveasnew' in request.POST:              
-                messages.success( request, 'Enregistrement ajouté' )
-                return HttpResponseRedirect("../%s" % obj.id)
-            else:
-                return super(ParamValueEquipModelAdmin, self).response_add(request, obj, post_url_continue)
-"""
-"""
-class ParamEquipModelAdmin(admin.ModelAdmin):
-    model = ParamEquipModel
-
-    inlines = [ParamValueInline,]
-"""    
 
 class ParameterValueInline(admin.TabularInline):
     model = ParameterValue

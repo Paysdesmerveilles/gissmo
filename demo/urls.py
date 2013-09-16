@@ -14,10 +14,8 @@ urlpatterns = patterns('',
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    (r'^bdmateriel/', include('bdmateriel.urls')),
+    (r'^gissmo/', include('gissmo.urls')),
     (r'^admin/', include(admin.site.urls)),
-#    (r'^equipments/(.+)/(?P<app_label>.+)/(?P<model_name>.+)/(?P<field_name>.+)/(?P<identifier>\d+)/(?P<filename>.*)$', 'bdmateriel.views.get_file'),
-#    (r'^equipments/(.+)/(.+)/(?P<app_label>.+)/(?P<model_name>.+)/(?P<field_name>.+)/(?P<identifier>\d+)/(?P<filename>.*)$', 'bdmateriel.views.get_file'),
     (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
     (r'^chaining/', include('smart_selects.urls')),
 )

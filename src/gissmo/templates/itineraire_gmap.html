@@ -1,14 +1,15 @@
 {% extends "admin/base_site.html" %}
-{% load i18n %}
+{% load i18n admin_static admin_list %}
 {% load url from future %}
+{% load admin_urls %}
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
         <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
-        <a href="{% url 'admin:app_list' 'bdmateriel' %}">{% trans 'Bdmateriel' %}</a> &rsaquo;
-        <a href="{% url 'admin:bdmateriel_stationsite_changelist' %}">{% trans 'A1. Stations' %}</a> &rsaquo;
+        <a href="{% url 'admin:app_list' app_label='gissmo' %}">{% trans 'Gissmo' %}</a> &rsaquo;
+        <a href="{% url 'admin:gissmo_stationsite_changelist' %}">{% trans 'A1. Stations' %}</a> &rsaquo;
         {% if ResStationUnique %}
-          <a href="{% url 'admin:bdmateriel_stationsite_change' ResStationUnique.id %}">{{ResStationUnique.station_code}}</a> &rsaquo;
+          <a href="{% url 'admin:gissmo_stationsite_change' ResStationUnique.id %}">{{ResStationUnique.station_code}}</a> &rsaquo;
         {% endif %}
         Carte des stations
     </div>

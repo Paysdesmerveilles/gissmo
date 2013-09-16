@@ -90,7 +90,7 @@
         {% endif %}
         {% endfor %}
         <td colspan=8 class="intervention">
-          <a href="{% url 'admin:bdmateriel_intervention_change' interv.id %}">Edit</a>
+          <a href="{% url url_redirection interv.id %}">Edit</a>
         </td>
         </tr>
      {% endfor %}

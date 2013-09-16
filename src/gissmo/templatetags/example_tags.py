@@ -1,6 +1,8 @@
 from django import template
-from bdmateriel.models import *
+from ..models import *
 import operator
+
+from django.contrib.contenttypes.models import ContentType
 
 register = template.Library()
 
@@ -9,6 +11,9 @@ def display_channel_comments(channel_id):
     liste = []
     comments = []
     comments = CommentChannel.objects.filter(channel__id=channel_id).order_by('-begin_effective')
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(CommentChannel)
+    url_redirection = "admin:%s_commentchannel_change" % (content_type.app_label)
     "Find the authors of the comment"
     if comments:
         for comment in comments:
@@ -18,13 +23,16 @@ def display_channel_comments(channel_id):
                 for author in authors:
                      liste_authors.append(author.author.actor_name)
             liste.append([comment, liste_authors])
-    return { 'comments': liste}
+    return { 'comments': liste, 'url_redirection' : url_redirection }
 
 @register.inclusion_tag('stationsite_comments.html')
 def display_stationsite_comments(station_id):
     liste = []
     comments = []
     comments = CommentStationSite.objects.filter(station__id=station_id).order_by('-begin_effective')
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(CommentStationSite)
+    url_redirection = "admin:%s_commentstationsite_change" % (content_type.app_label)    
     "Find the authors of the comment"
     if comments:
         for comment in comments:
@@ -34,13 +42,16 @@ def display_stationsite_comments(station_id):
                 for author in authors:
                      liste_authors.append(author.author.actor_name)
             liste.append([comment, liste_authors])
-    return { 'comments': liste}
+    return { 'comments': liste, 'url_redirection' : url_redirection}
 
 @register.inclusion_tag('network_comments.html')
 def display_network_comments(network_id):
     liste = []
     comments = []
     comments = CommentNetwork.objects.filter(network__id=network_id).order_by('-begin_effective')
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(CommentNetwork)
+    url_redirection = "admin:%s_commentnetwork_change" % (content_type.app_label) 
     "Find the authors of the comment"
     if comments:
         for comment in comments:
@@ -50,7 +61,7 @@ def display_network_comments(network_id):
                 for author in authors:
                      liste_authors.append(author.author.actor_name)
             liste.append([comment, liste_authors])
-    return { 'comments': liste}
+    return { 'comments': liste, 'url_redirection' : url_redirection}
 
 @register.inclusion_tag('station_states.html')
 def display_station_states(station_id):
@@ -86,6 +97,9 @@ def display_station_interventions(station_id):
     liste = []
     intervs = []
     intervs = Intervention.objects.filter(station_id=station_id).order_by('-intervention_date')
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(Intervention)
+    url_redirection = "admin:%s_intervention_change" % (content_type.app_label) 
 
 # TODO add global function ti obtain thaht information
     last_station_state = IntervStation.objects.filter(intervention__station__id=station_id,station_state__isnull=False).order_by('-intervention__intervention_date')
@@ -119,7 +133,7 @@ def display_station_interventions(station_id):
                 nbrligne = intervstations.count() + intervequips.count()
 
             liste.append([interv, liste_actors, liste_stations, liste_equips, nbrligne, last_state])
-    return { 'intervs': liste}
+    return { 'intervs': liste, 'url_redirection' : url_redirection}
 
 @register.inclusion_tag('equip_states.html')
 def display_equip_states(equip_id):
@@ -141,7 +155,11 @@ def display_equip_actions(equip_id):
 def display_equip_interventions(equip_id):
     intervs = []
     intervs = IntervEquip.objects.filter(equip__id=equip_id).order_by('-intervention__intervention_date')
-    return { 'intervs': intervs}
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(IntervEquip)
+    url_redirection = "admin:%s_intervention_change" % (content_type.app_label) 
+
+    return { 'intervs': intervs, 'url_redirection' : url_redirection}
 
 @register.inclusion_tag('equip_locations.html')
 def display_equip_locations(equip_id):
@@ -164,6 +182,10 @@ def display_equip_last_location(station_id):
     """       
     liste = []
     equipments = Equipment.objects.all()
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(Equipment)
+    url_redirection = "admin:%s_equipment_change" % (content_type.app_label)
+
     for equip in equipments:
         last_equip_location = IntervEquip.objects.filter(equip__id=equip.id, station__isnull=False).order_by('-intervention__intervention_date')[:1]
         if last_equip_location:
@@ -172,7 +194,7 @@ def display_equip_last_location(station_id):
 #    Changing the order by fr presenting the equipment by supertype, type, model
 #    locations = IntervEquip.objects.filter(station=station_id,id__in=liste).order_by('-intervention__intervention_date')
     locations = IntervEquip.objects.filter(station=station_id,id__in=liste).order_by('equip__equip_supertype', 'equip__equip_type', 'equip__equip_model')
-    return { 'locations': locations }
+    return { 'locations': locations , 'url_redirection' : url_redirection}
 
 @register.inclusion_tag('hist_equip_station.html')
 def display_hist_equip_station(station_id):
@@ -203,6 +225,9 @@ def display_hist_equip_station(station_id):
 
     """ Tous les equipements ayant ete presents a un moment a la station """
     equipments = Equipment.objects.filter(id__in=liste)
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(Equipment)
+    url_redirection = "admin:%s_equipment_change" % (content_type.app_label)
 
     """ Tous les emplacmements des equipements ayant ete presents a un moment a la station """
     liste = []
@@ -254,7 +279,7 @@ def display_hist_equip_station(station_id):
 #                        liste.append(interv_equip.id) 
     """ Trie descendant sur date de fin """
     liste_sorted = sorted(liste, key=operator.itemgetter(2), reverse=True)
-    return { 'locations': liste_sorted }
+    return { 'locations': liste_sorted, 'url_redirection' : url_redirection }
 
 
 
@@ -272,19 +297,29 @@ def equip_last_station(equip_id):
         liste.append(station.id)
     return { 'locations': liste }
 
+#
+# Channel link chech it s use 
+# 
+#
 @register.inclusion_tag('channel_link.html')
 def channel_link(intervention_id):
     """
     """
     liste = []
     intervention = Intervention.objects.get(id=intervention_id)
-    return { 'station': intervention.station.id }
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(Intervention)
+    url_redirection = "admin:%s_protochannel_add" % (content_type.app_label)
+    return { 'station': intervention.station.id, 'url_redirection' : url_redirection}
 
 @register.inclusion_tag('station_channels.html')
 def display_station_channels(station_id):
     liste = []
     channels = []
     channels = Channel.objects.filter(station__id=station_id).order_by('-start_date', 'location_code', '-channel_code')
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(Channel)
+    url_redirection = "admin:%s_channel_change" % (content_type.app_label)
     "Find the equipments of the acquisition chain"
     if channels:
         for channel in channels:
@@ -294,5 +329,5 @@ def display_station_channels(station_id):
                 for chain in chains:
                      liste_equipments.append(chain.equip)
             liste.append([channel, liste_equipments])
-    return { 'channels': liste }
+    return { 'channels': liste, 'url_redirection' : url_redirection}
 

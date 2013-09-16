@@ -24,6 +24,7 @@ from django.db.models import get_model
 from django.utils import simplejson
 from django.utils.encoding import smart_str
 from django.utils.encoding import force_unicode
+from django.contrib.contenttypes.models import ContentType
 
 def site_maps(request):
     query = request.GET.get('Station','')
@@ -33,7 +34,11 @@ def site_maps(request):
     Liste = []
 
     Stations = StationSite.objects.filter(site_type=1)
- 
+
+    #Obtain the app_label
+    content_type = ContentType.objects.get_for_model(StationSite)
+    application_label = content_type.app_label
+
     for station in Stations:
         last_station_state = IntervStation.objects.filter(intervention__station=station, station_state__isnull=False).order_by('-intervention__intervention_date')[:1]
         if last_station_state:
@@ -51,7 +56,7 @@ def site_maps(request):
                 StationUnique = resstationunique.intervention.station
 
     return render_to_response("site_gmap.html", {
-        "ResHistStations": ResHistStations, "query": query, "StationUnique": StationUnique, "ResStatTheo": ResStatTheo, "ResStatTest": ResStatTest},
+        "ResHistStations": ResHistStations, "query": query, "StationUnique": StationUnique, "ResStatTheo": ResStatTheo, "ResStatTest": ResStatTest, "application_label": application_label,},
          RequestContext(request, {}),)
 site_maps = staff_member_required(site_maps)
 
@@ -369,17 +374,17 @@ def available_equipment_cursor(action, station, date, intervention_id):
     interv.equip_id, interv.intervention_date, interv.station_id, interv.equip_state
     FROM (
     SELECT 
-    bdmateriel_intervequip.equip_id,
-    bdmateriel_intervention.intervention_date, 
-    bdmateriel_intervequip.station_id,
-    bdmateriel_intervequip.equip_state
+    gissmo_intervequip.equip_id,
+    gissmo_intervention.intervention_date, 
+    gissmo_intervequip.station_id,
+    gissmo_intervequip.equip_state
     FROM 
-    public.bdmateriel_intervequip, 
-    public.bdmateriel_intervention
+    public.gissmo_intervequip, 
+    public.gissmo_intervention
     WHERE 
-    bdmateriel_intervention.id != %s and
-    bdmateriel_intervention.intervention_date < %s and
-    bdmateriel_intervequip.intervention_id = bdmateriel_intervention.id
+    gissmo_intervention.id != %s and
+    gissmo_intervention.intervention_date < %s and
+    gissmo_intervequip.intervention_id = gissmo_intervention.id
     ) AS interv
     ORDER  BY interv.equip_id, interv.intervention_date DESC) AS it''', [intervention_id, date])
 
@@ -674,59 +679,59 @@ def dataless(request):
     response['Content-Disposition'] = 'attachment; filename="dataless.csv"'
 
     cursor.execute('''SELECT
-  CASE WHEN substr(bdmateriel_channel.channel_code,3,1)='2' THEN 'N' 
-  WHEN substr(bdmateriel_channel.channel_code,3,1)='3' THEN 'E' 
-  ELSE substr(bdmateriel_channel.channel_code,3,1) END AS "Composante", 
-  bdmateriel_channel.channel_code AS "Code du canal",
-  bdmateriel_stationsite.station_code  AS "Code du site",
-  bdmateriel_channel.latitude AS "Latitude",
-  bdmateriel_channel.longitude AS "Longitude",
-  bdmateriel_channel.elevation AS "Elevation",
-  bdmateriel_channel.depth AS "Profondeur",
-  bdmateriel_channel.start_date,
-  bdmateriel_channel.end_date,
-  bdmateriel_channel.dip AS "Dip",
-  bdmateriel_channel.azimuth AS "Azimuth",
-  bdmateriel_network.network_code AS "Reseau",
-  bdmateriel_actor.actor_name AS "Observatoire",
+  CASE WHEN substr(gissmo_channel.channel_code,3,1)='2' THEN 'N' 
+  WHEN substr(gissmo_channel.channel_code,3,1)='3' THEN 'E' 
+  ELSE substr(gissmo_channel.channel_code,3,1) END AS "Composante", 
+  gissmo_channel.channel_code AS "Code du canal",
+  gissmo_stationsite.station_code  AS "Code du site",
+  gissmo_channel.latitude AS "Latitude",
+  gissmo_channel.longitude AS "Longitude",
+  gissmo_channel.elevation AS "Elevation",
+  gissmo_channel.depth AS "Profondeur",
+  gissmo_channel.start_date,
+  gissmo_channel.end_date,
+  gissmo_channel.dip AS "Dip",
+  gissmo_channel.azimuth AS "Azimuth",
+  gissmo_network.network_code AS "Reseau",
+  gissmo_actor.actor_name AS "Observatoire",
   (SELECT 
-    bdmateriel_equipmodel.equip_model_name || '-' || bdmateriel_equipment.serial_number 
+    gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number 
    FROM 
-    public.bdmateriel_chain,
-    public.bdmateriel_equipment,
-    public.bdmateriel_equipmodel
+    public.gissmo_chain,
+    public.gissmo_equipment,
+    public.gissmo_equipmodel
    WHERE
-    bdmateriel_chain."order" = 1 AND
-    bdmateriel_chain.equip_id = bdmateriel_equipment.id AND
-    bdmateriel_equipment.equip_model_id = bdmateriel_equipmodel.id AND
-    bdmateriel_chain.channel_id = bdmateriel_channel.id
+    gissmo_chain."order" = 1 AND
+    gissmo_chain.equip_id = gissmo_equipment.id AND
+    gissmo_equipment.equip_model_id = gissmo_equipmodel.id AND
+    gissmo_chain.channel_id = gissmo_channel.id
   ) AS "Capteur S/N",
   (SELECT 
-    bdmateriel_equipmodel.equip_model_name || '-' || bdmateriel_equipment.serial_number 
+    gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number 
    FROM 
-    public.bdmateriel_chain,
-    public.bdmateriel_equipment,
-    public.bdmateriel_equipmodel
+    public.gissmo_chain,
+    public.gissmo_equipment,
+    public.gissmo_equipmodel
    WHERE
-    bdmateriel_chain."order" = 2 AND
-    bdmateriel_chain.equip_id = bdmateriel_equipment.id AND
-    bdmateriel_equipment.equip_model_id = bdmateriel_equipmodel.id AND
-    bdmateriel_chain.channel_id = bdmateriel_channel.id
+    gissmo_chain."order" = 2 AND
+    gissmo_chain.equip_id = gissmo_equipment.id AND
+    gissmo_equipment.equip_model_id = gissmo_equipmodel.id AND
+    gissmo_chain.channel_id = gissmo_channel.id
   ) AS "Numeriseur S/N",
-  bdmateriel_channel.sample_rate AS "Fréquence"
+  gissmo_channel.sample_rate AS "Fréquence"
 FROM 
-  public.bdmateriel_channel,
-  public.bdmateriel_stationsite,
-  public.bdmateriel_network,
-  public.bdmateriel_actor
+  public.gissmo_channel,
+  public.gissmo_stationsite,
+  public.gissmo_network,
+  public.gissmo_actor
 WHERE 
-  bdmateriel_channel.station_id = bdmateriel_stationsite.id AND
-  bdmateriel_channel.network_id = bdmateriel_network.id AND
-  bdmateriel_stationsite.operator_id = bdmateriel_actor.id AND
-  bdmateriel_stationsite.id = %s
+  gissmo_channel.station_id = gissmo_stationsite.id AND
+  gissmo_channel.network_id = gissmo_network.id AND
+  gissmo_stationsite.operator_id = gissmo_actor.id AND
+  gissmo_stationsite.id = %s
 ORDER BY 
-  bdmateriel_channel.start_date,
-  bdmateriel_channel.location_code,
+  gissmo_channel.start_date,
+  gissmo_channel.location_code,
   "Composante" DESC
 ''', [query])
     dictrow = dictfetchall(cursor)
@@ -1227,41 +1232,41 @@ def test_site(request):
     response['Content-Disposition'] = 'attachment; filename="test_site.csv"'
 
     cursor.execute('''SELECT DISTINCT
-  bdmateriel_stationsite.station_code AS "Code du site",
-  bdmateriel_stationsite.site_name AS "Nom du site",
-  bdmateriel_stationsite.address AS "Adresse",
-  bdmateriel_stationsite.town AS "Commune",
-  bdmateriel_stationsite.county AS "Departement",
-  bdmateriel_stationsite.region AS "Region",
-  bdmateriel_stationsite.country AS "Pays",
-  bdmateriel_stationsite.latitude AS "Latitude",
-  bdmateriel_stationsite.longitude AS "Longitude",
-  bdmateriel_stationsite.note AS "Note",
-  bdmateriel_stationdoc.private_link AS "Lien vers document prive",
-  (SELECT bdmateriel_stationstate.station_state_name
+  gissmo_stationsite.station_code AS "Code du site",
+  gissmo_stationsite.site_name AS "Nom du site",
+  gissmo_stationsite.address AS "Adresse",
+  gissmo_stationsite.town AS "Commune",
+  gissmo_stationsite.county AS "Departement",
+  gissmo_stationsite.region AS "Region",
+  gissmo_stationsite.country AS "Pays",
+  gissmo_stationsite.latitude AS "Latitude",
+  gissmo_stationsite.longitude AS "Longitude",
+  gissmo_stationsite.note AS "Note",
+  gissmo_stationdoc.private_link AS "Lien vers document prive",
+  (SELECT gissmo_stationstate.station_state_name
    FROM 
-      public.bdmateriel_intervention,
-      public.bdmateriel_intervstation,
-      public.bdmateriel_stationstate
+      public.gissmo_intervention,
+      public.gissmo_intervstation,
+      public.gissmo_stationstate
    WHERE 
-      bdmateriel_intervention.station_id = bdmateriel_stationsite.id AND
-      bdmateriel_intervstation.intervention_id = bdmateriel_intervention.id AND
-      bdmateriel_intervstation.station_state IS NOT NULL AND
-      bdmateriel_intervstation.station_state = bdmateriel_stationstate.id
+      gissmo_intervention.station_id = gissmo_stationsite.id AND
+      gissmo_intervstation.intervention_id = gissmo_intervention.id AND
+      gissmo_intervstation.station_state IS NOT NULL AND
+      gissmo_intervstation.station_state = gissmo_stationstate.id
    ORDER BY
-      bdmateriel_intervention.intervention_date DESC
+      gissmo_intervention.intervention_date DESC
    LIMIT 1) AS "Etat",
-   (SELECT bdmateriel_actor.actor_name 
+   (SELECT gissmo_actor.actor_name 
     FROM
-       bdmateriel_actor
+       gissmo_actor
     WHERE
-       bdmateriel_stationsite.operator_id = bdmateriel_actor.id) AS "Operateur"
+       gissmo_stationsite.operator_id = gissmo_actor.id) AS "Operateur"
 FROM 
-  public.bdmateriel_stationsite LEFT JOIN public.bdmateriel_stationdoc ON (bdmateriel_stationdoc.station_id = bdmateriel_stationsite.id)
+  public.gissmo_stationsite LEFT JOIN public.gissmo_stationdoc ON (gissmo_stationdoc.station_id = gissmo_stationsite.id)
 WHERE 
-  bdmateriel_stationsite.site_type = 6
+  gissmo_stationsite.site_type = 6
 ORDER BY 
-  bdmateriel_stationsite.station_code
+  gissmo_stationsite.station_code
 ''', [query])
     dictrow = dictfetchall(cursor)
     writer = csv.writer(response)

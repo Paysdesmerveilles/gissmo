@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('bdmateriel.views',
+urlpatterns = patterns('gissmo.views',
     # Example:
     # (r'^monsitedev/', include('monsitedev.foo.urls')),
 

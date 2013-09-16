@@ -1,7 +1,7 @@
 {% load url from future %}
 
 <fieldset class="module aligned collapse">
-  <h2>Commentaires sur le canal</h2>
+  <h2>Commentaires sur le réseau</h2>
    <table>
      <thead><tr>
          <th>Commentaire</th>
@@ -30,7 +30,7 @@
         </td>
 
         <td class="edit">
-          <a href="{% url 'admin:bdmateriel_commentchannel_change' comment.id %}">Edit</a>
+          <a href="{% url  url_redirection comment.id %}">Edit</a>
         </td>
 
         </tr>

@@ -2,7 +2,7 @@
 import os
 
 import sys
-sys.path.insert(0, "/home/martin/gitclone/bdmatos/src")
+sys.path.insert(0, "/home/martin/gitclone/gissmo/src")
 #PROJECT_PATH = os.path.abspath(os.path.curdir)
 #(filepath, filename) = os.path.split(PROJECT_PATH)
 #APP_PATH = os.path.join(filepath, 'bdmateriel')
@@ -22,41 +22,10 @@ MANAGERS = ADMINS
 #EMAIL_HOST_USER = 'mdutil.fr@gmail.com'
 #EMAIL_HOST_PASSWORD = ''
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#        'NAME': 'demo.db',                      # Or path to database file if using sqlite3.
-#        'USER': '',                      # Not used with sqlite3.
-#        'PASSWORD': '',                  # Not used with sqlite3.
-#        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-#        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-#    }
-#}
-
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#        'NAME': 'gissmo',                      # Or path to database file if using sqlite3.
-#        'USER': 'root',                      # Not used with sqlite3.
-#        'PASSWORD': 'django',                  # Not used with sqlite3.
-#        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-#        'PORT': '3306',                      # Set to empty string for default. Not used with sqlite3.
-#        'OPTIONS' : {
-#	       "init_command": "SET storage_engine=INNODB",
-#	}
-#    }
-#}
-
 DATABASES = {
     'default': {            
-#        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#        'NAME': 'materiel09092013',                      # Or path to database file if using sqlite3.
-#        'USER': 'martin',                      # Not used with sqlite3.
-#        'PASSWORD': 'django',                  # Not used with sqlite3.
-#        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-#        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('POSTGRES_NAME', 'materiel09092013'),
+        'NAME': os.getenv('POSTGRES_NAME', 'materiel16092013'),
         'USER': os.getenv('POSTGRES_USER', 'martin'),
         'PASSWORD': os.getenv('POSTGRES_PASS', 'django'),
         'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
@@ -163,7 +132,7 @@ INSTALLED_APPS = (
     #'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bdmateriel',
+    'gissmo',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -176,20 +145,3 @@ INSTALLED_APPS = (
 # the site admins on every HTTP 500 error.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
-}
