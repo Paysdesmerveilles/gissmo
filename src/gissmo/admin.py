@@ -95,9 +95,11 @@ class EquipModelDocInline(admin.TabularInline):
         models.URLField: {'widget': URLFieldWidget},
     }
 
+"""
 class ParamEquipModelInline(admin.TabularInline):
     model = ParamEquipModel
     extra = 0
+"""
 
 class ParameterEquipInline(admin.TabularInline):
     model = ParameterEquip
@@ -924,6 +926,13 @@ class ChainAdmin(admin.ModelAdmin):
             else:
                 return super(ChainAdmin, self).response_add(request, obj, post_url_continue)
 
+    def get_model_perms(self, request):
+        """
+        Return empty perms dict thus hiding the model from admin index.
+        """
+        return {}
+
+
 class CommentNetworkAuthorInline(admin.TabularInline):
     model = CommentNetworkAuthor
     extra = 0
@@ -963,6 +972,12 @@ class CommentNetworkAdmin(admin.ModelAdmin):
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(CommentNetworkAdmin, self).response_add(request, obj, post_url_continue)
+
+    def get_model_perms(self, request):
+        """
+        Return empty perms dict thus hiding the model from admin index.
+        """
+        return {}
 
 
 class NetworkAdmin(admin.ModelAdmin):
@@ -1013,6 +1028,12 @@ class CommentChannelAdmin(admin.ModelAdmin):
             else:
                 return super(CommentChannelAdmin, self).response_add(request, obj, post_url_continue)
 
+    def get_model_perms(self, request):
+        """
+        Return empty perms dict thus hiding the model from admin index.
+        """
+        return {}
+
 class CommentStationSiteAuthorInline(admin.TabularInline):
     model = CommentStationSiteAuthor
     extra = 0
@@ -1052,6 +1073,12 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(CommentStationSiteAdmin, self).response_add(request, obj, post_url_continue)
+
+    def get_model_perms(self, request):
+        """
+        Return empty perms dict thus hiding the model from admin index.
+        """
+        return {}
 
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -1164,7 +1191,7 @@ admin.site.register(Network, NetworkAdmin)
 admin.site.register(BuiltType)
 admin.site.register(CalibrationUnit)
 admin.site.register(DataType)
-admin.site.register(ParamEquipModel)
+#admin.site.register(ParamEquipModel)
 #admin.site.register(ParamValueEquipModel, ParamValueEquipModelAdmin)
 #admin.site.register(ParamValue)
 admin.site.register(EquipModelDocType)

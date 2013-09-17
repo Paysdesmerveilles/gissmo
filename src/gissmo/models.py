@@ -243,6 +243,8 @@ class EquipModel(models.Model):
     def __unicode__(self):
         return self.equip_model_name
 
+"""
+Ancienne structure des parametres
 # Parameters 
 class ParamEquipModel(models.Model):
     equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
@@ -256,7 +258,7 @@ class ParamEquipModel(models.Model):
 
     def __unicode__(self):
         return u'%s : %s' % (self.equip_model.equip_model_name, self.parameter_name)
-
+"""
 
 class ParameterEquip(models.Model):
     equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
