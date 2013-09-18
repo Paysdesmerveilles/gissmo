@@ -162,7 +162,7 @@ def available_equip_state(action):
     Function that return a list of state according to the action via the parameter
     This is use on add_fields section of the IntervEquipInlineFormset and in xhr_equip_state function
     """
-    select_choice = [(c[0],[1]) for c in EquipState.EQUIP_STATES]
+    select_choice = [(c[0],c[1]) for c in EquipState.EQUIP_STATES]
     select_choice.insert(0,('','-- choisir une action en premier --'))
     if int(action) == EquipAction.ACHETER:
         select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])] 

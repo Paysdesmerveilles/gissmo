@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name = "gissmo",
-    version = "1.31",
+    version = "1.32",
     author = "Martin Dutil",
     author_email = "mdutil@unistra.fr",
     description = "BD suivi materiel",
