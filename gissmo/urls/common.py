@@ -1,19 +1,13 @@
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import include, patterns, url
 
-urlpatterns = patterns('gissmo.views',
-    # Example:
-    # (r'^monsitedev/', include('monsitedev.foo.urls')),
+from django.contrib import admin
+admin.autodiscover()
 
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    ####(r'^stationequip/$', 'stationequip'),
-    ####(r'^histoequip/$', 'histoequip'),
-    ####(r'^histostation/$', 'histostation'),
-    url(r'^xhr_station$','xhr_station', name='xhr_station'),
-    url(r'^xhr_station_state$','xhr_station_state', name='xhr_station_state'),
-    url(r'^xhr_equipment$','xhr_equipment', name='xhr_equipment'),
+urlpatterns = patterns(
+    'gissmo.views',
+    url(r'^xhr_station$', 'xhr_station', name='xhr_station'),
+    url(r'^xhr_station_state$', 'xhr_station_state', name='xhr_station_state'),
+    url(r'^xhr_equipment$', 'xhr_equipment', name='xhr_equipment'),
     url(r'^xhr_equip_state$', 'xhr_equip_state', name='xhr_equip_state'),
     url(r'^xhr_equip_oper$', 'xhr_equip_oper', name='xhr_equip_oper'),
     url(r'^xhr_station_position$', 'xhr_station_position', name='xhr_station_position'),
@@ -27,6 +21,6 @@ urlpatterns = patterns('gissmo.views',
     url(r'^network_xml/$', 'network_xml', name='network_xml'),
     url(r'^station_dataless/$', 'station_dataless', name='station_dataless'),
     url(r'^test_site/$', 'test_site', name='test_site'),
-#    url(r'^test_dbchange/$', 'test_dbchange', name='test_dbchange'),
+    (r'^admin/', include(admin.site.urls)),
+    (r'^chaining/', include('smart_selects.urls')),
 )
-
