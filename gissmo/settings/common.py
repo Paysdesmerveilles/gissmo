@@ -80,6 +80,7 @@ TEMPLATE_LOADERS = (
 )
 
 INSTALLED_APPS = (
+    'gissmo',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -87,7 +88,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'gissmo',
     'smart_selects'
 )
 
