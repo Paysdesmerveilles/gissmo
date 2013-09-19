@@ -1,12 +1,10 @@
 import os
+import gissmo
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
-)
-
+ADMINS = ()
 MANAGERS = ADMINS
 
 DATABASES = {
@@ -33,27 +31,22 @@ LANGUAGE_CODE = 'en-us'
 SITE_ID = 1
 
 USE_I18N = False
-
 USE_L10N = True
 
 USE_TZ = True
 
 UPLOAD_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
 
-ADMIN_MEDIA_PREFIX = '/static/admin/'
+ADMIN_MEDIA_PREFIX = '/gissmo/static/admin/'
 
 MEDIA_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'media')
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'static')
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(os.path.dirname(gissmo.__file__), '..', 'static')
+STATIC_URL = '/gissmo/static/'
 
 # Additional locations of static files
-STATICFILES_DIRS = (
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
+STATICFILES_DIRS = ()
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -61,9 +54,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = '2^q(j)(9nmm_&l6dp!&zinygb+&a7bh%ez)pjwjcppwnpy=8i*'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -77,18 +67,16 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'gissmo.wsgi.application'
 
-TEMPLATE_DIRS = (
-    # Put strings here,
-    # like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
+TEMPLATE_DIRS = ()
+
+TEMPLATE_LOADERS = (
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
 )
 
 INSTALLED_APPS = (
@@ -103,11 +91,6 @@ INSTALLED_APPS = (
     'smart_selects'
 )
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

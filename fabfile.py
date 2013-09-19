@@ -16,8 +16,8 @@ env.roledefs.update({
 
 @roles('webserver')
 def uwsgi():
-    put('upstart/renass.conf', '/etc/init')
-    run('service renass restart')
+    put('upstart/gissmo.conf', '/etc/init')
+    run('service gissmo restart')
 
 
 @roles('webserver')
@@ -30,8 +30,10 @@ def deploy():
     )
 
     run('/srv/env/gissmo/bin/pip install -r /srv/app/gissmo/requirements.txt')
+    run('mkdir /srv/app/gissmo/static')
+    run('/srv/env/gissmo/bin/python /srv/app/gissmo/manage.py collectstatic --noinput --clear')
 
 
 def all():
     execute(deploy)
-    #execute(uwsgi)
+    execute(uwsgi)

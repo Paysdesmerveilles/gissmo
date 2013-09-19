@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.conf.urls.defaults import include, patterns, url
+from django.conf.urls.static import static
 
 from django.contrib import admin
 admin.autodiscover()
@@ -21,6 +23,21 @@ urlpatterns = patterns(
     url(r'^network_xml/$', 'network_xml', name='network_xml'),
     url(r'^station_dataless/$', 'station_dataless', name='station_dataless'),
     url(r'^test_site/$', 'test_site', name='test_site'),
-    (r'^admin/', include(admin.site.urls)),
+    (r'^gissmo/', include(admin.site.urls)),
     (r'^chaining/', include('smart_selects.urls')),
 )
+
+urlpatterns += patterns(
+    '',
+    (
+        r'^media/(?P<path>.*)$',
+        'django.views.static.serve',
+        {
+            'document_root': settings.MEDIA_ROOT,
+            'show_indexes': True
+        }
+    ),
+) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+urlpatterns += staticfiles_urlpatterns()
