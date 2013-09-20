@@ -51,7 +51,7 @@ class LabeledHiddenInput(forms.HiddenInput):
     def render(self, name, value, attrs=None):
 
         status  = self.choices.queryset.get(pk = value)
-        
+
         h_input = super(LabeledHiddenInput, self).render( name, value, attrs=None)
         return mark_safe("%s %s"%(status, h_input))
 
@@ -129,7 +129,7 @@ class EquipModelFilter(SimpleListFilter):
        """
        Liste = []
        Equip_Supertype = EquipSupertype.objects.all().order_by('equip_supertype_name')
-       
+
 
        """
        Tree presentation of the filter choice.
@@ -171,7 +171,7 @@ class EquipModelAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
-        for instance in instances:      
+        for instance in instances:
             if isinstance(instance, EquipModelDoc): #Check if it is the correct type of inline
                 instance.equip_supertype = form.cleaned_data['equip_supertype']
                 instance.equip_type = form.cleaned_data['equip_type']
@@ -264,7 +264,7 @@ class OwnerFilter(SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-        lookup_list = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.INCONNU)).values_list('id', 'actor_name').distinct() 
+        lookup_list = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.INCONNU)).values_list('id', 'actor_name').distinct()
         return lookup_list
 
     def queryset(self, request, queryset):
@@ -321,7 +321,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         Buy equipment as action and To Test for the state
         """
         obj.save()
-        
+
         if not change:
             station_id = form.cleaned_data['stockage_site']
             purchase_date = form.cleaned_data['purchase_date']
@@ -344,8 +344,8 @@ class EquipmentAdmin(admin.ModelAdmin):
                 interv_equip = IntervEquip(intervention=intervention, equip_action=EquipAction.ACHETER, \
                                            equip=equipment, equip_state=EquipState.A_TESTER, station=station, note="Creation automatique")
                 interv_equip.save()
-            
-                actor = get_object_or_404(Actor, actor_name=request.user.username)            
+
+                actor = get_object_or_404(Actor, actor_name=request.user.username)
                 interv_actor = IntervActor(intervention=intervention, actor=actor)
                 interv_actor.save()
         super(EquipmentAdmin, self).save_model(request, obj, form, change)
@@ -354,7 +354,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
-        for instance in instances:      
+        for instance in instances:
             if isinstance(instance, EquipDoc): #Check if it is the correct type of inline
                 instance.equip_supertype = form.cleaned_data['equip_supertype']
                 instance.equip_type = form.cleaned_data['equip_type']
@@ -373,7 +373,7 @@ class EquipmentAdmin(admin.ModelAdmin):
 class BuiltInline(admin.TabularInline):
     model = Built
     extra = 0
-    classes = ['collapse', 'collapsed'] 
+    classes = ['collapse', 'collapsed']
 
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1})},
@@ -440,7 +440,7 @@ class StationSiteFilter(SimpleListFilter):
 #    for sd in queryset:
 #        sd_copy = copy.copy(sd) # (2) django copy object
 #        sd_copy.id = None   # (3) set 'id' to None to create new object
-#        sd_copy.station_code = sd.station_code + '_NEW' 
+#        sd_copy.station_code = sd.station_code + '_NEW'
 #        sd_copy.save()    # initial save
 #
 #    copy_stationsite.short_description = "Make a Copy of StationSite"
@@ -477,7 +477,7 @@ class StationSiteAdmin(admin.ModelAdmin):
         qs = super(StationSiteAdmin, self).queryset(request)
         check_forall = ProjectUser.objects.filter(user=request.user).values_list('project__project_name', flat=True)
         # The name of the project must stay ALL
-        if request.user.is_superuser or u'ALL' in check_forall:        
+        if request.user.is_superuser or u'ALL' in check_forall:
             return qs
         project_list = ProjectUser.objects.filter(user=request.user).values_list('project', flat=True)
         station_list = Project.objects.filter(id__in=project_list).values_list('station', flat=True)
@@ -489,17 +489,17 @@ class StationSiteAdmin(admin.ModelAdmin):
         Create station code as action and in construction for the state
         """
         obj.save()
-        
+
         if not change:
             station = get_object_or_404(StationSite, pk=obj.id)
             intervention = Intervention(station=station,intervention_date=form.cleaned_data['creation_date'], note="Creation automatique")
             intervention.save()
-            
+
             intervention = get_object_or_404(Intervention, pk=intervention.id)
             interv_station = IntervStation(intervention=intervention, station_action=StationAction.CREER, station_state=StationState.INSTALLATION, note="Creation automatique")
             interv_station.save()
-            
-            actor = get_object_or_404(Actor, actor_name=request.user.username)            
+
+            actor = get_object_or_404(Actor, actor_name=request.user.username)
             interv_actor = IntervActor(intervention=intervention, actor=actor)
             interv_actor.save()
 
@@ -512,7 +512,7 @@ class StationSiteAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
-        for instance in instances:      
+        for instance in instances:
             if isinstance(instance, StationDoc): #Check if it is the correct type of inline
                 if not instance.pk:
                     instance.owner = request.user
@@ -577,8 +577,8 @@ class IntervEquipInline(admin.TabularInline):
 
     def get_formset(self, request, obj=None, **kwargs):
         """ Pourquoi est-ce que station est necessaire """
-        station = request.GET.get('station', '') 
-        equip = request.GET.get('equip', '') 
+        station = request.GET.get('station', '')
+        equip = request.GET.get('equip', '')
         initial = []
         initial.append(equip)
 #        if obj is not None:
@@ -640,8 +640,10 @@ class InterventionAdmin(admin.ModelAdmin):
 
     def format_date(self, obj):
         return obj.intervention_date.strftime('%Y-%m-%d %H:%M')
+
     format_date.short_description = 'Date (aaaa-mm-jj hh24:mi)'
     format_date.admin_order_field = 'intervention_date'
+
 
 class ChainInline(admin.TabularInline):
     model = Chain
@@ -650,29 +652,29 @@ class ChainInline(admin.TabularInline):
 
     readonly_fields = ['configuration', 'delete']
 
-    def __init__(self, *args, **kwargs): 
-        super(ChainInline, self).__init__(*args, **kwargs) 
-        self.can_delete = False 
+    def __init__(self, *args, **kwargs):
+        super(ChainInline, self).__init__(*args, **kwargs)
+        self.can_delete = False
 
     def configuration(self, obj):
         if obj.id:
         	# Hack to obtain the channel ID to be able to pass it to the config link as parameter
             channel = get_object_or_404(Chain, pk=obj.id).channel.id
-            # Trick to get the app label 
+            # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             url = reverse('admin:%s_chain_change' % (content_type.app_label), args=[obj.id]) + '?channel=' +str(channel)
             return mark_safe("<a href='%s'>config</a>" % url)
 
     def delete(self, obj):
         if obj.id:
-            # Trick to get the app label 
+            # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             url = reverse('admin:%s_chain_change' % (content_type.app_label), args=[obj.id]) + 'delete/'
             return mark_safe("<a href='%s'>delete</a>" % url)
 
     def get_formset(self, request, obj=None, **kwargs):
 #       Pourquoi est-ce que station est necessairen
-        station = request.GET.get('station', '') 
+        station = request.GET.get('station', '')
         initial = []
         initial.append(station)
         formset = super(ChainInline, self).get_formset(request, obj, **kwargs)
@@ -695,7 +697,7 @@ class ChainConfigInline(admin.TabularInline):
 
     # Hack to pass the channel id to the formset
 #    def get_formset(self, request, obj=None, **kwargs):
-#        channel = request.GET.get('channel', '') 
+#        channel = request.GET.get('channel', '')
 #        initial = []
 #        initial.append(channel)
 #        formset = super(ChainConfigInline, self).get_formset(request, obj, **kwargs)
@@ -742,7 +744,7 @@ class ChannelChainInline(admin.TabularInline):
             kwargs['widget'] = forms.TextInput(attrs={'readonly':'readonly','style':'width: 1px'})
 #            kwargs['widget'] = forms.HiddenInput()
             kwargs.pop('request', None) #erreur sinon
-            return db_field.formfield(**kwargs) 
+            return db_field.formfield(**kwargs)
         return super(ChannelChainInline,self).formfield_for_dbfield(db_field, **kwargs)
 
 class ChannelAdmin(admin.ModelAdmin):
@@ -777,7 +779,7 @@ class ChannelAdmin(admin.ModelAdmin):
         else:
             return {}
 
-# a lot of todo 
+# a lot of todo
 # blinder la generation automatique de parametre de config selon modele equip
 # empecher tout changement
 # generer l'ordre automatiquement
@@ -800,7 +802,7 @@ class ChannelAdmin(admin.ModelAdmin):
                         #Default physical channel according to the channel code and network code
                         chainconfig = ChainConfig(channel=channel,chain=instance,parameter=parameter.parameter_name, value=parameter.default_value)
                         chainconfig.save()
-                    """    
+                    """
                     for parameter in parameters:
                         channel = get_object_or_404(Channel, pk=instance.channel.id) # Hack to inline in channel
                         """
@@ -816,8 +818,8 @@ class ChannelAdmin(admin.ModelAdmin):
                         instance.chain = new_chain[0]
                     instance.save()
                 else:
-                    formset.save()               
-                """                    
+                    formset.save()
+                """
                 else:
                     if isinstance(instance, ChainConfigTest): #Check if it is the correct type of inline
                         old_chain = get_object_or_404(Chain, pk=instance.chain.id) # Hack to inline in channel
@@ -825,7 +827,7 @@ class ChannelAdmin(admin.ModelAdmin):
                         if new_chain:
                             instance.chain = new_chain[0]
                         instance.save()
-                """                        
+                """
 
 #    def save_model(self, request, obj, form, change):
 #        # custom stuff here
@@ -841,8 +843,8 @@ class ChannelAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
             if '_saveasnew' in request.POST:
@@ -854,13 +856,13 @@ class ChannelAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
-            if '_saveasnew' in request.POST:              
+            if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement ajouté' )
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
@@ -882,7 +884,7 @@ class ChainAdmin(admin.ModelAdmin):
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
 
         instances = formset.save(commit=False)
- 
+
         for instance in instances:
             if isinstance(instance, ChainConfig): #Check if it is the correct type of inline
                 if not instance.pk:
@@ -890,19 +892,19 @@ class ChainAdmin(admin.ModelAdmin):
                 instance.save()
             else:
                 formset.save()
-            """                
+            """
             else:
                 if isinstance(instance, ChainConfigTest): #Check if it is the correct type of inline
                     if not instance.pk:
                         instance.channel = instance.chain.channel
                     instance.save()
-            """                    
+            """
 
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)             
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_channel_change" % (content_type.app_label), args=(obj.channel.id,)))
         else:
             if '_saveasnew' in request.POST:
@@ -914,13 +916,13 @@ class ChainAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)             
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_channel_change" % (content_type.app_label), args=(obj.channel.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
-            if '_saveasnew' in request.POST:              
+            if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement ajouté' )
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
@@ -948,8 +950,8 @@ class CommentNetworkAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)             
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_network_change" % (content_type.app_label), args=(obj.network.id,)))
         else:
             if '_saveasnew' in request.POST:
@@ -961,13 +963,13 @@ class CommentNetworkAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_network_change" % (content_type.app_label), args=(obj.network.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
-            if '_saveasnew' in request.POST:              
+            if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement ajouté' )
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
@@ -987,7 +989,7 @@ class NetworkAdmin(admin.ModelAdmin):
     fieldsets = [
         ('' , {'fields': [('network_code','start_date','end_date'),]}),
         ('Informations complementaires' , {'fields': [('description'), ('alternate_code','historical_code', 'restricted_status')], 'classes': ['collapse']}),]
-        
+
 class CommentChannelAuthorInline(admin.TabularInline):
     model = CommentChannelAuthor
     extra = 0
@@ -1003,8 +1005,8 @@ class CommentChannelAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_channel_change" % (content_type.app_label), args=(obj.channel.id,)))
         else:
             if '_saveasnew' in request.POST:
@@ -1016,13 +1018,13 @@ class CommentChannelAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_channel_change" % (content_type.app_label), args=(obj.channel.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
-            if '_saveasnew' in request.POST:              
+            if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement ajouté' )
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
@@ -1049,8 +1051,8 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement modifié' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)         	
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
             if '_saveasnew' in request.POST:
@@ -1062,13 +1064,13 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
-            # Trick to get the app label 
-            content_type = ContentType.objects.get_for_model(obj.__class__)         	            
+            # Trick to get the app label
+            content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
         else:
 ##        This makes the response go to the newly created model's change page
 ##        without using reverse
-            if '_saveasnew' in request.POST:              
+            if '_saveasnew' in request.POST:
                 messages.success( request, 'Enregistrement ajouté' )
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
@@ -1083,9 +1085,9 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
 
 class ProjectAdmin(admin.ModelAdmin):
     model = Project
-    filter_horizontal = ['station',]
-    fields = ('project_name', 'manager','station')
-    
+    filter_horizontal = ['station']
+    fields = ('project_name', 'manager', 'station')
+
     # Redefine queryset to show only project according to the user's project
     def queryset(self, request):
         qs = super(ProjectAdmin, self).queryset(request)
@@ -1095,7 +1097,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
     def delete_model(self, request, obj):
         if obj.project_name == 'ALL':
-            messages.error( request, 'Delete of the project ALL is forbidden')            
+            messages.error(request, 'Delete of the project ALL is forbidden')
         else:
             obj.delete()
             return super(ProjectAdmin, self).delete_model(request, obj)
@@ -1117,6 +1119,7 @@ class ProjectAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             return ('project_name', 'manager')
         return self.readonly_fields
+
 
 class ProjectUserAdmin(admin.ModelAdmin):
     model = ProjectUser

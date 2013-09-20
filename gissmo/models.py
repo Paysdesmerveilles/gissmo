@@ -5,7 +5,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 # Ajout pour definir un lien entre des champs FK. Ce qui limitera le choix du drop down select d'un champ FK
-from smart_selects.db_fields import ChainedForeignKey 
+from smart_selects.db_fields import ChainedForeignKey
 # Fin de l'ajout pour definir un lien entre des champs FK
 
 # Ajout pour lever des erreurs de validation
@@ -38,9 +38,9 @@ from django.dispatch import receiver
 class Actor(models.Model):
     """
     **Description :** Personne ou entité morale qui est soit opérateur d'une station ou propriétaire d'un équipement ou impliquée lors d'une intervention
-            
+
     **Attributes :**
-  
+
     actor_type : integer
         Type d'acteur comme décrit ci-dessous
 
@@ -62,7 +62,7 @@ class Actor(models.Model):
 
     actor_name : char(50)
         Nom d'usage donné à l'acteur
-  
+
     actor_note : text
         Champ libre afin d'ajouter des informations supplémentaires
     """
@@ -82,12 +82,12 @@ class Actor(models.Model):
         (ENTREPRISE_SAV, 'Entreprise SAV'),
         (INCONNU, 'Inconnu'),
         (AUTRE, 'Autre'),
-    ) 
+    )
     actor_type = models.IntegerField(choices=ACTOR_TYPE_CHOICES, default=AUTRE, verbose_name=_("Type d\'intervenant"))
     actor_name = models.CharField(max_length=50, unique=True, verbose_name=_("nom"))
     actor_note = models.TextField(null=True, blank=True, verbose_name=_("note"))
     actor_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("Groupe d\'appartenance"))
-   
+
     class Meta:
         ordering = ['actor_name']
         verbose_name = _("intervenant")
@@ -112,11 +112,11 @@ class Actor(models.Model):
 class BuiltType(models.Model):
     """
     **Description :** Type de bâti
-    
+
     **Attributes :**
 
     built_type_name : char(40)
-        Nom que l'on donne au type de bâti 
+        Nom que l'on donne au type de bâti
     """
 
     built_type_name = models.CharField(max_length=40, verbose_name=_("type de bati"))
@@ -227,9 +227,9 @@ class EquipModel(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip_model_name = models.CharField(max_length=50, verbose_name=_("modele d'equipement"))
@@ -245,7 +245,7 @@ class EquipModel(models.Model):
 
 """
 Ancienne structure des parametres
-# Parameters 
+# Parameters
 class ParamEquipModel(models.Model):
     equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
     parameter_name = models.CharField(max_length=50, verbose_name=_("nom du parametre"))
@@ -293,7 +293,7 @@ class ParameterValue(models.Model):
         return u'%s' % (self.value)
 
 """
-# Parameters 
+# Parameters
 class ParamValueEquipModel(models.Model):
     equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
     parameter_name = models.CharField(max_length=50, verbose_name=_("nom du parametre"))
@@ -344,17 +344,17 @@ class Equipment(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip_model = ChainedForeignKey(
         EquipModel,
         chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_type",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("modele d'equipement")
     )
     serial_number = models.CharField(max_length=50, verbose_name=_("numero de serie"))
@@ -362,7 +362,7 @@ class Equipment(models.Model):
     vendor = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("vendeur"))
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
-   
+
     class Meta:
         unique_together = ("equip_supertype", "equip_type", "equip_model", "serial_number")
         verbose_name = _("equipement")
@@ -377,7 +377,7 @@ class Equipment(models.Model):
 #    c.last_state = equip_last_state(c)
 #    c.save()
 
-#models.signals.post_save.connect(update_equipment, sender="IntervEquip") 
+#models.signals.post_save.connect(update_equipment, sender="IntervEquip")
 #models.signals.post_delete.connect(update_equipment, sender="IntervEquip")
 
 ####
@@ -399,7 +399,7 @@ class CommentNetwork(models.Model):
 # Network
 class Network(models.Model):
     """
-    **Description :** Réseau 
+    **Description :** Réseau
 
     **Attributes :**
 
@@ -519,7 +519,7 @@ class StationState(models.Model):
 
         3 : DEFAUT : En défaillance
 
-        4 : PANNE : En panne 
+        4 : PANNE : En panne
 
         5 : FERMEE : Fermée
 
@@ -654,7 +654,7 @@ class EquipState(models.Model):
 
         9 : AU_REBUT : Au rebut
 
-        10 : AUTRE : Autre               
+        10 : AUTRE : Autre
 
     **Attributes :**
 
@@ -698,11 +698,11 @@ class CommentStationSite(models.Model):
 def get_defaut_operator():
     return Actor.objects.get(actor_name='Inconnu')
 
-# Station or site 
+# Station or site
 class StationSite(models.Model):
     """
     **Description :** Site ou station d'intérêt dans le cadre du CLB Resif
-             
+
     **Attributes :**
 
     site_type : integer (choice)
@@ -710,7 +710,7 @@ class StationSite(models.Model):
 
         **Choices :**
 
-            1 : STATION : 
+            1 : STATION :
 
             2 : OBSERVATOIRE : Personne qui effectue une action sur une station
 
@@ -721,9 +721,9 @@ class StationSite(models.Model):
             7 : AUTRE : Autre
 
     station_code : char(40)
-        Code attribué au site ou à la station lors de sa création 
+        Code attribué au site ou à la station lors de sa création
 
-    site_name : char(50) 
+    site_name : char(50)
         Nom d'usage attribué au site. On y retrouve souvent le nom de la commune à proximité.
 
     latitude : decimal(8,6)
@@ -754,7 +754,7 @@ class StationSite(models.Model):
         Pays où est située la station
 
     zip_code : char(15)
-        Code postal 
+        Code postal
 
     contact : text
         Champ libre afin d'ajouter des informations sur les contacts
@@ -786,7 +786,7 @@ class StationSite(models.Model):
         (OREME, 'OREME'),
         (OSUNA, 'OSUNA'),
         (AUTRE, 'AUTRE'),
-    )   
+    )
 
     STATION = 1
     OBSERVATOIRE = 2
@@ -804,7 +804,7 @@ class StationSite(models.Model):
         (NEANT, 'Lieu indéterminé'),
         (AUTRE, 'Autre'),
     )
-   
+
     OPEN = 1
     CLOSE = 2
     PARTIAL = 3
@@ -857,11 +857,11 @@ class StationSite(models.Model):
 #
 #    Code test to keep the old value et compare if diff in new value
 #
-#    def __init__(self, *args, **kw): 
+#    def __init__(self, *args, **kw):
 #        super(StationSite, self).__init__(*args, **kw)
 #        self._old = dict([(field.name,field.value_to_string(self)) for field in StationSite._meta.fields])
 #
-#    def save(self, *args, **kwargs):        
+#    def save(self, *args, **kwargs):
 #        print "StationSite save"
 #        old_value_dict = self._old
 #        new_value_dict = dict([(field.name,field.value_to_string(self)) for field in StationSite._meta.fields])
@@ -872,13 +872,13 @@ class StationSite(models.Model):
 
     def __unicode__(self):
         return self.station_code
-    
+
 # Management of intervention
 
 class Intervention(models.Model):
     """
     **Description :** Intervention ayant eu lieu dans le cadre de CLB Resif
-             
+
     **Attributes :**
 
     station : integer (fk)
@@ -902,10 +902,11 @@ class Intervention(models.Model):
     def __unicode__(self):
         return u'%s : %s' % (self.station.station_code, self.intervention_date)
 
+
 class IntervActor(models.Model):
     """
     **Description :** Acteurs ayant effectués ou présents lors de l'intervention
-             
+
     **Attributes :**
 
     intervention : integer (fk)
@@ -930,7 +931,7 @@ class IntervActor(models.Model):
 class IntervStation(models.Model):
     """
     **Description :** Détail de l'intervention qui s'est effectuée sur la station
-             
+
     **Attributes :**
 
     intervention : integer (fk)
@@ -959,7 +960,7 @@ class IntervStation(models.Model):
 class IntervEquip(models.Model):
     """
     **Description :** Détail de l'intervention qui s'est effectuée sur l'équipement
-             
+
     **Attributes :**
 
     intervention : integer (fk)
@@ -1013,7 +1014,7 @@ def stationdoc_file_name(self, filename):
 class StationDoc(models.Model):
     """
     **Description :** Documents relatifs à la station
-             
+
     **Attributes :**
 
     station : integer (fk)
@@ -1066,7 +1067,7 @@ def equipmodeldoc_file_name(self, filename):
 class EquipModelDoc(models.Model):
     """
     **Description :** Documents relatifs à un modèle d'équipement
-             
+
     **Attributes :**
 
     equip_supertype : integer (fk)
@@ -1094,17 +1095,17 @@ class EquipModelDoc(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip_model = ChainedForeignKey(
         EquipModel,
         chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_type",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("modele d'equipement")
     )
     owner = models.ForeignKey(User)
@@ -1140,7 +1141,7 @@ def equipdoc_file_name(self, filename):
 class EquipDoc(models.Model):
     """
     **Description :** Documents relatifs à un équipement
-             
+
     **Attributes :**
 
     equip_supertype : integer (fk)
@@ -1171,25 +1172,25 @@ class EquipDoc(models.Model):
     equip_type = ChainedForeignKey(
         EquipType,
         chained_field="equip_supertype",
-        chained_model_field="equip_supertype", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_supertype",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("type d'equipement")
     )
     equip_model = ChainedForeignKey(
         EquipModel,
         chained_field="equip_type",
-        chained_model_field="equip_type", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_type",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("modele d'equipement")
     )
     equip = ChainedForeignKey(
         Equipment,
         chained_field="equip_model",
-        chained_model_field="equip_model", 
-        show_all=False, 
-        auto_choose=True, 
+        chained_model_field="equip_model",
+        show_all=False,
+        auto_choose=True,
         verbose_name=_("equipement")
     )
     owner = models.ForeignKey(User)
@@ -1244,7 +1245,7 @@ New simple structure to permit to add channel_code by the super admin
 """
 class ChannelCode(models.Model) :
     channel_code = models.CharField(max_length=3, primary_key=True, verbose_name=_("code du canal"))
-    presentation_rank = models.IntegerField(null=True, blank=True)    
+    presentation_rank = models.IntegerField(null=True, blank=True)
     validation_rule = models.TextField(null=True, blank=True, verbose_name=_("regle validation"))
 
     class Meta:
@@ -1387,7 +1388,7 @@ class Chain(models.Model) :
 # Ancienne structure
 class ChainConfig(models.Model) :
     channel = models.ForeignKey('Channel', verbose_name=_("canal")) # Hack to inline in channel
-    chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition")) 
+    chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition"))
     parameter = models.CharField(max_length=50, verbose_name=_("parametre"))
     value = models.CharField(max_length=20, null=True, blank=True, verbose_name=_("valeur"))
 
@@ -1420,7 +1421,7 @@ class ChainConfig(models.Model) :
 
         Ne pas utilser les caractères spéciaux (meme si en principe cela semble autorise)
         Les caractères spéciaux pour nous francophones comme é, à, ê, ï, ù sont à priori permis mais pourraient être mal interprétés par certains programmes.
-""" 
+"""
 
 #from django.db.models.signals import post_save, post_delete
 #from django.dispatch import receiver
@@ -1440,22 +1441,25 @@ class ChainConfig(models.Model) :
 #    print(EquipState.EQUIP_STATES[equip_last_state(obj.equip.id)-1][1])
 #    print(equip_last_place(obj.equip.id))
 
-class Project(models.Model) :
+
+class Project(models.Model):
     project_name = models.CharField(max_length=50)
     manager = models.ForeignKey(User)
     station = models.ManyToManyField('StationSite', null=True, blank=True)
 
     # Validation to check that the name of the project ALL don't change
-    # It's needed in comparison to the admin.py module to filter station, equipment, intervention
+    # It's needed in comparison to the admin.py module to filter station,
+    # equipment, intervention
     # in the queryset
     def clean(self):
         if self.id:
             project = get_object_or_404(Project, pk=self.id)
-            if project.project_name == 'ALL' and self.project_name <> 'ALL':
+            if project.project_name == 'ALL' and self.project_name != 'ALL':
                 raise ValidationError("We can't change the name for the project ALL")
 
     def __unicode__(self):
         return u'%s' % (self.project_name)
+
 
 class ProjectUser(models.Model) :
     user = models.ForeignKey(User)
@@ -1467,6 +1471,7 @@ class ProjectUser(models.Model) :
 
     def __unicode__(self):
         return u'%s' % (self.user)
+
 
 class LoggedActions(models.Model):
     event_id = models.BigIntegerField(primary_key=True)
