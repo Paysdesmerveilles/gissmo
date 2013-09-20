@@ -750,6 +750,8 @@ ORDER BY
 def station_xml(request):
     query = request.GET.get('Station','')
 
+    aujourdhui = datetime.now()
+
     result = []
 
     """Obtain the information about the station """
@@ -1018,7 +1020,7 @@ def station_xml(request):
             result.append([network, comment_list, station_count, ResStation, station_vault, ResChannels.count(), create_station, terminate_station, channel_list])
 
     return render_to_response("station_xml.xml", {
-    "ResNetwork": result,},
+    "ResNetwork": result, "aujourdhui": aujourdhui },
          RequestContext(request, {}), mimetype="application/xhtml+xml") 
 station_xml = staff_member_required(station_xml)
 
