@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
+{% load tz %}
+{% localtime off %}
 <ResifStationXML schemaVersion="1.0">
      <Source>Noeud A</Source>
      <Sender>Noeud A</Sender>
-     <Created>{% now "c" %}</Created>
+     <Created>{{ aujourdhui|date:"Y-m-d\TH:i:s" }}</Created>
      {% for network, comments, station_count, station, station_vault, channels_count, create_station, terminate_station, channels in ResNetwork %}
      <Network code="{{ network.network_code }}"
          {% if network.start_date %} 
-             startDate="{{ network.start_date|date:"c" }}"
+             startDate="{{ network.start_date|date:"Y-m-d\TH:i:s" }}"
          {% endif %} 
          {% if network.end_date %} 
-             endDate="{{ network.end_date|date:"c" }}"
+             endDate="{{ network.end_date|date:"Y-m-d\TH:i:s" }}"
          {% endif %} 
          {% if network.restricted_status %} 
              restrictedStatus="{{ network.restricted_status }}"
@@ -29,10 +31,10 @@
                  <Value>{{ comment.value }}</Value>
                {% endif %}
                {% if comment.begin_effective %} 
-                 <BeginEffectiveTime>{{ comment.begin_effective|date:"c" }}</BeginEffectiveTime>
+                 <BeginEffectiveTime>{{ comment.begin_effective|date:"Y-m-d\TH:i:s" }}</BeginEffectiveTime>
                {% endif %}
                {% if comment.end_effective %} 
-                 <EndEffectiveTime>{{ comment.end_effective|date:"c" }}</EndEffectiveTime>
+                 <EndEffectiveTime>{{ comment.end_effective|date:"Y-m-d\TH:i:s" }}</EndEffectiveTime>
                {% endif %}
                {% for author in authors %}
                    <Author>
@@ -94,20 +96,20 @@
            </Operator>
            {% endif %}
            {% if create_station != None %} 
-             <CreationDate>{{ create_station.intervention_date|date:"c" }}</CreationDate>
+             <CreationDate>{{ create_station.intervention_date|date:"Y-m-d\TH:i:s" }}</CreationDate>
            {% endif %}
            {% if terminate_station != None %} 
-             <TerminationDate>{{ terminate_station.intervention_date|date:"c" }}</TerminationDate>
+             <TerminationDate>{{ terminate_station.intervention_date|date:"Y-m-d\TH:i:s" }}</TerminationDate>
            {% endif %}
            <TotalNumberChannels>{{ channels_count }}</TotalNumberChannels>
            <SelectedNumberChannels>{{ channels_count }}</SelectedNumberChannels>
            {% for channel, sensor, sensor_installed, sensor_uninstalled, sensor_config, preamplifier, preamplifier_installed, preamplifier_uninstalled, preamplifier_config, datalogger, datalogger_installed, datalogger_uninstalled, datalogger_config, equipment, equipment_installed, equipment_uninstalled, equipment_config, other_1, other_1_installed, other_1_uninstalled, other_1_config, other_2, other_2_installed, other_2_uninstalled, other_2_config, other_3, other_3_installed, other_3_uninstalled, other_3_config, other_4, other_4_installed, other_4_uninstalled, other_4_config, other_5, other_5_installed, other_5_uninstalled, other_5_config, comments in channels %}
              <Channel code="{{ channel.channel_code }}" locationCode="{{ channel.location_code }}"
              {% if channel.start_date %} 
-                 startDate="{{ channel.start_date|date:"c" }}"
+                 startDate="{{ channel.start_date|date:"Y-m-d\TH:i:s" }}"
              {% endif %} 
              {% if channel.end_date %} 
-                 endDate="{{ channel.end_date|date:"c" }}"
+                 endDate="{{ channel.end_date|date:"Y-m-d\TH:i:s" }}"
              {% endif %}
              {% if channel.restricted_status %} 
                  restrictedStatus="{{ channel.restricted_status }}"
@@ -122,10 +124,10 @@
                  <Comment>
                    <Value>{{ comment.value }}</Value>
                    {% if comment.begin_effective %} 
-                     <BeginEffectiveTime>{{ comment.begin_effective|date:"c" }}</BeginEffectiveTime>
+                     <BeginEffectiveTime>{{ comment.begin_effective|date:"Y-m-d\TH:i:s" }}</BeginEffectiveTime>
                    {% endif %}
                    {% if comment.end_effective %} 
-                     <EndEffectiveTime>{{ comment.end_effective|date:"c" }}</EndEffectiveTime>
+                     <EndEffectiveTime>{{ comment.end_effective|date:"Y-m-d\TH:i:s" }}</EndEffectiveTime>
                    {% endif %}
                    {% for author in authors %}
                        <Author>
@@ -207,10 +209,10 @@
                   <SerialNumber>{{ sensor.serial_number }}</SerialNumber>
                  {% endif %}  
                  {% if  sensor_installed != None %} 
-                  <InstallationDate>{{ sensor_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ sensor_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if  sensor_uninstalled != None %}   
-                  <RemovalDate>{{ sensor_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ sensor_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}                  
                   {% for config in sensor_config %}
@@ -241,10 +243,10 @@
                   <SerialNumber>{{ preamplifier.serial_number }}</SerialNumber>
                  {% endif %}
                  {% if preamplifier_installed != None %}
-                  <InstallationDate>{{ preamplifier_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ preamplifier_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if preamplifier_uninstalled != None %}
-                  <RemovalDate>{{ preamplifier_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ preamplifier_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
                  {% for config in preamplifier_config %}
@@ -275,10 +277,10 @@
                   <SerialNumber>{{ datalogger.serial_number }}</SerialNumber>
                  {% endif %}
                  {% if datalogger_installed != None %}
-                  <InstallationDate>{{ datalogger_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ datalogger_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if datalogger_uninstalled != None %}
-                  <RemovalDate>{{ datalogger_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ datalogger_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
                  {% for config in datalogger_config %}
@@ -309,10 +311,10 @@
                   <SerialNumber>{{ equipment.serial_number }}</SerialNumber>
                  {% endif %}
                  {% if equipment_installed != None %}
-                  <InstallationDate>{{ equipment_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ equipment_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if equipment_uninstalled != None %}
-                  <RemovalDate>{{ equipment_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ equipment_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
                  {% for config in equipment_config %}
@@ -343,10 +345,10 @@
                   <SerialNumber>{{ other_1.serial_number }}</SerialNumber>
                  {% endif %}
                  {% if other_1_installed != None %}
-                  <InstallationDate>{{ other_1_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ other_1_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if other_1_uninstalled != None %}
-                  <RemovalDate>{{ other_1_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ other_1_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
                  {% for config in other_1_config %}
@@ -377,10 +379,10 @@
                   <SerialNumber>{{ other_2.serial_number }}</SerialNumber>
                  {% endif %}
                  {% if other_2_installed != None %}
-                  <InstallationDate>{{ other_2_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ other_2_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if other_2_uninstalled != None %}
-                  <RemovalDate>{{ other_2_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ other_2_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
                  {% for config in other_2_config %}
@@ -411,10 +413,10 @@
                   <SerialNumber>{{ other_3.serial_number }}</SerialNumber>
                  {% endif %}
                  {% if other_3_installed != None %}
-                  <InstallationDate>{{ other_3_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ other_3_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if other_3_uninstalled != None %}
-                  <RemovalDate>{{ other_3_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ other_3_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
                  {% for config in other_3_config %}
@@ -445,10 +447,10 @@
                   <SerialNumber>{{ other_4.serial_number }}</SerialNumber>
                  {% endif %}
                  {% if other_4_installed != None %}
-                  <InstallationDate>{{ other_4_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ other_4_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if other_4_uninstalled != None %}
-                  <RemovalDate>{{ other_4_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ other_4_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
                  {% for config in other_4_config %}
@@ -479,10 +481,10 @@
                   <SerialNumber>{{ other_5.serial_number }}</SerialNumber>
                  {% endif %}
                  {% if other_5_installed != None %}
-                  <InstallationDate>{{ other_5_installed|date:"c" }}</InstallationDate>
+                  <InstallationDate>{{ other_5_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
                  {% if other_5_uninstalled != None %}
-                  <RemovalDate>{{ other_5_uninstalled|date:"c" }}</RemovalDate>
+                  <RemovalDate>{{ other_5_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
                  {# <CalibrationDate></CalibrationDate> #}
                  {% for config in other_5_config %}
@@ -500,5 +502,5 @@
       </Network>
      {% endfor %}
 </ResifStationXML>
-
+{% endlocaltime %}
 
