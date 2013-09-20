@@ -27,6 +27,9 @@ from django.shortcuts import get_object_or_404
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
+from datetime import datetime
+from django.utils.timezone import localtime
+
 """
 ####
 #
@@ -900,7 +903,7 @@ class Intervention(models.Model):
         verbose_name_plural = _("E1. Interventions")
 
     def __unicode__(self):
-        return u'%s : %s' % (self.station.station_code, self.intervention_date)
+        return u'%s : %s' % (self.station.station_code,  localtime(self.intervention_date).strftime("%Y-%m-%d %H:%M:%S"))
 
 
 class IntervActor(models.Model):
@@ -1342,7 +1345,7 @@ class Channel(models.Model) :
         verbose_name_plural = _("Z1. Canaux d'acquisition")
 
     def __unicode__(self):
-        return u'%s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s' % (self.station, self.network, self.location_code, self.channel_code, self.latitude, self.longitude, self.elevation, self.depth, self.dip, self.azimuth, self.sample_rate, self.start_date, self.end_date)
+        return u'%s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s' % (self.station, self.network, self.location_code, self.channel_code, self.latitude, self.longitude, self.elevation, self.depth, self.dip, self.azimuth, self.sample_rate, localtime(self.start_date).strftime("%Y-%m-%d %H:%M:%S"))
 
 #class ProtoChannelChain(models.Model) :
 #    channel = models.ForeignKey('ProtoChannel', verbose_name=_("canal"))

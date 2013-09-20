@@ -25,6 +25,7 @@ from django.contrib.admin import SimpleListFilter
 # Fin de l'ajout pour custom filter
 
 from django.contrib.contenttypes.models import ContentType
+from django.utils.timezone import localtime
 """
 Usage:
 
@@ -639,7 +640,7 @@ class InterventionAdmin(admin.ModelAdmin):
             return super(InterventionAdmin, self).response_add(request, obj, post_url_continue)
 
     def format_date(self, obj):
-        return obj.intervention_date.strftime('%Y-%m-%d %H:%M')
+        return localtime(obj.intervention_date).strftime("%Y-%m-%d %H:%M:%S")
 
     format_date.short_description = 'Date (aaaa-mm-jj hh24:mi)'
     format_date.admin_order_field = 'intervention_date'
