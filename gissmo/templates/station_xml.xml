@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-{% load tz %}
-{% localtime off %}
 <ResifStationXML schemaVersion="1.0">
      <Source>Noeud A</Source>
      <Sender>Noeud A</Sender>
@@ -502,5 +500,5 @@
       </Network>
      {% endfor %}
 </ResifStationXML>
-{% endlocaltime %}
+
 
