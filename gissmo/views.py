@@ -4,12 +4,11 @@ import csv
 import os.path
 import mimetypes
 from datetime import datetime
-from django.db.models import Q
 from operator import itemgetter
 from models import *
 from tools import DecimalEncoder
 
-
+from django.db.models import Q
 from django.template import loader, Context
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -19,11 +18,11 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.db.models import get_model
-
 from django.utils import simplejson
 from django.utils.encoding import smart_str
 from django.utils.encoding import force_unicode
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 
 def site_maps(request):
@@ -492,7 +491,7 @@ def xhr_equipment(request):
     equipment available
     equipment on site
     """
-    # Check that it's an ajax request and that the method is GET
+
     if request.is_ajax() and request.method == 'GET':
         action=request.GET.get('action', '')
         station=request.GET.get('station', '')
@@ -500,14 +499,13 @@ def xhr_equipment(request):
         heure_intervention=request.GET.get('heure', '')
         intervention_id=request.GET.get('intervention', '')
 
+        # From : https://docs.djangoproject.com/en/dev/topics/i18n/timezones/#troubleshooting
         date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
-        date_intervention = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
+        date_without_timezone = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
+        current_timezone = timezone.get_current_timezone()
+        date_intervention = date_without_timezone.replace(tzinfo=current_timezone)
 
         equip_dispo = available_equipment_cursor(action, station, date_intervention, intervention_id)
-
-        #test = available_equipment(action, station, date_intervention, intervention_id)
-
-        #print list(set(equip_dispo)-set(test))
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:
