@@ -1,44 +1,26 @@
 # coding=utf-8
 
+import time
+
 from django.contrib import admin
+from django import forms
+from django.forms import Textarea
+from django.utils.translation import ugettext as _
+from django.utils.encoding import force_unicode
+from django.contrib.admin import widgets
+from django.shortcuts import render_to_response, get_object_or_404, HttpResponseRedirect
+from django.utils.functional import curry
+from django.contrib.admin import SimpleListFilter
+from django.contrib.contenttypes.models import ContentType
+from django.utils.timezone import localtime
+from django.contrib.admin.widgets import AdminURLFieldWidget
+from django.db.models import URLField
+from django.utils.safestring import mark_safe
+
 from models import *
 from forms import *
 from views import *
 
-# Ajout pour definir un autre formfield_for_dbfield afin de limiter le choix du select d'un champ FK
-from django import forms
-# Fin de l'ajout pour definir un autre formfield_for_dbfield
-
-# Ajout pour limiter la taille d'un champ Textfield a plus ou moins une ligne dans une section inline
-from django.forms import Textarea
-# Fin de l'ajout pour limiter la taille d'un champ Textfield
-
-from django.utils.translation import ugettext as _
-from django.utils.encoding import force_unicode
-
-from django.contrib.admin import widgets
-from django.shortcuts import render_to_response, get_object_or_404, HttpResponseRedirect
-from django.utils.functional import curry
-
-# Ajout pour custom filter
-from django.contrib.admin import SimpleListFilter
-# Fin de l'ajout pour custom filter
-
-from django.contrib.contenttypes.models import ContentType
-from django.utils.timezone import localtime
-"""
-Usage:
-
-import time
-Afin d'avoir un changement dans les formsets de EquipModelDocInline
-"""
-import time
-
-# Ajout pour custom URLFieldWidget
-from django.contrib.admin.widgets import AdminURLFieldWidget
-from django.db.models import URLField
-from django.utils.safestring import mark_safe
-# Fin de l'ajout pour custom URLFieldWidget
 
 class URLFieldWidget(AdminURLFieldWidget):
     def render(self, name, value, attrs=None):
@@ -56,34 +38,21 @@ class LabeledHiddenInput(forms.HiddenInput):
         h_input = super(LabeledHiddenInput, self).render( name, value, attrs=None)
         return mark_safe("%s %s"%(status, h_input))
 
-####
-#
-# ActorAdmin's section
-#
-####
+
 class ActorAdmin(admin.ModelAdmin):
     form = ActorForm
     list_display = ['actor_parent', 'actor_name', 'actor_type',]
     list_display_links = ['actor_name',]
     ordering = ['actor_parent', 'actor_name',]
     search_fields = ['actor_name',]
-#    exclude = ['actor_type',]
 
-####
-#
-# BuiltAdmin's section
-#
-####
+
 class BuiltAdmin(admin.ModelAdmin):
     list_display = ['station', 'built_type', 'built_short_desc',]
     ordering = ['station',]
     search_fields = ['station__station_code',]
 
-####
-#
-# EquipmentAdmin's section
-#
-####
+
 class EquipModelDocInline(admin.TabularInline):
     model = EquipModelDoc
     fields = ('document_type', 'document_title', 'begin_effective', 'end_effective', 'document_equip_model', 'private_link')
@@ -434,20 +403,8 @@ class StationSiteFilter(SimpleListFilter):
        if self.value():
            return queryset.filter(operator__id__exact=self.value())
 
-#import copy
-
-#def copy_stationsite(modeladmin, request, queryset):
-#    # sd is an instance of StationSite
-#    for sd in queryset:
-#        sd_copy = copy.copy(sd) # (2) django copy object
-#        sd_copy.id = None   # (3) set 'id' to None to create new object
-#        sd_copy.station_code = sd.station_code + '_NEW'
-#        sd_copy.save()    # initial save
-#
-#    copy_stationsite.short_description = "Make a Copy of StationSite"
 
 class StationSiteAdmin(admin.ModelAdmin):
-#    actions = [copy_stationsite]
     list_display = ('station_code', 'site_name', 'operator', 'get_last_state', 'site_type', 'latitude', 'longitude', 'elevation',)
     list_filter = [StationSiteFilter,  'site_type',]
     ordering = ['station_code',]

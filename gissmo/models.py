@@ -1,34 +1,22 @@
 # coding=utf-8
 
-from django.db import models
-#from hstore_field import fields
-from django.utils.translation import ugettext_lazy as _
+from datetime import datetime
 
-# Ajout pour definir un lien entre des champs FK. Ce qui limitera le choix du drop down select d'un champ FK
-from smart_selects.db_fields import ChainedForeignKey
-# Fin de l'ajout pour definir un lien entre des champs FK
-
-# Ajout pour lever des erreurs de validation
-from django.core.exceptions import ValidationError
-# Fin de l'ajout pour lever des erreurs de validation
-
-from django.core.files.storage import FileSystemStorage
-from django.conf import settings
-
-fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
-
-# Ajout pour securiser les fichiers uploader
-from django.contrib.auth.models import User
-#from private_files import PrivateFileField
-# Fin de l'ajout pour securiser les fichiers uploader
 from django.core.mail import send_mail
-
 from django.shortcuts import get_object_or_404
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-
-from datetime import datetime
+from django.db import models
+from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
 from django.utils.timezone import localtime
+from django.contrib.auth.models import User
+
+from smart_selects.db_fields import ChainedForeignKey
+
+fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 
 """
 ####
@@ -37,7 +25,6 @@ from django.utils.timezone import localtime
 #
 ####
 """
-# Actor
 class Actor(models.Model):
     """
     **Description :** Personne ou entité morale qui est soit opérateur d'une station ou propriétaire d'un équipement ou impliquée lors d'une intervention

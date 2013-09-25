@@ -1,6 +1,5 @@
 # coding=utf-8
 
-# Create your views here.
 import csv
 import os.path
 import mimetypes
@@ -26,6 +25,7 @@ from django.utils.encoding import smart_str
 from django.utils.encoding import force_unicode
 from django.contrib.contenttypes.models import ContentType
 
+
 def site_maps(request):
     query = request.GET.get('Station','')
     ResHistStations = []
@@ -49,7 +49,7 @@ def site_maps(request):
     ResStatTheo = StationSite.objects.filter(site_type=7)
     ResHistStations = IntervStation.objects.filter(id__in=Liste)
 
-    if query: 
+    if query:
         ResStationUnique = IntervStation.objects.filter(intervention__station=query, station_state__isnull=False).order_by('-intervention__intervention_date')[:1]
         if ResStationUnique:
             for resstationunique in ResStationUnique:
@@ -65,7 +65,7 @@ def itineraire_maps(request):
     ResStationUnique = ''
     Observatoire = ''
 
-    if query: 
+    if query:
         ResStationUnique = StationSite.objects.get(pk=query)
 
 #   Un utilisateur ne doit avoir que deux groupes resif et l'observatoire d'attache
@@ -82,7 +82,7 @@ def itineraire_maps(request):
         Observatoire = StationSite.objects.get(station_code = user_group)
     except StationSite.DoesNotExist:
         Observatoire = StationSite.objects.get(station_code = 'EOST')
- 
+
     return render_to_response("itineraire_gmap.html", {
         "ResStationUnique": ResStationUnique,
         "Observatoire": Observatoire,
@@ -112,7 +112,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
         if mime_type_guess is not None:
             response = HttpResponse(fsock, mimetype=mime_type_guess[0])
         response['Content-Disposition'] = 'attachment; filename=' + smart_str(file_name)
-        return response    
+        return response
     else:
         raise PermissionDenied()
 
@@ -128,22 +128,22 @@ def xhr_station_state(request):
         select_choice = [({"optionValue" : c[0], "optionDisplay" : c[1]}) for c in StationState.STATION_STATES]
         select_choice.insert(0, ({"optionValue": '', "optionDisplay": '-- choisir une action en premier --'}))
         if int(action) == StationAction.CREER or int(action) == StationAction.INSTALLER:
-            select_choice = [{"optionValue": StationState.INSTALLATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.INSTALLATION]}] 
+            select_choice = [{"optionValue": StationState.INSTALLATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.INSTALLATION]}]
         elif int(action) == StationAction.DEBUTER_TEST:
             select_choice = [{"optionValue": StationState.EN_TEST, "optionDisplay": dict(StationState.STATION_STATES)[StationState.EN_TEST]}]
             select_choice.append({"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]})
         elif int(action) == StationAction.TERMINER_TEST:
             select_choice = [{"optionValue": StationState.FERMEE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.FERMEE]}]
-            select_choice.append({"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]})   
+            select_choice.append({"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]})
         elif int(action) == StationAction.OPERER:
             select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
         elif int(action) == StationAction.CONSTATER_DEFAUT:
             select_choice = [{"optionValue": StationState.DEFAUT, "optionDisplay": dict(StationState.STATION_STATES)[StationState.DEFAUT]}]
-            select_choice.append({"optionValue": StationState.PANNE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.PANNE]})            
+            select_choice.append({"optionValue": StationState.PANNE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.PANNE]})
         elif int(action) == StationAction.MAINT_PREV_DISTANTE or int(action) == StationAction.MAINT_CORR_DISTANTE or int(action) == StationAction.MAINT_PREV_SITE or int(action) == StationAction.MAINT_CORR_SITE:
             select_choice = [{"optionValue": StationState.OPERATION, "optionDisplay": dict(StationState.STATION_STATES)[StationState.OPERATION]}]
             select_choice.append({"optionValue": StationState.DEFAUT, "optionDisplay": dict(StationState.STATION_STATES)[StationState.DEFAUT]})
-            select_choice.append({"optionValue": StationState.PANNE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.PANNE]})          
+            select_choice.append({"optionValue": StationState.PANNE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.PANNE]})
         elif int(action) == StationAction.DEMANTELER:
             select_choice = [{"optionValue": StationState.FERMEE, "optionDisplay": dict(StationState.STATION_STATES)[StationState.FERMEE]}]
         elif int(action) == StationAction.AUTRE:
@@ -151,7 +151,7 @@ def xhr_station_state(request):
         else:
             pass
         data = simplejson.dumps(select_choice)
-        
+
         return HttpResponse(data)
     # If you want to prevent non XHR calls
     else:
@@ -165,7 +165,7 @@ def available_equip_state(action):
     select_choice = [(c[0],c[1]) for c in EquipState.EQUIP_STATES]
     select_choice.insert(0,('','-- choisir une action en premier --'))
     if int(action) == EquipAction.ACHETER:
-        select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])] 
+        select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])]
     elif int(action) == EquipAction.TESTER:
         select_choice = [(EquipState.DISPONIBLE, EquipState.EQUIP_STATES[EquipState.DISPONIBLE-1][1])]
         select_choice.append((EquipState.OPERATION, EquipState.EQUIP_STATES[EquipState.OPERATION-1][1]))
@@ -203,7 +203,7 @@ def available_equip_state(action):
     elif int(action) == EquipAction.CONSTATER_DISPARITION:
         select_choice = [(EquipState.DISPARU, EquipState.EQUIP_STATES[EquipState.DISPARU-1][1])]
     elif int(action) == EquipAction.RETROUVER:
-        select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])] 
+        select_choice = [(EquipState.A_TESTER, EquipState.EQUIP_STATES[EquipState.A_TESTER-1][1])]
     elif int(action) == EquipAction.METTRE_AU_REBUT:
         select_choice = [(EquipState.AU_REBUT, EquipState.EQUIP_STATES[EquipState.AU_REBUT-1][1])]
     elif int(action) == EquipAction.AUTRE:
@@ -215,7 +215,7 @@ def available_equip_state(action):
 def xhr_equip_state(request):
     """
     Request that return the possible states for a station according to the action done
-    This is use onchange event 
+    This is use onchange event
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -264,7 +264,7 @@ def equip_state_todate(equip, date, intervention_id):
             last_equip_state = IntervEquip.objects.exclude(intervention__pk=intervention_id).filter(intervention__intervention_date__lt=date, equip__id=equip, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
         else:
             last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
-    else:           
+    else:
         last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
 
     if last_equip_state:
@@ -290,12 +290,12 @@ def equip_with_state_todate(date, intervention_id):
                 last_equip_state = IntervEquip.objects.exclude(intervention__pk=intervention_id).filter(intervention__intervention_date__lt=date, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
             else:
                 last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
-        else:           
+        else:
             last_equip_state = IntervEquip.objects.filter(intervention__intervention_date__lt=date, equip__id=equip.id, equip_state__isnull=False).order_by('-intervention__intervention_date')[:1]
 
         if last_equip_state:
             if last_equip_state[0].equip_state == 3:
-                liste.append(equip)                
+                liste.append(equip)
     return liste
 
 def equip_last_place(equip):
@@ -308,8 +308,8 @@ def equip_last_place(equip):
     else:
         return 'Inconnu'
 
-# 
-# TODO eliminate one of this function 
+#
+# TODO eliminate one of this function
 #
 # equip_place_todate return the station object
 # equip_place_todate_id return the station id
@@ -342,7 +342,7 @@ def equip_place_todate_id(equip, date, intervention_id):
         else:
             last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lte=date, equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]
     else:
-        last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lte=date, equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]                    
+        last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lte=date, equip__id=equip, station__isnull=False).order_by('-intervention__intervention_date')[:1]
 
     if last_equip_place:
         for last in last_equip_place:
@@ -358,8 +358,8 @@ def available_equipment_cursor(action, station, date, intervention_id):
     else:
         intervention = get_object_or_404(Intervention, pk=intervention_id)
         # Trick : If the date and site have not changed we put 0 as intervention
-        # There is no intervention with the ID 0 but we can keep the same code 
-        if date == intervention.intervention_date and int(station) == intervention.station_id: 
+        # There is no intervention with the ID 0 but we can keep the same code
+        if date == intervention.intervention_date and int(station) == intervention.station_id:
             intervention_id = 0
 
     cursor = connection.cursor()
@@ -373,15 +373,15 @@ def available_equipment_cursor(action, station, date, intervention_id):
     SELECT DISTINCT ON (interv.equip_id)
     interv.equip_id, interv.intervention_date, interv.station_id, interv.equip_state
     FROM (
-    SELECT 
+    SELECT
     gissmo_intervequip.equip_id,
-    gissmo_intervention.intervention_date, 
+    gissmo_intervention.intervention_date,
     gissmo_intervequip.station_id,
     gissmo_intervequip.equip_state
-    FROM 
-    public.gissmo_intervequip, 
+    FROM
+    public.gissmo_intervequip,
     public.gissmo_intervention
-    WHERE 
+    WHERE
     gissmo_intervention.id != %s and
     gissmo_intervention.intervention_date < %s and
     gissmo_intervequip.intervention_id = gissmo_intervention.id
@@ -402,7 +402,7 @@ def available_equipment_cursor(action, station, date, intervention_id):
         # Obtain all equip without BUY action
         nobuy_equipments = Equipment.objects.exclude(id__in=list_equip_purchased)
         for equip in nobuy_equipments:
-            equipment_list.append(equip.id)    
+            equipment_list.append(equip.id)
     # Install only equip DISPONIBLE or No state
     elif int(action) == EquipAction.INSTALLER:
         for row in cursor.fetchall():
@@ -418,7 +418,7 @@ def available_equipment_cursor(action, station, date, intervention_id):
         for row in cursor.fetchall():
             if row[3] == EquipState.DISPARU:
                 equipment_list.append(row[0])
-    # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE 
+    # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE
     elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
         for row in cursor.fetchall():
             if row[2] == int(station) and (row[3] == EquipState.DEFAUT or row[3] == EquipState.PANNE):
@@ -454,7 +454,7 @@ def available_equipment(action, station, date, intervention_id):
         # Obtain all equip without BUY action
         nobuy_equipments = Equipment.objects.exclude(id__in=list_equip_purchased)
         for equip in nobuy_equipments:
-            equipment_list.append(equip.id)    
+            equipment_list.append(equip.id)
     # Install only equip DISPONIBLE or No state
     elif int(action) == EquipAction.INSTALLER:
         for equip in equipments:
@@ -470,7 +470,7 @@ def available_equipment(action, station, date, intervention_id):
         for equip in equipments:
             if equip_state_todate(equip.id, date, int(intervention_id)) == EquipState.DISPARU:
                 equipment_list.append(equip.id)
-    # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE 
+    # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE
     elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
         for equip in equipments:
             if int(equip_place_todate_id(equip.id, date, int(intervention_id))) == int(station):
@@ -527,13 +527,13 @@ def available_station(action, station):
     """
     # Send equipment somewhere SAV, OSU or Other
     if int(action) == EquipAction.EXPEDIER:
-        station_dispo = StationSite.objects.filter(Q(site_type=StationSite.OBSERVATOIRE) | Q(site_type=StationSite.SAV) | Q(site_type=StationSite.AUTRE)).order_by('station_code') 
+        station_dispo = StationSite.objects.filter(Q(site_type=StationSite.OBSERVATOIRE) | Q(site_type=StationSite.SAV) | Q(site_type=StationSite.AUTRE)).order_by('station_code')
     # Uninstall and put the equip in OSU or in the station of the intervention
     elif int(action) == EquipAction.DESINSTALLER:
-        station_dispo = StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE).order_by('station_code')              
+        station_dispo = StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE).order_by('station_code')
     # Not able to know where is the equipment
     elif int(action) == EquipAction.CONSTATER_DISPARITION:
-        station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')            
+        station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')
     # Stop tracking the equipment
     elif int(action) == EquipAction.METTRE_AU_REBUT:
         station_dispo = StationSite.objects.filter(site_type=StationSite.NEANT).order_by('station_code')
@@ -543,7 +543,7 @@ def available_station(action, station):
     # Make action only on equip installed in the station
     else:
         station_dispo = StationSite.objects.filter(id=station)
-    
+
     return station_dispo
 
 def xhr_station(request):
@@ -586,7 +586,7 @@ def xhr_built(request):
     """
     if request.is_ajax() and request.method == 'GET':
         station=request.GET.get('station', '')
-        
+
         built_dispo = available_built(station)
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
@@ -619,7 +619,7 @@ def available_equipment_scioper(station, date):
 
 def xhr_equip_oper(request):
     """
-    Request that return the possible scientific equipment in operation for a station 
+    Request that return the possible scientific equipment in operation for a station
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -644,7 +644,7 @@ def xhr_equip_oper(request):
 
 def xhr_station_position(request):
     """
-    Request that return the position for a station 
+    Request that return the position for a station
     """
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
@@ -653,7 +653,7 @@ def xhr_station_position(request):
         instance = get_object_or_404(StationSite, pk=station)
 
         select_choice = [{"latitude": instance.latitude, "longitude": instance.longitude, "elevation": instance.elevation}]
-       
+
         data = simplejson.dumps(select_choice, cls=DecimalEncoder)
 
         return HttpResponse(data)
@@ -679,9 +679,9 @@ def dataless(request):
     response['Content-Disposition'] = 'attachment; filename="dataless.csv"'
 
     cursor.execute('''SELECT
-  CASE WHEN substr(gissmo_channel.channel_code,3,1)='2' THEN 'N' 
-  WHEN substr(gissmo_channel.channel_code,3,1)='3' THEN 'E' 
-  ELSE substr(gissmo_channel.channel_code,3,1) END AS "Composante", 
+  CASE WHEN substr(gissmo_channel.channel_code,3,1)='2' THEN 'N'
+  WHEN substr(gissmo_channel.channel_code,3,1)='3' THEN 'E'
+  ELSE substr(gissmo_channel.channel_code,3,1) END AS "Composante",
   gissmo_channel.channel_code AS "Code du canal",
   gissmo_stationsite.station_code  AS "Code du site",
   gissmo_channel.latitude AS "Latitude",
@@ -694,9 +694,9 @@ def dataless(request):
   gissmo_channel.azimuth AS "Azimuth",
   gissmo_network.network_code AS "Reseau",
   gissmo_actor.actor_name AS "Observatoire",
-  (SELECT 
-    gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number 
-   FROM 
+  (SELECT
+    gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number
+   FROM
     public.gissmo_chain,
     public.gissmo_equipment,
     public.gissmo_equipmodel
@@ -706,9 +706,9 @@ def dataless(request):
     gissmo_equipment.equip_model_id = gissmo_equipmodel.id AND
     gissmo_chain.channel_id = gissmo_channel.id
   ) AS "Capteur S/N",
-  (SELECT 
-    gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number 
-   FROM 
+  (SELECT
+    gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number
+   FROM
     public.gissmo_chain,
     public.gissmo_equipment,
     public.gissmo_equipmodel
@@ -719,17 +719,17 @@ def dataless(request):
     gissmo_chain.channel_id = gissmo_channel.id
   ) AS "Numeriseur S/N",
   gissmo_channel.sample_rate AS "Fréquence"
-FROM 
+FROM
   public.gissmo_channel,
   public.gissmo_stationsite,
   public.gissmo_network,
   public.gissmo_actor
-WHERE 
+WHERE
   gissmo_channel.station_id = gissmo_stationsite.id AND
   gissmo_channel.network_id = gissmo_network.id AND
   gissmo_stationsite.operator_id = gissmo_actor.id AND
   gissmo_stationsite.id = %s
-ORDER BY 
+ORDER BY
   gissmo_channel.start_date,
   gissmo_channel.location_code,
   "Composante" DESC
@@ -762,7 +762,7 @@ def station_xml(request):
     intervention_creation = IntervStation.objects.filter(intervention__station=query, station_action=StationAction.CREER).values('intervention')
     if intervention_creation:
         create_station = Intervention.objects.get(pk=intervention_creation)
-    
+
     """Obtain the date of closure for this station """
     terminate_station = None
     intervention_terminate = IntervStation.objects.filter(intervention__station=query, station_action=StationAction.DEMANTELER).values('intervention')
@@ -794,7 +794,7 @@ def station_xml(request):
             for comment in ResCommentNetwork:
                 """ Obtain the authors for each comment """
                 author_list = []
-                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(comment_network_id=comment.id)                
+                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(comment_network_id=comment.id)
                 comment_list.append([comment, ResCommentNetworkAuthor])
 
             ResChannels = ResChannel.filter(network_id=network.id)
@@ -846,39 +846,39 @@ def station_xml(request):
                         sensor = equipchain.equip
                         """Obtain the config parameters and values for the sensor """
                         sensor_config = ChainConfig.objects.filter(chain=equipchain.id)
-                    if equipchain.order == Chain.PREAMPLIFIER:  
+                    if equipchain.order == Chain.PREAMPLIFIER:
                         preamplifier = equipchain.equip
                         """Obtain the config parameters and values for the preamplifier """
-                        preamplifier_config = ChainConfig.objects.filter(chain=equipchain.id)                        
-                    if equipchain.order == Chain.DATALOGGER:  
+                        preamplifier_config = ChainConfig.objects.filter(chain=equipchain.id)
+                    if equipchain.order == Chain.DATALOGGER:
                         datalogger = equipchain.equip
                         """Obtain the config parameters and values for the datalogger """
-                        datalogger_config = ChainConfig.objects.filter(chain=equipchain.id)                        
-                    if equipchain.order == Chain.EQUIPMENT:  
+                        datalogger_config = ChainConfig.objects.filter(chain=equipchain.id)
+                    if equipchain.order == Chain.EQUIPMENT:
                         equipment = equipchain.equip
                         """Obtain the config parameters and values for the equipment """
-                        equipment_config = ChainConfig.objects.filter(chain=equipchain.id)                        
-                    if equipchain.order == Chain.OTHER_1:  
+                        equipment_config = ChainConfig.objects.filter(chain=equipchain.id)
+                    if equipchain.order == Chain.OTHER_1:
                         other_1 = equipchain.equip
                         """Obtain the config parameters and values for the equipment """
-                        other_1_config = ChainConfig.objects.filter(chain=equipchain.id) 
-                    if equipchain.order == Chain.OTHER_2:  
+                        other_1_config = ChainConfig.objects.filter(chain=equipchain.id)
+                    if equipchain.order == Chain.OTHER_2:
                         other_2 = equipchain.equip
                         """Obtain the config parameters and values for the equipment """
-                        other_2_config = ChainConfig.objects.filter(chain=equipchain.id) 
-                    if equipchain.order == Chain.OTHER_3:  
+                        other_2_config = ChainConfig.objects.filter(chain=equipchain.id)
+                    if equipchain.order == Chain.OTHER_3:
                         other_3 = equipchain.equip
                         """Obtain the config parameters and values for the equipment """
-                        other_3_config = ChainConfig.objects.filter(chain=equipchain.id) 
-                    if equipchain.order == Chain.OTHER_4:  
+                        other_3_config = ChainConfig.objects.filter(chain=equipchain.id)
+                    if equipchain.order == Chain.OTHER_4:
                         other_4 = equipchain.equip
                         """Obtain the config parameters and values for the equipment """
-                        other_4_config = ChainConfig.objects.filter(chain=equipchain.id) 
-                    if equipchain.order == Chain.OTHER_5:  
+                        other_4_config = ChainConfig.objects.filter(chain=equipchain.id)
+                    if equipchain.order == Chain.OTHER_5:
                         other_5 = equipchain.equip
                         """Obtain the config parameters and values for the equipment """
-                        other_5_config = ChainConfig.objects.filter(chain=equipchain.id) 
-                #    if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':  
+                        other_5_config = ChainConfig.objects.filter(chain=equipchain.id)
+                #    if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':
                 #        sensor = equipchain.equip
                 #        """Obtain the config parameters and values for the sensor """
                 #        sensor_config = ChainConfig.objects.filter(chain=equipchain.id)
@@ -895,12 +895,12 @@ def station_xml(request):
                     sensor_operation = equip_operation.filter(equip__id=sensor.id).order_by('-intervention__intervention_date')[:1]
                     if sensor_operation:
                          """ Here we have 0 or 1 occurence """
-                         sensor_installed = sensor_operation[0].intervention.intervention_date 
+                         sensor_installed = sensor_operation[0].intervention.intervention_date
                     """ Sensor removal after the start of the channel life """
                     sensor_removal = equip_removal.filter(equip__id=sensor.id).order_by('intervention__intervention_date')[:1]
                     if sensor_removal:
                          """ Here we have 0 or 1 occurence """
-                         sensor_uninstalled = sensor_removal[0].intervention.intervention_date 
+                         sensor_uninstalled = sensor_removal[0].intervention.intervention_date
                 if preamplifier != []:
                     """ Preamplifier in operation during the channel life """
                     preamplifier_operation = equip_operation.filter(equip__id=preamplifier.id).order_by('-intervention__intervention_date')[:1]
@@ -911,7 +911,7 @@ def station_xml(request):
                     preamplifier_removal = equip_removal.filter(equip__id=preamplifier.id).order_by('intervention__intervention_date')[:1]
                     if preamplifier_removal:
                          """ Here we have 0 or 1 occurence """
-                         preamplifier_uninstalled = preamplifier_removal[0].intervention.intervention_date  
+                         preamplifier_uninstalled = preamplifier_removal[0].intervention.intervention_date
                 if datalogger != []:
                     """ Datalogger in operation during the channel life """
                     datalogger_operation = equip_operation.filter(equip__id=datalogger.id).order_by('-intervention__intervention_date')[:1]
@@ -933,7 +933,7 @@ def station_xml(request):
                     equipment_removal = equip_removal.filter(equip__id=equipment.id).order_by('intervention__intervention_date')[:1]
                     if equipment_removal:
                          """ Here we have 0 or 1 occurence """
-                         equipment_uninstalled = equipment_removal[0].intervention.intervention_date                         
+                         equipment_uninstalled = equipment_removal[0].intervention.intervention_date
                 if other_1 != []:
                     """ Equipment in operation during the channel life """
                     other_1_operation = equip_operation.filter(equip__id=other_1.id).order_by('-intervention__intervention_date')[:1]
@@ -996,7 +996,7 @@ def station_xml(request):
                 for comment in ResCommentChannel:
                     """ Obtain the authors for each comment """
                     author_list = []
-                    ResCommentChannelAuthor = CommentChannelAuthor.objects.filter(comment_channel_id=comment.id)                
+                    ResCommentChannelAuthor = CommentChannelAuthor.objects.filter(comment_channel_id=comment.id)
                     comment_list.append([comment, ResCommentChannelAuthor])
 
                 channel_list.append([channel, sensor, sensor_installed, sensor_uninstalled, sensor_config, \
@@ -1011,7 +1011,7 @@ def station_xml(request):
                                      comment_list])
                 """ Obtain the last built for the sensor according with the channel date """
                 """ WARNING only one built among possibly many """
-                if sensor != []:                   
+                if sensor != []:
                     last_equip_place = IntervEquip.objects.filter(intervention__intervention_date__lte=channel.start_date, equip__id=sensor.id, station__id=channel.station.id).order_by('-intervention__intervention_date')[:1]
                     """ Here we have 0 or 1 occurence """
                     if last_equip_place:
@@ -1021,7 +1021,7 @@ def station_xml(request):
 
     return render_to_response("station_xml.xml", {
     "ResNetwork": result, "aujourdhui": aujourdhui },
-         RequestContext(request, {}), mimetype="application/xhtml+xml") 
+         RequestContext(request, {}), mimetype="application/xhtml+xml")
 station_xml = staff_member_required(station_xml)
 
 def network_xml(request):
@@ -1053,7 +1053,7 @@ def network_xml(request):
                     intervention_creation = IntervStation.objects.filter(intervention__station=ResStation.id, station_action=StationAction.CREER).values('intervention')
                     if intervention_creation:
                         create_station = Intervention.objects.get(pk=intervention_creation)
-    
+
                     """Obtain the date of closure for this station """
                     terminate_station = None
                     intervention_terminate = IntervStation.objects.filter(intervention__station=ResStation.id, station_action=StationAction.DEMANTELER).values('intervention')
@@ -1079,7 +1079,7 @@ def network_xml(request):
                         datalogger_uninstalled = None
                         ResChain = Chain.objects.filter(channel=channel.id)
                         for equipchain in ResChain:
-                            if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':  
+                            if equipchain.equip.equip_type.equip_type_name == u'Vélocimètre' or equipchain.equip.equip_type.equip_type_name == u'Accéléromètre':
                                 sensor = equipchain.equip
                             else:
                                 if equipchain.equip.equip_type.equip_type_name == u'Numériseur':
@@ -1092,12 +1092,12 @@ def network_xml(request):
                             sensor_operation = equip_operation.filter(equip__id=sensor.id).order_by('-intervention__intervention_date')[:1]
                             if sensor_operation:
                                  """ Here we have 0 or 1 occurence """
-                                 sensor_installed = sensor_operation[0].intervention.intervention_date 
+                                 sensor_installed = sensor_operation[0].intervention.intervention_date
                             """ Sensor removal after the start of the channel life """
                             sensor_removal = equip_removal.filter(equip__id=sensor.id).order_by('intervention__intervention_date')[:1]
                             if sensor_removal:
                                  """ Here we have 0 or 1 occurence """
-                                 sensor_uninstalled = sensor_removal[0].intervention.intervention_date 
+                                 sensor_uninstalled = sensor_removal[0].intervention.intervention_date
                         if preamplifier != []:
                             """ Preamplifier in operation during the channel life """
                             preamplifier_operation = equip_operation.filter(equip__id=preamplifier.id).order_by('-intervention__intervention_date')[:1]
@@ -1108,7 +1108,7 @@ def network_xml(request):
                             preamplifier_removal = equip_removal.filter(equip__id=preamplifier.id).order_by('intervention__intervention_date')[:1]
                             if preamplifier_removal:
                                  """ Here we have 0 or 1 occurence """
-                                 preamplifier_uninstalled = preamplifier_removal[0].intervention.intervention_date  
+                                 preamplifier_uninstalled = preamplifier_removal[0].intervention.intervention_date
                         if datalogger != []:
                             """ Datalogger in operation during the channel life """
                             datalogger_operation = equip_operation.filter(equip__id=datalogger.id).order_by('-intervention__intervention_date')[:1]
@@ -1120,17 +1120,17 @@ def network_xml(request):
                             if datalogger_removal:
                                  """ Here we have 0 or 1 occurence """
                                  datalogger_uninstalled = datalogger_removal[0].intervention.intervention_date
-        
+
                         """ Obtain the comment for the channel """
                         ResCommentChannel = CommentChannel.objects.filter(channel_id=channel.id)
-        
+
                         comment_list = []
                         for comment in ResCommentChannel:
                             """ Obtain the authors for each comment """
                             author_list = []
-                            ResCommentChannelAuthor = CommentChannelAuthor.objects.filter(comment_channel_id=comment.id)                
+                            ResCommentChannelAuthor = CommentChannelAuthor.objects.filter(comment_channel_id=comment.id)
                             comment_list.append([comment, ResCommentChannelAuthor])
-        
+
                         channel_list.append([channel, sensor, sensor_installed, sensor_uninstalled, preamplifier, preamplifier_installed, preamplifier_uninstalled, datalogger, datalogger_installed, datalogger_uninstalled, comment_list])
                     station_list.append([ResStation, station_vault, ResChannels.count(), create_station, terminate_station, channel_list])
 
@@ -1141,7 +1141,7 @@ def network_xml(request):
             for comment in ResCommentNetwork:
                 """ Obtain the authors for each comment """
                 author_list = []
-                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(comment_network_id=comment.id)                
+                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(comment_network_id=comment.id)
                 comment_list.append([comment, ResCommentNetworkAuthor])
             result.append([network, comment_list, station_count, station_list])
 #            result.append([network, comment_list, station_count, ResStation, station_vault, ResChannels.count(), create_station, terminate_station, channel_list])
@@ -1195,15 +1195,15 @@ def station_dataless(request):
                             liste_config.append(chainconfig)
                     liste_chain.append([chain.equip,liste_config])
                     """ Built of the sensor and dataloger list """
-                    if chain.equip.equip_type.equip_type_name == u'Vélocimètre' or chain.equip.equip_type.equip_type_name == u'Accéléromètre':  
+                    if chain.equip.equip_type.equip_type_name == u'Vélocimètre' or chain.equip.equip_type.equip_type_name == u'Accéléromètre':
                         sensor_list.append(chain.equip)
                     else:
                         if chain.equip.equip_type.equip_type_name == u'Numériseur':
                             datalogger_list.append(chain.equip)
-            
+
             liste_channel.append([channel,liste_chain])
 
-            liste_canal = [channel_component, liste_chain] 
+            liste_canal = [channel_component, liste_chain]
             if liste_canal_prec != liste_canal:
                  """ First time initialisation """
                  if liste_canal_prec != []:
@@ -1246,11 +1246,11 @@ def test_site(request):
   gissmo_stationsite.note AS "Note",
   gissmo_stationdoc.private_link AS "Lien vers document prive",
   (SELECT gissmo_stationstate.station_state_name
-   FROM 
+   FROM
       public.gissmo_intervention,
       public.gissmo_intervstation,
       public.gissmo_stationstate
-   WHERE 
+   WHERE
       gissmo_intervention.station_id = gissmo_stationsite.id AND
       gissmo_intervstation.intervention_id = gissmo_intervention.id AND
       gissmo_intervstation.station_state IS NOT NULL AND
@@ -1258,16 +1258,16 @@ def test_site(request):
    ORDER BY
       gissmo_intervention.intervention_date DESC
    LIMIT 1) AS "Etat",
-   (SELECT gissmo_actor.actor_name 
+   (SELECT gissmo_actor.actor_name
     FROM
        gissmo_actor
     WHERE
        gissmo_stationsite.operator_id = gissmo_actor.id) AS "Operateur"
-FROM 
+FROM
   public.gissmo_stationsite LEFT JOIN public.gissmo_stationdoc ON (gissmo_stationdoc.station_id = gissmo_stationsite.id)
-WHERE 
+WHERE
   gissmo_stationsite.site_type = 6
-ORDER BY 
+ORDER BY
   gissmo_stationsite.station_code
 ''', [query])
     dictrow = dictfetchall(cursor)
@@ -1288,7 +1288,7 @@ def test_dbchange(request):
     asking_date = request.GET.get('Date','')
 
     asking_datehour = u''.join([asking_date,u' ',"00:00:00"])
-    
+
     ResChange = LoggedActions.objects.filter(action_tstamp_tx__lt=datetime.strptime(asking_datehour,"%Y-%m-%d %H:%M:%S")).order_by('action_tstamp_tx')
 
     response = HttpResponse(mimetype='text/plain')
@@ -1298,13 +1298,13 @@ def test_dbchange(request):
         # Insert
         response.write("Table name    : %s \n" % change.table_name)
         response.write("Date    : %s" % change.action_tstamp_tx)
-        response.write("\n")            
+        response.write("\n")
         if change.action == "I":
             response.write("Table action  : Insert\n")
             response.write("Changed value : %-30s : %-30s\n" % ("FIELDS","VALUES"))
             for key, value in loads(change.row_data).items():
                 response.write("                %-30s : %-30s\n" % (key, value))
-            response.write("\n")            
+            response.write("\n")
         else:
             # Delete
             if change.action == "D":
@@ -1312,7 +1312,7 @@ def test_dbchange(request):
                 response.write("Changed value : %-30s : %-30s\n" % ("FIELDS","VALUES"))
                 for key, value in loads(change.row_data).items():
                     response.write("                %-30s : %-30s\n" % (key, value))
-                response.write("\n")            
+                response.write("\n")
             else:
                 # Update
                 if change.action == "U":
@@ -1320,11 +1320,11 @@ def test_dbchange(request):
                     response.write("Changed value : %-30s : %-30s\n" % ("FIELDS","VALUES"))
                     for key, value in loads(change.changed_fields).items():
                         response.write("                %-30s : %-30s\n" % (key, value))
-                    response.write("\n")            
+                    response.write("\n")
                 # Other action
                 else:
                     response.write("Other\n")
-        response.write("\n")            
+        response.write("\n")
     return response
 """
 
@@ -1334,7 +1334,7 @@ def xhr_parameter_value(request):
     """
     if request.is_ajax() and request.method == 'GET':
         parameter=request.GET.get('parameter', '')
-        
+
         value_dispo = ParameterValue.objects.filter(parameter_id=parameter)
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]

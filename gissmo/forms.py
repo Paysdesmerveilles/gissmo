@@ -1,38 +1,24 @@
 # coding=utf-8
 
+from datetime import datetime
+import math
+import time
+
 from django import forms
 from django.contrib.admin import widgets
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.forms.widgets import CheckboxSelectMultiple
 from django.shortcuts import render_to_response, redirect, get_object_or_404, HttpResponseRedirect, HttpResponse
-
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
-from datetime import datetime
-
 from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel, Built, DataType, EquipSupertype, EquipType, Project, ProjectUser, ParameterEquip, ParameterValue
-
-# TODO Voir a deplacer dans un autre fichier
 from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate_id, available_equipment, available_equip_state, available_station, available_built, available_equipment_scioper
-
-# TODO Eliminer ou bonifier EquipAction, EquipState, StationAction, StationState
 from models import EquipAction, EquipState, StationAction, StationState, ChannelCode
 
-import math
 
-"""
-Usage:
-
-import time
-Afin d'avoir un changement dans les formsets de EquipModelDocInline
-"""
-import time
-"""
-Devra aller dans widget.py
-"""
 class AdminFileWidget(forms.FileInput):
     """
     A FileField Widget that shows its current value if it has one.
@@ -57,6 +43,7 @@ class AdminFileWidget(forms.FileInput):
         output.append(super(AdminFileWidget, self).render(name, value, attrs))
         return mark_safe(u''.join(output))
 
+
 class ActorForm(forms.ModelForm):
 
     class Meta:
@@ -71,7 +58,7 @@ class ActorForm(forms.ModelForm):
         #
         # Check that the actor_name Inconnu will not change too
         # The name is use for the default operator in site creation
- 
+
         if self.instance.id:
             actor = get_object_or_404(Actor, id=self.instance.id)
             if User.objects.filter(username=actor.actor_name).exists():
@@ -83,11 +70,12 @@ class ActorForm(forms.ModelForm):
         # Always return the full collection of cleaned data.
         return cleaned_data
 
+
 class EquipModelDocInlineForm(forms.ModelForm):
-    """ 
-    Champ pour faire en sorte que les forms inline instancier 
+    """
+    Champ pour faire en sorte que les forms inline instancier
     soit toujours avec un flag has_changed a True
-    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants    
+    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants
     """
     always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
 
@@ -102,11 +90,12 @@ class EquipModelDocInlineForm(forms.ModelForm):
             self.fields['always_update'].initial = int(time.time())
             self.fields['document_equip_model'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_equip_model', 'id':instance_document.id})
 
+
 class EquipDocInlineForm(forms.ModelForm):
-    """ 
-    Champ pour faire en sorte que les forms inline instancier 
+    """
+    Champ pour faire en sorte que les forms inline instancier
     soit toujours avec un flag has_changed a True
-    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants    
+    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants
     """
     always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
 
@@ -120,6 +109,7 @@ class EquipDocInlineForm(forms.ModelForm):
             instance_document = kwargs['instance']
             self.fields['always_update'].initial = int(time.time())
             self.fields['document_equip'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_equip', 'id':instance_document.id})
+
 
 class InterventionForm(forms.ModelForm):
 
@@ -135,9 +125,10 @@ class InterventionForm(forms.ModelForm):
         split_widget.widgets[1].attrs = {'class': 'vTimeField', 'size': '8', 'value': '00:00:00'}
         self.fields['intervention_date'].widget = split_widget
 
+
 class EquipmentForm(forms.ModelForm):
     """
-    Add of fields to obtain the date of purchase and stockage_site only when it'a new equipment 
+    Add of fields to obtain the date of purchase and stockage_site only when it'a new equipment
     else hide the field and the label
     Only the site of type OBSERVATOIRE can be a stockage site
     """
@@ -166,6 +157,7 @@ class EquipmentForm(forms.ModelForm):
     class Meta:
         model = Equipment
 
+
 class StationDocInlineForm(forms.ModelForm):
     """
     """
@@ -179,9 +171,10 @@ class StationDocInlineForm(forms.ModelForm):
             instance_document = kwargs['instance']
             self.fields['document_station'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_station', 'id':instance_document.id})
 
+
 class StationSiteForm(forms.ModelForm):
     """
-    Add of a field to obtain the date of the creation and the associated project only when it'a new station 
+    Add of a field to obtain the date of the creation and the associated project only when it'a new station
     else hide the field and the label
     """
     creation_date = forms.DateField(widget=widgets.AdminDateWidget,label='Date creation',required=False)
@@ -202,7 +195,7 @@ class StationSiteForm(forms.ModelForm):
             self.fields['project'].queryset = Project.objects.filter(id__in=project_list)
             if len(project_list) == 1:
                 self.fields['project'].empty_label=None
-            
+
         self.fields['operator'].queryset = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.ENTREPRISE_SAV) | Q(actor_type=Actor.INCONNU))
 
     class Meta:
@@ -224,6 +217,7 @@ class StationSiteForm(forms.ModelForm):
         # Always return the full collection of cleaned data.
         return cleaned_data
 
+
 class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
@@ -244,9 +238,9 @@ class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
 
         # Queryset to order by OSU and engineer to group them in the drop down box
         # Hack with the extra to sort by agency and after by actor_name to bypass the agency actor_name
-        # TODO make custom widget for display a tree structure by agency, contact            
+        # TODO make custom widget for display a tree structure by agency, contact
         form.fields['actor'].queryset = Actor.objects.extra(select={"sortfield": "CASE WHEN id=actor_parent_id THEN actor_parent_id || '0' || actor_name ELSE actor_parent_id || '1' || actor_name END"}).order_by('sortfield')
-    
+
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
@@ -263,9 +257,10 @@ class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
                 # TODO vue de validation
                 # Validation of station_action and final state
                 form_number += 1
- 
-        if form_number == 0 or form_number == delete_checked:  
+
+        if form_number == 0 or form_number == delete_checked:
             raise forms.ValidationError('Au moins un intervenant par intervention')
+
 
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
@@ -295,7 +290,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         STATE_CHOICES.insert(0, ('', '-- choisir une action en premier --'))
 
         """
-        Initialize form.fields 
+        Initialize form.fields
         """
         form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --", widget=forms.Select(attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
         #form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --")
@@ -306,10 +301,10 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         """
         Hack to check if the formset is already filled to present the complete list of actions
         else the list exclude the action of buying (Acheter)
-        """ 
+        """
 
         if index != None:
-            """ 
+            """
             Obtain the value for each field of a line of a formset
             """
             action_id = form['equip_action'].value()
@@ -333,18 +328,18 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             """
             #intervention_id = self.instance.id
 
-            """ 
+            """
             All actions can be display
             """
             if action_id != None and action_id != '' and int(action_id) == 1:
                 ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
                 ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
             else:
-                """ 
+                """
                 The BUY action is not display
                 """
                 #ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS[1:]]
-                """ 
+                """
                 The BUY action is display
                 """
                 ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
@@ -354,9 +349,9 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
             ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
 
-            """ 
+            """
             Filtering the queryset depending of the value
-            """        
+            """
             if action_id != None and action_id != '':
                 form.fields['equip_state'].widget = forms.Select(choices=available_equip_state(action_id))
                 if intervention_station_id != None and intervention_station_id != '':
@@ -375,11 +370,11 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 form.fields['built'] = forms.ModelChoiceField(queryset = available_built(station_id), required=False)
 
         else :
-            """ 
+            """
             The BUY action is not permit
             """
             #ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS[1:]]
-            """ 
+            """
             The BUY action permitted
             """
             ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
@@ -387,7 +382,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
             """
             Special case if we came from a specific equipment
-            """ 
+            """
             if self.__initial and self.__initial != ['']:
                 equip = get_object_or_404(Equipment, id=self.__initial[0])
                 form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.filter(id=self.__initial[0]), empty_label="-- choisir une action en premier --", initial=equip, widget=forms.Select(attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
@@ -395,21 +390,21 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             else:
                 form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --", widget=forms.Select(attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
                 #form.fields['equip'] = forms.ModelChoiceField(queryset = Equipment.objects.none(), empty_label="-- choisir une action en premier --")
-        
+
         form.fields['equip_action'].widget = forms.Select(choices=ACTION_CHOICES, attrs={'onchange': 'get_equip_state(this,\'' + url1 + '\',\'' + url2 + '\',\'' + url3 + '\',\'' + url4 + '\');'})
 
     def clean(self):
 
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
-            return 
+            return
 
         Liste_equip = []
 
         # Obtain the information from the form needed for the validation
         intervention_station_id = self.data.get('station')
         intervention_id = self.instance.id
-        
+
         # Check if intervention_id is set to something else put the value 0
         if not intervention_id:
             intervention_id = 0
@@ -423,7 +418,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             intervention_station = StationSite.objects.none()
 
         date_intervention = self.data.get('intervention_date_0')
-        heure_intervention = self.data.get('intervention_date_1') 
+        heure_intervention = self.data.get('intervention_date_1')
         if date_intervention and heure_intervention:
             date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
             try:
@@ -481,7 +476,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
                 """
                 The action TESTER is valid only if the state were OPERATION, A_TESTER, DISPONIBLE, DEFAUT, PANNE or AUTRE before
-                """ 
+                """
                 if equip_action == EquipAction.TESTER and \
                    (equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.OPERATION and \
                     equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.A_TESTER and \
@@ -493,21 +488,21 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
                 """
                 The action INSTALLER is valid only if the state was DISPONIBLE before
-                """ 
+                """
                 if equip_action == EquipAction.INSTALLER and \
                    equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.DISPONIBLE:
                      raise forms.ValidationError('Equipement (%s) non dans un etat disponible (%s) pour cette action (%s)' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date, int(intervention_id))-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
 
                 """
                 The action RECEVOIR is valid only if the state was EN_TRANSIT before
-                """ 
+                """
                 if equip_action == EquipAction.RECEVOIR and \
                    equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.EN_TRANSIT:
                      raise forms.ValidationError('Equipement (%s) n\'est pas actuellement en transit (%s) pour reception' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date, int(intervention_id))-1][1]))
 
                 """
                 The action RETROUVER is valid only if the state was DISPARU before
-                """ 
+                """
                 if equip_action == EquipAction.RETROUVER and \
                    equip_state_todate(equip.id, intervention_date, int(intervention_id)) != EquipState.DISPARU:
                      raise forms.ValidationError('Equipement (%s) n\'est pas actuellement disparu (%s) pour etre retrouver' % (equip, EquipState.EQUIP_STATES[equip_state_todate(equip.id, intervention_date, int(intervention_id))-1][1]))
@@ -575,7 +570,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                    equip_state != EquipState.AU_REBUT:
                     errors += 1
 
-                if errors != 0:  
+                if errors != 0:
                     raise forms.ValidationError('Etat final (%s) est invalide pour l\'action choisie  (%s)' % (EquipState.EQUIP_STATES[equip_state-1][1], EquipAction.EQUIP_ACTIONS[equip_action-1][1]))
 
                 # TODO
@@ -597,7 +592,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                     if equip_action == action and intervention_station != target_station:
                         errors += 1
 
-                if errors != 0: 
+                if errors != 0:
                      raise forms.ValidationError('On doit effectuer cette action (%s) sur le site de l\'intervention (%s) et non (%s)' % (EquipAction.EQUIP_ACTIONS[equip_action-1][1], intervention_station, target_station))
 
                 # The action DESINSTALLER is valid only if the target_station is an OSU
@@ -628,6 +623,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         if not (len(set(Liste_equip)) == len(Liste_equip)):
             raise forms.ValidationError('On ne peut effectuer qu\'une seul action par equipement')
 
+
 class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
     def add_fields(self, form, index):
         super(IntervStationInlineFormset, self).add_fields(form, index)
@@ -636,7 +632,7 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
         Hack to check if the formset is already filled
 	    to present the complete list of actions
         else the list exclude the action of creating (Creer code station)
-        """ 
+        """
         if index != None:
             ACTION_CHOICES = [(c[0], c[1]) for c in StationAction.STATION_ACTIONS]
             ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
@@ -655,7 +651,7 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
-            return 
+            return
 
         # get forms that actually have valid data
         for form in self.forms:
@@ -687,8 +683,9 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
                 if station_action == StationAction.DEMANTELER and station_state != StationState.FERMEE:
                     errors += 1
 
-                if errors != 0:  
+                if errors != 0:
                     raise forms.ValidationError('Etat (%s) invalide pour l\'action choisi  (%s)' % (StationState.STATION_STATES[station_state-1][1], StationAction.STATION_ACTIONS[station_action-1][1]))
+
 
 """
 class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
@@ -697,11 +694,10 @@ class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
         self.__initial = kwargs.pop('initial', [])
         super(ChainConfigInlineFormset, self).__init__(*args, **kwargs)
 """
-
 class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
-        
+
 #        Grabs the curried initial values and stores them into a 'private'
 #        variable. Note: the use of self.__initial is important, using
 #        self.initial or self._initial will be erased by a parent class
@@ -710,7 +706,7 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
     def add_fields(self, form, index):
         super(ChainInlineFormset, self).add_fields(form, index)
-      
+
         # TODO Ameliorer cette comparaison
         if self.__initial and self.__initial != ['']:
             station = get_object_or_404(StationSite, id=self.__initial[0])
@@ -719,7 +715,7 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         url = reverse('xhr_equip_oper')
 
         """
-        Initialize form.fields 
+        Initialize form.fields
         """
         ORDER_CHOICES = [(c[0], c[1]) for c in Chain.ORDER_CHOICES]
         ORDER_CHOICES.insert(0, ('', '-- choisir un type en premier --'))
@@ -730,7 +726,7 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
         if index != None :
             #
-            # Ne sera plus necessaire apres l'utilisation de la fonction 
+            # Ne sera plus necessaire apres l'utilisation de la fonction
             # available_equipment_scioper
             #
             #equip_id = form['equip'].value()
@@ -743,7 +739,8 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
                 form.fields['equip'] = forms.ModelChoiceField(queryset = available_equipment_scioper(channel_station_id, channel_date), empty_label=None)
             except:
                 return
-        
+
+
 class ChannelForm(forms.ModelForm):
     """
     Obtain the latitude, longitude and elevation of the station
@@ -759,7 +756,7 @@ class ChannelForm(forms.ModelForm):
     # Hack field to show only if channel code and sample rate not fit
     accept_anyway = forms.BooleanField(initial=False,required=False)
 
-    def __init__(self, *args, **kwargs):        
+    def __init__(self, *args, **kwargs):
         super(ChannelForm, self).__init__(*args, **kwargs)
 
         # Hack to simulate warning message via raise Validationerror
@@ -768,10 +765,10 @@ class ChannelForm(forms.ModelForm):
         else:
             self.fields['accept_anyway'].widget = forms.HiddenInput()
             self.fields['accept_anyway'].label = ""
-        
+
 #        instance = getattr(self, 'instance', None)
 #        if instance and instance.pk:
-#            station = get_object_or_404(StationSite, id=instance.station.id)  
+#            station = get_object_or_404(StationSite, id=instance.station.id)
 #            self.fields['distance_x'].initial = (float(instance.longitude) - float(station.longitude)) * (111.111 * math.cos(float(instance.latitude) * math.pi / 180))
 #            self.fields['distance_y'].initial = (float(instance.latitude) - float(station.latitude)) * 111.111
 #            self.fields['distance_z'].initial = float(instance.elevation) - float(station.elevation)
@@ -779,11 +776,11 @@ class ChannelForm(forms.ModelForm):
 #            self.fields['distance_y'].widget.attrs['readonly'] = True
 #            self.fields['distance_z'].widget.attrs['readonly'] = True
 
-#        station_label = ""  
+#        station_label = ""
         if 'initial' in kwargs:
-            initial = kwargs['initial'] 
+            initial = kwargs['initial']
             if 'station' in initial:
-                station = get_object_or_404(StationSite, id=initial['station'])            
+                station = get_object_or_404(StationSite, id=initial['station'])
                 self.fields['latitude'].initial = station.latitude
                 self.fields['longitude'].initial = station.longitude
                 self.fields['elevation'].initial = station.elevation
@@ -815,12 +812,12 @@ class ChannelForm(forms.ModelForm):
                             ('LH1','LH1'),('LH2','LH2'), \
                             ('VH1','VH1'),('VH2','VH2'), \
                             ('HN2','HN2'),('HN3','HN3'),]
-        """                            
+        """
         #self.fields['channel_code'].widget = forms.Select(choices=CHANNEL_CHOICES, attrs={'onchange':'get_dip_azimut_value(this);'})
         self.fields['channel_code'] = forms.ModelChoiceField(queryset = ChannelCode.objects.all().order_by('presentation_rank'), widget=forms.Select(attrs={'onchange':'get_dip_azimut_value(this);'}), empty_label='--')
         self.fields['station'] = forms.ModelChoiceField(queryset = StationSite.objects.all())
-        self.fields["data_type"].widget = CheckboxSelectMultiple()  
-        self.fields["data_type"].queryset = DataType.objects.all()       
+        self.fields["data_type"].widget = CheckboxSelectMultiple()
+        self.fields["data_type"].queryset = DataType.objects.all()
         self.fields["data_type"].initial = [t.pk for t in DataType.objects.filter(Q(type_description='CONTINUOUS')| Q(type_description='GEOPHYSICAL'))]
 
     def clean(self):
@@ -860,6 +857,7 @@ class ChannelForm(forms.ModelForm):
         # Always return the full collection of cleaned data.
         return cleaned_data
 
+
 class ProjectUserForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
@@ -867,6 +865,7 @@ class ProjectUserForm(forms.ModelForm):
 
         if self.instance.id:
             self.fields['user'] = forms.ModelChoiceField(queryset=User.objects.filter(pk=self.instance.user.id), empty_label=None)
+
 
 class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
 
@@ -879,17 +878,17 @@ class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
         form.fields['parameter'] = forms.ModelChoiceField(queryset = ParameterEquip.objects.filter(equip_model_id=self.instance.equip.equip_model.id), widget=forms.Select(attrs={'onchange': 'get_parameter_value(this,\'' + url1 + '\');'}))
         form.fields['value'] = forms.ModelChoiceField(queryset = ParameterValue.objects.all(), widget=forms.Select(attrs={'onfocus': 'get_parameter_value(this,\'' + url1 + '\');'}), empty_label="-- choisir un parametre en premier --")
 
+
 class ChannelChainInlineFormset(forms.models.BaseInlineFormSet):
 
     def add_fields(self, form, index):
         super(ChannelChainInlineFormset, self).add_fields(form, index)
 
         if index != None:
-            """ 
+            """
             Obtain the value for each field of a line of a formset
             """
             parameter_id = form['parameter'].value()
 
             form.fields['parameter'] = forms.ModelChoiceField(queryset = ParameterEquip.objects.filter(pk=parameter_id), empty_label=None)
             form.fields['value'] = forms.ModelChoiceField(queryset = ParameterValue.objects.filter(parameter_id=parameter_id), empty_label=None)
-
