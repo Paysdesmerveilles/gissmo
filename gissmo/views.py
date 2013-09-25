@@ -6,7 +6,7 @@ import mimetypes
 from datetime import datetime
 from operator import itemgetter
 from models import *
-from tools import DecimalEncoder
+from tools import DecimalEncoder, timezone_aware
 
 from django.db.models import Q
 from django.template import loader, Context
@@ -22,7 +22,6 @@ from django.utils import simplejson
 from django.utils.encoding import smart_str
 from django.utils.encoding import force_unicode
 from django.contrib.contenttypes.models import ContentType
-from django.utils import timezone
 
 
 def site_maps(request):
@@ -501,9 +500,8 @@ def xhr_equipment(request):
 
         # From : https://docs.djangoproject.com/en/dev/topics/i18n/timezones/#troubleshooting
         date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
-        date_without_timezone = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
-        current_timezone = timezone.get_current_timezone()
-        date_intervention = date_without_timezone.replace(tzinfo=current_timezone)
+        naive_datetime = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
+        date_intervention = timezone_aware(naive_datetime)
 
         equip_dispo = available_equipment_cursor(action, station, date_intervention, intervention_id)
 

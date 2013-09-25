@@ -17,6 +17,7 @@ from django.utils.safestring import mark_safe
 from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel, Built, DataType, EquipSupertype, EquipType, Project, ProjectUser, ParameterEquip, ParameterValue
 from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate_id, available_equipment, available_equip_state, available_station, available_built, available_equipment_scioper
 from models import EquipAction, EquipState, StationAction, StationState, ChannelCode
+from tools import timezone_aware
 
 
 class AdminFileWidget(forms.FileInput):
@@ -422,7 +423,8 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         if date_intervention and heure_intervention:
             date_heure_intervention = u''.join([date_intervention,u' ',heure_intervention])
             try:
-                intervention_date = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
+                naive_datetime = datetime.strptime(date_heure_intervention,"%Y-%m-%d %H:%M:%S")
+                intervention_date = timezone_aware(naive_datetime)
             except ValueError:
                 intervention_date = ''
             pass
