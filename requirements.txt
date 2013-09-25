@@ -2,11 +2,13 @@ Django==1.5.1
 Fabric==1.7.0
 argparse==1.2.1
 distribute==0.6.24
+django-extensions==1.2.2
 django-smart-selects==1.0.9
 ipython==1.1.0
 paramiko==1.11.0
 psycopg2==2.5.1
 pycrypto==2.6
 pytz==2013d
+six==1.4.1
 uWSGI==1.9.16
 wsgiref==0.1.2
