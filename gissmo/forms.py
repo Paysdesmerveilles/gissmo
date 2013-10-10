@@ -1,7 +1,6 @@
 # coding=utf-8
 
 from datetime import datetime
-import math
 import time
 
 from django import forms
@@ -9,14 +8,19 @@ from django.contrib.admin import widgets
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.forms.widgets import CheckboxSelectMultiple
-from django.shortcuts import render_to_response, redirect, get_object_or_404, HttpResponseRedirect, HttpResponse
+from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
-from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, StationDoc, Chain, Channel, Built, DataType, EquipSupertype, EquipType, Project, ProjectUser, ParameterEquip, ParameterValue
-from views import equip_last_state, equip_last_place, equip_state_todate, equip_place_todate_id, available_equipment, available_equip_state, available_station, available_built, available_equipment_scioper
-from models import EquipAction, EquipState, StationAction, StationState, ChannelCode
+from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, \
+    StationDoc, Chain, Channel, Built, DataType, EquipSupertype, Project, \
+    ProjectUser, ParameterEquip, ParameterValue
+from views import equip_state_todate, equip_place_todate_id, \
+    available_equip_state, available_station, available_built, \
+    available_equipment_scioper
+from models import EquipAction, EquipState, StationAction, StationState, \
+    ChannelCode
 from tools import timezone_aware
 
 
@@ -34,9 +38,9 @@ class AdminFileWidget(forms.FileInput):
     def render(self, name, value, attrs=None):
         output = []
         url = ''
-        if value:
-            liste = value.url.split('/')
-        url = reverse('get_file', args=[self.app_label, self.model_name, self.field_name, self.id])
+
+        args = [self.app_label, self.model_name, self.field_name, self.id]
+        url = reverse('get_file', args=args)
 
         if value and hasattr(value, "url"):
             output.append('%s <a target="_blank" href="%s">%s</a> <br />%s ' % \
@@ -54,7 +58,8 @@ class ActorForm(forms.ModelForm):
         cleaned_data = super(ActorForm, self).clean()
         name = cleaned_data.get("actor_name")
 
-        # Check that an authenticated user via Auth.user will not change is actor_name in the Actor table
+        # Check that an authenticated user via Auth.user will not change is
+        # actor_name in the Actor table
         # The name is use for the default actor in intervention
         #
         # Check that the actor_name Inconnu will not change too
@@ -63,9 +68,9 @@ class ActorForm(forms.ModelForm):
         if self.instance.id:
             actor = get_object_or_404(Actor, id=self.instance.id)
             if User.objects.filter(username=actor.actor_name).exists():
-                if actor.actor_name <> name:
+                if actor.actor_name != name:
                     raise forms.ValidationError('The name for this actor must stay : %s' % actor.actor_name)
-            elif actor.actor_name == 'Inconnu' and name <> 'Inconnu':
+            elif actor.actor_name == 'Inconnu' and name != 'Inconnu':
                 raise forms.ValidationError('The name for this actor must stay : Inconnu')
 
         # Always return the full collection of cleaned data.
@@ -76,9 +81,13 @@ class EquipModelDocInlineForm(forms.ModelForm):
     """
     Champ pour faire en sorte que les forms inline instancier
     soit toujours avec un flag has_changed a True
-    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants
+    De cette facon si on change le supertype, type ou le modele du parent cela
+    se repercute aux enfants
     """
-    always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    always_update = forms.IntegerField(
+        required=False,
+        widget=forms.HiddenInput
+    )
 
     class Meta:
         model = EquipModelDoc
@@ -89,16 +98,27 @@ class EquipModelDocInlineForm(forms.ModelForm):
         if 'instance' in kwargs:
             instance_document = kwargs['instance']
             self.fields['always_update'].initial = int(time.time())
-            self.fields['document_equip_model'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_equip_model', 'id':instance_document.id})
+            self.fields['document_equip_model'].widget = AdminFileWidget(
+                attrs={
+                    'app_label': instance_document._meta.app_label,
+                    'model_name': instance_document._meta.object_name.lower(),
+                    'field_name': 'document_equip_model',
+                    'id': instance_document.id
+                }
+            )
 
 
 class EquipDocInlineForm(forms.ModelForm):
     """
     Champ pour faire en sorte que les forms inline instancier
     soit toujours avec un flag has_changed a True
-    De cette facon si on change le supertype, type ou le modele du parent cela se repercute aux enfants
+    De cette facon si on change le supertype, type ou le modele du parent cela
+    se repercute aux enfants
     """
-    always_update = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    always_update = forms.IntegerField(
+        required=False,
+        widget=forms.HiddenInput
+    )
 
     class Meta:
         model = EquipDoc
@@ -109,7 +129,14 @@ class EquipDocInlineForm(forms.ModelForm):
         if 'instance' in kwargs:
             instance_document = kwargs['instance']
             self.fields['always_update'].initial = int(time.time())
-            self.fields['document_equip'].widget = AdminFileWidget(attrs={'app_label':instance_document._meta.app_label, 'model_name':instance_document._meta.object_name.lower(), 'field_name':'document_equip', 'id':instance_document.id})
+            self.fields['document_equip'].widget = AdminFileWidget(
+                attrs={
+                    'app_label': instance_document._meta.app_label,
+                    'model_name': instance_document._meta.object_name.lower(),
+                    'field_name': 'document_equip',
+                    'id': instance_document.id
+                }
+            )
 
 
 class InterventionForm(forms.ModelForm):
@@ -117,28 +144,45 @@ class InterventionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(InterventionForm, self).__init__(*args, **kwargs)
 
-        #today = datetime.now()
-        #today_at_midnight = datetime(today.year, today.month, today.day)
-        #self.fields['intervention_date'].initial = today_at_midnight
-        #Hack to display time but let data empty to froce the user to fill the field
+        # today = datetime.now()
+        # today_at_midnight = datetime(today.year, today.month, today.day)
+        # self.fields['intervention_date'].initial = today_at_midnight
+        # Hack to display time but let data empty to froce the user
+        # to fill the field
         split_widget = widgets.AdminSplitDateTime()
         split_widget.widgets[0].attrs = {'class': 'vDateField', 'size': '10'}
-        split_widget.widgets[1].attrs = {'class': 'vTimeField', 'size': '8', 'value': '00:00:00'}
+        split_widget.widgets[1].attrs = {
+            'class': 'vTimeField',
+            'size': '8',
+            'value': '00:00:00'
+        }
         self.fields['intervention_date'].widget = split_widget
 
 
 class EquipmentForm(forms.ModelForm):
     """
-    Add of fields to obtain the date of purchase and stockage_site only when it'a new equipment
-    else hide the field and the label
+    Add of fields to obtain the date of purchase and stockage_site only when
+    it'a new equipment else hide the field and the label
     Only the site of type OBSERVATOIRE can be a stockage site
     """
-    observatories = StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE)
+    observatories = StationSite.objects.filter(
+        site_type=StationSite.OBSERVATOIRE
+    )
     OBS_CHOICES = []
     for obs in observatories:
         OBS_CHOICES.append((obs.id, obs.__unicode__()))
-    purchase_date = forms.DateField(widget=widgets.AdminDateWidget,label='Date achat',required=False)
-    stockage_site = forms.IntegerField(widget=forms.Select(choices=OBS_CHOICES),label='Site entreposage',required=False)
+
+    purchase_date = forms.DateField(
+        widget=widgets.AdminDateWidget,
+        label='Date achat',
+        required=False
+    )
+
+    stockage_site = forms.IntegerField(
+        widget=forms.Select(choices=OBS_CHOICES),
+        label='Site entreposage',
+        required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super(EquipmentForm, self).__init__(*args, **kwargs)
@@ -632,10 +676,10 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
 
         """
         Hack to check if the formset is already filled
-	    to present the complete list of actions
+        to present the complete list of actions
         else the list exclude the action of creating (Creer code station)
         """
-        if index != None:
+        if index:
             ACTION_CHOICES = [(c[0], c[1]) for c in StationAction.STATION_ACTIONS]
             ACTION_CHOICES.insert(0, ('', '-- choisir une action --'))
         else:

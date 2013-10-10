@@ -302,6 +302,7 @@ class ParamValueEquipModel(models.Model):
 def get_defaut_owner():
     return Actor.objects.get(actor_name='DT INSU')
 
+
 # Equipments
 class Equipment(models.Model):
     """
