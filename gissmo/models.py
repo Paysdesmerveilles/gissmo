@@ -362,14 +362,6 @@ class Equipment(models.Model):
     def __unicode__(self):
         return u'%s : %s : %s' % (self.equip_type, self.equip_model, self.serial_number)
 
-#def update_equipment(instance, **kwargs):
-#    print instance
-#    c = instance.equipment
-#    c.last_state = equip_last_state(c)
-#    c.save()
-
-#models.signals.post_save.connect(update_equipment, sender="IntervEquip")
-#models.signals.post_delete.connect(update_equipment, sender="IntervEquip")
 
 ####
 #

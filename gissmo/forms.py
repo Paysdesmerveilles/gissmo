@@ -168,9 +168,13 @@ class EquipmentForm(forms.ModelForm):
     observatories = StationSite.objects.filter(
         site_type=StationSite.OBSERVATOIRE
     )
-    OBS_CHOICES = []
+
+    OBS_CHOICES = [
+        ('', '')
+    ]
+
     for obs in observatories:
-        OBS_CHOICES.append((obs.id, obs.__unicode__()))
+        OBS_CHOICES.append((obs.id, obs))
 
     purchase_date = forms.DateField(
         widget=widgets.AdminDateWidget,
