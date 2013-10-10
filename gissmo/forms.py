@@ -831,6 +831,7 @@ class ChannelForm(forms.ModelForm):
 
         # Check that the sample rate fit in the range for the channel code
         # We can bypass this validation with the accept field
+        # http://www.iris.edu/manuals/SEED_appA.htm
         if channel_code:
             if channel_code.channel_code and not(sample_rate == None):
                 if not accept and \
@@ -838,7 +839,7 @@ class ChannelForm(forms.ModelForm):
                      (channel_code.channel_code[0] == 'C' and not(sample_rate >= 250 and sample_rate < 1000)) or \
                      (channel_code.channel_code[0] == 'E' and not(sample_rate >= 80 and sample_rate < 250)) or \
                      (channel_code.channel_code[0] == 'S' and not(sample_rate >= 10 and sample_rate < 80)) or \
-                     (channel_code.channel_code[0] == 'H' and not(sample_rate >= 80 and sample_rate < 250)) or \
+                     (channel_code.channel_code[0] == 'H' and not sample_rate >= 80) or \
                      (channel_code.channel_code[0] == 'B' and not(sample_rate >= 10 and sample_rate < 80)) or \
                      (channel_code.channel_code[0] == 'M' and not(sample_rate > 1 and sample_rate < 10)) or \
                      (channel_code.channel_code[0] == 'L' and not(sample_rate == 1)) or \
