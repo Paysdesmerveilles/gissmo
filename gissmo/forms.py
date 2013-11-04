@@ -285,9 +285,12 @@ class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
             actor = get_object_or_404(Actor, actor_name=self.__initial[0])
             form.fields['actor'].initial = actor
 
-        # Queryset to order by OSU and engineer to group them in the drop down box
-        # Hack with the extra to sort by agency and after by actor_name to bypass the agency actor_name
-        # TODO make custom widget for display a tree structure by agency, contact
+        # Queryset to order by OSU and engineer to group them in
+        # the drop down box.
+        # Hack with the extra to sort by agency and after by actor_name
+        # to bypass the agency actor_name.
+        # TODO make custom widget for display a tree structure
+        # by agency, contact.
         form.fields['actor'].queryset = Actor.objects.extra(select={"sortfield": "CASE WHEN id=actor_parent_id THEN actor_parent_id || '0' || actor_name ELSE actor_parent_id || '1' || actor_name END"}).order_by('sortfield')
 
     def clean(self):
