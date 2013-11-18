@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ResifStationXML schemaVersion="1.0">
+<FDSNStationXML schemaVersion="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
      <Source>Noeud A</Source>
      <Sender>Noeud A</Sender>
      <Created>{{ aujourdhui|date:"Y-m-d\TH:i:s" }}</Created>
      {% for network, comments, station_count, station, station_vault, channels_count, create_station, terminate_station, channels in ResNetwork %}
      <Network code="{{ network.network_code }}"
-         {% if network.start_date %} 
+         {% if network.start_date %}
              startDate="{{ network.start_date|date:"Y-m-d\TH:i:s" }}"
-         {% endif %} 
-         {% if network.end_date %} 
+         {% endif %}
+         {% if network.end_date %}
              endDate="{{ network.end_date|date:"Y-m-d\TH:i:s" }}"
-         {% endif %} 
-         {% if network.restricted_status %} 
+         {% endif %}
+         {% if network.restricted_status %}
              restrictedStatus="{{ network.restricted_status }}"
-         {% endif %} 
-         {% if network.alternate_code %} 
+         {% endif %}
+         {% if network.alternate_code %}
              alternateCode="{{ network.alternate_code }}"
          {% endif %}
-         {% if network.historical_code %} 
+         {% if network.historical_code %}
              historicalCode="{{ network.historical_code }}"
          {% endif %}>
-         {% if network.description %} 
+         {% if network.description %}
              <Description>{{ network.description }}</Description>
          {% endif %}
          {% for comment, authors in comments %}
@@ -28,15 +28,15 @@
                {% if comment.value %}
                  <Value>{{ comment.value }}</Value>
                {% endif %}
-               {% if comment.begin_effective %} 
+               {% if comment.begin_effective %}
                  <BeginEffectiveTime>{{ comment.begin_effective|date:"Y-m-d\TH:i:s" }}</BeginEffectiveTime>
                {% endif %}
-               {% if comment.end_effective %} 
+               {% if comment.end_effective %}
                  <EndEffectiveTime>{{ comment.end_effective|date:"Y-m-d\TH:i:s" }}</EndEffectiveTime>
                {% endif %}
                {% for author in authors %}
                    <Author>
-                   {% if author.author.actor_name %} 
+                   {% if author.author.actor_name %}
                      <Name>{{ author.author.actor_name }}</Name>
                    {% endif %}
                    </Author>
@@ -46,85 +46,85 @@
          <TotalNumberStations>{{ station_count }}</TotalNumberStations>
          <SelectedNumberStations>1</SelectedNumberStations>
          <Station code="{{ station.station_code }}"
-             {% if station.restricted_status %} 
+             {% if station.restricted_status %}
                  restrictedStatus="{{ station.restricted_status }}"
-             {% endif %} 
-             {% if station.alternate_code %} 
+             {% endif %}
+             {% if station.alternate_code %}
                  alternateCode="{{ station.alternate_code }}"
              {% endif %}
-             {% if station.historical_code %} 
+             {% if station.historical_code %}
                  historicalCode="{{ station.historical_code }}"
              {% endif %}>
            <Latitude
-               {% if station.latitude_unit %} 
+               {% if station.latitude_unit %}
                    unit="{{ station.latitude_unit }}"
                {% endif %}>{{ station.latitude }}</Latitude>
            <Longitude
-               {% if station.longitude_unit %} 
+               {% if station.longitude_unit %}
                    unit="{{ station.longitude_unit }}"
                {% endif %}>{{ station.longitude }}</Longitude>
            <Elevation
-               {% if station.elevation_unit %} 
+               {% if station.elevation_unit %}
                    unit="{{ station.elevation_unit }}"
                {% endif %}>{{ station.elevation }}</Elevation>
            <Site>
              <Name>{{ station.site_name }}</Name>
-             {% if station.city %} 
+             {% if station.city %}
                <Town>{{ station.town }}</Town>
              {% endif %}
-             {% if station.department %}  
+             {% if station.department %}
                <County>{{ station.county }}</County>
              {% endif %}
-             {% if station.region %}  
+             {% if station.region %}
                <Region>{{ station.region }}</Region>
              {% endif %}
-             {% if station.country %}  
+             {% if station.country %}
                <Country>{{ station.country }}</Country>
              {% endif %}
            </Site>
-           {% if station.vault %}  
+           {% if station.vault %}
              <Vault>{{ station_vault }}</Vault>
            {% endif %}
-           {% if station.geology %}  
+           {% if station.geology %}
              <Geology>{{ station.geology }}</Geology>
            {% endif %}
-           {% if station.operator %}  
+           {% if station.operator %}
            <Operator>
              <Agency>{{ station.operator }}</Agency>
            </Operator>
            {% endif %}
-           {% if create_station != None %} 
+           {% if create_station != None %}
              <CreationDate>{{ create_station.intervention_date|date:"Y-m-d\TH:i:s" }}</CreationDate>
            {% endif %}
-           {% if terminate_station != None %} 
+           {% if terminate_station != None %}
              <TerminationDate>{{ terminate_station.intervention_date|date:"Y-m-d\TH:i:s" }}</TerminationDate>
            {% endif %}
            <TotalNumberChannels>{{ channels_count }}</TotalNumberChannels>
            <SelectedNumberChannels>{{ channels_count }}</SelectedNumberChannels>
            {% for channel, sensor, sensor_installed, sensor_uninstalled, sensor_config, preamplifier, preamplifier_installed, preamplifier_uninstalled, preamplifier_config, datalogger, datalogger_installed, datalogger_uninstalled, datalogger_config, equipment, equipment_installed, equipment_uninstalled, equipment_config, other_1, other_1_installed, other_1_uninstalled, other_1_config, other_2, other_2_installed, other_2_uninstalled, other_2_config, other_3, other_3_installed, other_3_uninstalled, other_3_config, other_4, other_4_installed, other_4_uninstalled, other_4_config, other_5, other_5_installed, other_5_uninstalled, other_5_config, comments in channels %}
              <Channel code="{{ channel.channel_code }}" locationCode="{{ channel.location_code }}"
-             {% if channel.start_date %} 
+             {% if channel.start_date %}
                  startDate="{{ channel.start_date|date:"Y-m-d\TH:i:s" }}"
-             {% endif %} 
-             {% if channel.end_date %} 
+             {% endif %}
+             {% if channel.end_date %}
                  endDate="{{ channel.end_date|date:"Y-m-d\TH:i:s" }}"
              {% endif %}
-             {% if channel.restricted_status %} 
+             {% if channel.restricted_status %}
                  restrictedStatus="{{ channel.restricted_status }}"
-             {% endif %} 
-             {% if channel.alternate_code %} 
+             {% endif %}
+             {% if channel.alternate_code %}
                  alternateCode="{{ channel.alternate_code }}"
              {% endif %}
-             {% if channel.historical_code %} 
+             {% if channel.historical_code %}
                  historicalCode="{{ channel.historical_code }}"
              {% endif %}>
              {% for comment, authors in comments %}
                  <Comment>
                    <Value>{{ comment.value }}</Value>
-                   {% if comment.begin_effective %} 
+                   {% if comment.begin_effective %}
                      <BeginEffectiveTime>{{ comment.begin_effective|date:"Y-m-d\TH:i:s" }}</BeginEffectiveTime>
                    {% endif %}
-                   {% if comment.end_effective %} 
+                   {% if comment.end_effective %}
                      <EndEffectiveTime>{{ comment.end_effective|date:"Y-m-d\TH:i:s" }}</EndEffectiveTime>
                    {% endif %}
                    {% for author in authors %}
@@ -135,30 +135,30 @@
                  </Comment>
              {% endfor %}
              <Latitude
-                 {% if channel.latitude_unit %} 
+                 {% if channel.latitude_unit %}
                      unit="{{ channel.latitude_unit }}"
                  {% endif %}>{{ channel.latitude }}</Latitude>
              <Longitude
-                 {% if channel.longitude_unit %} 
+                 {% if channel.longitude_unit %}
                      unit="{{ channel.longitude_unit }}"
                  {% endif %}>{{ channel.longitude }}</Longitude>
              <Elevation
-                 {% if channel.elevation_unit %} 
+                 {% if channel.elevation_unit %}
                      unit="{{ channel.elevation_unit }}"
                  {% endif %}>{{ channel.elevation }}</Elevation>
              <Depth
-                 {% if channel.depth_unit %} 
+                 {% if channel.depth_unit %}
                      unit="{{ channel.depth_unit }}"
                  {% endif %}>{{ channel.depth }}</Depth>
-             {% if channel.azimuth != None %}  
+             {% if channel.azimuth != None %}
                <Azimuth
-                   {% if channel.azimuth_unit %} 
+                   {% if channel.azimuth_unit %}
                        unit="{{ channel.azimuth_unit }}"
                    {% endif %}>{{ channel.azimuth }}</Azimuth>
              {% endif %}
-             {% if channel.dip  != None %}  
+             {% if channel.dip  != None %}
                <Dip
-                   {% if channel.dip_unit %} 
+                   {% if channel.dip_unit %}
                        unit="{{ channel.dip_unit }}"
                    {% endif %}>{{ channel.dip }}</Dip>
              {% endif %}
@@ -168,19 +168,19 @@
              {% if channel.sample_rate != None %}
                {# <SampleRateGroup> #}
                <SampleRate
-                   {% if channel.sample_rate_unit %} 
+                   {% if channel.sample_rate_unit %}
                        unit="{{ channel.sample_rate_unit }}"
                    {% endif %}>{{ channel.sample_rate }}</SampleRate>
-               {# </SampleRateGroup> #} 
+               {# </SampleRateGroup> #}
              {% endif %}
              {% if channel.storage_format != None and channel.storage_format != '' %}
-                 <StorageFormat>{{channel.storage_format}}</StorageFormat>   
+                 <StorageFormat>{{channel.storage_format}}</StorageFormat>
              {% endif %}
              {% if channel.clock_drift != None %}
                  <ClockDrift
                      {% if channel.clock_drift_unit %}
                        unit="{{ channel.clock_drift_unit }}"
-                     {% endif %}>{{channel.clock_drift}}</ClockDrift>   
+                     {% endif %}>{{channel.clock_drift}}</ClockDrift>
              {% endif %}
              {% if channel.calibration_units.id != None %}
                  <CalibrationUnits>
@@ -194,25 +194,25 @@
                  {% if sensor.description != None %}
                   <Description>{{ sensor.description }}</Description>
                  {% endif %}
-                 {% if sensor.equip_model.manufacturer != None and sensor.equip_model.manufacturer != '' %}  
+                 {% if sensor.equip_model.manufacturer != None and sensor.equip_model.manufacturer != '' %}
                   <Manufacturer>{{ sensor.equip_model.manufacturer }}</Manufacturer>
                  {% endif %}
-                 {% if sensor.vendor != None and sensor.vendor != '' %} 
+                 {% if sensor.vendor != None and sensor.vendor != '' %}
                   <Vendor>{{ sensor.vendor }}</Vendor>
                  {% endif %}
-                 {% if sensor.equip_model.equip_model_name != None %} 
+                 {% if sensor.equip_model.equip_model_name != None %}
                   <Model>{{ sensor.equip_model.equip_model_name }}</Model>
-                 {% endif %} 
-                 {% if sensor.serial_number != None %} 
+                 {% endif %}
+                 {% if sensor.serial_number != None %}
                   <SerialNumber>{{ sensor.serial_number }}</SerialNumber>
-                 {% endif %}  
-                 {% if  sensor_installed != None %} 
+                 {% endif %}
+                 {% if  sensor_installed != None %}
                   <InstallationDate>{{ sensor_installed|date:"Y-m-d\TH:i:s" }}</InstallationDate>
                  {% endif %}
-                 {% if  sensor_uninstalled != None %}   
+                 {% if  sensor_uninstalled != None %}
                   <RemovalDate>{{ sensor_uninstalled|date:"Y-m-d\TH:i:s" }}</RemovalDate>
                  {% endif %}
-                 {# <CalibrationDate></CalibrationDate> #}                  
+                 {# <CalibrationDate></CalibrationDate> #}
                   {% for config in sensor_config %}
                     {% if forloop.first %}<Configuration>{% endif %}
                     {% if config.value != None and config.value != '' %}
@@ -287,7 +287,7 @@
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                    {% if forloop.last %}</Configuration>{% endif %}
-                 {% endfor %} 
+                 {% endfor %}
                </DataLogger>
              {% endif %}
              {% if equipment.id != None %}
@@ -321,9 +321,9 @@
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                    {% if forloop.last %}</Configuration>{% endif %}
-                 {% endfor %} 
+                 {% endfor %}
                </Equipment>
-             {% endif %}             
+             {% endif %}
              {% if other_1.id != None %}
                <Other_1>
                  <Type>{{ other_1.equip_type.equip_type_name }}</Type>
@@ -355,9 +355,9 @@
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                    {% if forloop.last %}</Configuration>{% endif %}
-                 {% endfor %} 
+                 {% endfor %}
                </Other_1>
-             {% endif %}  
+             {% endif %}
              {% if other_2.id != None %}
                <Other_2>
                  <Type>{{ other_2.equip_type.equip_type_name }}</Type>
@@ -389,9 +389,9 @@
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                    {% if forloop.last %}</Configuration>{% endif %}
-                 {% endfor %} 
+                 {% endfor %}
                </Other_2>
-             {% endif %}  
+             {% endif %}
              {% if other_3.id != None %}
                <Other_3>
                  <Type>{{ other_3.equip_type.equip_type_name }}</Type>
@@ -423,9 +423,9 @@
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                    {% if forloop.last %}</Configuration>{% endif %}
-                 {% endfor %} 
+                 {% endfor %}
                </Other_3>
-             {% endif %}  
+             {% endif %}
              {% if other_4.id != None %}
                <Other_4>
                  <Type>{{ other_4.equip_type.equip_type_name }}</Type>
@@ -457,9 +457,9 @@
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                    {% if forloop.last %}</Configuration>{% endif %}
-                 {% endfor %} 
+                 {% endfor %}
                </Other_4>
-             {% endif %}  
+             {% endif %}
              {% if other_5.id != None %}
                <Other_5>
                  <Type>{{ other_5.equip_type.equip_type_name }}</Type>
@@ -491,14 +491,12 @@
                      <{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>{{ config.value.value }}</{{ config.parameter.parameter_name|cut:" "|cut:"/" }}>
                    {% endif %}
                    {% if forloop.last %}</Configuration>{% endif %}
-                 {% endfor %} 
+                 {% endfor %}
                </Other_5>
-             {% endif %}  
+             {% endif %}
              </Channel>
            {% endfor %}
          </Station>
       </Network>
      {% endfor %}
-</ResifStationXML>
-
-
+</FDSNStationXML>
