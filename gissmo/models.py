@@ -233,22 +233,6 @@ class EquipModel(models.Model):
     def __unicode__(self):
         return self.equip_model_name
 
-"""
-Ancienne structure des parametres
-# Parameters
-class ParamEquipModel(models.Model):
-    equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
-    parameter_name = models.CharField(max_length=50, verbose_name=_("nom du parametre"))
-    default_value = models.CharField(max_length=50, verbose_name=_("valeur par defaut"))
-
-    class Meta:
-        unique_together = ("equip_model", "parameter_name")
-        verbose_name = _("parametre")
-        verbose_name_plural = _("P1. Parametres")
-
-    def __unicode__(self):
-        return u'%s : %s' % (self.equip_model.equip_model_name, self.parameter_name)
-"""
 
 class ParameterEquip(models.Model):
     equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
@@ -261,6 +245,7 @@ class ParameterEquip(models.Model):
 
     def __unicode__(self):
         return u'%s : %s' % (self.equip_model, self.parameter_name)
+
 
 class ParameterValue(models.Model):
     parameter = models.ForeignKey("ParameterEquip", verbose_name=_("Parametre modele d'equipement"))
