@@ -22,9 +22,10 @@ urlpatterns = patterns(
     url(r'^gissmo/station_xml/$', 'station_xml', name='station_xml'),
     url(r'^gissmo/network_xml/$', 'network_xml', name='network_xml'),
     url(r'^gissmo/station_dataless/$', 'station_dataless', name='station_dataless'),
+    url(r'^gissmo/([A-Z0-9]{2,4})/$', 'site_shortcut', name='site_shortcut'),
     url(r'^gissmo/test_site/$', 'test_site', name='test_site'),
     (r'^gissmo/chaining/', include('smart_selects.urls')),
-    (r'^gissmo/', include(admin.site.urls))
+    (r'^gissmo/', include(admin.site.urls)),
 )
 
 urlpatterns += patterns(

@@ -22,6 +22,7 @@ from django.utils import simplejson
 from django.utils.encoding import smart_str
 from django.utils.encoding import force_unicode
 from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 
 
 def site_maps(request):
@@ -1363,3 +1364,9 @@ def xhr_parameter_value(request):
 #
 #         pip install pghstore
 #
+
+def site_shortcut(request, code):
+    site = StationSite.objects.get(station_code=code)
+    url = reverse('admin:gissmo_stationsite_change', args=(site.id,))
+
+    return HttpResponseRedirect(url)
