@@ -9,7 +9,6 @@ project_dir = os.path.dirname(__file__)
 env.roledefs.update({
     'webserver': (
         'root@renass-web1.u-strasbg.fr',
-        'root@renass-web2.u-strasbg.fr',
     )
 })
 
