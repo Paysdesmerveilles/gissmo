@@ -1,21 +1,18 @@
 # coding=utf-8
 
-import time
-
-from django.contrib import admin
 from django import forms
-from django.forms import Textarea
-from django.utils.translation import ugettext as _
-from django.utils.encoding import force_unicode
-from django.contrib.admin import widgets
-from django.shortcuts import render_to_response, get_object_or_404, HttpResponseRedirect
-from django.utils.functional import curry
+from django.conf import settings
+from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from django.contrib.contenttypes.models import ContentType
-from django.utils.timezone import localtime
 from django.contrib.admin.widgets import AdminURLFieldWidget
-from django.db.models import URLField
+from django.contrib.contenttypes.models import ContentType
+from django.forms import Textarea
+from django.shortcuts import get_object_or_404, HttpResponseRedirect
+from django.utils.datetime_safe import new_datetime
+from django.utils.functional import curry
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext as _
+import pytz
 
 from models import *
 from forms import *
@@ -597,7 +594,12 @@ class InterventionAdmin(admin.ModelAdmin):
             return super(InterventionAdmin, self).response_add(request, obj, post_url_continue)
 
     def format_date(self, obj):
-        return localtime(obj.intervention_date).strftime("%Y-%m-%d %H:%M:%S")
+        # Fix datetime < 1900 ...
+        # https://github.com/django/django/blob/master/django/utils/datetime_safe.py
+        local_timezone = pytz.timezone(settings.TIME_ZONE)
+        intervention_date = new_datetime(obj.intervention_date)
+        intervention_date.astimezone(local_timezone)
+        return intervention_date.strftime("%Y-%m-%d %H:%M:%S")
 
     format_date.short_description = 'Date (aaaa-mm-jj hh24:mi)'
     format_date.admin_order_field = 'intervention_date'
