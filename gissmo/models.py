@@ -1,11 +1,6 @@
 # coding=utf-8
 
-from datetime import datetime
-
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
@@ -14,17 +9,13 @@ from django.conf import settings
 from django.utils.timezone import localtime
 from django.contrib.auth.models import User
 
+from gissmo.helpers import format_date
+
 from smart_selects.db_fields import ChainedForeignKey
 
 fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 
-"""
-####
-#
-# Actor's section
-#
-####
-"""
+
 class Actor(models.Model):
     """
     **Description :** Personne ou entité morale qui est soit opérateur d'une station ou propriétaire d'un équipement ou impliquée lors d'une intervention
@@ -86,19 +77,7 @@ class Actor(models.Model):
     def __unicode__(self):
         return self.actor_name
 
-#    def save(self, *args, **kw):
-#        if self.pk is not None:
-#            send_mail('Changement au niveau des intervenants', 'Il y a eu un changement au niveau des informations sur les intervenants', 'mdutil@unistra.fr',
-#            ['mdutil@unistra.fr'], fail_silently=False)
-#
-#        super(Actor, self).save(*args, **kw)
 
-####
-#
-# Built's section
-#
-####
-# Type of the built
 class BuiltType(models.Model):
     """
     **Description :** Type de bâti
@@ -119,7 +98,7 @@ class BuiltType(models.Model):
     def __unicode__(self):
         return self.built_type_name
 
-# Builts on the site of a station
+
 class Built(models.Model):
     """
     **Description :** Bâti que l'on retrouvre sur le site et qui contient au moins un équipement
@@ -140,7 +119,7 @@ class Built(models.Model):
     """
     station = models.ForeignKey("StationSite", verbose_name=_("site"))
     built_type = models.ForeignKey("BuiltType", verbose_name=_("type de bati"))
-    built_short_desc =  models.CharField(max_length=40, null=True, blank=True, verbose_name=_("courte description"))
+    built_short_desc = models.CharField(max_length=40, null=True, blank=True, verbose_name=_("courte description"))
     built_note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
     class Meta:
@@ -151,7 +130,7 @@ class Built(models.Model):
     def __unicode__(self):
         return u'%s : %s : %s' % (self.station.station_code, self.built_type.built_type_name, self.built_short_desc)
 
-# Supertype or category of equipment
+
 class EquipSupertype(models.Model):
     """
     **Description :** Catégorie ou supertype auquel est associé l'équipement
@@ -172,7 +151,7 @@ class EquipSupertype(models.Model):
     def __unicode__(self):
         return self.equip_supertype_name
 
-## Type of equipment
+
 class EquipType(models.Model):
     """
     **Description :** Sous catégorie ou type auquel est associé l'équipement
@@ -190,14 +169,14 @@ class EquipType(models.Model):
     presentation_rank = models.IntegerField()
 
     class Meta:
-        ordering = ['equip_type_name',]
+        ordering = ['equip_type_name']
         verbose_name = _("type d'equipement")
         verbose_name_plural = _("types des equipements")
 
     def __unicode__(self):
         return self.equip_type_name
 
-# Models of equipment
+
 class EquipModel(models.Model):
     """
     **Description :** Modèle de l'équipement attribué par son constructeur ou nom d'usage utilisé par la communauté des instrumentalistes
@@ -226,7 +205,7 @@ class EquipModel(models.Model):
     manufacturer = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("manufacturier"))
 
     class Meta:
-        ordering = ['equip_model_name',]
+        ordering = ['equip_model_name']
         verbose_name = _("modele d'equipement")
         verbose_name_plural = _("C1. Modeles des equipements")
 
@@ -267,22 +246,6 @@ class ParameterValue(models.Model):
     def __unicode__(self):
         return u'%s' % (self.value)
 
-"""
-# Parameters
-class ParamValueEquipModel(models.Model):
-    equip_model = models.ForeignKey("EquipModel", verbose_name=_("modele d'equipement"))
-    parameter_name = models.CharField(max_length=50, verbose_name=_("nom du parametre"))
-    value = models.CharField(max_length=50, verbose_name=_("valeur"))
-    default_value = models.BooleanField(verbose_name=_("valeur par defaut"))
-
-    class Meta:
-        unique_together = ("equip_model", "parameter_name", "value")
-        verbose_name = _("parametre et valeur")
-        verbose_name_plural = _("P1. Parametres et valeurs")
-
-    def __unicode__(self):
-        return u'%s : %s : %s' % (self.equip_model.equip_model_name, self.parameter_name, self.value)
-"""
 
 def get_defaut_owner():
     return Actor.objects.get(actor_name='DT INSU')
@@ -358,13 +321,14 @@ class CommentNetworkAuthor(models.Model):
     comment_network = models.ForeignKey("CommentNetwork", verbose_name=_("commentaire"))
     author = models.ForeignKey("Actor", verbose_name=_("auteur"))
 
+
 class CommentNetwork(models.Model):
     network = models.ForeignKey("Network", verbose_name=_("reseau"))
     value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+    begin_effective = models.DateTimeField(null=True, blank=True, verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateTimeField(null=True, blank=True, verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
-# Network
+
 class Network(models.Model):
     """
     **Description :** Réseau
@@ -389,11 +353,11 @@ class Network(models.Model):
     network_code = models.CharField(max_length=5, verbose_name=_("network code"))
     network_name = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("nom du reseau"))
     code = models.CharField(max_length=5, verbose_name=_("code reseau"))
-    start_date = models.DateTimeField(null=True, blank=True,verbose_name=_("date debut (aaaa-mm-jj)"))
-    end_date = models.DateTimeField(null=True, blank=True,verbose_name=_("date fin (aaaa-mm-jj)"))
-    restricted_status = models.IntegerField(choices=STATUS,null=True, blank=True, verbose_name=_("etat restrictif"))
-    alternate_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code alternatif"))
-    historical_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code historique"))
+    start_date = models.DateTimeField(null=True, blank=True, verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateTimeField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
+    restricted_status = models.IntegerField(choices=STATUS, null=True, blank=True, verbose_name=_("etat restrictif"))
+    alternate_code = models.CharField(max_length=5, null=True, blank=True, verbose_name=_("code alternatif"))
+    historical_code = models.CharField(max_length=5, null=True, blank=True, verbose_name=_("code historique"))
     description = models.TextField(null=True, blank=True, verbose_name=_("description"))
 
     class Meta:
@@ -403,13 +367,7 @@ class Network(models.Model):
     def __unicode__(self):
         return self.network_code
 
-####
-#
-# Station's section
-#
-####
 
-# Type of action that occur on station
 class StationAction(models.Model):
     """
     **Description :** Action qui peut survenir sur une station
@@ -474,7 +432,7 @@ class StationAction(models.Model):
     station_action_name = models.CharField(max_length=50, null=True, blank=True)
     pass
 
-# Possible state of a station
+
 class StationState(models.Model):
     """
     **Description :** Etat dans lequel une station peut se retrouver
@@ -517,6 +475,7 @@ class StationState(models.Model):
         (AUTRE, 'Autre'),
     )
     station_state_name = models.CharField(max_length=50, null=True, blank=True)
+
 
 class EquipAction(models.Model):
     """
@@ -597,7 +556,7 @@ class EquipAction(models.Model):
     )
     equip_action_name = models.CharField(max_length=50, null=True, blank=True)
 
-# Possible state of an equipment
+
 class EquipState(models.Model):
     """
     **Description :** Etat dans lequel un équipement peut se retrouver
@@ -653,20 +612,23 @@ class EquipState(models.Model):
     )
     equip_state_name = models.CharField(max_length=50, null=True, blank=True)
 
+
 class CommentStationSiteAuthor(models.Model):
     comment_station = models.ForeignKey("CommentStationSite", verbose_name=_("commentaire"))
     author = models.ForeignKey("Actor", verbose_name=_("auteur"))
 
+
 class CommentStationSite(models.Model):
     station = models.ForeignKey("StationSite", verbose_name=_("site"))
     value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+    begin_effective = models.DateTimeField(null=True, blank=True, verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateTimeField(null=True, blank=True, verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+
 
 def get_defaut_operator():
     return Actor.objects.get(actor_name='Inconnu')
 
-# Station or site
+
 class StationSite(models.Model):
     """
     **Description :** Site ou station d'intérêt dans le cadre du CLB Resif
@@ -793,16 +755,16 @@ class StationSite(models.Model):
     town = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("commune"))
     county = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("departement"))
     region = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("region"))
-    country =  models.CharField(max_length=50, null=True, blank=True, verbose_name=_("pays"))
+    country = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("pays"))
     zip_code = models.CharField(max_length=15, null=True, blank=True, verbose_name=_("code postal"))
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien outil interne"))
     station_parent = models.ForeignKey('self', null=True, blank=True, verbose_name=_("site referent"))
-    geology =  models.CharField(max_length=50, null=True, blank=True, verbose_name=_("formation geologique"))
-    restricted_status = models.IntegerField(choices=STATUS,null=True, blank=True, verbose_name=_("etat restrictif"))
-    alternate_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code alternatif"))
-    historical_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code historique"))
+    geology = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("formation geologique"))
+    restricted_status = models.IntegerField(choices=STATUS, null=True, blank=True, verbose_name=_("etat restrictif"))
+    alternate_code = models.CharField(max_length=5, null=True, blank=True, verbose_name=_("code alternatif"))
+    historical_code = models.CharField(max_length=5, null=True, blank=True, verbose_name=_("code historique"))
     station_description = models.TextField(null=True, blank=True, verbose_name=_("description station"))
     site_description = models.TextField(null=True, blank=True, verbose_name=_("description site"))
     latitude_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
@@ -822,26 +784,9 @@ class StationSite(models.Model):
         verbose_name = _("site")
         verbose_name_plural = _("A1. Sites")
 
-#
-#    Code test to keep the old value et compare if diff in new value
-#
-#    def __init__(self, *args, **kw):
-#        super(StationSite, self).__init__(*args, **kw)
-#        self._old = dict([(field.name,field.value_to_string(self)) for field in StationSite._meta.fields])
-#
-#    def save(self, *args, **kwargs):
-#        print "StationSite save"
-#        old_value_dict = self._old
-#        new_value_dict = dict([(field.name,field.value_to_string(self)) for field in StationSite._meta.fields])
-#        diff = [(key, old_value_dict[key], val1) for key, val1 in new_value_dict.iteritems() if val1 != old_value_dict[key]]
-#        print old_value_dict
-#        print diff
-#        super(StationSite, self).save(*args, **kwargs)
-
     def __unicode__(self):
         return self.station_code
 
-# Management of intervention
 
 class Intervention(models.Model):
     """
@@ -868,7 +813,7 @@ class Intervention(models.Model):
         verbose_name_plural = _("E1. Interventions")
 
     def __unicode__(self):
-        return u'%s : %s' % (self.station.station_code,  localtime(self.intervention_date).strftime("%Y-%m-%d %H:%M:%S"))
+        return u'%s : %s' % (self.station.station_code, format_date(self.intervention_date))
 
 
 class IntervActor(models.Model):
@@ -895,6 +840,7 @@ class IntervActor(models.Model):
 
     def __unicode__(self):
         return u'%s : %s' % (self.intervention, self.actor)
+
 
 class IntervStation(models.Model):
     """
@@ -924,6 +870,7 @@ class IntervStation(models.Model):
 
     def __unicode__(self):
         return u'%s' % (self.intervention)
+
 
 class IntervEquip(models.Model):
     """
@@ -966,7 +913,7 @@ class IntervEquip(models.Model):
     def __unicode__(self):
         return u'%s' % (self.intervention)
 
-# Management of station document
+
 class StationDocType(models.Model):
     stationdoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
 
@@ -976,8 +923,10 @@ class StationDocType(models.Model):
     def __unicode__(self):
         return u'%s' % (self.stationdoc_type_name)
 
+
 def stationdoc_file_name(self, filename):
         return 'stations/%s_%s/%s' % (self.station.id, self.station.station_code, filename)
+
 
 class StationDoc(models.Model):
     """
@@ -1019,7 +968,7 @@ class StationDoc(models.Model):
     def __unicode__(self):
         return u'%s %s %s' % (self.station.station_code, self.document_title, self.inscription_date)
 
-# Management of equipment model document
+
 class EquipModelDocType(models.Model):
     equipmodeldoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
 
@@ -1029,8 +978,10 @@ class EquipModelDocType(models.Model):
     def __unicode__(self):
         return u'%s' % (self.equipmodeldoc_type_name)
 
+
 def equipmodeldoc_file_name(self, filename):
     return 'equipments/%s_%s/%s' % (self.equip_model.id, self.equip_model.equip_model_name, filename)
+
 
 class EquipModelDoc(models.Model):
     """
@@ -1082,8 +1033,8 @@ class EquipModelDoc(models.Model):
     inscription_date = models.DateField(null=True, blank=True, verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_equip_model = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipmodeldoc_file_name, blank=True)
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
-    begin_effective = models.DateField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+    begin_effective = models.DateField(null=True, blank=True, verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateField(null=True, blank=True, verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
     class Meta:
         unique_together = ("equip_model", "document_title", "inscription_date")
@@ -1093,7 +1044,7 @@ class EquipModelDoc(models.Model):
     def __unicode__(self):
         return u'%s %s %s' % (self.equip_model.equip_model_name, self.document_title, self.inscription_date)
 
-# Management of equipment document
+
 class EquipDocType(models.Model):
     equipdoc_type_name = models.CharField(max_length=40, verbose_name=_("type de document"))
 
@@ -1103,8 +1054,10 @@ class EquipDocType(models.Model):
     def __unicode__(self):
         return u'%s' % (self.equipdoc_type_name)
 
+
 def equipdoc_file_name(self, filename):
         return 'equipments/%s_%s/%s_%s_%s/%s' % (self.equip.equip_model.id, self.equip.equip_model.equip_model_name, self.equip.id, self.equip.equip_model.equip_model_name, self.equip.serial_number, filename)
+
 
 class EquipDoc(models.Model):
     """
@@ -1167,8 +1120,8 @@ class EquipDoc(models.Model):
     inscription_date = models.DateField(null=True, blank=True, verbose_name=_("date inscription (aaaa-mm-jj)"))
     document_equip = models.FileField(storage=fs, verbose_name=_("document"), upload_to=equipdoc_file_name, blank=True)
     private_link = models.URLField(null=True, blank=True, verbose_name=_("lien document prive"))
-    begin_effective = models.DateField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+    begin_effective = models.DateField(null=True, blank=True, verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateField(null=True, blank=True, verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
     class Meta:
         unique_together = ("equip", "document_title", "inscription_date")
@@ -1178,18 +1131,20 @@ class EquipDoc(models.Model):
     def __unicode__(self):
         return u'%s %s %s %s' % (self.equip.equip_model.equip_model_name, self.equip.serial_number, self.document_title, self.inscription_date)
 
+
 class CommentChannelAuthor(models.Model):
     comment_channel = models.ForeignKey("CommentChannel", verbose_name=_("commentaire"))
     author = models.ForeignKey("Actor", verbose_name=_("auteur"))
 
+
 class CommentChannel(models.Model):
     channel = models.ForeignKey("Channel", verbose_name=_("canal"))
     value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(null=True, blank=True,verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+    begin_effective = models.DateTimeField(null=True, blank=True, verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+    end_effective = models.DateTimeField(null=True, blank=True, verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
 
-class CalibrationUnit(models.Model) :
+class CalibrationUnit(models.Model):
     name = models.CharField(max_length=50, verbose_name=_("Nom unite"))
     description = models.TextField(null=True, blank=True, verbose_name=_("description"))
 
@@ -1199,7 +1154,8 @@ class CalibrationUnit(models.Model) :
     def __unicode__(self):
         return u'%s' % (self.name)
 
-class DataType(models.Model) :
+
+class DataType(models.Model):
     type_description = models.CharField(max_length=50, verbose_name=_("type de donnees"))
 
     class Meta:
@@ -1208,10 +1164,8 @@ class DataType(models.Model) :
     def __unicode__(self):
         return u'%s' % (self.type_description)
 
-"""
-New simple structure to permit to add channel_code by the super admin
-"""
-class ChannelCode(models.Model) :
+
+class ChannelCode(models.Model):
     channel_code = models.CharField(max_length=3, primary_key=True, verbose_name=_("code du canal"))
     presentation_rank = models.IntegerField(null=True, blank=True)
     validation_rule = models.TextField(null=True, blank=True, verbose_name=_("regle validation"))
@@ -1223,9 +1177,8 @@ class ChannelCode(models.Model) :
     def __unicode__(self):
         return u'%s' % (self.channel_code)
 
-class Channel(models.Model) :
 
-
+class Channel(models.Model):
     OPEN = 1
     CLOSE = 2
     PARTIAL = 3
@@ -1264,17 +1217,17 @@ class Channel(models.Model) :
     depth = models.DecimalField(verbose_name=_("profondeur (m)"), max_digits=4, decimal_places=1)
     azimuth = models.DecimalField(verbose_name=_("azimut"), max_digits=4, decimal_places=1)
     dip = models.DecimalField(verbose_name=_("angle d'inclinaison"), max_digits=3, decimal_places=1)
-    sample_rate =  models.FloatField(verbose_name=_("frequence (Hz)"))
+    sample_rate = models.FloatField(verbose_name=_("frequence (Hz)"))
 
     start_date = models.DateTimeField(verbose_name=_("date debut (aaaa-mm-jj)"))
     end_date = models.DateTimeField(null=True, blank=True, verbose_name=_("date fin (aaaa-mm-jj)"))
 
-    restricted_status = models.IntegerField(choices=STATUS,null=True, blank=True, verbose_name=_("etat restrictif"))
-    alternate_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code alternatif"))
-    historical_code = models.CharField(max_length=5,null=True, blank=True, verbose_name=_("code historique"))
+    restricted_status = models.IntegerField(choices=STATUS, null=True, blank=True, verbose_name=_("etat restrictif"))
+    alternate_code = models.CharField(max_length=5, null=True, blank=True, verbose_name=_("code alternatif"))
+    historical_code = models.CharField(max_length=5, null=True, blank=True, verbose_name=_("code historique"))
     description = models.TextField(null=True, blank=True, verbose_name=_("description"))
-    storage_format = models.CharField(max_length=50,null=True, blank=True, verbose_name=_("format de donnees"))
-    clock_drift =  models.FloatField(null=True, blank=True, verbose_name=_("derive horloge (seconds/sample)"))
+    storage_format = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("format de donnees"))
+    clock_drift = models.FloatField(null=True, blank=True, verbose_name=_("derive horloge (seconds/sample)"))
     calibration_units = models.ForeignKey("CalibrationUnit", null=True, blank=True, verbose_name=_("unite de mesure"))
     data_type = models.ManyToManyField("DataType", null=True, blank=True, verbose_name=_("donnees produites"))
     latitude_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
@@ -1312,12 +1265,8 @@ class Channel(models.Model) :
     def __unicode__(self):
         return u'%s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s' % (self.station, self.network, self.location_code, self.channel_code, self.latitude, self.longitude, self.elevation, self.depth, self.dip, self.azimuth, self.sample_rate, localtime(self.start_date).strftime("%Y-%m-%d %H:%M:%S"))
 
-#class ProtoChannelChain(models.Model) :
-#    channel = models.ForeignKey('ProtoChannel', verbose_name=_("canal"))
-#    chain = models.ForeignKey('ProtoChain', verbose_name=_("chaine d'acquisition"))
 
-class Chain(models.Model) :
-
+class Chain(models.Model):
     SENSOR = 1
     PREAMPLIFIER = 2
     DATALOGGER = 3
@@ -1339,7 +1288,6 @@ class Chain(models.Model) :
         (OTHER_5, 'Other_5'),
     )
 
-#    name = models.CharField(max_length=50, verbose_name=_("Nom de chaine"))
     channel = models.ForeignKey('Channel', verbose_name=_("canal"))
     order = models.IntegerField(choices=ORDER_CHOICES, null=False, blank=False, verbose_name=_("Type"))
     equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
@@ -1352,24 +1300,13 @@ class Chain(models.Model) :
     def __unicode__(self):
         return u'%s : %s' % (self.order, self.equip)
 
-"""
-# Ancienne structure
-class ChainConfig(models.Model) :
-    channel = models.ForeignKey('Channel', verbose_name=_("canal")) # Hack to inline in channel
-    chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition"))
-    parameter = models.CharField(max_length=50, verbose_name=_("parametre"))
-    value = models.CharField(max_length=20, null=True, blank=True, verbose_name=_("valeur"))
 
-    def __unicode__(self):
-        return u'%s : %s : %s' % (self.chain, self.parameter, self.value)
-"""
-
-# Nouvelle structure
-class ChainConfig(models.Model) :
-    channel = models.ForeignKey('Channel', verbose_name=_("canal")) # Hack to inline in channel
+class ChainConfig(models.Model):
+    # Hack to inline in channel
+    channel = models.ForeignKey('Channel', verbose_name=_("canal"))
     chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition"))
-    parameter =  models.ForeignKey('ParameterEquip', verbose_name=_("parametre"))
-    value =  models.ForeignKey('ParameterValue', verbose_name=_("value"))
+    parameter = models.ForeignKey('ParameterEquip', verbose_name=_("parametre"))
+    value = models.ForeignKey('ParameterValue', verbose_name=_("value"))
 
     class Meta:
         unique_together = ("channel", "chain", "parameter")
@@ -1391,24 +1328,6 @@ class ChainConfig(models.Model) :
         Les caractères spéciaux pour nous francophones comme é, à, ê, ï, ù sont à priori permis mais pourraient être mal interprétés par certains programmes.
 """
 
-#from django.db.models.signals import post_save, post_delete
-#from django.dispatch import receiver
-#from views import equip_last_state, equip_last_place
-
-#@receiver(post_save, sender=IntervEquip)
-#def IntervEquip_post_save_handler(sender, **kwargs):
-#    obj = kwargs['instance']
-#    print("Post save finished!", obj.equip.id)
-#    print(EquipState.EQUIP_STATES[equip_last_state(obj.equip.id)-1][1])
-#    print(equip_last_place(obj.equip.id))
-
-#@receiver(post_delete, sender=IntervEquip)
-#def IntervEquip_post_delete_handler(sender, **kwargs):
-#    obj = kwargs['instance']
-#    print("Post delete finished!", obj.equip.id)
-#    print(EquipState.EQUIP_STATES[equip_last_state(obj.equip.id)-1][1])
-#    print(equip_last_place(obj.equip.id))
-
 
 class Project(models.Model):
     project_name = models.CharField(max_length=50)
@@ -1429,7 +1348,7 @@ class Project(models.Model):
         return u'%s' % (self.project_name)
 
 
-class ProjectUser(models.Model) :
+class ProjectUser(models.Model):
     user = models.ForeignKey(User)
     project = models.ManyToManyField('Project')
 
@@ -1445,7 +1364,8 @@ class LoggedActions(models.Model):
     event_id = models.BigIntegerField(primary_key=True)
     schema_name = models.TextField()
     table_name = models.TextField()
-    relid = models.TextField() # This field type is a guess.
+    # This field type is a guess.
+    relid = models.TextField()
     session_user_name = models.TextField(blank=True)
     action_tstamp_tx = models.DateTimeField()
     action_tstamp_stm = models.DateTimeField()

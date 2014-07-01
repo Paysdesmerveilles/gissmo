@@ -8,15 +8,14 @@ from django.contrib.admin.widgets import AdminURLFieldWidget
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Textarea
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
-from django.utils.datetime_safe import new_datetime
 from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
-import pytz
 
 from models import *
 from forms import *
 from views import *
+from gissmo.helpers import format_date
 
 
 class URLFieldWidget(AdminURLFieldWidget):
@@ -27,21 +26,20 @@ class URLFieldWidget(AdminURLFieldWidget):
                          u'open(document.getElementById(\'%s\')'
                          u'.value)" />' % (widget, attrs['id']))
 
+
 class LabeledHiddenInput(forms.HiddenInput):
     def render(self, name, value, attrs=None):
-
-        status  = self.choices.queryset.get(pk = value)
-
-        h_input = super(LabeledHiddenInput, self).render( name, value, attrs=None)
-        return mark_safe("%s %s"%(status, h_input))
+        status = self.choices.queryset.get(pk=value)
+        h_input = super(LabeledHiddenInput, self).render(name, value, attrs=None)
+        return mark_safe("%s %s" % (status, h_input))
 
 
 class ActorAdmin(admin.ModelAdmin):
     form = ActorForm
-    list_display = ['actor_parent', 'actor_name', 'actor_type',]
-    list_display_links = ['actor_name',]
-    ordering = ['actor_parent', 'actor_name',]
-    search_fields = ['actor_name',]
+    list_display = ['actor_parent', 'actor_name', 'actor_type']
+    list_display_links = ['actor_name']
+    ordering = ['actor_parent', 'actor_name']
+    search_fields = ['actor_name']
 
 
 class BuiltAdmin(admin.ModelAdmin):
@@ -586,7 +584,7 @@ class InterventionAdmin(admin.ModelAdmin):
 
     def response_add(self, request, obj, post_url_continue="../%s/"):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
-            messages.success( request, 'Enregistrement ajouté' )
+            messages.success(request, 'Enregistrement ajouté')
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse("admin:%s_stationsite_change" % (content_type.app_label), args=(obj.station.id,)))
@@ -594,12 +592,7 @@ class InterventionAdmin(admin.ModelAdmin):
             return super(InterventionAdmin, self).response_add(request, obj, post_url_continue)
 
     def format_date(self, obj):
-        # Fix datetime < 1900 ...
-        # https://github.com/django/django/blob/master/django/utils/datetime_safe.py
-        local_timezone = pytz.timezone(settings.TIME_ZONE)
-        intervention_date = new_datetime(obj.intervention_date)
-        intervention_date.astimezone(local_timezone)
-        return intervention_date.strftime("%Y-%m-%d %H:%M:%S")
+        return format_date(obj.intervention_date)
 
     format_date.short_description = 'Date (aaaa-mm-jj hh24:mi)'
     format_date.admin_order_field = 'intervention_date'
