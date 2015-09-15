@@ -110,7 +110,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
         mime_type_guess = mimetypes.guess_type(file_name)
         fsock = open(path,"r")
         if mime_type_guess is not None:
-            response = HttpResponse(fsock, mimetype=mime_type_guess[0])
+            response = HttpResponse(fsock, content_type=mime_type_guess[0])
         response['Content-Disposition'] = 'attachment; filename=' + smart_str(file_name)
         return response
     else:
@@ -673,7 +673,7 @@ def dataless(request):
 
     query = request.GET.get('Station','')
     # Create the HttpResponse object with the appropriate CSV header.
-    response = HttpResponse(mimetype='text/csv')
+    response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="dataless.csv"'
 
     cursor.execute('''SELECT
@@ -1023,7 +1023,7 @@ def station_xml(request):
 station_xml = staff_member_required(station_xml)
 
 def network_xml(request):
-    response = HttpResponse(mimetype='application/xhtml+xml')
+    response = HttpResponse(content_type='application/xhtml+xml')
     response['Content-Disposition'] = 'attachment; filename="somefilename.xhtml"'
 
     query = request.GET.get('Network','')
@@ -1228,7 +1228,7 @@ def test_site(request):
 
     query = request.GET.get('Station','')
     # Create the HttpResponse object with the appropriate CSV header.
-    response = HttpResponse(mimetype='text/csv')
+    response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="test_site.csv"'
 
     cursor.execute('''SELECT DISTINCT
@@ -1289,7 +1289,7 @@ def test_dbchange(request):
 
     ResChange = LoggedActions.objects.filter(action_tstamp_tx__lt=datetime.strptime(asking_datehour,"%Y-%m-%d %H:%M:%S")).order_by('action_tstamp_tx')
 
-    response = HttpResponse(mimetype='text/plain')
+    response = HttpResponse(content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="dbchange.txt"'
 
     for change in ResChange:
