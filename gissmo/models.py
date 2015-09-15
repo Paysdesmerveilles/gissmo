@@ -1229,7 +1229,7 @@ class Channel(models.Model):
     storage_format = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("format de donnees"))
     clock_drift = models.FloatField(null=True, blank=True, verbose_name=_("derive horloge (seconds/sample)"))
     calibration_units = models.ForeignKey("CalibrationUnit", null=True, blank=True, verbose_name=_("unite de mesure"))
-    data_type = models.ManyToManyField("DataType", null=True, blank=True, verbose_name=_("donnees produites"))
+    data_type = models.ManyToManyField("DataType", blank=True, verbose_name=_("donnees produites"))
     latitude_unit = models.CharField(max_length=15, null=True, blank=True, default="DEGREES")
     latitude_pluserror = models.FloatField(null=True, blank=True)
     latitude_minuserror = models.FloatField(null=True, blank=True)
@@ -1332,7 +1332,7 @@ class ChainConfig(models.Model):
 class Project(models.Model):
     project_name = models.CharField(max_length=50)
     manager = models.ForeignKey(User)
-    station = models.ManyToManyField('StationSite', null=True, blank=True)
+    station = models.ManyToManyField('StationSite', blank=True)
 
     # Validation to check that the name of the project ALL don't change
     # It's needed in comparison to the admin.py module to filter station,
