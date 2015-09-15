@@ -53,6 +53,7 @@ class ActorForm(forms.ModelForm):
 
     class Meta:
         model = Actor
+        exclude = [] # Django 1.8 compatibility (if fields attrs is missing)
 
     def clean(self):
         cleaned_data = super(ActorForm, self).clean()
@@ -91,6 +92,7 @@ class EquipModelDocInlineForm(forms.ModelForm):
 
     class Meta:
         model = EquipModelDoc
+        exclude = [] # Django 1.8 compatibility (if fields attrs is missing)
 
     def __init__(self, *args, **kwargs):
         super(EquipModelDocInlineForm, self).__init__(*args, **kwargs)
@@ -122,6 +124,7 @@ class EquipDocInlineForm(forms.ModelForm):
 
     class Meta:
         model = EquipDoc
+        exclude = [] # Django 1.8 compatibility (if fields attrs is missing)
 
     def __init__(self, *args, **kwargs):
         super(EquipDocInlineForm, self).__init__(*args, **kwargs)
@@ -205,13 +208,14 @@ class EquipmentForm(forms.ModelForm):
 
     class Meta:
         model = Equipment
-
+        exclude = [] # Django 1.8 compatibility (if fields attrs is missing)
 
 class StationDocInlineForm(forms.ModelForm):
     """
     """
     class Meta:
         model = StationDoc
+        exclude = [] # Django 1.8 compatibility (if fields attrs is missing)
 
     def __init__(self, *args, **kwargs):
         super(StationDocInlineForm, self).__init__(*args, **kwargs)
@@ -249,6 +253,7 @@ class StationSiteForm(forms.ModelForm):
 
     class Meta:
         model = StationSite
+        exclude = [] # Django 1.8 compatibility (if fields attrs is missing)
 
     def clean(self):
         cleaned_data = super(StationSiteForm, self).clean()
@@ -805,6 +810,7 @@ class ChannelForm(forms.ModelForm):
 
     class Meta:
         model = Channel
+        exclude = [] # Django 1.8 compatibility (if fields attrs is missing)
 
     # Hack field to show only if channel code and sample rate not fit
     accept_anyway = forms.BooleanField(initial=False,required=False)
