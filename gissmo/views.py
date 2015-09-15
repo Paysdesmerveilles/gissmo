@@ -18,7 +18,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.db.models import get_model
-from django.utils import simplejson
+# delete simplejson from django.utils as Django 1.7 deliver it not
+import json
 from django.utils.encoding import smart_str
 from django.utils.encoding import force_unicode
 from django.contrib.contenttypes.models import ContentType
@@ -149,7 +150,7 @@ def xhr_station_state(request):
             pass
         else:
             pass
-        data = simplejson.dumps(select_choice)
+        data = json.dumps(select_choice)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls
@@ -221,7 +222,7 @@ def xhr_equip_state(request):
         action=request.GET.get('action', '')
 
         select_choice = [({"optionValue" : c[0], "optionDisplay" : c[1]}) for c in available_equip_state(action)]
-        data = simplejson.dumps(select_choice)
+        data = json.dumps(select_choice)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls
@@ -509,7 +510,7 @@ def xhr_equipment(request):
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:
             select_choice.append(({"optionValue": equip.id, "optionDisplay": equip.__unicode__()}))
-        data = simplejson.dumps(select_choice)
+        data = json.dumps(select_choice)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls
@@ -561,7 +562,7 @@ def xhr_station(request):
             select_choice = [{"optionValue": "", "optionDisplay": "-- choisir un site --"}]
         for station in station_dispo:
             select_choice.append(({"optionValue": station.id, "optionDisplay": station.__unicode__()}))
-        data = simplejson.dumps(select_choice)
+        data = json.dumps(select_choice)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls
@@ -589,7 +590,7 @@ def xhr_built(request):
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for built in built_dispo:
             select_choice.append(({"optionValue": built.id, "optionDisplay": built.__unicode__()}))
-        data = simplejson.dumps(select_choice)
+        data = json.dumps(select_choice)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls
@@ -632,7 +633,7 @@ def xhr_equip_oper(request):
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:
             select_choice.append(({"optionValue": equip.id, "optionDisplay": equip.__unicode__()}))
-        data = simplejson.dumps(select_choice)
+        data = json.dumps(select_choice)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls
@@ -651,7 +652,7 @@ def xhr_station_position(request):
 
         select_choice = [{"latitude": instance.latitude, "longitude": instance.longitude, "elevation": instance.elevation}]
 
-        data = simplejson.dumps(select_choice, cls=DecimalEncoder)
+        data = json.dumps(select_choice, cls=DecimalEncoder)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls
@@ -1337,7 +1338,7 @@ def xhr_parameter_value(request):
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for value in value_dispo:
             select_choice.append(({"optionValue": value.id, "optionDisplay": value.__unicode__()}))
-        data = simplejson.dumps(select_choice)
+        data = json.dumps(select_choice)
 
         return HttpResponse(data)
     # If you want to prevent non XHR calls
