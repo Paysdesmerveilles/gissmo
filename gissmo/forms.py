@@ -161,24 +161,12 @@ class InterventionForm(forms.ModelForm):
         }
         self.fields['intervention_date'].widget = split_widget
 
-
 class EquipmentForm(forms.ModelForm):
     """
     Add of fields to obtain the date of purchase and stockage_site only when
     it'a new equipment else hide the field and the label
     Only the site of type OBSERVATOIRE can be a stockage site
     """
-    observatories = StationSite.objects.filter(
-        site_type=StationSite.OBSERVATOIRE
-    )
-
-    OBS_CHOICES = [
-        ('', '')
-    ]
-
-    for obs in observatories:
-        OBS_CHOICES.append((obs.id, obs))
-
     purchase_date = forms.DateField(
         widget=widgets.AdminDateWidget,
         label='Date achat',
@@ -186,7 +174,7 @@ class EquipmentForm(forms.ModelForm):
     )
 
     stockage_site = forms.IntegerField(
-        widget=forms.Select(choices=OBS_CHOICES),
+        widget=forms.Select(choices=StationSite.objects.none()),
         label='Site entreposage',
         required=False
     )
@@ -205,6 +193,7 @@ class EquipmentForm(forms.ModelForm):
 
         self.fields['owner'].queryset = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.INCONNU))
         self.fields['equip_supertype'].queryset = EquipSupertype.objects.all().order_by('presentation_rank')
+        self.fields['stockage_site'].queryset = StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE)
 
     class Meta:
         model = Equipment
