@@ -246,11 +246,6 @@ class ParameterValue(models.Model):
     def __unicode__(self):
         return u'%s' % (self.value)
 
-
-def get_defaut_owner():
-    return Actor.objects.get(actor_name='DT INSU')
-
-
 # Equipments
 class Equipment(models.Model):
     """
@@ -297,7 +292,7 @@ class Equipment(models.Model):
         verbose_name=_("modele d'equipement")
     )
     serial_number = models.CharField(max_length=50, verbose_name=_("numero de serie"))
-    owner = models.ForeignKey("Actor", default=get_defaut_owner, verbose_name=_("proprietaire"))
+    owner = models.ForeignKey("Actor", verbose_name=_("proprietaire"))
     vendor = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("vendeur"))
     contact = models.TextField(null=True, blank=True, verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
@@ -624,11 +619,6 @@ class CommentStationSite(models.Model):
     begin_effective = models.DateTimeField(null=True, blank=True, verbose_name=_("debut effectivite (aaaa-mm-jj)"))
     end_effective = models.DateTimeField(null=True, blank=True, verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
-
-def get_defaut_operator():
-    return Actor.objects.get(actor_name='Inconnu')
-
-
 class StationSite(models.Model):
     """
     **Description :** Site ou station d'intérêt dans le cadre du CLB Resif
@@ -750,7 +740,7 @@ class StationSite(models.Model):
     latitude = models.DecimalField(null=True, blank=True, verbose_name=_("latitude (degre decimal)"), max_digits=8, decimal_places=6)
     longitude = models.DecimalField(null=True, blank=True, verbose_name=_("longitude (degre decimal)"), max_digits=9, decimal_places=6)
     elevation = models.DecimalField(null=True, blank=True, verbose_name=_("elevation (m)"), max_digits=5, decimal_places=1)
-    operator = models.ForeignKey("Actor", default=get_defaut_operator, verbose_name=_("operateur"))
+    operator = models.ForeignKey("Actor", verbose_name=_("operateur"))
     address = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("adresse"))
     town = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("commune"))
     county = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("departement"))

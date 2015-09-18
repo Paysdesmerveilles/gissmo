@@ -191,7 +191,14 @@ class EquipmentForm(forms.ModelForm):
             self.fields['purchase_date'].required = True
             self.fields['stockage_site'].required = True
 
+        # initialization
+        try:
+            owner_default_value = Actor.objects.get(actor_name='DT INSU')
+        except (KeyError, Actor.DoesNotExist):
+            owner_default_value = None
+
         self.fields['owner'].queryset = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.INCONNU))
+        self.fields['owner'].initial = owner_default_value
         self.fields['equip_supertype'].queryset = EquipSupertype.objects.all().order_by('presentation_rank')
         self.fields['stockage_site'].queryset = StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE)
 
@@ -238,7 +245,15 @@ class StationSiteForm(forms.ModelForm):
             if len(project_list) == 1:
                 self.fields['project'].empty_label=None
 
+        # intialization
+        operator_default_value = None
+        try:
+            operator_default_value = Actor.objects.get(actor_name='Inconnu')
+        except (KeyError, Actor.DoesNotExist):
+            pass
+
         self.fields['operator'].queryset = Actor.objects.filter(Q(actor_type=Actor.OBSERVATOIRE) | Q(actor_type=Actor.ORGANISME) | Q(actor_type=Actor.ENTREPRISE_SAV) | Q(actor_type=Actor.INCONNU))
+        self.fields['operator'].initial = operator_default_value
 
     class Meta:
         model = StationSite
