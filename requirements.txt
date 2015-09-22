@@ -12,3 +12,6 @@ pytz==2013d
 six==1.4.1
 uWSGI==1.9.16
 wsgiref==0.1.2
+# functionnal tests dependancies
+selenium
+docker-py
