@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+
 import unittest
+import os
+import csv
+
 from docker import Client
 
 DOCKER_CONTAINER_NAME = 'gissmo'
 DOCKER_CONTAINER_DEFAULT_PORT = '8000'
 DEFAULT_ADMIN_LOGIN = 'olivier'
 DEFAULT_ADMIN_PASSWORD = 'olivier'
+DOWNLOAD_PATH = os.getcwd()
+DOWNLOADED_FILE = 'test_site.csv'
 
 class SimpleTest(unittest.TestCase):
     """
@@ -18,7 +24,15 @@ class SimpleTest(unittest.TestCase):
         """
         Launch Firefox as Web Testing Platform.
         """
-        self.browser = webdriver.Firefox()
+        # Set Firefox profile to DL CSV files
+        fp = webdriver.FirefoxProfile()
+
+        fp.set_preference("browser.download.folderList",2)
+        fp.set_preference("browser.download.manager.showWhenStarting",False)
+        fp.set_preference("browser.download.dir", DOWNLOAD_PATH)
+        fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "text/csv")
+
+        self.browser = webdriver.Firefox(firefox_profile=fp)
         self.browser.implicitly_wait(3)
         # search for gissmo instance IP (in Docker)
         c = Client(base_url='unix://var/run/docker.sock')
@@ -45,12 +59,18 @@ class SimpleTest(unittest.TestCase):
     def tearDown(self):
         """
         Close Browser.
+        Clean working directory:
+          - test_site.csv file
         """
         self.browser.quit()
+        csv_filename = DOWNLOADED_FILE
+        filepath = '/'.join([DOWNLOAD_PATH, csv_filename])
+        if os.path.exists(filepath):
+            os.remove(filepath)
 
     def gissmo_login(self):
         """
-        Log in to Gissmo application
+        Log in to Gissmo application.
         """
         url = self.adminurl
         self.browser.get(url)
@@ -62,6 +82,20 @@ class SimpleTest(unittest.TestCase):
         # Stop tests if login failed
         self.assertIn('Site administration', self.browser.title, 
             'Login problem on %s: no administration interface found.')
+
+    def check_csv_file(self, filepath):
+        """
+        Browse the given CSV file to check if any error occured.
+        """
+        with open(filepath, 'rb') as f:
+            reader = csv.reader(f)
+            try:
+                # just browse rows
+                for row in reader:
+                    pass
+            except csv.Error as e:
+                sys.exit('file %s, line %d: %s' % 
+                    (filepath, reader.line_num, e))
 
     def test_can_get_main_pages(self):
         """
@@ -137,7 +171,7 @@ class SimpleTest(unittest.TestCase):
 
     def test_station_map_loading(self):
         """
-        Check that Station Map is loaded.
+        Check that Station Map is visible.
         """
         # Yvette wants to check Station Map.
         # She log in to Gissmo.
@@ -157,11 +191,47 @@ class SimpleTest(unittest.TestCase):
         )
 
         # Station Map link is here. So she finally click on it to see result
-        url = self.adminurl + 'site_maps/'
-        self.browser.get(url)
+        self.browser.get(tofind_url)
         self.assertIn('RESIF', self.browser.title,
             "Title should contains RESIF on %s. Current: %s." % 
             (self.browser.current_url, self.browser.title))
+
+    def test_station_to_csv_file(self):
+        """
+        Download the CSV Station file and check it.
+        """
+        # Henri needs the CSV file of all stations in order to check them on
+        #+ LibreOffice.
+        # He so get Gissmo website and log in.
+        self.gissmo_login()
+        
+        # Then he goes to Station Site page and check that 'Site de test to CSV'
+        #+ is here.
+        url = self.appurl + 'stationsite/'
+        self.browser.get(url)
+        links = self.browser.find_elements_by_tag_name('a')
+        self.assertNotEqual(links, [], 
+            "No links found on this page: %s" % self.browser.current_url)
+        tofind_url = self.adminurl + 'test_site/'
+        self.assertTrue(
+            any(link.get_attribute('href') == tofind_url for link in links),
+            "No link found to get Station Map here: %s. Searching for: %s" % 
+                (self.browser.current_url, tofind_url)
+        )
+
+        # So he clicks on it.
+        for link in links:
+            if link.get_attribute('href') == tofind_url:
+                link.click()
+
+        # He checks that he receives a CSV file in order to use it lately
+        local_csv_filepath = '/'.join([DOWNLOAD_PATH, DOWNLOADED_FILE])
+        self.assertTrue(os.path.exists(local_csv_filepath), 
+            "%s not found (when downloading %s)." % 
+                (local_csv_filepath, tofind_url))
+        
+        # We check the CSV file by reading it.
+        self.check_csv_file(local_csv_filepath)
 
 if __name__ == "__main__":
     unittest.main()
