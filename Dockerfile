@@ -18,7 +18,7 @@ RUN echo "deb http://ftp.u-strasbg.fr/debian jessie main" > /etc/apt/sources.lis
 
 # DEPENDANCIES (after an update)
 # - postgresql: database
-# - libpq-dev python-dev python-pip : for Django
+# - libpq-dev python-dev python-pip: for Django
 RUN apt-get install -y \
   postgresql-$PG_VERSION \
   libpq-dev \
