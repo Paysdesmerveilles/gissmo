@@ -100,3 +100,42 @@ Start the test server using this command:
 ```
 
 Open this following url : [http://127.0.0.1/gissmo]() using your superuser account. Finally submit your pull request ;)
+
+# Tests
+
+## Functional tests
+
+### Prerequisites
+
+Debian-like packages:
+
+  * docker
+  * firefox/iceweasel
+
+Python packages:
+
+  * selenium
+  * docker-py
+
+### Prepare test environment
+
+Create a new Docker image:
+
+    ./scripts/docker_build.sh
+
+Create an instance:
+
+    ./script/docker_start.sh
+
+Into the instance:
+
+    ./init.sh
+    ./runserver.sh
+
+### Run functional tests
+
+Outside the docker instance:
+
+    python functional_tests/tests.py
+
+It will launch Firefox and check some URLs.

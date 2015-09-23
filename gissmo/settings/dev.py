@@ -12,4 +12,6 @@ ROOT_URLCONF = 'gissmo.urls.dev'
 
 INSTALLED_APPS += (
     'django_extensions',
+    # Activate functional_tests when it will be OK in docker and/or virtualenv
+#    'functional_tests',
 )
