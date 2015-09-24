@@ -12,6 +12,14 @@ ROOT_URLCONF = 'gissmo.urls.dev'
 
 INSTALLED_APPS += (
     'django_extensions',
-    # Activate functional_tests when it will be OK in docker and/or virtualenv
-#    'functional_tests',
+)
+
+# Update DB settings for docker-compose use
+del(DATABASES['default']['PASSWORD'])
+DATABASES['default'].update(
+    {
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'HOST': 'db',
+    }
 )

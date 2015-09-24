@@ -1,67 +1,23 @@
-# Version 0.0
+# Version 0.1
 # This Dockerfile creates a fresh environment for Gissmo
 
-FROM debian:jessie
+FROM python:2.7
 
 MAINTAINER Olivier DOSSMANN, olivier+dockerfile@dossmann.net
 
 # Main variables
-ENV DEBIAN_FRONTEND noninteractive
-ENV PG_VERSION 9.4
-
-# Add Strasbourg Debian Mirror list (except security one) to update the Dockerfile faster
-RUN echo "deb http://ftp.u-strasbg.fr/debian jessie main" > /etc/apt/sources.list; \
-  echo "deb http://ftp.u-strasbg.fr/debian jessie-updates main" >> /etc/apt/sources.list; \
-  echo "deb http://security.debian.org jessie/updates main" >> /etc/apt/sources.list; \
-  apt-get update; \
-  apt-get upgrade -y
-
-# DEPENDANCIES (after an update)
-# - postgresql: database
-# - libpq-dev python-dev python-pip: for Django
-RUN apt-get install -y \
-  postgresql-$PG_VERSION \
-  libpq-dev \
-  python-dev \
-#  supervisor \
-  python-pip
+ENV PYTHONBUFFERED 1
+ENV GISSMO_DIR /opt/gissmo
 
 # GISSMO directory
-RUN mkdir -p /opt/gissmo
-# Add special user gissmo
-RUN useradd -m gissmo # create the home directory (-m option)
-RUN echo "gissmo:gissmo" | chpasswd # change default gissmo password
+RUN mkdir -p $GISSMO_DIR
+WORKDIR $GISSMO_DIR
 
 # Install Django dependancies
-COPY requirements.txt /opt/gissmo_requirements.txt
+COPY requirements.txt $GISSMO_DIR/requirements.txt
 # non-resolved issue about distribute into Docker
-RUN sed -i '/distribute==/d' /opt/gissmo_requirements.txt
-RUN pip install -r /opt/gissmo_requirements.txt
+RUN sed -i '/distribute==/d' $GISSMO_DIR/requirements.txt
+RUN pip install -r $GISSMO_DIR/requirements.txt
 
-# Configure postgreSQL
-USER postgres
-
-RUN service postgresql start && \
-  psql --command "CREATE USER gissmo WITH SUPERUSER PASSWORD 'gissmo';" && \
-  createdb -O gissmo gissmo
-
-# Enable remote connections for postgreSQL
-RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$PG_VERSION/main/pg_hba.conf
-RUN echo "listen_addresses='*'" >> /etc/postgresql/$PG_VERSION/main/postgresql.conf
-
-# Return as admin user
-USER root
-
-## Configure services
-#COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-## Launch supervisord
-#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
-# Open postgreSQL (5432), Django (8000) port
-EXPOSE 5432 8000
-
-# Did you need some access?
-VOLUME ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/opt/gissmo"]
-
-WORKDIR /opt/gissmo
-ENTRYPOINT ["/bin/bash"]
+# Add current directory code to gissmo project directory
+ADD . $GISSMO_DIR
