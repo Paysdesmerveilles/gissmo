@@ -18,14 +18,14 @@ With docker-compose you only need to build containers, deploy models and
 run the server:
 
 ```bash
-docker-compose build web
-docker-compose run web python manage.py syncdb
-docker-compose run
+docker-compose up
+docker-compose run --rm web python manage.py syncdb
+docker-compose run --rm --service-ports -d web
 ```
 
 ### Access the GISSMO application
 
-GISSMO is available here: http://localhost:8000/
+GISSMO is available here: http://localhost:8000/gissmo/
 
 ## With virtualenv
 
@@ -68,35 +68,27 @@ Open this following url : [http://127.0.0.1/gissmo]() using your superuser accou
 
 ### Prerequisites
 
-Debian-like packages:
+As previously with docker-compose:
 
   * docker
-  * firefox/iceweasel
-
-Python packages:
-
-  * selenium
-  * docker-py
+  * docker-compose
 
 ### Prepare test environment
 
-Create a new Docker image:
+Just do:
 
-    ./scripts/docker_build.sh
-
-Create an instance:
-
-    ./script/docker_start.sh
-
-Into the instance:
-
-    ./init.sh
-    ./runserver.sh
+```bash
+docker-compose up
+docker-compose run --rm web python manage.py syncdb
+```
 
 ### Run functional tests
 
-Outside the docker instance:
+Then launch functional tests as:
 
-    python functional_tests/tests.py
+```bash
+docker-compose run --service-ports -d web
+docker-compose run web python manage.py test
+```
 
 It will launch Firefox and check some URLs.

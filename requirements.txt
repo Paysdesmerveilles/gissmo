@@ -15,4 +15,3 @@ wsgiref==0.1.2
 django-extensions==1.2.2
 # functionnal tests dependancies
 selenium
-docker-py

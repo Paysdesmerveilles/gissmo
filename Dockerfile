@@ -21,3 +21,5 @@ RUN pip install -r $GISSMO_DIR/requirements.txt
 
 # Add current directory code to gissmo project directory
 ADD . $GISSMO_DIR
+
+EXPOSE 8000

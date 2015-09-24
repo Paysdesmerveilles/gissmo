@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 
 import unittest
 import os
 import csv
 
-from docker import Client
+from django.test import LiveServerTestCase
 
-DOCKER_CONTAINER_NAME = 'gissmo'
-DOCKER_CONTAINER_DEFAULT_PORT = '8000'
 DEFAULT_ADMIN_LOGIN = 'olivier'
 DEFAULT_ADMIN_PASSWORD = 'olivier'
 DOWNLOAD_PATH = os.getcwd()
 DOWNLOADED_FILE = 'test_site.csv'
 
-class SimpleTest(unittest.TestCase):
+class SimpleTest(LiveServerTestCase):
     """
     A set of tests that only load some webpages from Gissmo.
     """
@@ -32,27 +31,15 @@ class SimpleTest(unittest.TestCase):
         fp.set_preference("browser.download.dir", DOWNLOAD_PATH)
         fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "text/csv")
 
-        self.browser = webdriver.Firefox(firefox_profile=fp)
+        self.browser = webdriver.Remote(
+            command_executor='http://selenium:4444/wd/hub',
+            desired_capabilities=DesiredCapabilities.FIREFOX,
+            browser_profile=fp,
+        )
         self.browser.implicitly_wait(3)
-        # search for gissmo instance IP (in Docker)
-        c = Client(base_url='unix://var/run/docker.sock')
-        container_metadata = c.inspect_container(DOCKER_CONTAINER_NAME)
-        try:
-            self.ip = container_metadata['NetworkSettings']['IPAddress']
-        except KeyError as e:
-            self.ip = 'localhost'
-        try:
-            self.ports = container_metadata['NetworkSettings']['Ports']
-        except KeyError as e:
-            self.ports = None
-        self.port = DOCKER_CONTAINER_DEFAULT_PORT
-        # DOCKER BUG: Don't know why 8000 is the default one
-#        if self.ports:
-#            try:
-#                self.port = self.ports['8000/tcp'][0]['HostPort']
-#            except KeyError as e:
-#                self.port = None
-        self.url = 'http://%s:%s/' % (self.ip, self.port)
+
+        self.url = self.live_server_url
+        print(self.url)
         self.adminurl = self.url + 'gissmo/'
         self.appurl = self.adminurl + 'gissmo/'
 

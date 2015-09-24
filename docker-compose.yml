@@ -11,3 +11,6 @@ web:
     - db
   environment:
     - DJANGO_SETTINGS_MODULE=gissmo.settings.dev
+selenium:
+  image: selenium/standalone-firefox
+  net: "container:web"

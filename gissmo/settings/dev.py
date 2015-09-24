@@ -12,6 +12,7 @@ ROOT_URLCONF = 'gissmo.urls.dev'
 
 INSTALLED_APPS += (
     'django_extensions',
+    'functional_tests', # for function test purposes
 )
 
 # Update DB settings for docker-compose use
