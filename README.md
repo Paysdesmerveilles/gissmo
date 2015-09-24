@@ -1,70 +1,31 @@
 # Development environment
 
-## With Docker
+## With docker-compose
 
 ### Prerequisites
 
+You need **Docker** and **docker-compose**.
+
 Cf. http://docs.docker.com/installation/ubuntulinux/
+
+and
+
+Cf. https://docs.docker.com/compose/install/
 
 ### Quick setup
 
-```bash
-git clone https://github.com/eost/gissmo gissmo
-cd gissmo
-docker build -t gissmo:latest .
-```
-
-Your GISSMO environment is now ready.
-
-**Note**: This could be done with the following command:
+With docker-compose you only need to build containers, deploy models and
+run the server:
 
 ```bash
-./scripts/docker_build.sh
-```
-
-Each time you want to launch a *GISSMO instance*, use this command:
-
-```bash
-docker run --rm -it -p :8000 -v `pwd`:/opt/gissmo --name=gissmo gissmo:latest
-(then into the docker instance)
-```
-
-And you will enter a *GISSMO instance* named **gissmo**.
-
-**Note**: This could be done with the following command:
-
-```bash
-./scripts/docker_start.sh
-```
-
-### Launch postgreSQL and Django
-
-Into your GISSMO instance, use these commands:
-
-```bash
-service postgresql start
-./manage syncdb
-./manage runserver 0.0.0.0:8080
-```
-
-This will offer your Django application on your Docker instance.
-
-**Note**: This could be done with the following command (in gissmo instance):
-
-```bash
-./init.sh
-./runserver.sh
+docker-compose build web
+docker-compose run web python manage.py syncdb
+docker-compose run
 ```
 
 ### Access the GISSMO application
 
-Launch firefox like this (from gissmo directory, **outside docker instance**):
-
-```bash
-./scripts/firefox.sh
-```
-
-This will open *firefox* with the right IP address.
+GISSMO is available here: http://localhost:8000/
 
 ## With virtualenv
 

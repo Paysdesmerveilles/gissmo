@@ -13,3 +13,13 @@ ROOT_URLCONF = 'gissmo.urls.dev'
 INSTALLED_APPS += (
     'django_extensions',
 )
+
+# Update DB settings for docker-compose use
+del(DATABASES['default']['PASSWORD'])
+DATABASES['default'].update(
+    {
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'HOST': 'db',
+    }
+)
