@@ -16,11 +16,9 @@ INSTALLED_APPS += (
 )
 
 # Update DB settings for docker-compose use
-del(DATABASES['default']['PASSWORD'])
 DATABASES['default'].update(
     {
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'HOST': 'db',
+        'HOST': os.getenv('DB_PORT_5432_TCP_ADDR', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT_5432_TCP_PORT', '5433'),
     }
 )

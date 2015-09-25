@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+#from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 
 import unittest
@@ -8,9 +8,10 @@ import os
 import csv
 
 from django.test import LiveServerTestCase
+from django.contrib.auth.models import User
 
-DEFAULT_ADMIN_LOGIN = 'olivier'
-DEFAULT_ADMIN_PASSWORD = 'olivier'
+DEFAULT_ADMIN_LOGIN = 'admin'
+DEFAULT_ADMIN_PASSWORD = 'admin'
 DOWNLOAD_PATH = os.getcwd()
 DOWNLOADED_FILE = 'test_site.csv'
 
@@ -23,6 +24,7 @@ class SimpleTest(LiveServerTestCase):
         """
         Launch Firefox as Web Testing Platform.
         """
+        self.superuser = User.objects.create_superuser(DEFAULT_ADMIN_LOGIN, 'admin@mysite.com', DEFAULT_ADMIN_PASSWORD)
         # Set Firefox profile to DL CSV files
         fp = webdriver.FirefoxProfile()
 
@@ -31,25 +33,32 @@ class SimpleTest(LiveServerTestCase):
         fp.set_preference("browser.download.dir", DOWNLOAD_PATH)
         fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "text/csv")
 
-        self.browser = webdriver.Remote(
-            command_executor='http://selenium:4444/wd/hub',
-            desired_capabilities=DesiredCapabilities.FIREFOX,
-            browser_profile=fp,
-        )
+#        # Create a connection to a Remote Selenium Node
+#        self.browser = webdriver.Remote(
+#            command_executor='http://selenium:4444/wd/hub',
+#            desired_capabilities=DesiredCapabilities.FIREFOX,
+#            browser_profile=fp,
+#        )
+
+        self.browser = webdriver.Firefox(firefox_profile=fp)
         self.browser.implicitly_wait(3)
 
-        self.url = self.live_server_url
-        print(self.url)
+        self.url = self.live_server_url + '/'
         self.adminurl = self.url + 'gissmo/'
         self.appurl = self.adminurl + 'gissmo/'
 
     def tearDown(self):
         """
-        Close Browser.
-        Clean working directory:
-          - test_site.csv file
+        Cleaning
         """
+        # close firefox
         self.browser.quit()
+
+        # Bug: https://code.djangoproject.com/ticket/10827
+        from django.contrib.contenttypes.models import ContentType
+        ContentType.objects.clear_cache()
+
+        # clean working directory
         csv_filename = DOWNLOADED_FILE
         filepath = '/'.join([DOWNLOAD_PATH, csv_filename])
         if os.path.exists(filepath):
@@ -61,11 +70,13 @@ class SimpleTest(LiveServerTestCase):
         """
         url = self.adminurl
         self.browser.get(url)
-        inputlogin = self.browser.find_element_by_id('id_username')
-        inputpassword = self.browser.find_element_by_id('id_password')
+        inputlogin = self.browser.find_element_by_name('username')
+        inputpassword = self.browser.find_element_by_name('password')
         inputlogin.send_keys(DEFAULT_ADMIN_LOGIN)
         inputpassword.send_keys(DEFAULT_ADMIN_PASSWORD)
         inputpassword.send_keys(Keys.ENTER)
+
+        self.browser.implicitly_wait(3)
         # Stop tests if login failed
         self.assertIn('Site administration', self.browser.title, 
             'Login problem on %s: no administration interface found.')
@@ -88,15 +99,8 @@ class SimpleTest(LiveServerTestCase):
         """
         Check that each page don't send a 404 error message
         """
-        # Martin Dupont start using the site. He goes to check the website 
-        #+ homepage.
-        url = self.url
-        self.browser.get(url)
-
-        # He receive a 404 error: Page not found. He remembers that we should 
-        #+ type /gissmo after the URL
-        self.assertIn('Page not found', self.browser.title, 
-            'Problem loading %s' % self.browser.current_url)
+        # Martin Dupont start using the site by accessing to /gissmo after
+        #+ the webpage URL
         url = self.adminurl
         self.browser.get(url)
         header_text = self.browser.find_element_by_tag_name('h1').text
@@ -148,13 +152,6 @@ class SimpleTest(LiveServerTestCase):
                 "No 'select' on title. %s" % self.browser.current_url)
             self.assertIn('to change', self.browser.title,
                 "No 'to change' on title. %s" % self.browser.current_url)
-        
-        # As Martin is curious, he changes the URL using imagination.
-        # But the application said "Page not found".
-        url = self.appurl + 'sdflkj'
-        self.browser.get(url)
-        self.assertIn('Page not found', self.browser.title,
-            "This page SHOULD NOT be found! %s" % self.browser.current_url)
 
     def test_station_map_loading(self):
         """

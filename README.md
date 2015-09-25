@@ -14,18 +14,28 @@ Cf. https://docs.docker.com/compose/install/
 
 ### Quick setup
 
-With docker-compose you only need to build containers, deploy models and
-run the server:
+With docker-compose you only need to build image, build container, deploy models
+and run the server:
 
 ```bash
-docker-compose up
+docker-compose build
 docker-compose run --rm web python manage.py syncdb
-docker-compose run --rm --service-ports -d web
+docker-compose run --rm --service-ports web
 ```
+
+It will launch the server on the current terminal.
+
+To stop the server, press Ctrl+C.
+
+To stop the database, just do:
+
+    docker-compose stop db
+
+And it will stop our DB.
 
 ### Access the GISSMO application
 
-GISSMO is available here: http://localhost:8000/gissmo/
+GISSMO is available here: http://localhost:8000/gissmo/ .
 
 ## With virtualenv
 
@@ -78,17 +88,18 @@ As previously with docker-compose:
 Just do:
 
 ```bash
-docker-compose up
-docker-compose run --rm web python manage.py syncdb
+docker-compose start db
 ```
 
 ### Run functional tests
 
-Then launch functional tests as:
+Then launch functional tests **in a virtualenv** (as previously explained):
 
 ```bash
-docker-compose run --service-ports -d web
-docker-compose run web python manage.py test
+cd gissmo
+source bin/activate
+pip install -r requirements
+python manage.py test functional_tests
 ```
 
 It will launch Firefox and check some URLs.
