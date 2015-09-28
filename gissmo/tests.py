@@ -25,12 +25,8 @@ class AdminPageTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_login_connection(self):
-        response = self.client.post('/gissmo/', 
-            {
-                'username': DEFAULT_ADMIN_LOGIN, 
-                'password': DEFAULT_ADMIN_PASSWORD,
-            })
-        self.assertEqual(response.status_code, 200, "Cannot login")
+        self.assertTrue(self.client.login(username=DEFAULT_ADMIN_LOGIN,
+            password=DEFAULT_ADMIN_PASSWORD), "Cannot login")
 
     def test_gissmo_shortcuts_dont_return_404_pages(self):
         links = [
