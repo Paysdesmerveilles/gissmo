@@ -72,6 +72,44 @@ Start the test server using this command:
 
 Open this following url : [http://127.0.0.1/gissmo]() using your superuser account. Finally submit your pull request ;)
 
+## Check its code with flake8
+
+Create the following **.git/hooks/pre-commit** file:
+
+```python
+#!/usr/bin/env python
+
+import glob
+import os
+import sys
+
+site_packages = glob.glob('%s/lib/*/site-packages' % os.environ['VIRTUAL_ENV'])[0]
+sys.path.insert(0, site_packages)
+
+from flake8.run import git_hook
+
+COMPLEXITY = os.getenv('FLAKE8_COMPLEXITY', 10)
+STRICT = os.getenv('FLAKE8_STRICT', True)
+IGNORE = os.getenv('FLAKE8_IGNORE', 'E501')
+LAZY = os.getenv('FLAKE8_LAZY', False)
+
+if __name__ == '__main__':
+        sys.exit(git_hook(
+        complexity=COMPLEXITY,
+        strict=STRICT,
+        ignore=IGNORE,
+        lazy=LAZY,
+    ))
+```
+
+Change it to an executable one:
+
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
+Then use a python virtual environment to use it.
+
 # Tests
 
 ## Functional tests
