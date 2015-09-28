@@ -242,6 +242,3 @@ class SimpleTest(LiveServerTestCase):
 
         # We check the CSV file by reading it.
         self.check_csv_file(local_csv_filepath)
-
-if __name__ == "__main__":
-    unittest.main()
