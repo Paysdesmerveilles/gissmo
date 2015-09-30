@@ -17,7 +17,7 @@ DOWNLOAD_PATH = os.getcwd()
 DOWNLOADED_FILE = 'test_site.csv'
 
 
-class SimpleTest(LiveServerTestCase):
+class FunctionalTest(LiveServerTestCase):
     """
     A set of tests that only load some webpages from Gissmo.
     """
@@ -28,13 +28,13 @@ class SimpleTest(LiveServerTestCase):
             if 'liveserver' in arg:
                 cls.server_url = 'http://' + arg.split('=')[1]
                 return
-        super(SimpleTest, cls).setUpClass()
+        super(FunctionalTest, cls).setUpClass()
         cls.server_url = cls.live_server_url
 
     @classmethod
     def tearDownClass(cls):
         if cls.server_url == cls.live_server_url:
-            super(SimpleTest, cls).tearDownClass()
+            super(FunctionalTest, cls).tearDownClass()
 
     def setUp(self):
         """
@@ -117,6 +117,9 @@ class SimpleTest(LiveServerTestCase):
                     'file %s, line %d: %s' %
                     (filepath, reader.line_num, e))
 
+
+class CheckMainURLBehaviourTest(FunctionalTest):
+
     def test_can_get_main_pages(self):
         """
         Check that each page don't send a 404 error message
@@ -185,6 +188,9 @@ class SimpleTest(LiveServerTestCase):
                 self.browser.title,
                 "No 'to change' on title. %s" % self.browser.current_url)
 
+
+class MapTest(FunctionalTest):
+
     def test_station_map_loading(self):
         """
         Check that Station Map is visible.
@@ -215,6 +221,9 @@ class SimpleTest(LiveServerTestCase):
             self.browser.title,
             "Title should contains RESIF on %s. Current: %s." %
             (self.browser.current_url, self.browser.title))
+
+
+class TestSiteCSVFileTest(FunctionalTest):
 
     def test_station_to_csv_file(self):
         """
