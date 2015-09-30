@@ -4,7 +4,6 @@ from selenium import webdriver
 #        DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 
-import unittest
 import os
 import csv
 import sys
@@ -12,8 +11,8 @@ import sys
 from django.test import LiveServerTestCase
 from django.contrib.auth.models import User
 
-DEFAULT_ADMIN_LOGIN = 'admin'
-DEFAULT_ADMIN_PASSWORD = 'admin'
+DEFAULT_ADMIN_LOGIN = os.getenv('USER', 'admin')
+DEFAULT_ADMIN_PASSWORD = os.getenv('PWD', 'admin')
 DOWNLOAD_PATH = os.getcwd()
 DOWNLOADED_FILE = 'test_site.csv'
 
@@ -22,6 +21,20 @@ class SimpleTest(LiveServerTestCase):
     """
     A set of tests that only load some webpages from Gissmo.
     """
+
+    @classmethod
+    def setUpClass(cls):
+        for arg in sys.argv:
+            if 'liveserver' in arg:
+                cls.server_url = 'http://' + arg.split('=')[1]
+                return
+        super(SimpleTest, cls).setUpClass()
+        cls.server_url = cls.live_server_url
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.server_url == cls.live_server_url:
+            super(SimpleTest, cls).tearDownClass()
 
     def setUp(self):
         """
@@ -49,7 +62,7 @@ class SimpleTest(LiveServerTestCase):
         self.browser = webdriver.Firefox(firefox_profile=fp)
         self.browser.implicitly_wait(3)
 
-        self.url = self.live_server_url + '/'
+        self.url = self.server_url + '/'
         self.adminurl = self.url + 'gissmo/'
         self.appurl = self.adminurl + 'gissmo/'
 

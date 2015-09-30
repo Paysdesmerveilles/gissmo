@@ -141,3 +141,17 @@ python manage.py test functional_tests
 ```
 
 It will launch Firefox and check some URLs.
+
+### Run functional tests on a staging website
+
+You need to know:
+
+  * admin user (**USER**)
+  * admin password (**PWD**)
+  * staging website URL (**--liveserver**)
+
+Which give us:
+
+```bash
+USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=thefroid.u-strasbg.fr:8000
+```
