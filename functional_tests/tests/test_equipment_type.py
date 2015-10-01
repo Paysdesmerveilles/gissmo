@@ -13,14 +13,12 @@ class EquipmentTypeTest(FunctionalTest):
         Some needed datas
         """
         super(EquipmentTypeTest, self).setUp()
-        self.super_1 = EquipSupertype.objects.create(
+        self.supertype_1 = EquipSupertype.objects.create(
             equip_supertype_name='01. Scientific',
-            presentation_rank='1'
-        )
-        self.super_2 = EquipSupertype.objects.create(
+            presentation_rank='1')
+        self.supertype_2 = EquipSupertype.objects.create(
             equip_supertype_name='02. Energetic',
-            presentation_rank='2'
-        )
+            presentation_rank='2')
 
     def test_equipment_type_creation(self):
         """
