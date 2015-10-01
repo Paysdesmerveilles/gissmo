@@ -142,6 +142,20 @@ python manage.py test functional_tests
 
 It will launch Firefox and check some URLs.
 
+**TIP**: You can only launch some tests by using this syntax:
+
+```bash
+python manage.py test functional_tests.TestClassName
+```
+
+for an example:
+
+```bash
+python manage.py test functional_tests.ActorTest
+```
+
+will launch tests from ActorTest class. This is useful when coding tests.
+
 ### Run functional tests on a staging website
 
 You need to know:
