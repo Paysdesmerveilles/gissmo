@@ -3,3 +3,4 @@ from test_main_pages import *  # NOQA
 from test_map import *  # NOQA
 from test_test_site_file import *  # NOQA
 from test_actor import *  # NOQA
+from test_equipment_type import *  # NOQA
