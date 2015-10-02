@@ -154,6 +154,9 @@ class FunctionalTest(LiveServerTestCase):
             if field.check:
                 to_check_fields.append(field)
 
+        if not to_check_fields:
+            self.fail('You have to define some field to check.')
+
         # Save form
         input_save = self.browser.find_element_by_name('_save')
         input_save.send_keys(Keys.ENTER)

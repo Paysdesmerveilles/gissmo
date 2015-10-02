@@ -6,7 +6,7 @@ class InputField(object):
     """
 
     def __init__(self, name, content, _type=None, check=False):
-        self.name = str(name)
-        self.content = str(content)
+        self.name = name
+        self.content = content
         self._type = _type
         self.check = check

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .base import FunctionalTest
-from selenium.webdriver.common.keys import Keys
+from .input_field import InputField
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
@@ -29,24 +29,23 @@ class EquipmentModelTest(FunctionalTest):
         """
         # @EOST we often receive CMG-40T equipment. They are Scientific
         # velocimeters.
-        self.gissmo_login()
-        url = self.appurl + 'equipmodel/add'
-        expected_value = 'CMG-40T'
-        self.browser.get(url)
-
-        input_supertype = Select(self.browser.find_element_by_name('equip_supertype'))
-        input_supertype.select_by_visible_text('01. Scientific')
-        input_type = Select(self.browser.find_element_by_name('equip_type'))
-        input_type.select_by_visible_text('Velocimeter')
-        input_name = self.browser.find_element_by_name('equip_model_name')
-        input_name.send_keys(expected_value)
-        input_manufacturer = self.browser.find_element_by_name('manufacturer')
-        input_manufacturer.send_keys(u'Güralp')
-        input_manufacturer.send_keys(Keys.ENTER)
-
-        self.assertEqual(self.browser.current_url, self.appurl + 'equipmodel/')
-
         # We check that CMG-40T appears in the given Equipment Model list
-        table = self.browser.find_element_by_id('result_list')
-        rows = table.find_elements_by_xpath('//tbody/tr//th')
-        self.assertIn(expected_value, [row.text for row in rows])
+        supertype = InputField(
+            name='equip_supertype',
+            content='01. Scientific',
+            _type=Select)
+        _type = InputField(
+            name='equip_type',
+            content='Velocimeter',
+            _type=Select)
+        name = InputField(
+            name='equip_model_name',
+            content='CMG-40T',
+            check=True)
+        manufacturer = InputField(
+            name='manufacturer',
+            content=u'Güralp')
+
+        fields = [supertype, _type, name, manufacturer]
+
+        self.add_item_in_admin_and_check_presence_in_list('equipmodel/', fields)
