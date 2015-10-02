@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .base import FunctionalTest
-from selenium.webdriver.common.keys import Keys
+from .input_field import InputField
 from selenium.webdriver.support.ui import Select
 
 
@@ -11,21 +11,17 @@ class ActorTest(FunctionalTest):
         Check a simple actor creation
         """
         # @EOST a new protagonist comes. His name is: John Doe.
-        # We enter him in the system and check we are redirect to actor list
-        actor_expected_name = 'John DOE'
-        self.gissmo_login()
-        url = self.appurl + 'actor/add'
-        self.browser.get(url)
+        # We enter him in the system and check we are redirect to actor list.
+        # Then we check that John DOE appears in the given actor list.
+        actor_type = InputField(
+            name='actor_type',
+            content='Inconnu',
+            _type=Select)
+        actor_name = InputField(
+            name='actor_name',
+            content='John DOE',
+            check=True)
 
-        input_actortype = Select(self.browser.find_element_by_name('actor_type'))
-        input_actortype.select_by_value('6')
-        input_name = self.browser.find_element_by_name('actor_name')
-        input_name.send_keys(actor_expected_name)
-        input_name.send_keys(Keys.ENTER)
+        fields = [actor_type, actor_name]
 
-        self.assertEqual(self.browser.current_url, self.appurl + 'actor/')
-
-        # We check that John Doe appears in the given actor list
-        table = self.browser.find_element_by_id('result_list')
-        rows = table.find_elements_by_xpath('//tbody/tr//th')
-        self.assertIn(actor_expected_name, [row.text for row in rows])
+        self.add_item_in_admin_and_check_presence_in_list('actor/', fields)

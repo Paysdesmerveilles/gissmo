@@ -3,6 +3,7 @@ from selenium import webdriver
 # from selenium.webdriver.common.desired_capabilities import \
 #        DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 
 import os
 import csv
@@ -120,3 +121,49 @@ class FunctionalTest(LiveServerTestCase):
                 sys.exit(
                     'file %s, line %d: %s' %
                     (filepath, reader.line_num, e))
+
+    def add_item_in_admin_and_check_presence_in_list(
+            self,
+            objectlisturl='/',
+            fields=[]):
+        """
+        The goal is to go to admin form from the given object, insert some
+        given 'fields', and check one or more field as expected value in the
+        'objectlisturl'.
+        'fields' is a list of fields (InputField class)
+        """
+        # Useless to do something without data
+        if not fields:
+            self.fail('No data given!')
+            return
+        # Login and get URL
+        self.gissmo_login()
+        url = self.appurl + objectlisturl + 'add'
+        self.browser.get(url)
+
+        # Complete all fields and keep those that needs to be checked after
+        to_check_fields = []
+        for field in fields:
+            input_field = self.browser.find_element_by_name(field.name)
+            if field._type and field._type == Select:
+                input_field = Select(input_field)
+                input_field.select_by_visible_text(field.content)
+            else:
+                input_field.send_keys(field.content)
+            # aggregate fields to check
+            if field.check:
+                to_check_fields.append(field)
+
+        # Save form
+        input_save = self.browser.find_element_by_name('_save')
+        input_save.send_keys(Keys.ENTER)
+
+        # After saving, forms should redirect to object's list
+        self.assertEqual(self.browser.current_url, self.appurl + objectlisturl)
+
+        # Check fields
+        table = self.browser.find_element_by_id('result_list')
+        rows = table.find_elements_by_xpath('//tbody/tr//th')
+
+        for to_check_field in to_check_fields:
+            self.assertIn(to_check_field.content, [row.text for row in rows])
