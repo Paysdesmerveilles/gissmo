@@ -11,6 +11,7 @@ import sys
 
 from django.test import LiveServerTestCase
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 
 DEFAULT_ADMIN_LOGIN = os.getenv('USER', 'admin')
 DEFAULT_ADMIN_PASSWORD = os.getenv('PWD', 'admin')
@@ -79,7 +80,6 @@ class FunctionalTest(LiveServerTestCase):
         self.browser.quit()
 
         # Bug: https://code.djangoproject.com/ticket/10827
-        from django.contrib.contenttypes.models import ContentType
         ContentType.objects.clear_cache()
 
         # clean working directory
