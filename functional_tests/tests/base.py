@@ -144,12 +144,20 @@ class FunctionalTest(LiveServerTestCase):
         # Complete all fields and keep those that needs to be checked after
         to_check_fields = []
         for field in fields:
-            input_field = self.browser.find_element_by_name(field.name)
-            if field._type and field._type == Select:
+            if field._type == 'checkbox':
+                input_fields = self.browser.find_elements_by_xpath(
+                    "//input[@name='%s']" % field.name)
+                for input_field in input_fields:
+                    if not input_field.is_selected():
+                        input_field.click()
+            elif field._type == Select:
+                input_field = self.browser.find_element_by_name(field.name)
                 input_field = Select(input_field)
                 input_field.select_by_visible_text(field.content)
             else:
+                input_field = self.browser.find_element_by_name(field.name)
                 input_field.send_keys(field.content)
+
             # aggregate fields to check
             if field.check:
                 to_check_fields.append(field)
