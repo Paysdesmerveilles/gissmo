@@ -58,7 +58,7 @@ class ProjectTest(FunctionalTest):
             check=True)
         project = InputField(
             name='project',
-            content=self.project_1.id,
+            content=[self.project_1.id],
             _type='checkbox')
 
         fields = [user, project]

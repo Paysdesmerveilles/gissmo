@@ -149,8 +149,9 @@ class FunctionalTest(LiveServerTestCase):
                     "//input[@name='%s']" % field.name)
                 for input_field in input_fields:
                     input_value = input_field.get_attribute('value')
-                    if input_value == str(field.content) and \
-                            not input_field.is_selected():
+                    is_selected = not input_field.is_selected()
+                    same_content = input_value in [str(value) for value in field.content]
+                    if same_content and is_selected:
                         input_field.click()
             elif field._type == Select:
                 input_field = self.browser.find_element_by_name(field.name)
