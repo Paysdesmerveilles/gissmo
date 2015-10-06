@@ -173,7 +173,10 @@ class FunctionalTest(LiveServerTestCase):
         input_save.send_keys(Keys.ENTER)
 
         # After saving, forms should redirect to object's list
-        self.assertEqual(self.browser.current_url, self.appurl + objectlisturl)
+        self.assertEqual(
+            self.browser.current_url,
+            self.appurl + objectlisturl,
+            "Problem while validating the form.")
 
         # Check fields
         table = self.browser.find_element_by_id('result_list')

@@ -6,3 +6,4 @@ from test_actor import *  # NOQA
 from test_equipment_type import *  # NOQA
 from test_equipment_model import *  # NOQA
 from test_project import *  # NOQA
+from test_site import *  # NOQA
