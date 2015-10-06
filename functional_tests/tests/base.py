@@ -148,7 +148,9 @@ class FunctionalTest(LiveServerTestCase):
                 input_fields = self.browser.find_elements_by_xpath(
                     "//input[@name='%s']" % field.name)
                 for input_field in input_fields:
-                    if not input_field.is_selected():
+                    input_value = input_field.get_attribute('value')
+                    if input_value == str(field.content) and \
+                            not input_field.is_selected():
                         input_field.click()
             elif field._type == Select:
                 input_field = self.browser.find_element_by_name(field.name)

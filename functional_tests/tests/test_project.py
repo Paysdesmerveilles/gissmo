@@ -45,16 +45,20 @@ class ProjectTest(FunctionalTest):
         """
         # Even if John is the ADEME project manager, we need to add him to the
         # project so that it can create some sites (Stationsite).
-        self.project = Project.objects.create(
+        self.project_1 = Project.objects.create(
             project_name='ADEME',
             manager=self.user_1)
+        self.project_2 = Project.objects.create(
+            project_name='G-EAU-THERMIE',
+            manager=self.user_1)
+
         user = InputField(
             name='user',
             content='john',
             check=True)
         project = InputField(
             name='project',
-            content='ADEME',
+            content=self.project_1.id,
             _type='checkbox')
 
         fields = [user, project]
