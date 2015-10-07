@@ -48,8 +48,7 @@ class StationSiteTest(FunctionalTest):
             _type=Select)
         date = InputField(
             name='creation_date',
-            content='2015-10-04',
-            _type='datetime')
+            content='2015-10-04')
 
         fields = [site_type, code, project, date]
 
