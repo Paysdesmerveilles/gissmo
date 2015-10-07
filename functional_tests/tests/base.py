@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import Select
 import os
 import csv
 import sys
+import time
 
 from django.test import LiveServerTestCase
 from django.contrib.auth.models import User
@@ -175,6 +176,11 @@ class FunctionalTest(LiveServerTestCase):
         # Save form
         input_save = self.browser.find_element_by_name('_save')
         input_save.send_keys(Keys.ENTER)
+
+        # Stop few seconds if any problem to see what's needed
+        same_url = self.browser.current_url == self.appurl + objectlisturl
+        if not same_url:
+            time.sleep(8)
 
         # After saving, forms should redirect to object's list
         self.assertEqual(
