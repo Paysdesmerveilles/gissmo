@@ -122,6 +122,25 @@ class FunctionalTest(LiveServerTestCase):
                     'file %s, line %d: %s' %
                     (filepath, reader.line_num, e))
 
+    def fill_in_field(self, field):
+        if field._type == 'checkbox':
+            input_fields = self.browser.find_elements_by_xpath(
+                "//input[@name='%s']" % field.name)
+            for input_field in input_fields:
+                input_value = input_field.get_attribute('value')
+                is_selected = not input_field.is_selected()
+                same_content = input_value in \
+                    [str(value) for value in field.content]
+                if same_content and is_selected:
+                    input_field.click()
+        elif field._type == Select:
+            input_field = self.browser.find_element_by_name(field.name)
+            input_field = Select(input_field)
+            input_field.select_by_visible_text(field.content)
+        else:
+            input_field = self.browser.find_element_by_name(field.name)
+            input_field.send_keys(field.content)
+
     def add_item_in_admin_and_check_presence_in_list(
             self,
             objectlisturl='/',
@@ -144,22 +163,7 @@ class FunctionalTest(LiveServerTestCase):
         # Complete all fields and keep those that needs to be checked after
         to_check_fields = []
         for field in fields:
-            if field._type == 'checkbox':
-                input_fields = self.browser.find_elements_by_xpath(
-                    "//input[@name='%s']" % field.name)
-                for input_field in input_fields:
-                    input_value = input_field.get_attribute('value')
-                    is_selected = not input_field.is_selected()
-                    same_content = input_value in [str(value) for value in field.content]
-                    if same_content and is_selected:
-                        input_field.click()
-            elif field._type == Select:
-                input_field = self.browser.find_element_by_name(field.name)
-                input_field = Select(input_field)
-                input_field.select_by_visible_text(field.content)
-            else:
-                input_field = self.browser.find_element_by_name(field.name)
-                input_field.send_keys(field.content)
+            self.fill_in_field(field)
 
             # aggregate fields to check
             if field.check:
