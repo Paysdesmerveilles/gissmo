@@ -140,6 +140,8 @@ class FunctionalTest(LiveServerTestCase):
             input_field.select_by_visible_text(field.content)
         else:
             input_field = self.browser.find_element_by_name(field.name)
+            # Delete content first
+            input_field.clear()
             input_field.send_keys(field.content)
 
     def add_item_in_admin_and_check_presence_in_list(
