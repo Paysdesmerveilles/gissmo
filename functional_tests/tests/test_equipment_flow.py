@@ -7,6 +7,7 @@ from gissmo.models import (
     Actor,
     EquipSupertype,
     EquipType,
+    Equipment,
     EquipModel,
     Project,
     ProjectUser,
@@ -49,10 +50,12 @@ class EquipmentTest(FunctionalTest):
             manager=self.superuser)
         self.projectuser = ProjectUser.objects.create(
             user=self.superuser)
+        self.projectuser.project.add(self.project.id)
         self.station_1 = StationSite.objects.create(
-            site_type=2,  # TODO: add new ActorType model
+            site_type=StationSite.OBSERVATOIRE,  # TODO: add new ActorType model
             station_code='EOST',
             operator=self.unknown_actor)
+        self.project.station.add(self.station_1.id)
 
     def test_equipment_creation(self):
         """
@@ -89,4 +92,49 @@ class EquipmentTest(FunctionalTest):
 
         fields = [supertype, _type, model, serial, owner, date, site]
 
-        self.add_item_in_admin_and_check_presence_in_list('equipment/', fields)
+        self.add_item_in_admin('equipment/', fields, check=True)
+
+    def test_equipment_installation_on_a_site(self):
+        # @EOST we receive a new equipment CMG-40T: T4Q31
+        self.equipment_1 = Equipment.objects.create(
+            equip_supertype=self.supertype_1,
+            equip_type=self.eq_type,
+            equip_model=self.equipment_model,
+            serial_number='T4Q31',
+            owner=self.mandatory_actor)
+
+        # We test it in stockage place.
+        # It becomes so available.
+        station = InputField(
+            name='station',
+            content='EOST',
+            _type=Select)
+        intervention_date_0 = InputField(
+            name='intervention_date_0',
+            content='2015-10-04',
+            check=True)
+        intervention_date_1 = InputField(
+            name='intervention_date_1',
+            content='11:14:00',
+            check=True)
+        intervenant = InputField(
+            name='intervactor_set-0-actor',
+            content=self.superuser.username,
+            _type=Select)
+
+        fields = [
+            station,
+            intervention_date_0,
+            intervention_date_1,
+            intervenant,
+        ]
+
+        self.add_item_in_admin('intervention/', fields, check=False)
+
+        # We install it on a new site with a assembly (bâti).
+        # We add channel HHE, 100Mhz frequency
+
+        # 3 weeks after, we decide to finish to test the site. Uninstall the
+        # equipement for test. We define channels as finished.
+
+        # We test the equipment and so we put it in another place.

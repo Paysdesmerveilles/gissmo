@@ -148,13 +148,34 @@ class FunctionalTest(LiveServerTestCase):
             input_field.clear()
             input_field.send_keys(field.content)
 
-    def add_item_in_admin_and_check_presence_in_list(
+    def check_presence_in_list(self, url, fields):
+        # Stop few seconds if any problem to see what's needed
+        same_url = self.browser.current_url == self.appurl + url
+        if not same_url:
+            time.sleep(8)
+
+        # After saving, forms should redirect to given's url
+        self.assertEqual(
+            self.browser.current_url,
+            self.appurl + url,
+            "Problem while validating the form.")
+
+        # Check fields
+        table = self.browser.find_element_by_id('result_list')
+        rows = table.find_elements_by_xpath('//tbody/tr//th')
+
+        for field in fields:
+            self.assertIn(field.content, [row.text for row in rows])
+
+    def add_item_in_admin(
             self,
             objectlisturl='/',
-            fields=[]):
+            fields=[],
+            check=False):
         """
         The goal is to go to admin form from the given object, insert some
-        given 'fields', and check one or more field as expected value in the
+        given 'fields'.
+        If check is True, we check one or more field as expected value in the
         'objectlisturl'.
         'fields' is a list of fields (InputField class)
         """
@@ -166,6 +187,7 @@ class FunctionalTest(LiveServerTestCase):
         self.gissmo_login()
         url = self.appurl + objectlisturl + 'add'
         self.browser.get(url)
+        self.browser.implicitly_wait(3)
 
         # Complete all fields and keep those that needs to be checked after
         to_check_fields = []
@@ -176,27 +198,15 @@ class FunctionalTest(LiveServerTestCase):
             if field.check:
                 to_check_fields.append(field)
 
-        if not to_check_fields:
-            self.fail('You have to define some field to check.')
+        # Wait a moment to permit a developer to see if any problem
+        time.sleep(3)
 
         # Save form
         input_save = self.browser.find_element_by_name('_save')
         input_save.send_keys(Keys.ENTER)
 
-        # Stop few seconds if any problem to see what's needed
-        same_url = self.browser.current_url == self.appurl + objectlisturl
-        if not same_url:
-            time.sleep(8)
-
-        # After saving, forms should redirect to object's list
-        self.assertEqual(
-            self.browser.current_url,
-            self.appurl + objectlisturl,
-            "Problem while validating the form.")
-
-        # Check fields
-        table = self.browser.find_element_by_id('result_list')
-        rows = table.find_elements_by_xpath('//tbody/tr//th')
-
-        for to_check_field in to_check_fields:
-            self.assertIn(to_check_field.content, [row.text for row in rows])
+        if check:
+            if not to_check_fields:
+                self.fail('You have to define some field to check.')
+            # check presence in list
+            self.check_presence_in_list(objectlisturl, to_check_fields)

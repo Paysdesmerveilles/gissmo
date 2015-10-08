@@ -35,9 +35,7 @@ class ProjectTest(FunctionalTest):
 
         fields = [name, manager]
 
-        self.add_item_in_admin_and_check_presence_in_list(
-            'project/',
-            fields)
+        self.add_item_in_admin('project/', fields, check=True)
 
     def test_project_user_creation(self):
         """
@@ -55,6 +53,7 @@ class ProjectTest(FunctionalTest):
         user = InputField(
             name='user',
             content='john',
+            _type=Select,
             check=True)
         project = InputField(
             name='project',
@@ -63,6 +62,4 @@ class ProjectTest(FunctionalTest):
 
         fields = [user, project]
 
-        self.add_item_in_admin_and_check_presence_in_list(
-            'projectuser/',
-            fields)
+        self.add_item_in_admin('projectuser/', fields, check=True)

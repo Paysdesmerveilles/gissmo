@@ -52,6 +52,7 @@ class StationSiteTest(FunctionalTest):
 
         fields = [site_type, code, project, date]
 
-        self.add_item_in_admin_and_check_presence_in_list(
+        self.add_item_in_admin(
             'stationsite/',
-            fields)
+            fields,
+            check=True)

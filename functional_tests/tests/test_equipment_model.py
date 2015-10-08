@@ -48,4 +48,4 @@ class EquipmentModelTest(FunctionalTest):
 
         fields = [supertype, _type, name, manufacturer]
 
-        self.add_item_in_admin_and_check_presence_in_list('equipmodel/', fields)
+        self.add_item_in_admin('equipmodel/', fields, check=True)

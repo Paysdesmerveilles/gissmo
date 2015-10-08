@@ -24,4 +24,4 @@ class ActorTest(FunctionalTest):
 
         fields = [actor_type, actor_name]
 
-        self.add_item_in_admin_and_check_presence_in_list('actor/', fields)
+        self.add_item_in_admin('actor/', fields, check=True)

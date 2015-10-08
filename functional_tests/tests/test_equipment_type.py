@@ -41,4 +41,4 @@ class EquipmentTypeTest(FunctionalTest):
 
         fields = [supertype, _type, rank]
 
-        self.add_item_in_admin_and_check_presence_in_list('equiptype/', fields)
+        self.add_item_in_admin('equiptype/', fields, check=True)
