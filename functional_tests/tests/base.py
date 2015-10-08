@@ -73,6 +73,8 @@ class FunctionalTest(LiveServerTestCase):
         self.adminurl = self.url + 'gissmo/'
         self.appurl = self.adminurl + 'gissmo/'
 
+        self.logged = False
+
     def tearDown(self):
         """
         Cleaning
@@ -93,20 +95,22 @@ class FunctionalTest(LiveServerTestCase):
         """
         Log in to Gissmo application.
         """
-        url = self.adminurl
-        self.browser.get(url)
-        inputlogin = self.browser.find_element_by_name('username')
-        inputpassword = self.browser.find_element_by_name('password')
-        inputlogin.send_keys(self.DEFAULT_ADMIN_LOGIN)
-        inputpassword.send_keys(self.DEFAULT_ADMIN_PASSWORD)
-        inputpassword.send_keys(Keys.ENTER)
+        if not self.logged:
+            url = self.adminurl
+            self.browser.get(url)
+            inputlogin = self.browser.find_element_by_name('username')
+            inputpassword = self.browser.find_element_by_name('password')
+            inputlogin.send_keys(self.DEFAULT_ADMIN_LOGIN)
+            inputpassword.send_keys(self.DEFAULT_ADMIN_PASSWORD)
+            inputpassword.send_keys(Keys.ENTER)
 
-        self.browser.implicitly_wait(3)
-        # Stop tests if login failed
-        self.assertIn(
-            'Site administration',
-            self.browser.title,
-            'Login problem on %s: no administration interface found.')
+            self.browser.implicitly_wait(3)
+            # Stop tests if login failed
+            self.assertIn(
+                'Site administration',
+                self.browser.title,
+                'Login problem on %s: no administration interface found.')
+            self.logged = True
 
     def check_csv_file(self, filepath):
         """
