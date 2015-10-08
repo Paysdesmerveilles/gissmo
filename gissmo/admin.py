@@ -288,11 +288,11 @@ class EquipmentAdmin(admin.ModelAdmin):
         obj.save()
 
         if not change:
-            station_id = form.cleaned_data['stockage_site']
+            result_station = form.cleaned_data['stockage_site']
             purchase_date = form.cleaned_data['purchase_date']
 
             equipment = get_object_or_404(Equipment, pk=obj.id)
-            station = get_object_or_404(StationSite, pk=station_id)
+            station = get_object_or_404(StationSite, pk=result_station.id)
 
             """
             Check that intervention exist to make multiple purchase

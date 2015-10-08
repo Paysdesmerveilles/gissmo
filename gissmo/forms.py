@@ -167,17 +167,17 @@ class EquipmentForm(forms.ModelForm):
     it'a new equipment else hide the field and the label
     Only the site of type OBSERVATOIRE can be a stockage site
     """
+    observatories = StationSite.objects.filter(
+        site_type=StationSite.OBSERVATOIRE
+    )
+
     purchase_date = forms.DateField(
         widget=widgets.AdminDateWidget,
         label='Date achat',
         required=False
     )
 
-    stockage_site = forms.IntegerField(
-        widget=forms.Select(choices=StationSite.objects.none()),
-        label='Site entreposage',
-        required=False
-    )
+    stockage_site = forms.ModelChoiceField(queryset=observatories)
 
     def __init__(self, *args, **kwargs):
         super(EquipmentForm, self).__init__(*args, **kwargs)
