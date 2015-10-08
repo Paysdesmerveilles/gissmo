@@ -169,24 +169,13 @@ class EquipmentForm(forms.ModelForm):
         site_type=StationSite.OBSERVATOIRE
     )
 
-    OBS_CHOICES = [
-        ('', '')
-    ]
-
-    for obs in observatories:
-        OBS_CHOICES.append((obs.id, obs))
-
     purchase_date = forms.DateField(
         widget=widgets.AdminDateWidget,
         label='Date achat',
         required=False
     )
 
-    stockage_site = forms.IntegerField(
-        widget=forms.Select(choices=OBS_CHOICES),
-        label='Site entreposage',
-        required=False
-    )
+    stockage_site = forms.ModelChoiceField(queryset=observatories)
 
     def __init__(self, *args, **kwargs):
         super(EquipmentForm, self).__init__(*args, **kwargs)
