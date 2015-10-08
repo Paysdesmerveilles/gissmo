@@ -14,18 +14,28 @@ Cf. https://docs.docker.com/compose/install/
 
 ### Quick setup
 
-With docker-compose you only need to build containers, deploy models and
-run the server:
+With docker-compose you only need to build image, build container, deploy models
+and run the server:
 
 ```bash
-docker-compose build web
-docker-compose run web python manage.py syncdb
-docker-compose run
+docker-compose build
+docker-compose run --rm web python manage.py syncdb
+docker-compose run --rm --service-ports web
 ```
+
+It will launch the server on the current terminal.
+
+To stop the server, press Ctrl+C.
+
+To stop the database, just do:
+
+    docker-compose stop db
+
+And it will stop our DB.
 
 ### Access the GISSMO application
 
-GISSMO is available here: http://localhost:8000/
+GISSMO is available here: http://localhost:8000/gissmo/ .
 
 ## With virtualenv
 
@@ -61,3 +71,101 @@ Start the test server using this command:
 ```
 
 Open this following url : [http://127.0.0.1/gissmo]() using your superuser account. Finally submit your pull request ;)
+
+## Check its code with flake8
+
+Create the following **.git/hooks/pre-commit** file:
+
+```python
+#!/usr/bin/env python
+
+import glob
+import os
+import sys
+
+site_packages = glob.glob('%s/lib/*/site-packages' % os.environ['VIRTUAL_ENV'])[0]
+sys.path.insert(0, site_packages)
+
+from flake8.run import git_hook
+
+COMPLEXITY = os.getenv('FLAKE8_COMPLEXITY', 10)
+STRICT = os.getenv('FLAKE8_STRICT', True)
+IGNORE = os.getenv('FLAKE8_IGNORE', 'E501')
+LAZY = os.getenv('FLAKE8_LAZY', False)
+
+if __name__ == '__main__':
+        sys.exit(git_hook(
+        complexity=COMPLEXITY,
+        strict=STRICT,
+        ignore=IGNORE,
+        lazy=LAZY,
+    ))
+```
+
+Change it to an executable one:
+
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
+Then use a python virtual environment to use it.
+
+# Tests
+
+## Functional tests
+
+### Prerequisites
+
+As previously with docker-compose:
+
+  * docker
+  * docker-compose
+
+### Prepare test environment
+
+Just do:
+
+```bash
+docker-compose start db
+```
+
+### Run functional tests
+
+Then launch functional tests **in a virtualenv** (as previously explained):
+
+```bash
+cd gissmo
+source bin/activate
+pip install -r requirements
+python manage.py test functional_tests
+```
+
+It will launch Firefox and check some URLs.
+
+**TIP**: You can only launch some tests by using this syntax:
+
+```bash
+python manage.py test functional_tests.TestClassName
+```
+
+for an example:
+
+```bash
+python manage.py test functional_tests.ActorTest
+```
+
+will launch tests from ActorTest class. This is useful when coding tests.
+
+### Run functional tests on a staging website
+
+You need to know:
+
+  * admin user (**USER**)
+  * admin password (**PWD**)
+  * staging website URL (**--liveserver**)
+
+Which give us:
+
+```bash
+USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=thefroid.u-strasbg.fr:8000
+```

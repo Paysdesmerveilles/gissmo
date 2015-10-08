@@ -13,3 +13,6 @@ uWSGI==1.9.16
 wsgiref==0.1.2
 # For development purposes
 django-extensions==1.2.2
+flake8
+# functionnal tests dependancies
+selenium

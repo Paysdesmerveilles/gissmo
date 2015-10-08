@@ -3,4 +3,4 @@
 # Launch Django server for gissmo Docker instance
 #
 
-python manage.py runserver 0.0.0.0:8000
+docker-compose run --rm --service-ports web

@@ -1,5 +1,10 @@
 db:
   image: postgres
+  environment:
+    - POSTGRES_USER=gissmo
+    - POSTGRES_PASSWORD=gissmo
+  ports:
+    - "5433:5432"
 web:
   build: .
   command: python manage.py runserver 0.0.0.0:8000
