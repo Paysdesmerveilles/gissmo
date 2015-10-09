@@ -11,7 +11,8 @@ class ProjectTest(FunctionalTest):
 
     def setUp(self):
         """
-        Add user in order to test project creation with another user than admin.
+        Add user in order to test project creation with another user than
+        admin.
         """
         super(ProjectTest, self).setUp()
         self.user_1 = User.objects.create_user(

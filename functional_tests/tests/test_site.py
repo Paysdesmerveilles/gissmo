@@ -13,11 +13,8 @@ class StationSiteTest(FunctionalTest):
 
     def setUp(self):
         super(StationSiteTest, self).setUp()
-        # This site view need by default an unknown actor and an actor that have
-        # the same name of username
-        self.mandatory_actor = Actor.objects.create(
-            actor_name='Inconnu',
-            actor_type=6)
+        # This site view need by default an unknown actor and an actor that
+        # have the same name of username
         self.superuser_actor = Actor.objects.create(
             actor_name=self.superuser.username,
             actor_type=7)

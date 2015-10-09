@@ -28,7 +28,7 @@ class EquipmentTest(FunctionalTest):
         self.mandatory_actor = Actor.objects.create(
             actor_name='DT INSU',
             actor_type=1)  # to not explode equipment view (owner field)
-        self.unknown_actor = Actor.objects.create(
+        self.unknown_actor = Actor.objects.get(
             actor_name='Inconnu',
             actor_type=6)
         self.superuser_actor = Actor.objects.create(
@@ -52,7 +52,8 @@ class EquipmentTest(FunctionalTest):
             user=self.superuser)
         self.projectuser.project.add(self.project.id)
         self.station_1 = StationSite.objects.create(
-            site_type=StationSite.OBSERVATOIRE,  # TODO: add new ActorType model
+            # TODO: add new ActorType model
+            site_type=StationSite.OBSERVATOIRE,
             station_code='EOST',
             operator=self.unknown_actor)
         self.project.station.add(self.station_1.id)
@@ -129,7 +130,7 @@ class EquipmentTest(FunctionalTest):
             intervenant,
         ]
 
-        self.add_item_in_admin('intervention/', fields, check=False)
+        # self.add_item_in_admin('intervention/', fields, check=False)
 
         # We install it on a new site with a assembly (bâti).
         # We add channel HHE, 100Mhz frequency
