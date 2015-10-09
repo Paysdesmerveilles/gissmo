@@ -229,7 +229,9 @@ class ParameterEquip(models.Model):
 class ParameterValue(models.Model):
     parameter = models.ForeignKey("ParameterEquip", verbose_name=_("Parametre modele d'equipement"))
     value = models.CharField(max_length=50, verbose_name=_("valeur"))
-    default_value = models.BooleanField(verbose_name=_("valeur par defaut"))
+    default_value = models.BooleanField(
+        verbose_name=_("valeur par defaut"),
+        default=False)
 
     class Meta:
         unique_together = ("parameter", "value")

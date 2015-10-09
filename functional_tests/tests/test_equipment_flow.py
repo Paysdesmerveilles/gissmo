@@ -28,7 +28,7 @@ class EquipmentTest(FunctionalTest):
         self.mandatory_actor = Actor.objects.create(
             actor_name='DT INSU',
             actor_type=1)  # to not explode equipment view (owner field)
-        self.unknown_actor = Actor.objects.create(
+        self.unknown_actor = Actor.objects.get(
             actor_name='Inconnu',
             actor_type=6)
         self.superuser_actor = Actor.objects.create(
@@ -129,7 +129,7 @@ class EquipmentTest(FunctionalTest):
             intervenant,
         ]
 
-        self.add_item_in_admin('intervention/', fields, check=False)
+        # self.add_item_in_admin('intervention/', fields, check=False)
 
         # We install it on a new site with a assembly (bâti).
         # We add channel HHE, 100Mhz frequency
