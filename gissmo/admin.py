@@ -582,7 +582,7 @@ class InterventionAdmin(admin.ModelAdmin):
         else:
             return super(InterventionAdmin, self).response_change(request, obj)
 
-    def response_add(self, request, obj, post_url_continue="../%s/"):
+    def response_add(self, request, obj, post_url_continue=None):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success(request, 'Enregistrement ajouté')
             # Trick to get the app label
@@ -806,7 +806,7 @@ class ChannelAdmin(admin.ModelAdmin):
             else:
                 return super(ChannelAdmin, self).response_change(request, obj)
 
-    def response_add(self, request, obj, post_url_continue="../%s/"):
+    def response_add(self, request, obj, post_url_continue=None):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
             # Trick to get the app label
@@ -866,7 +866,7 @@ class ChainAdmin(admin.ModelAdmin):
             else:
                 return super(ChainAdmin, self).response_change(request, obj)
 
-    def response_add(self, request, obj, post_url_continue="../%s/"):
+    def response_add(self, request, obj, post_url_continue=None):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
             # Trick to get the app label
@@ -913,7 +913,7 @@ class CommentNetworkAdmin(admin.ModelAdmin):
             else:
                 return super(CommentNetworkAdmin, self).response_change(request, obj)
 
-    def response_add(self, request, obj, post_url_continue="../%s/"):
+    def response_add(self, request, obj, post_url_continue=None):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
             # Trick to get the app label
@@ -968,7 +968,7 @@ class CommentChannelAdmin(admin.ModelAdmin):
             else:
                 return super(CommentChannelAdmin, self).response_change(request, obj)
 
-    def response_add(self, request, obj, post_url_continue="../%s/"):
+    def response_add(self, request, obj, post_url_continue=None):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
             # Trick to get the app label
@@ -1014,7 +1014,7 @@ class CommentStationSiteAdmin(admin.ModelAdmin):
             else:
                 return super(CommentStationSiteAdmin, self).response_change(request, obj)
 
-    def response_add(self, request, obj, post_url_continue="../%s/"):
+    def response_add(self, request, obj, post_url_continue=None):
         if not '_continue' in request.POST and not '_saveasnew' in request.POST and not '_addanother' in request.POST:
             messages.success( request, 'Enregistrement ajouté' )
             # Trick to get the app label
