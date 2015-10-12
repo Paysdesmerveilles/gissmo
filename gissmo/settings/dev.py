@@ -11,7 +11,18 @@ SECRET_KEY = '%%p8v8k44rd8hw%_j%m3hrzg6w^1eic6x6g28nqdn&4=qtelok'
 
 ROOT_URLCONF = 'gissmo.urls.dev'
 
-INSTALLED_APPS += (
+INSTALLED_APPS = (
+    'gissmo',
+    'flat',
+    'django.contrib.admin',
+    'django.contrib.admindocs',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.messages',
+    'django.contrib.sessions',
+    'django.contrib.staticfiles',
+    'smart_selects',
+    # Dev specifics
     'django_extensions',
     'functional_tests',
 )
