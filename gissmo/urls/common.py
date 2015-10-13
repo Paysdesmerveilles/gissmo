@@ -3,7 +3,10 @@ from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 
 from django.contrib import admin
+
 admin.autodiscover()
+admin.site.site_header = 'Gissmo'
+admin.site.site_title = 'Gissmo'
 
 urlpatterns = patterns(
     'gissmo.views',
