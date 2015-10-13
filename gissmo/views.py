@@ -24,6 +24,7 @@ from django.utils.encoding import smart_str
 from django.utils.encoding import force_unicode
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.db import connection, transaction
 
 
 def site_maps(request):
@@ -350,7 +351,6 @@ def equip_place_todate_id(equip, date, intervention_id):
     return result
 
 def available_equipment_cursor(action, station, date, intervention_id):
-    from django.db import connection, transaction
 
     # Check if intervention_id is set to something else put the value 0
     if not intervention_id:
@@ -362,72 +362,77 @@ def available_equipment_cursor(action, station, date, intervention_id):
         if date == intervention.intervention_date and int(station) == intervention.station_id:
             intervention_id = 0
 
-    cursor = connection.cursor()
-    """
-    Give the last state and station of an equipment
-    If the intervention date or time change via the form of the intervention
-    we exclude this intervention to permit the change of those fields (date and time)
-    """
-    cursor.execute('''SELECT equip_id, intervention_date, station_id, equip_state
-    FROM (
-    SELECT DISTINCT ON (interv.equip_id)
-    interv.equip_id, interv.intervention_date, interv.station_id, interv.equip_state
-    FROM (
-    SELECT
-    gissmo_intervequip.equip_id,
-    gissmo_intervention.intervention_date,
-    gissmo_intervequip.station_id,
-    gissmo_intervequip.equip_state
-    FROM
-    public.gissmo_intervequip,
-    public.gissmo_intervention
-    WHERE
-    gissmo_intervention.id != %s and
-    gissmo_intervention.intervention_date < %s and
-    gissmo_intervequip.intervention_id = gissmo_intervention.id
-    ) AS interv
-    ORDER  BY interv.equip_id, interv.intervention_date DESC) AS it''', [intervention_id, date])
-
     equipment_list = []
     equipments = Equipment.objects.all()
-    # Buy only equip that were never buy in the system
 
-    if int(action) == EquipAction.ACHETER:
-        # Obtain all intervention with BUY as action
-        equip_purchased = IntervEquip.objects.exclude(intervention__pk=intervention_id).filter(equip_action=EquipAction.ACHETER)
-        list_equip_purchased = []
-        for equip in equip_purchased:
-            list_equip_purchased.append(equip.equip.id)
+    # Use 'with connection.cursor()' instead of c = connection.cursor() as
+    # explained in https://docs.djangoproject.com/en/1.8/releases/1.7/
+        #using-database-cursors-as-context-managers
+    with connection.cursor() as cursor:
+        """
+        Give the last state and station of an equipment
+        If the intervention date or time change via the form of the
+        intervention we exclude this intervention to permit the change of those
+        fields (date and time)
+        """
+        cursor.execute('''SELECT equip_id, intervention_date, station_id, equip_state
+        FROM (
+        SELECT DISTINCT ON (interv.equip_id)
+        interv.equip_id, interv.intervention_date, interv.station_id, interv.equip_state
+        FROM (
+        SELECT
+        gissmo_intervequip.equip_id,
+        gissmo_intervention.intervention_date,
+        gissmo_intervequip.station_id,
+        gissmo_intervequip.equip_state
+        FROM
+        public.gissmo_intervequip,
+        public.gissmo_intervention
+        WHERE
+        gissmo_intervention.id != %s and
+        gissmo_intervention.intervention_date < %s and
+        gissmo_intervequip.intervention_id = gissmo_intervention.id
+        ) AS interv
+        ORDER  BY interv.equip_id, interv.intervention_date DESC) AS it''', [intervention_id, date])
 
-        # Obtain all equip without BUY action
-        nobuy_equipments = Equipment.objects.exclude(id__in=list_equip_purchased)
-        for equip in nobuy_equipments:
-            equipment_list.append(equip.id)
-    # Install only equip DISPONIBLE or No state
-    elif int(action) == EquipAction.INSTALLER:
-        for row in cursor.fetchall():
-            if row[3] == EquipState.DISPONIBLE:
-                equipment_list.append(row[0])
-    # Receive only equip En transit or No state
-    elif int(action) == EquipAction.RECEVOIR:
-        for row in cursor.fetchall():
-            if row[3] == EquipState.EN_TRANSIT:
-                equipment_list.append(row[0])
-    # Retreive only equip Disparu
-    elif int(action) == EquipAction.RETROUVER:
-        for row in cursor.fetchall():
-            if row[3] == EquipState.DISPARU:
-                equipment_list.append(row[0])
-    # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE
-    elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
-        for row in cursor.fetchall():
-            if row[2] == int(station) and (row[3] == EquipState.DEFAUT or row[3] == EquipState.PANNE):
-                equipment_list.append(row[0])
-    # Make action only on equip installed in the station
-    else:
-        for row in cursor.fetchall():
-            if row[2] == int(station):
-                equipment_list.append(row[0])
+        # Buy only equip that were never buy in the system
+
+        if int(action) == EquipAction.ACHETER:
+            # Obtain all intervention with BUY as action
+            equip_purchased = IntervEquip.objects.exclude(intervention__pk=intervention_id).filter(equip_action=EquipAction.ACHETER)
+            list_equip_purchased = []
+            for equip in equip_purchased:
+                list_equip_purchased.append(equip.equip.id)
+
+            # Obtain all equip without BUY action
+            nobuy_equipments = Equipment.objects.exclude(id__in=list_equip_purchased)
+            for equip in nobuy_equipments:
+                equipment_list.append(equip.id)
+        # Install only equip DISPONIBLE or No state
+        elif int(action) == EquipAction.INSTALLER:
+            for row in cursor.fetchall():
+                if row[3] == EquipState.DISPONIBLE:
+                    equipment_list.append(row[0])
+        # Receive only equip En transit or No state
+        elif int(action) == EquipAction.RECEVOIR:
+            for row in cursor.fetchall():
+                if row[3] == EquipState.EN_TRANSIT:
+                    equipment_list.append(row[0])
+        # Retreive only equip Disparu
+        elif int(action) == EquipAction.RETROUVER:
+            for row in cursor.fetchall():
+                if row[3] == EquipState.DISPARU:
+                    equipment_list.append(row[0])
+        # Corrective maintenance only equip installed in the station in the following state DEFAUT ou PANNE
+        elif int(action) == EquipAction.MAINT_CORR_DISTANTE or int(action) == EquipAction.MAINT_CORR_SITE:
+            for row in cursor.fetchall():
+                if row[2] == int(station) and (row[3] == EquipState.DEFAUT or row[3] == EquipState.PANNE):
+                    equipment_list.append(row[0])
+        # Make action only on equip installed in the station
+        else:
+            for row in cursor.fetchall():
+                if row[2] == int(station):
+                    equipment_list.append(row[0])
 
     equip_dispo = Equipment.objects.filter(id__in=equipment_list).order_by('equip_supertype','equip_type','equip_model','serial_number')
     return equip_dispo
@@ -668,81 +673,83 @@ def dictfetchall(cursor):
     ]
 
 def dataless(request):
-    from django.db import connection, transaction
-    cursor = connection.cursor()
 
     query = request.GET.get('Station','')
     # Create the HttpResponse object with the appropriate CSV header.
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="dataless.csv"'
 
-    cursor.execute('''SELECT
-  CASE WHEN substr(gissmo_channel.channel_code,3,1)='2' THEN 'N'
-  WHEN substr(gissmo_channel.channel_code,3,1)='3' THEN 'E'
-  ELSE substr(gissmo_channel.channel_code,3,1) END AS "Composante",
-  gissmo_channel.channel_code AS "Code du canal",
-  gissmo_stationsite.station_code  AS "Code du site",
-  gissmo_channel.latitude AS "Latitude",
-  gissmo_channel.longitude AS "Longitude",
-  gissmo_channel.elevation AS "Elevation",
-  gissmo_channel.depth AS "Profondeur",
-  gissmo_channel.start_date,
-  gissmo_channel.end_date,
-  gissmo_channel.dip AS "Dip",
-  gissmo_channel.azimuth AS "Azimuth",
-  gissmo_network.network_code AS "Reseau",
-  gissmo_actor.actor_name AS "Observatoire",
-  (SELECT
-    gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number
-   FROM
-    public.gissmo_chain,
-    public.gissmo_equipment,
-    public.gissmo_equipmodel
-   WHERE
-    gissmo_chain."order" = 1 AND
-    gissmo_chain.equip_id = gissmo_equipment.id AND
-    gissmo_equipment.equip_model_id = gissmo_equipmodel.id AND
-    gissmo_chain.channel_id = gissmo_channel.id
-  ) AS "Capteur S/N",
-  (SELECT
-    gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number
-   FROM
-    public.gissmo_chain,
-    public.gissmo_equipment,
-    public.gissmo_equipmodel
-   WHERE
-    gissmo_chain."order" = 2 AND
-    gissmo_chain.equip_id = gissmo_equipment.id AND
-    gissmo_equipment.equip_model_id = gissmo_equipmodel.id AND
-    gissmo_chain.channel_id = gissmo_channel.id
-  ) AS "Numeriseur S/N",
-  gissmo_channel.sample_rate AS "Fréquence"
-FROM
-  public.gissmo_channel,
-  public.gissmo_stationsite,
-  public.gissmo_network,
-  public.gissmo_actor
-WHERE
-  gissmo_channel.station_id = gissmo_stationsite.id AND
-  gissmo_channel.network_id = gissmo_network.id AND
-  gissmo_stationsite.operator_id = gissmo_actor.id AND
-  gissmo_stationsite.id = %s
-ORDER BY
-  gissmo_channel.start_date,
-  gissmo_channel.location_code,
-  "Composante" DESC
-''', [query])
-    dictrow = dictfetchall(cursor)
-    writer = csv.writer(response)
-    writer.writerow(["Composante","Code du canal","Code du site","Latitude", \
-                    "Longitude","Elevation","Profondeur","start_date", \
-                    "end_date","Dip","Azimuth","Reseau","Observatoire","Capteur S/N", \
-                    "Numeriseur S/N","Fréquence"])
-    for row in dictrow:
-        writer.writerow([row["Composante"],row["Code du canal"],row["Code du site"],row["Latitude"], \
-                         row["Longitude"],row["Elevation"],row["Profondeur"],row["start_date"], \
-                         row["end_date"],row["Dip"],row["Azimuth"],row["Reseau"],row["Observatoire"], \
-                         row["Capteur S/N"],row["Numeriseur S/N"],row["Fréquence"]])
+    # Use 'with connection.cursor()' instead of c = connection.cursor() as
+    # explained in https://docs.djangoproject.com/en/1.8/releases/1.7/
+        #using-database-cursors-as-context-managers
+    with connection.cursor() as cursor:
+        cursor.execute('''SELECT
+            CASE WHEN substr(gissmo_channel.channel_code,3,1)='2' THEN 'N'
+            WHEN substr(gissmo_channel.channel_code,3,1)='3' THEN 'E'
+            ELSE substr(gissmo_channel.channel_code,3,1) END AS "Composante",
+            gissmo_channel.channel_code AS "Code du canal",
+            gissmo_stationsite.station_code  AS "Code du site",
+            gissmo_channel.latitude AS "Latitude",
+            gissmo_channel.longitude AS "Longitude",
+            gissmo_channel.elevation AS "Elevation",
+            gissmo_channel.depth AS "Profondeur",
+            gissmo_channel.start_date,
+            gissmo_channel.end_date,
+            gissmo_channel.dip AS "Dip",
+            gissmo_channel.azimuth AS "Azimuth",
+            gissmo_network.network_code AS "Reseau",
+            gissmo_actor.actor_name AS "Observatoire",
+            (SELECT
+            gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number
+            FROM
+            public.gissmo_chain,
+            public.gissmo_equipment,
+            public.gissmo_equipmodel
+            WHERE
+            gissmo_chain."order" = 1 AND
+            gissmo_chain.equip_id = gissmo_equipment.id AND
+            gissmo_equipment.equip_model_id = gissmo_equipmodel.id AND
+            gissmo_chain.channel_id = gissmo_channel.id
+            ) AS "Capteur S/N",
+            (SELECT
+            gissmo_equipmodel.equip_model_name || '-' || gissmo_equipment.serial_number
+            FROM
+            public.gissmo_chain,
+            public.gissmo_equipment,
+            public.gissmo_equipmodel
+            WHERE
+            gissmo_chain."order" = 2 AND
+            gissmo_chain.equip_id = gissmo_equipment.id AND
+            gissmo_equipment.equip_model_id = gissmo_equipmodel.id AND
+            gissmo_chain.channel_id = gissmo_channel.id
+            ) AS "Numeriseur S/N",
+            gissmo_channel.sample_rate AS "Fréquence"
+            FROM
+            public.gissmo_channel,
+            public.gissmo_stationsite,
+            public.gissmo_network,
+            public.gissmo_actor
+            WHERE
+            gissmo_channel.station_id = gissmo_stationsite.id AND
+            gissmo_channel.network_id = gissmo_network.id AND
+            gissmo_stationsite.operator_id = gissmo_actor.id AND
+            gissmo_stationsite.id = %s
+            ORDER BY
+            gissmo_channel.start_date,
+            gissmo_channel.location_code,
+            "Composante" DESC
+        ''', [query])
+        dictrow = dictfetchall(cursor)
+        writer = csv.writer(response)
+        writer.writerow(["Composante","Code du canal","Code du site","Latitude", \
+                        "Longitude","Elevation","Profondeur","start_date", \
+                        "end_date","Dip","Azimuth","Reseau","Observatoire","Capteur S/N", \
+                        "Numeriseur S/N","Fréquence"])
+        for row in dictrow:
+            writer.writerow([row["Composante"],row["Code du canal"],row["Code du site"],row["Latitude"], \
+                             row["Longitude"],row["Elevation"],row["Profondeur"],row["start_date"], \
+                             row["end_date"],row["Dip"],row["Azimuth"],row["Reseau"],row["Observatoire"], \
+                             row["Capteur S/N"],row["Numeriseur S/N"],row["Fréquence"]])
     return response
 
 def station_xml(request):
@@ -1223,61 +1230,63 @@ def station_dataless(request):
 site_maps = staff_member_required(site_maps)
 
 def test_site(request):
-    from django.db import connection, transaction
-    cursor = connection.cursor()
 
     query = request.GET.get('Station','')
     # Create the HttpResponse object with the appropriate CSV header.
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="test_site.csv"'
 
-    cursor.execute('''SELECT DISTINCT
-  gissmo_stationsite.station_code AS "Code du site",
-  gissmo_stationsite.site_name AS "Nom du site",
-  gissmo_stationsite.address AS "Adresse",
-  gissmo_stationsite.town AS "Commune",
-  gissmo_stationsite.county AS "Departement",
-  gissmo_stationsite.region AS "Region",
-  gissmo_stationsite.country AS "Pays",
-  gissmo_stationsite.latitude AS "Latitude",
-  gissmo_stationsite.longitude AS "Longitude",
-  gissmo_stationsite.note AS "Note",
-  gissmo_stationdoc.private_link AS "Lien vers document prive",
-  (SELECT gissmo_stationstate.station_state_name
-   FROM
-      public.gissmo_intervention,
-      public.gissmo_intervstation,
-      public.gissmo_stationstate
-   WHERE
-      gissmo_intervention.station_id = gissmo_stationsite.id AND
-      gissmo_intervstation.intervention_id = gissmo_intervention.id AND
-      gissmo_intervstation.station_state IS NOT NULL AND
-      gissmo_intervstation.station_state = gissmo_stationstate.id
-   ORDER BY
-      gissmo_intervention.intervention_date DESC
-   LIMIT 1) AS "Etat",
-   (SELECT gissmo_actor.actor_name
-    FROM
-       gissmo_actor
-    WHERE
-       gissmo_stationsite.operator_id = gissmo_actor.id) AS "Operateur"
-FROM
-  public.gissmo_stationsite LEFT JOIN public.gissmo_stationdoc ON (gissmo_stationdoc.station_id = gissmo_stationsite.id)
-WHERE
-  gissmo_stationsite.site_type = 6
-ORDER BY
-  gissmo_stationsite.station_code
-''', [query])
-    dictrow = dictfetchall(cursor)
-    writer = csv.writer(response)
-    writer.writerow(["Code du site","Nom du site","Adresse", \
-                    "Commune","Departement","Region","Pays", \
-                    "Latitude","Longitude","Note","Lien vers document prive","Etat","Operateur"])
-    for row in dictrow:
-        writer.writerow([unicode(s).encode("utf-8") for s in (
-                         row["Code du site"],row["Nom du site"],row["Adresse"],row["Commune"], \
-                         row["Departement"],row["Region"],row["Pays"],row["Latitude"], \
-                         row["Longitude"],row["Note"],row["Lien vers document prive"],row["Etat"],row["Operateur"])])
+    # Use 'with connection.cursor()' instead of c = connection.cursor() as
+    # explained in https://docs.djangoproject.com/en/1.8/releases/1.7/
+        #using-database-cursors-as-context-managers
+    with connection.cursor() as cursor:
+        cursor.execute('''SELECT DISTINCT
+            gissmo_stationsite.station_code AS "Code du site",
+            gissmo_stationsite.site_name AS "Nom du site",
+            gissmo_stationsite.address AS "Adresse",
+            gissmo_stationsite.town AS "Commune",
+            gissmo_stationsite.county AS "Departement",
+            gissmo_stationsite.region AS "Region",
+            gissmo_stationsite.country AS "Pays",
+            gissmo_stationsite.latitude AS "Latitude",
+            gissmo_stationsite.longitude AS "Longitude",
+            gissmo_stationsite.note AS "Note",
+            gissmo_stationdoc.private_link AS "Lien vers document prive",
+            (SELECT gissmo_stationstate.station_state_name
+            FROM
+              public.gissmo_intervention,
+              public.gissmo_intervstation,
+              public.gissmo_stationstate
+            WHERE
+              gissmo_intervention.station_id = gissmo_stationsite.id AND
+              gissmo_intervstation.intervention_id = gissmo_intervention.id AND
+              gissmo_intervstation.station_state IS NOT NULL AND
+              gissmo_intervstation.station_state = gissmo_stationstate.id
+            ORDER BY
+              gissmo_intervention.intervention_date DESC
+            LIMIT 1) AS "Etat",
+            (SELECT gissmo_actor.actor_name
+            FROM
+               gissmo_actor
+            WHERE
+               gissmo_stationsite.operator_id = gissmo_actor.id) AS "Operateur"
+            FROM
+            public.gissmo_stationsite LEFT JOIN public.gissmo_stationdoc ON (gissmo_stationdoc.station_id = gissmo_stationsite.id)
+            WHERE
+            gissmo_stationsite.site_type = 6
+            ORDER BY
+            gissmo_stationsite.station_code
+        ''', [query])
+        dictrow = dictfetchall(cursor)
+        writer = csv.writer(response)
+        writer.writerow(["Code du site","Nom du site","Adresse", \
+                        "Commune","Departement","Region","Pays", \
+                        "Latitude","Longitude","Note","Lien vers document prive","Etat","Operateur"])
+        for row in dictrow:
+            writer.writerow([unicode(s).encode("utf-8") for s in (
+                             row["Code du site"],row["Nom du site"],row["Adresse"],row["Commune"], \
+                             row["Departement"],row["Region"],row["Pays"],row["Latitude"], \
+                             row["Longitude"],row["Note"],row["Lien vers document prive"],row["Etat"],row["Operateur"])])
     return response
 """
 from pghstore import loads
