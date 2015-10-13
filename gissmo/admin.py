@@ -136,6 +136,10 @@ class EquipModelAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
+        # New in Django 1.7: (formset with commit=False are no longer deleted)
+        # https://docs.djangoproject.com/en/1.8/releases/1.7/#miscellaneous
+        for obj in formset.deleted_objects:
+            obj.delete()
         for instance in instances:
             if isinstance(instance, EquipModelDoc): #Check if it is the correct type of inline
                 instance.equip_supertype = form.cleaned_data['equip_supertype']
@@ -268,9 +272,11 @@ class EquipmentAdmin(admin.ModelAdmin):
         return '%s'%(equip_last_place(obj.id))
     get_last_place.short_description = 'Emplacement'
 
-    # Redefine queryset to show only equipment according to the user's project
-    def queryset(self, request):
-        qs = super(EquipmentAdmin, self).queryset(request)
+    def get_queryset(self, request):
+        """
+        Show only equipment according to the user's project
+        """
+        qs = super(EquipmentAdmin, self).get_queryset(request)
         check_forall = ProjectUser.objects.filter(user=request.user).values_list('project__project_name', flat=True)
         # The name of the project must stay ALL
         if request.user.is_superuser or u'ALL' in check_forall:
@@ -319,6 +325,10 @@ class EquipmentAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
+        # New in Django 1.7: (formset with commit=False are no longer deleted)
+        # https://docs.djangoproject.com/en/1.8/releases/1.7/#miscellaneous
+        for obj in formset.deleted_objects:
+            obj.delete()
         for instance in instances:
             if isinstance(instance, EquipDoc): #Check if it is the correct type of inline
                 instance.equip_supertype = form.cleaned_data['equip_supertype']
@@ -426,8 +436,8 @@ class StationSiteAdmin(admin.ModelAdmin):
          return form
 
     # Redefine queryset to show only site according to the user's project
-    def queryset(self, request):
-        qs = super(StationSiteAdmin, self).queryset(request)
+    def get_queryset(self, request):
+        qs = super(StationSiteAdmin, self).get_queryset(request)
         check_forall = ProjectUser.objects.filter(user=request.user).values_list('project__project_name', flat=True)
         # The name of the project must stay ALL
         if request.user.is_superuser or u'ALL' in check_forall:
@@ -465,6 +475,10 @@ class StationSiteAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
+        # New in Django 1.7: (formset with commit=False are no longer deleted)
+        # https://docs.djangoproject.com/en/1.8/releases/1.7/#miscellaneous
+        for obj in formset.deleted_objects:
+            obj.delete()
         for instance in instances:
             if isinstance(instance, StationDoc): #Check if it is the correct type of inline
                 if not instance.pk:
@@ -563,8 +577,8 @@ class InterventionAdmin(admin.ModelAdmin):
         js = ["js/my_ajax_function.js"]
 
     # Redefine queryset to show only intervention according to the user's project
-    def queryset(self, request):
-        qs = super(InterventionAdmin, self).queryset(request)
+    def get_queryset(self, request):
+        qs = super(InterventionAdmin, self).get_queryset(request)
         check_forall = ProjectUser.objects.filter(user=request.user).values_list('project__project_name', flat=True)
         # The name of the project must stay ALL
         if request.user.is_superuser or u'ALL' in check_forall:
@@ -741,6 +755,10 @@ class ChannelAdmin(admin.ModelAdmin):
         """ Reference du code
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
         instances = formset.save(commit=False)
+        # New in Django 1.7: (formset with commit=False are no longer deleted)
+        # https://docs.djangoproject.com/en/1.8/releases/1.7/#miscellaneous
+        for obj in formset.deleted_objects:
+            obj.delete()
         for instance in instances:
             if isinstance(instance, Chain): #Check if it is the correct type of inline
                 instance.save()
@@ -837,7 +855,10 @@ class ChainAdmin(admin.ModelAdmin):
             http://stackoverflow.com/questions/3016158/django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field """
 
         instances = formset.save(commit=False)
-
+        # New in Django 1.7: (formset with commit=False are no longer deleted)
+        # https://docs.djangoproject.com/en/1.8/releases/1.7/#miscellaneous
+        for obj in formset.deleted_objects:
+            obj.delete()
         for instance in instances:
             if isinstance(instance, ChainConfig): #Check if it is the correct type of inline
                 if not instance.pk:
@@ -1042,8 +1063,8 @@ class ProjectAdmin(admin.ModelAdmin):
     fields = ('project_name', 'manager', 'station')
 
     # Redefine queryset to show only project according to the user's project
-    def queryset(self, request):
-        qs = super(ProjectAdmin, self).queryset(request)
+    def get_queryset(self, request):
+        qs = super(ProjectAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         return qs.filter(manager_id=request.user.id)
@@ -1083,8 +1104,8 @@ class ProjectUserAdmin(admin.ModelAdmin):
     }
 
     # Redefine queryset to show only intervention according to the user's project
-    def queryset(self, request):
-        qs = super(ProjectUserAdmin, self).queryset(request)
+    def get_queryset(self, request):
+        qs = super(ProjectUserAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         else:

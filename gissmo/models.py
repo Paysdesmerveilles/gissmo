@@ -231,7 +231,7 @@ class ParameterValue(models.Model):
     value = models.CharField(max_length=50, verbose_name=_("valeur"))
     default_value = models.BooleanField(
         verbose_name=_("valeur par defaut"),
-        default=False)
+        default=None)
 
     class Meta:
         unique_together = ("parameter", "value")
@@ -1370,7 +1370,7 @@ class LoggedActions(models.Model):
     action = models.TextField()
     row_data = models.TextField()
     changed_fields = models.TextField()
-    statement_only = models.BooleanField()
+    statement_only = models.BooleanField(default=None)
 
     class Meta:
         managed = False

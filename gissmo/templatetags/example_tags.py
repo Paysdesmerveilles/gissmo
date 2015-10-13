@@ -65,16 +65,12 @@ def display_network_comments(network_id):
 
 @register.inclusion_tag('station_states.html')
 def display_station_states(station_id):
-#    station = models.StationSite.objects.get(id__exact=station_id)
-#    states = models.HistoricStationState.objects.select_related(depth=1).filter(station=station).order_by('-start_date')
     states = []
     states = IntervStation.objects.filter(intervention__station__id=station_id,station_state__isnull=False).order_by('-intervention__intervention_date')
     return { 'states': states}
 
 @register.inclusion_tag('station_actions.html')
 def display_station_actions(station_id):
-#    station = models.StationSite.objects.get(id__exact=station_id)
-#    actions = models.HistoricStationAction.objects.select_related(depth=1).filter(station=station).order_by('-start_date')
     actions = []
     actions = IntervStation.objects.filter(intervention__station__id=station_id).order_by('-intervention__intervention_date')
     return { 'actions': actions }

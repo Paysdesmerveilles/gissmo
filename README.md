@@ -169,3 +169,27 @@ Which give us:
 ```bash
 USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=thefroid.u-strasbg.fr:8000
 ```
+
+# Production environment
+
+## Version 1.4 warnings
+
+### New Django version
+
+As we migrate from 1.5 to 1.7, you need to update your virtualenv:
+
+```bash
+cd gissmo
+pip install -r requirements.txt
+```
+
+### Migration
+
+As new Django's version give new migration feature, we need to update the
+ database with new migration file. So do this in a virtualenv:
+
+```bash
+cd gissmo
+python manage.py migrate gissmo 0001_initial --fake
+python manage.py migrate gissmo
+```
