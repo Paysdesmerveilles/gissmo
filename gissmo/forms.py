@@ -907,18 +907,9 @@ class ChannelForm(forms.ModelForm):
                      (channel_code.channel_code[0] == 'L' and not(sample_rate == 1)) or \
                      (channel_code.channel_code[0] == 'V' and not(sample_rate == 0.1)) or \
                      (channel_code.channel_code[0] == 'U' and not(sample_rate == 0.01))):
-                    msg = u"Sample rate unexpected."
-                    self._errors["sample_rate"] = self.error_class([msg])
-                    msg = u"Bypass error."
-                    self._errors["accept_anyway"] = self.error_class([msg])
+                    self.add_error('sample_rate', _("Sample rate unexpected."))
+                    self.add_error('accept_anyway', _("Bypass error."))
                     raise forms.ValidationError('Sample rate (%s) not in the range for this channel code (%s)' % (sample_rate, channel_code.channel_code))
-                """
-                rule = get_object_or_404(ChannelCode, pk=channel_code.channel_code)
-                rule_string = 'if not(%s): msg = u"Sample rate unexpected." self._errors["sample_rate"] = self.error_class([msg]) msg = u"Bypass error." self._errors["accept_anyway"] = self.error_class([msg]) raise forms.ValidationError("Sample rate (%s)")' % (rule.validation_rule, sample_rate)
-                print rule_string
-                if not accept:
-                    exec(rule_string)
-                """
         # Always return the full collection of cleaned data.
         return cleaned_data
 

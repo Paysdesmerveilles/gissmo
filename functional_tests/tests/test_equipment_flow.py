@@ -25,10 +25,10 @@ class EquipmentTest(FunctionalTest):
         """
         super(EquipmentTest, self).setUp()
         # TODO: Delete dependancy from this 2 actors if possible.
-        self.mandatory_actor = Actor.objects.create(
+        self.mandatory_actor, created = Actor.objects.get_or_create(
             actor_name='DT INSU',
             actor_type=1)  # to not explode equipment view (owner field)
-        self.unknown_actor = Actor.objects.get(
+        self.unknown_actor, created = Actor.objects.get_or_create(
             actor_name='Inconnu',
             actor_type=6)
         self.superuser_actor = Actor.objects.create(

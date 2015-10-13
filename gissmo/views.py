@@ -1019,7 +1019,7 @@ def station_xml(request):
 
     return render_to_response("station_xml.xml", {
     "ResNetwork": result, "aujourdhui": aujourdhui },
-         RequestContext(request, {}), mimetype="application/xhtml+xml")
+         RequestContext(request, {}), content_type="application/xhtml+xml")
 station_xml = staff_member_required(station_xml)
 
 def network_xml(request):
@@ -1146,7 +1146,7 @@ def network_xml(request):
 
 #    return render_to_response("network_xml.xml", {
 #    "ResNetwork": result,},
-#         RequestContext(request, {}), mimetype="application/xhtml+xml")
+#         RequestContext(request, {}), content_type="application/xhtml+xml")
     t = loader.get_template('network_xml.xml')
     c = Context({
         "ResNetwork": result,
