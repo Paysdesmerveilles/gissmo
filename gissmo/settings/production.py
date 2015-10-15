@@ -1,8 +1,7 @@
 import os
-from gissmo.settings.common import *
+from gissmo.settings.common import *  # NOQA
 
 DEBUG = os.getenv('DEBUG', False)
-TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     ('Fabien Engels', 'fabien.engels@unistra.fr'),

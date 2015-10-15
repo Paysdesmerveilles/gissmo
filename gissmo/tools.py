@@ -13,3 +13,4 @@ class DecimalEncoder(json.JSONEncoder):
 def timezone_aware(naive_datetime):
     current_timezone = timezone.get_current_timezone()
     return naive_datetime.replace(tzinfo=current_timezone)
+

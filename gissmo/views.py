@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.template import loader, Context
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from django.shortcuts import render_to_response, redirect, get_object_or_404, HttpResponseRedirect, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect, HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import admin
@@ -24,7 +24,7 @@ from django.utils.encoding import smart_str
 from django.utils.encoding import force_unicode
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
-from django.db import connection, transaction
+from django.db import connection
 
 
 def site_maps(request):
@@ -56,9 +56,15 @@ def site_maps(request):
             for resstationunique in ResStationUnique:
                 StationUnique = resstationunique.intervention.station
 
-    return render_to_response("site_gmap.html", {
-        "ResHistStations": ResHistStations, "query": query, "StationUnique": StationUnique, "ResStatTheo": ResStatTheo, "ResStatTest": ResStatTest, "application_label": application_label,},
-         RequestContext(request, {}),)
+    return render(request, "site_gmap.html", {
+        "ResHistStations": ResHistStations,
+        "query": query,
+        "StationUnique": StationUnique,
+        "ResStatTheo": ResStatTheo,
+        "ResStatTest": ResStatTest,
+        "application_label": application_label,
+    })
+
 site_maps = staff_member_required(site_maps)
 
 def itineraire_maps(request):
@@ -84,11 +90,11 @@ def itineraire_maps(request):
     except StationSite.DoesNotExist:
         Observatoire = StationSite.objects.get(station_code = 'EOST')
 
-    return render_to_response("itineraire_gmap.html", {
+    return render(request, "itineraire_gmap.html", {
         "ResStationUnique": ResStationUnique,
         "Observatoire": Observatoire,
-    },
-         RequestContext(request, {}),)
+    })
+
 itineraire_maps = staff_member_required(itineraire_maps)
 
 def get_file(request, app_label, model_name, field_name, identifier):
@@ -1024,9 +1030,11 @@ def station_xml(request):
                             station_vault = last_equip_place[0].built.built_type.built_type_name[4:]
             result.append([network, comment_list, station_count, ResStation, station_vault, ResChannels.count(), create_station, terminate_station, channel_list])
 
-    return render_to_response("station_xml.xml", {
-    "ResNetwork": result, "aujourdhui": aujourdhui },
-         RequestContext(request, {}), content_type="application/xhtml+xml")
+    return render(request, "station_xml.xml", {
+        "ResNetwork": result,
+        "aujourdhui": aujourdhui,
+    }, content_type="application/xhtml+xml")
+
 station_xml = staff_member_required(station_xml)
 
 def network_xml(request):
@@ -1149,21 +1157,9 @@ def network_xml(request):
                 ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(comment_network_id=comment.id)
                 comment_list.append([comment, ResCommentNetworkAuthor])
             result.append([network, comment_list, station_count, station_list])
-#            result.append([network, comment_list, station_count, ResStation, station_vault, ResChannels.count(), create_station, terminate_station, channel_list])
-
-#    return render_to_response("network_xml.xml", {
-#    "ResNetwork": result,},
-#         RequestContext(request, {}), content_type="application/xhtml+xml")
     t = loader.get_template('network_xml.xml')
-    c = Context({
-        "ResNetwork": result,
-    })
-    response.write(t.render(c))
+    response.write(t.render({"ResNetwork": result}))
     return response
-#    return render_to_string("network_xml.xml", {
-#    "ResNetwork": result,},
-#         RequestContext(request, {}))
-#network_xml = staff_member_required(network_xml)
 
 def station_dataless(request):
     query = request.GET.get('Station','')
@@ -1224,9 +1220,14 @@ def station_dataless(request):
 
         liste_canaux.append([channel_prec, liste_canal_prec[1], liste_component, liste_azimuth, liste_dip])
 
-    return render_to_response("station_dataless.html", {
-        "query": query, "ResStation": ResStation, "SensorList": list(set(sensor_list)), "DataloggerList": list(set(datalogger_list)), "ResChannel": liste_canaux,},
-         RequestContext(request, {}),)
+    return render(request, "station_dataless.html", {
+        "query": query,
+        "ResStation": ResStation,
+        "SensorList": list(set(sensor_list)),
+        "DataloggerList": list(set(datalogger_list)),
+        "ResChannel": liste_canaux,
+    })
+
 site_maps = staff_member_required(site_maps)
 
 def test_site(request):

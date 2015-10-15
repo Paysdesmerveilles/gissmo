@@ -109,7 +109,8 @@ class FunctionalTest(LiveServerTestCase):
             self.assertIn(
                 'Site administration',
                 self.browser.title,
-                'Login problem on %s: no administration interface found.')
+                'Login problem on %s: no administration interface found.' %
+                self.browser.current_url)
             self.logged = True
 
     def check_csv_file(self, filepath):

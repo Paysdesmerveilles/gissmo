@@ -2,7 +2,6 @@ from gissmo.settings.common import *  # NOQA
 from os import getenv
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 
 ADMINS = ()
 MANAGERS = ADMINS

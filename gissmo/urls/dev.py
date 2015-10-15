@@ -1,1 +1,1 @@
-from gissmo.urls.common import *
+from gissmo.urls.common import *  # NOQA
