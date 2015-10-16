@@ -1,16 +1,16 @@
-db:
+proddb:
   image: postgres
   environment:
     - POSTGRES_USER=gissmo
     - POSTGRES_PASSWORD=gissmo
   ports:
     - "5433:5432"
-web:
+prod:
   extends:
     file: common.yml
     service: webapp
-  command: python manage.py runserver 0.0.0.0:8000
   links:
     - db
   environment:
-    - DJANGO_SETTINGS_MODULE=gissmo.settings.dev
+    - DJANGO_SETTINGS_MODULE=gissmo.settings.production
+  env_file: production.env

@@ -25,7 +25,6 @@ def check_unknown_actor(apps, schema_editor):
             actor_type=1,
         )
 
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -33,5 +32,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(check_unknown_actor)
+        migrations.RunPython(check_unknown_actor),
     ]

@@ -97,7 +97,7 @@ def display_station_interventions(station_id):
     content_type = ContentType.objects.get_for_model(Intervention)
     url_redirection = "admin:%s_intervention_change" % (content_type.app_label) 
 
-# TODO add global function ti obtain thaht information
+# TODO add global function to obtain that information
     last_station_state = IntervStation.objects.filter(intervention__station__id=station_id,station_state__isnull=False).order_by('-intervention__intervention_date')
     if last_station_state:
         last_state = dict(StationState.STATION_STATES)[last_station_state[0].station_state]

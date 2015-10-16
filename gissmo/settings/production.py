@@ -12,4 +12,11 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 ROOT_URLCONF = 'gissmo.urls.production'
 
-UPLOAD_ROOT = '/srv/upload/gissmo'
+ALLOWED_HOSTS = ['*']
+
+DATABASES['default'].update(
+    {
+        'HOST': 'db',
+        'PORT': '5432',
+    }
+)

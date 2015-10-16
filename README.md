@@ -19,7 +19,8 @@ and run the server:
 
 ```bash
 docker-compose build
-docker-compose run --rm web python manage.py syncdb
+docker-compose run --rm web python manage.py migrate
+docker-compose run --rm web python manage.py createsuperuser
 docker-compose run --rm --service-ports web
 ```
 
@@ -172,24 +173,21 @@ USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=the
 
 # Production environment
 
-## Version 1.4 warnings
+To use the production environment, you need Docker and docker-compose. We assume you have a copy of Gissmo DB named **gissmo-1.dump**.
 
-### New Django version
+Then add the new SECRET\_KEY in **production.env** file.
 
-As we migrate from 1.5 to 1.7, you need to update your virtualenv:
-
-```bash
-cd gissmo
-pip install -r requirements.txt
-```
-
-### Migration
-
-As new Django's version give new migration feature, we need to update the
- database with new migration file. So do this in a virtualenv:
+Finally, do:
 
 ```bash
-cd gissmo
-python manage.py migrate gissmo 0001_initial --fake
-python manage.py migrate gissmo
+docker-compose -f production.yml build
+docker-compose -f production.yml run --rm --service-ports -d proddb
+PGHOST=localhost PGPORT=5433 PGUSER=gissmo pg_restore -d gissmo gissmo-1.dump
+docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate admin 0001_initial --fake
+docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate auth
+docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate sessions 0001_initial --fake
+docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate gissmo 0001_initial --fake
+docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate gissmo
 ```
+
+**Note**: By default the Dockerfile use this port: **8000**.

@@ -36,12 +36,10 @@ USE_TZ = True
 
 UPLOAD_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
 
-ADMIN_MEDIA_PREFIX = '/gissmo/static/admin/'
-
 MEDIA_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'media')
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(os.path.dirname(gissmo.__file__), '..', 'static')
+STATIC_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'static')
 STATIC_URL = '/gissmo/static/'
 
 # Additional locations of static files

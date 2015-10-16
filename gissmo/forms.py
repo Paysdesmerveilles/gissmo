@@ -13,15 +13,15 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
-from models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, \
+from gissmo.models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, \
     StationDoc, Chain, Channel, Built, DataType, EquipSupertype, Project, \
     ProjectUser, ParameterEquip, ParameterValue
-from views import equip_state_todate, equip_place_todate_id, \
+from gissmo.views import equip_state_todate, equip_place_todate_id, \
     available_equip_state, available_station, available_built, \
     available_equipment_scioper
-from models import EquipAction, EquipState, StationAction, StationState, \
+from gissmo.models import EquipAction, EquipState, StationAction, StationState, \
     ChannelCode
-from tools import timezone_aware
+from gissmo.tools import timezone_aware
 
 
 class AdminFileWidget(forms.FileInput):
