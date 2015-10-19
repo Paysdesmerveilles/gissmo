@@ -1,12 +1,12 @@
 # coding=utf-8
-
+from __future__ import unicode_literals
 import csv
 import os.path
 import mimetypes
 from datetime import datetime
 from operator import itemgetter
-from models import *
-from tools import DecimalEncoder, timezone_aware
+from gissmo.models import *  # NOQA
+from gissmo.tools import DecimalEncoder, timezone_aware
 
 from django.db.models import Q
 from django.template import loader, Context
@@ -20,8 +20,7 @@ from django.contrib.auth.models import User
 from django.db.models import get_model
 # delete simplejson from django.utils as Django 1.7 deliver it not
 import json
-from django.utils.encoding import smart_str
-from django.utils.encoding import force_unicode
+from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
@@ -118,7 +117,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
         fsock = open(path,"r")
         if mime_type_guess is not None:
             response = HttpResponse(fsock, content_type=mime_type_guess[0])
-        response['Content-Disposition'] = 'attachment; filename=' + smart_str(file_name)
+        response['Content-Disposition'] = 'attachment; filename=' + smart_text(file_name)
         return response
     else:
         raise PermissionDenied()

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from fabric.api import env, put, roles, run
 from fabric.tasks import execute
 from fabric.contrib.project import rsync_project

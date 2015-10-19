@@ -1,5 +1,5 @@
 # coding=utf-8
-
+from __future__ import unicode_literals
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -12,9 +12,9 @@ from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
-from models import *
-from forms import *
-from views import *
+from gissmo.models import *
+from gissmo.forms import *
+from gissmo.views import *
 from gissmo.helpers import format_date
 
 
@@ -308,7 +308,7 @@ class EquipmentAdmin(admin.ModelAdmin):
                 interv_equip = IntervEquip(intervention=intervention, equip_action=EquipAction.ACHETER, \
                                            equip=equipment, equip_state=EquipState.A_TESTER, station=station, note="Creation automatique")
                 interv_equip.save()
-            except Intervention.DoesNotExist:
+            except Intervention.DoesNotExist as i:
                 intervention = Intervention(station=station,intervention_date=purchase_date, note="Creation automatique")
                 intervention.save()
                 intervention = get_object_or_404(Intervention, pk=intervention.id)

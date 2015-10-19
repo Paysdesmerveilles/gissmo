@@ -1,5 +1,5 @@
 # coding=utf-8
-
+from __future__ import unicode_literals
 from datetime import datetime
 import time
 
@@ -13,14 +13,34 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
-from gissmo.models import Actor, EquipModelDoc, Equipment, EquipDoc, StationSite, \
-    StationDoc, Chain, Channel, Built, DataType, EquipSupertype, Project, \
-    ProjectUser, ParameterEquip, ParameterValue
-from gissmo.views import equip_state_todate, equip_place_todate_id, \
-    available_equip_state, available_station, available_built, \
-    available_equipment_scioper
-from gissmo.models import EquipAction, EquipState, StationAction, StationState, \
-    ChannelCode
+from gissmo.models import (
+    Actor,
+    EquipModelDoc,
+    Equipment,
+    EquipDoc,
+    StationSite,
+    StationDoc,
+    Chain,
+    Channel,
+    Built,
+    DataType,
+    EquipSupertype,
+    Project,
+    ProjectUser,
+    ParameterEquip,
+    ParameterValue)
+from gissmo.views import (
+    equip_state_todate,
+    equip_place_todate_id,
+    available_equip_state,
+    available_station, available_built,
+    available_equipment_scioper)
+from gissmo.models import (
+    EquipAction,
+    EquipState,
+    StationAction,
+    StationState,
+    ChannelCode)
 from gissmo.tools import timezone_aware
 
 

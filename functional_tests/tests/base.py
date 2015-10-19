@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from selenium import webdriver
 # from selenium.webdriver.common.desired_capabilities import \
 #        DesiredCapabilities
@@ -117,7 +118,7 @@ class FunctionalTest(LiveServerTestCase):
         """
         Browse the given CSV file to check if any error occured.
         """
-        with open(filepath, 'rb') as f:
+        with open(filepath) as f:
             reader = csv.reader(f)
             try:
                 # just browse rows

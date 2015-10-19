@@ -1,7 +1,7 @@
-# Version 0.1
+# Version 0.2
 # This Dockerfile creates a fresh environment for Gissmo
 
-FROM python:2.7
+FROM python:3.4
 
 MAINTAINER Olivier DOSSMANN, olivier+dockerfile@dossmann.net
 

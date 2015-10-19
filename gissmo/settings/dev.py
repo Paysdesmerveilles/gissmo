@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from gissmo.settings.common import *  # NOQA
 from os import getenv
 

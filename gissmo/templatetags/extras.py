@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django import template
 from django.utils.translation import gettext_lazy as _
 import re
@@ -55,7 +56,7 @@ r_expr = re.compile(r'(.*?)\s+as\s+(\w+)', re.DOTALL)
 def do_expr(parser, token):
     try:
         tag_name, arg = token.contents.split(None, 1)
-    except ValueError:
+    except ValueError as e:
         raise template.TemplateSyntaxError, "%r tag requires arguments" % token.contents[0]
     m = r_expr.search(arg)
     if m:

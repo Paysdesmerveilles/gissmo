@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from .base import FunctionalTest
-from input_field import InputField
+from .input_field import InputField
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
