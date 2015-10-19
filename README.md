@@ -181,13 +181,27 @@ Finally, do:
 
 ```bash
 docker-compose -f production.yml build
-docker-compose -f production.yml run --rm --service-ports -d proddb
+docker-compose -f production.yml up
 PGHOST=localhost PGPORT=5433 PGUSER=gissmo pg_restore -d gissmo gissmo-1.dump
-docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate admin 0001_initial --fake
-docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate auth
-docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate sessions 0001_initial --fake
-docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate gissmo 0001_initial --fake
-docker-compose -f production.yml run --rm --service-ports prod python manage.py migrate gissmo
+# password is gissmo
+# stop them with Ctrl + C
+docker-compose -f production.yml run --rm pweb python manage.py migrate admin 0001_initial --fake
+docker-compose -f production.yml run --rm pweb python manage.py migrate auth
+docker-compose -f production.yml run --rm pweb python manage.py migrate sessions 0001_initial --fake
+docker-compose -f production.yml run --rm pweb python manage.py migrate gissmo 0001_initial --fake
+docker-compose -f production.yml run --rm pweb python manage.py migrate gissmo
+```
+
+You can then create a new superuser as this:
+
+```bash
+docker-compose -f production.yml run --rm pweb python manage.py createsuperuser
+```
+
+And launch service like this:
+
+```bash
+docker-compose -f production.yml run --rm --service-ports pweb
 ```
 
 **Note**: By default the Dockerfile use this port: **8000**.

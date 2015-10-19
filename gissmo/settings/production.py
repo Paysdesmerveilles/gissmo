@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ['*']
 
 DATABASES['default'].update(
     {
-        'HOST': 'db',
+        'HOST': 'pdb',
         'PORT': '5432',
     }
 )

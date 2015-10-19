@@ -32,4 +32,4 @@ EXPOSE 8000
 RUN apt-get update && \
   apt-get install -y uwsgi
 
-CMD uwsgi --http :8000 --die-on-term --pythonpath $GISSMO_DIR --module gissmo.wsgi:application --master --socket /tmp/gissmo.sock --processes 4 --reload-on-as 512 --enable-threads --static-map=/gissmo/static/=$GISSMO_STATIC_DIR
+CMD uwsgi --ini $GISSMO_DIR/uwsgi.ini --pythonpath $GISSMO_DIR --static-map=/gissmo/static/=$GISSMO_STATIC_DIR
