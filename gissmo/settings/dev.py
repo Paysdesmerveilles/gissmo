@@ -31,6 +31,6 @@ INSTALLED_APPS = (
 DATABASES['default'].update(
     {
         'HOST': getenv('DB_PORT_5432_TCP_ADDR', '127.0.0.1'),
-        'PORT': getenv('DB_PORT_5432_TCP_PORT', '5433'),
+        'PORT': getenv('DB_PORT_5432_TCP_PORT', '5434'),
     }
 )

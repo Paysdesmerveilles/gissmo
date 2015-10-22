@@ -4,7 +4,7 @@ db:
     - POSTGRES_USER=gissmo
     - POSTGRES_PASSWORD=gissmo
   ports:
-    - "5433:5432"
+    - "5434:5432"
 web:
   extends:
     file: common.yml
