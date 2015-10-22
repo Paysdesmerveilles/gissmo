@@ -309,12 +309,13 @@ class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
             return
 
         # get forms that actually have valid data
+        super(IntervActorInlineFormset, self).clean()
         delete_checked = 0
         form_number = 0
         for form in self.forms:
             # Acquire data for each field
-            if form.cleaned_data != {}:
-                if form.cleaned_data['DELETE']:
+            if self.cleaned_data != {}:
+                if 'DELETE' in self.cleaned_data:
                     delete_checked += 1
                 # TODO vue de validation
                 # Validation of station_action and final state
