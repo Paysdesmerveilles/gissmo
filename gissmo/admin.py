@@ -1,7 +1,9 @@
 # coding=utf-8
 from __future__ import unicode_literals
 from django import forms
-from django.contrib import admin
+from django.contrib import (
+    admin,
+    messages)
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import AdminURLFieldWidget
 from django.contrib.contenttypes.models import ContentType
@@ -818,8 +820,6 @@ class ChainInline(admin.TabularInline):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
     }
-
-from django.contrib import messages
 
 """
 class ChainConfigInline(admin.TabularInline):

@@ -981,10 +981,12 @@ dans un OSU et non (%s)' % (
                 # The action EXPEDIER is valid only if the target_station is
                 # an OSU or SAV or AUTRE
                 is_expedier = equip_action == EquipAction.EXPEDIER
-                if is_expedier and (
-                        target_station.site_type != StationSite.OBSERVATOIRE
-                        and target_station.site_type != StationSite.SAV and
-                        target_station.site_type != StationSite.AUTRE):
+                type_site = target_station.site_type
+                unallowed_sites = [
+                    StationSite.OBSERVATOIRE,
+                    StationSite.SAV,
+                    StationSite.AUTRE]
+                if is_expedier and type_site not in unallowed_sites:
                     raise forms.ValidationError(
                         'On doit effectuer cette action (%s) et expedier vers \
 OSU, SAV ou Autre et non (%s)' % (
@@ -1018,10 +1020,12 @@ OSU et non (%s)' % (
                 # The state DISPONIBLE is valid only if the target_station is
                 # an OSU.
                 is_disponible = equip_state == EquipState.DISPONIBLE
-                if is_disponible and (
-                        target_station.site_type != StationSite.OBSERVATOIRE
-                        and target_station.site_type != StationSite.STATION and
-                        target_station.site_type != StationSite.SITE_TEST):
+                type_site = target_station.site_type
+                unallowed_sites = [
+                    StationSite.OBSERVATOIRE,
+                    StationSite.STATION,
+                    StationSite.SITE_TEST]
+                if is_disponible and type_site not in unallowed_sites:
                     raise forms.ValidationError(
                         'Un equipement est (%s) seulement dans une station ou \
 un OSU et non (%s)' % (

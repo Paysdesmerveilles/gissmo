@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+
 class InputField(object):
     """An element that gives informations about an Input field for Admin Forms.
     """
