@@ -47,9 +47,9 @@ class ActorAdmin(admin.ModelAdmin):
 
 
 class BuiltAdmin(admin.ModelAdmin):
-    list_display = ['station', 'built_type', 'built_short_desc', ]
-    ordering = ['station', ]
-    search_fields = ['station__station_code', ]
+    list_display = ['station', 'built_type', 'built_short_desc']
+    ordering = ['station']
+    search_fields = ['station__station_code']
 
 
 class EquipModelDocInline(admin.TabularInline):
@@ -57,7 +57,7 @@ class EquipModelDocInline(admin.TabularInline):
     fields = ('document_type', 'document_title', 'begin_effective',
               'end_effective', 'document_equip_model', 'private_link')
     form = EquipModelDocInlineForm
-    exclude = ['equip_supertype', 'equip_type', 'owner', ]
+    exclude = ['equip_supertype', 'equip_type', 'owner']
     extra = 0
     ordering = ['-begin_effective', ]
 
@@ -136,10 +136,16 @@ class EquipModelFilter(SimpleListFilter):
 
 
 class EquipModelAdmin(admin.ModelAdmin):
-    list_display = ['equip_type', 'equip_model_name']
+    list_display = [
+        'equip_supertype',
+        'equip_type',
+        'equip_model_name']
     list_display_links = ['equip_model_name']
     list_filter = [EquipModelFilter]
-    ordering = ['equip_type', 'equip_model_name']
+    ordering = [
+        'equip_type__equip_supertype',
+        'equip_type',
+        'equip_model_name']
     search_fields = ['equip_model_name']
     form = EquipModelForm
 
@@ -164,7 +170,6 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         for instance in instances:
             # Check if it is the correct type of inline
             if isinstance(instance, EquipModelDoc):
-                instance.equip_supertype = form.cleaned_data['equip_supertype']
                 instance.equip_type = form.cleaned_data['equip_type']
                 if not instance.pk:
                     instance.owner = request.user
@@ -244,10 +249,10 @@ class EquipFilter(SimpleListFilter):
         if self.value():
             if self.value()[:5] == 'Stype':
                 return queryset.filter(
-                    equip_supertype__id__exact=self.value()[6:])
+                    equip_model__equip_type__equip_supertype__id=self.value()[6:])  # NOQA
             if self.value()[:5] == 'Type_':
                 return queryset.filter(
-                    equip_type__id__exact=self.value()[6:])
+                    equip_model__equip_type__id=self.value()[6:])
             if self.value()[:5] == 'Model':
                 return queryset.filter(
                     equip_model__id__exact=self.value()[6:])
@@ -303,8 +308,8 @@ class EquipmentAdmin(admin.ModelAdmin):
     list_display_links = ['serial_number']
     list_filter = [EquipFilter]
     ordering = [
-        'equip_supertype',
-        'equip_type',
+        'equip_model__equip_type__equip_supertype',
+        'equip_model__equip_type',
         'equip_model',
         'serial_number']
     search_fields = [
@@ -315,8 +320,7 @@ class EquipmentAdmin(admin.ModelAdmin):
     fieldsets = [
         ('Equipements', {
             'fields': [
-                ('equip_supertype',
-                    'equip_type',
+                (
                     'equip_model',
                     'serial_number',
                     'owner',
@@ -431,9 +435,6 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         for instance in instances:
             # Check if it's the correct type of inline
             if isinstance(instance, EquipDoc):
-                instance.equip_supertype = form.cleaned_data['equip_supertype']
-                instance.equip_type = form.cleaned_data['equip_type']
-                instance.equip_model = form.cleaned_data['equip_model']
                 if not instance.pk:
                     instance.owner = request.user
                 instance.save()
@@ -646,8 +647,8 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
 
 
 class EquipTypeAdmin(admin.ModelAdmin):
-    list_display = ['equip_supertype', 'equip_type_name', ]
-    list_filter = ['equip_supertype', ]
+    list_display = ['equip_supertype', 'equip_type_name']
+    list_filter = ['equip_supertype']
 
 
 class IntervActorInline(admin.TabularInline):

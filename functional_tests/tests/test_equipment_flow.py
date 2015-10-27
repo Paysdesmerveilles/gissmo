@@ -63,18 +63,10 @@ class EquipmentTest(FunctionalTest):
         Check a simple equipment creation
         """
         # @EOST we receive a new CMG-40T equipment: T4Q30
-        supertype = InputField(
-            name='equip_supertype',
-            content='01. Scientific',
-            _type=Select)
-        _type = InputField(
-            name='equip_type',
-            content='Velocimeter',
-            _type=Select)
         model = InputField(
             name='equip_model',
             content='CMG-40T',
-            _type=Select)
+            _type='autocomplete')
         serial = InputField(
             name='serial_number',
             content='T4Q30',
@@ -91,7 +83,7 @@ class EquipmentTest(FunctionalTest):
             content='EOST',
             _type=Select)
 
-        fields = [supertype, _type, model, serial, owner, date, site]
+        fields = [model, serial, owner, date, site]
 
         self.add_item_in_admin('equipment/', fields, check=True)
 

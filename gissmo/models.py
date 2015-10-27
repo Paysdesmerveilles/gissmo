@@ -230,9 +230,6 @@ nom d'usage utilisé par la communauté des instrumentalistes
 
     **Attributes :**
 
-    equip_supertype : integer (fk)
-        Catégorie ou supertype auquel appartient le modèle d'équipement
-
     equip_type : integer (fk)
         Sous-catégorie ou type auquel appartient le modèle d'équipement
 
@@ -250,6 +247,14 @@ nom d'usage utilisé par la communauté des instrumentalistes
         null=True,
         blank=True,
         verbose_name=_("manufacturier"))
+
+    def _get_supertype(self):
+        "Returns the linked EquipSuperType"
+        return '%s' % (self.equip_type.equip_supertype)
+
+    _get_supertype.short_description = _('supertype d\'équipement')
+
+    equip_supertype = property(_get_supertype)
 
     class Meta:
         ordering = ['equip_model_name']
@@ -316,12 +321,6 @@ conserver dans l'inventaire des OSU
 
     **Attributes :**
 
-    equip_supertype : integer (fk)
-        Catégorie ou supertype auquel appartient l'équipement
-
-    equip_type : integer (fk)
-        Sous-catégorie ou type auquel appartient l'équipement
-
     equip_model : integer (fk)
         Modèle auquel appartient l'équipment
 
@@ -338,23 +337,8 @@ l'équipment
     note : text
         Champ libre afin d'ajouter des informations supplémentaires
     """
-    equip_supertype = models.ForeignKey(
-        "EquipSupertype",
-        verbose_name=_("supertype d'equipement"))
-    equip_type = ChainedForeignKey(
-        EquipType,
-        chained_field="equip_supertype",
-        chained_model_field="equip_supertype",
-        show_all=False,
-        auto_choose=True,
-        verbose_name=_("type d'equipement")
-    )
-    equip_model = ChainedForeignKey(
+    equip_model = models.ForeignKey(
         EquipModel,
-        chained_field="equip_type",
-        chained_model_field="equip_type",
-        show_all=False,
-        auto_choose=True,
         verbose_name=_("modele d'equipement")
     )
     serial_number = models.CharField(
@@ -372,10 +356,22 @@ l'équipment
         verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
 
+    def _get_type(self):
+        "Returns the linked EquipType"
+        return '%s' % (self.equip_model.equip_type)
+
+    def _get_supertype(self):
+        "Returns the linked EquipSuperType"
+        return '%s' % (self.equip_model.equip_type.equip_supertype)
+
+    _get_type.short_description = _('type d\'équipement')
+    _get_supertype.short_description = _('supertype d\'équipement')
+
+    equip_type = property(_get_type)
+    equip_supertype = property(_get_supertype)
+
     class Meta:
         unique_together = (
-            "equip_supertype",
-            "equip_type",
             "equip_model",
             "serial_number")
         verbose_name = _("equipement")
@@ -383,7 +379,7 @@ l'équipment
 
     def __str__(self):
         return u'%s : %s : %s' % (
-            self.equip_type,
+            self.equip_model.equip_type,
             self.equip_model,
             self.serial_number)
 

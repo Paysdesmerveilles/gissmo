@@ -652,7 +652,10 @@ def available_equipment_cursor(action, station, date, intervention_id):
                     equipment_list.append(row[0])
 
     equip_dispo = Equipment.objects.filter(id__in=equipment_list).order_by(
-        'equip_supertype', 'equip_type', 'equip_model', 'serial_number')
+        'equip_model__equip_type__equip_supertype',
+        'equip_model__equip_type',
+        'equip_model',
+        'serial_number')
     return equip_dispo
 
 """
@@ -746,8 +749,8 @@ def available_equipment(action, station, date, intervention_id):
 
     equip_dispo = Equipment.objects.filter(
         id__in=equipment_list).order_by(
-            'equip_supertype',
-            'equip_type',
+            'equip_model__equip_type__equip_supertype',
+            'equip_model__equip_type',
             'equip_model',
             'serial_number')
     return equip_dispo
@@ -911,9 +914,11 @@ def available_equipment_scioper(station, date):
     # TODO find a better way to filter
     # Not the best way to filter
     # If the supertype name change we have to change the code too
+    a = "01. Scientifique"
+    b = "06. Ordinateur"
     equipments = Equipment.objects.filter(
-        Q(equip_supertype__equip_supertype_name="01. Scientifique") |
-        Q(equip_supertype__equip_supertype_name="06. Ordinateur"))
+        Q(equip_model__equip_type__equip_supertype__equip_supertype_name=a) |
+        Q(equip_model__equip_type__equip_supertype__equip_supertype_name=b))
 
     for equip in equipments:
         if int(equip_place_todate_id(equip.id, date, None)) == int(station):
@@ -921,8 +926,8 @@ def available_equipment_scioper(station, date):
 
     equip_dispo = Equipment.objects.filter(
         id__in=equipment_list).order_by(
-            'equip_supertype',
-            'equip_type__presentation_rank',
+            'equip_model__equip_type__equip_supertype',
+            'equip_model__equip_type__presentation_rank',
             'equip_model',
             'serial_number')
     return equip_dispo
@@ -1258,9 +1263,11 @@ def station_xml(request):
                         # equipment
                         other_5_config = ChainConfig.objects.filter(
                             chain=equipchain.id)
-                #    if equipchain.equip.equip_type.equip_type_name == \
+                #    e_name = \
+                #        equipchain.equip.equip_model.equip_type
+                #    if e_name.equip_type_name == \
                 #        u'Vélocimètre' or \
-                #        equipchain.equip.equip_type.equip_type_name == \
+                #        e_name.equip_type_name == \
                 #            u'Accéléromètre':
                 #        sensor = equipchain.equip
                 #        # Obtain the config parameters and values for the
@@ -1268,7 +1275,7 @@ def station_xml(request):
                 #        sensor_config = \
                 #            ChainConfig.objects.filter(chain=equipchain.id)
                 #    else:
-                #        if equipchain.equip.equip_type.equip_type_name == \
+                #        if e_name.equip_type_name == \
                 #            u'Numériseur':
                 #            datalogger = equipchain.equip
                 #            # Obtain the config parameters and values for the
@@ -1591,7 +1598,8 @@ def network_xml(request):
                     datalogger_uninstalled = None
                     ResChain = Chain.objects.filter(channel=channel.id)
                     for equipchain in ResChain:
-                        type_name = equipchain.equip.equip_type.equip_type_name
+                        e_type = equipchain.equip.equip_model.equip_type
+                        type_name = e_type.equip_type_name
                         specific_values = [
                             'Vélocimètre',
                             'Accéléromètre']
@@ -1758,7 +1766,8 @@ def station_dataless(request):
                             liste_config.append(chainconfig)
                     liste_chain.append([chain.equip, liste_config])
                     # Built of the sensor and dataloger list
-                    type_name = chain.equip.equip_type.equip_type_name
+                    e_type = chain.equip.equip_model.equip_type
+                    type_name = e_type.equip_type_name
                     allowed_values = [
                         'Vélocimètre',
                         'Accéléromètre']

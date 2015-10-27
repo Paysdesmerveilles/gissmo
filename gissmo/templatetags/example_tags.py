@@ -224,8 +224,8 @@ def display_equip_last_location(station_id):
     locations = IntervEquip.objects.filter(
         station=station_id,
         id__in=liste).order_by(
-            'equip__equip_supertype',
-            'equip__equip_type',
+            'equip__equip_model__equip_type__equip_supertype',
+            'equip__equip_model__equip_type',
             'equip__equip_model')
     return {'locations': locations, 'url_redirection': url_redirection}
 

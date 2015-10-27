@@ -228,8 +228,8 @@ return false;
       <TR>
       {% for equip in ResStationEquip %}
       <TR>
-        <TD> {{ equip.equip_supertype.equip_supertype_name|escape }} </TD>
-        <TD> {{ equip.equip_type.equip_type_name|escape }} </TD>
+        <TD> {{ equip.equip_model.equip_type.equip_supertype.equip_supertype_name|escape }} </TD>
+        <TD> {{ equip.equip_model.equip_type.equip_type_name|escape }} </TD>
         <TD> {{ equip.equip.equip_model.equip_model_name|escape }} </TD>
         <TD> {{ equip.equip.serial_number|escape }} </TD>
         <TD> {{ equip.network.network_name|escape }} </TD>

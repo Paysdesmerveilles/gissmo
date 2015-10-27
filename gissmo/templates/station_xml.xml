@@ -190,7 +190,7 @@
              {% endif %}
              {% if sensor.id != None %}
                <Sensor>
-                 <Type>{{ sensor.equip_type.equip_type_name }}</Type>
+                 <Type>{{ sensor.equip_model.equip_type.equip_type_name }}</Type>
                  {% if sensor.description != None %}
                   <Description>{{ sensor.description }}</Description>
                  {% endif %}
@@ -224,7 +224,7 @@
              {% endif %}
              {% if preamplifier.id != None %}
                <PreAmplifier>
-                 <Type>{{preamplifier.equip_type.equip_type_name }}</Type>
+                 <Type>{{preamplifier.equip_model.equip_type.equip_type_name }}</Type>
                  {% if preamplifier.description != None %}
                   <Description>{{ preamplifier.description }}</Description>
                  {% endif %}
@@ -258,7 +258,7 @@
              {% endif %}
              {% if datalogger.id != None %}
                <DataLogger>
-                 <Type>{{ datalogger.equip_type.equip_type_name }}</Type>
+                 <Type>{{ datalogger.equip_model.equip_type.equip_type_name }}</Type>
                  {% if datalogger.description != None %}
                   <Description>{{ datalogger.description }}</Description>
                  {% endif %}
@@ -292,7 +292,7 @@
              {% endif %}
              {% if equipment.id != None %}
                <Equipment>
-                 <Type>{{ equipment.equip_type.equip_type_name }}</Type>
+                 <Type>{{ equipment.equip_model.equip_type.equip_type_name }}</Type>
                  {% if equipment.description != None %}
                   <Description>{{ equipment.description }}</Description>
                  {% endif %}
@@ -326,7 +326,7 @@
              {% endif %}
              {% if other_1.id != None %}
                <Other_1>
-                 <Type>{{ other_1.equip_type.equip_type_name }}</Type>
+                 <Type>{{ other_1.equip_model.equip_type.equip_type_name }}</Type>
                  {% if other_1.description != None %}
                   <Description>{{ other_1.description }}</Description>
                  {% endif %}
@@ -360,7 +360,7 @@
              {% endif %}
              {% if other_2.id != None %}
                <Other_2>
-                 <Type>{{ other_2.equip_type.equip_type_name }}</Type>
+                 <Type>{{ other_2.equip_model.equip_type.equip_type_name }}</Type>
                  {% if other_2.description != None %}
                   <Description>{{ other_2.description }}</Description>
                  {% endif %}
@@ -394,7 +394,7 @@
              {% endif %}
              {% if other_3.id != None %}
                <Other_3>
-                 <Type>{{ other_3.equip_type.equip_type_name }}</Type>
+                 <Type>{{ other_3.equip_model.equip_type.equip_type_name }}</Type>
                  {% if other_3.description != None %}
                   <Description>{{ other_3.description }}</Description>
                  {% endif %}
@@ -428,7 +428,7 @@
              {% endif %}
              {% if other_4.id != None %}
                <Other_4>
-                 <Type>{{ other_4.equip_type.equip_type_name }}</Type>
+                 <Type>{{ other_4.equip_model.equip_type.equip_type_name }}</Type>
                  {% if other_4.description != None %}
                   <Description>{{ other_4.description }}</Description>
                  {% endif %}
@@ -462,7 +462,7 @@
              {% endif %}
              {% if other_5.id != None %}
                <Other_5>
-                 <Type>{{ other_5.equip_type.equip_type_name }}</Type>
+                 <Type>{{ other_5.equip_model.equip_type.equip_type_name }}</Type>
                  {% if other_5.description != None %}
                   <Description>{{ other_5.description }}</Description>
                  {% endif %}

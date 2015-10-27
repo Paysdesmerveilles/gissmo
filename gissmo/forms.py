@@ -27,7 +27,6 @@ from gissmo.models import (
     Channel,
     Built,
     DataType,
-    EquipSupertype,
     Project,
     ProjectUser,
     ParameterEquip,
@@ -192,7 +191,7 @@ class InterventionForm(forms.ModelForm):
         self.fields['intervention_date'].widget = split_widget
 
 
-class EquipmentForm(forms.ModelForm):
+class EquipmentForm(autocomplete_light.ModelForm):
     """
     Add of fields to obtain the date of purchase and stockage_site only when
     it'a new equipment else hide the field and the label
@@ -233,14 +232,13 @@ class EquipmentForm(forms.ModelForm):
             Q(actor_type=Actor.ORGANISME) |
             Q(actor_type=Actor.INCONNU))
         self.fields['owner'].initial = owner_default_value
-        self.fields['equip_supertype'].queryset = \
-            EquipSupertype.objects.all().order_by('presentation_rank')
         self.fields['stockage_site'].queryset = \
             StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE)
 
     class Meta:
         model = Equipment
         fields = "__all__"
+        autocomplete_fields = ('equip_model')
 
 
 class EquipModelForm(autocomplete_light.ModelForm):
