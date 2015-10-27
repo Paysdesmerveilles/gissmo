@@ -242,7 +242,8 @@ def display_hist_equip_station(station_id):
     présents pour un moment a la station.
 
     TODO: Historique of equipment location.
-    equip.id station_code built.__unicode__ start_date end_date
+    equip.id station_code str(built) start_date end_date
+
     trie en ordre descendent date intervention
     iteration si station <> precedent sauvegarde precedent
                                       end_date == date_precedent

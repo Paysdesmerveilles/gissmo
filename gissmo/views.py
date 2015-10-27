@@ -786,7 +786,7 @@ def xhr_equipment(request):
         for equip in equip_dispo:
             select_choice.append(({
                 "optionValue": equip.id,
-                "optionDisplay": equip.__unicode__()}))
+                "optionDisplay": str(equip)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
@@ -860,7 +860,7 @@ def xhr_station(request):
         for station in station_dispo:
             select_choice.append(({
                 "optionValue": station.id,
-                "optionDisplay": station.__unicode__()}))
+                "optionDisplay": str(station)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
@@ -894,7 +894,7 @@ def xhr_built(request):
         for built in built_dispo:
             select_choice.append(({
                 "optionValue": built.id,
-                "optionDisplay": built.__unicode__()}))
+                "optionDisplay": str(built)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
@@ -954,7 +954,7 @@ def xhr_equip_oper(request):
         for equip in equip_dispo:
             select_choice.append(({
                 "optionValue": equip.id,
-                "optionDisplay": equip.__unicode__()}))
+                "optionDisplay": str(equip)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
@@ -1966,7 +1966,7 @@ def xhr_parameter_value(request):
         for value in value_dispo:
             select_choice.append(({
                 "optionValue": value.id,
-                "optionDisplay": value.__unicode__()}))
+                "optionDisplay": str(value)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
