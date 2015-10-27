@@ -520,7 +520,7 @@ def xhr_equipment(request):
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:
-            select_choice.append(({"optionValue": equip.id, "optionDisplay": equip.__unicode__()}))
+            select_choice.append(({"optionValue": equip.id, "optionDisplay": str(equip)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
@@ -572,7 +572,7 @@ def xhr_station(request):
         else:
             select_choice = [{"optionValue": "", "optionDisplay": "-- choisir un site --"}]
         for station in station_dispo:
-            select_choice.append(({"optionValue": station.id, "optionDisplay": station.__unicode__()}))
+            select_choice.append(({"optionValue": station.id, "optionDisplay": str(station)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
@@ -600,7 +600,7 @@ def xhr_built(request):
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for built in built_dispo:
-            select_choice.append(({"optionValue": built.id, "optionDisplay": built.__unicode__()}))
+            select_choice.append(({"optionValue": built.id, "optionDisplay": str(built)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
@@ -643,7 +643,7 @@ def xhr_equip_oper(request):
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for equip in equip_dispo:
-            select_choice.append(({"optionValue": equip.id, "optionDisplay": equip.__unicode__()}))
+            select_choice.append(({"optionValue": equip.id, "optionDisplay": str(equip)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
@@ -1347,7 +1347,7 @@ def xhr_parameter_value(request):
 
         select_choice = [{"optionValue": "", "optionDisplay": "------"}]
         for value in value_dispo:
-            select_choice.append(({"optionValue": value.id, "optionDisplay": value.__unicode__()}))
+            select_choice.append(({"optionValue": value.id, "optionDisplay": str(value)}))
         data = json.dumps(select_choice)
 
         return HttpResponse(data)
