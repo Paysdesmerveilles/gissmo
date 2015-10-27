@@ -13,10 +13,13 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
+import autocomplete_light
+
 from gissmo.models import (
     Actor,
     EquipModelDoc,
     Equipment,
+    EquipModel,
     EquipDoc,
     StationSite,
     StationDoc,
@@ -238,6 +241,16 @@ class EquipmentForm(forms.ModelForm):
     class Meta:
         model = Equipment
         fields = "__all__"
+
+
+class EquipModelForm(autocomplete_light.ModelForm):
+    """
+    Add autocomplete on equip_type field
+    """
+    class Meta:
+        model = EquipModel
+        fields = "__all__"
+        autocomplete_fields = ('equip_type')
 
 
 class StationDocInlineForm(forms.ModelForm):

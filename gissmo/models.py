@@ -239,17 +239,9 @@ nom d'usage utilisé par la communauté des instrumentalistes
     equip_model_name : char(50)
         Nom du modèle de l'équipment
     """
-    equip_supertype = models.ForeignKey(
-        "EquipSupertype",
-        verbose_name=_("supertype d'equipement"))
-    equip_type = ChainedForeignKey(
+    equip_type = models.ForeignKey(
         EquipType,
-        chained_field="equip_supertype",
-        chained_model_field="equip_supertype",
-        show_all=False,
-        auto_choose=True,
-        verbose_name=_("type d'equipement")
-    )
+        verbose_name=_("type d'equipement"))
     equip_model_name = models.CharField(
         max_length=50,
         verbose_name=_("modele d'equipement"))

@@ -4,9 +4,12 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 from smart_selects import urls as ss_urls
+from autocomplete_light import shortcuts as al
+from autocomplete_light import urls as al_urls
 
 from gissmo import views
 
+al.autodiscover()
 admin.autodiscover()
 admin.site.site_header = 'Gissmo'
 admin.site.site_title = 'Gissmo'
@@ -65,6 +68,7 @@ urlpatterns = [
         name='test_site'),
     url(r'^gissmo/chaining/', include(ss_urls)),
     url(r'^gissmo/', include(admin.site.urls)),
+    url(r'^autocomplete/', include(al_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Note about STATIC_URL: django.contrib.staticfils in INSTALLED_APPS do the job

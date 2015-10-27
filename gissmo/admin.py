@@ -129,22 +129,22 @@ class EquipModelFilter(SimpleListFilter):
         if self.value():
             if self.value()[:5] == 'Stype':
                 return queryset.filter(
-                    equip_supertype__id__exact=self.value()[6:])
+                    equip_type__equip_supertype__id__exact=self.value()[6:])
             if self.value()[:5] == 'Type_':
                 return queryset.filter(
                     equip_type__id__exact=self.value()[6:])
 
 
 class EquipModelAdmin(admin.ModelAdmin):
-    list_display = ['equip_supertype', 'equip_type', 'equip_model_name']
+    list_display = ['equip_type', 'equip_model_name']
     list_display_links = ['equip_model_name']
     list_filter = [EquipModelFilter]
-    ordering = ['equip_supertype', 'equip_type', 'equip_model_name']
+    ordering = ['equip_type', 'equip_model_name']
     search_fields = ['equip_model_name']
+    form = EquipModelForm
 
     fieldsets = [('', {'fields': [
                   (
-                      'equip_supertype',
                       'equip_type',
                       'equip_model_name',
                       'manufacturer')]})]
@@ -229,7 +229,6 @@ class EquipFilter(SimpleListFilter):
                 liste.append(('Type__' + str(equip_type.id),
                               _(equip_type.equip_type_name)))
                 Equip_Model = EquipModel.objects.filter(
-                    equip_supertype=equip_supertype,
                     equip_type=equip_type).order_by('equip_model_name')
                 for equip_model in Equip_Model:
                     liste.append(('Model_' + str(equip_model.id),

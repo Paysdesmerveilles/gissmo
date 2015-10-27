@@ -140,6 +140,21 @@ class FunctionalTest(LiveServerTestCase):
                     [str(value) for value in field.content]
                 if same_content and is_selected:
                     input_field.click()
+        elif field._type == 'autocomplete':
+            # autocomplete add a kind of new input field with -autocomplete
+            # at the end of the field name.
+            # So we first search this input. Then we send him some value
+            fieldname = field.name + '-autocomplete'
+            input_field = self.browser.find_element_by_name(fieldname)
+            input_field.clear()
+            input_field.send_keys(field.content)
+            # After a while, we select the first value displayed
+            self.browser.implicitly_wait(2)
+            select_element = '.yourlabs-autocomplete[data-input-id="id_' + \
+                fieldname + '"] [data-value]'
+            choices = self.browser.find_elements_by_css_selector(
+                select_element)
+            choices[0].click()
         elif field._type == Select:
             input_field = self.browser.find_element_by_name(field.name)
             input_field = Select(input_field)

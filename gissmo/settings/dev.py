@@ -14,6 +14,7 @@ ROOT_URLCONF = 'gissmo.urls.dev'
 INSTALLED_APPS = (
     'gissmo',
     'flat',
+    'autocomplete_light',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',

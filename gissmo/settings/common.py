@@ -82,6 +82,7 @@ WSGI_APPLICATION = 'gissmo.wsgi.application'
 
 INSTALLED_APPS = (
     'gissmo',
+    'autocomplete_light',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',

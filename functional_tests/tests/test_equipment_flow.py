@@ -43,7 +43,6 @@ class EquipmentTest(FunctionalTest):
             equip_type_name='Velocimeter',
             presentation_rank=0)
         self.equipment_model = EquipModel.objects.create(
-            equip_supertype=self.supertype_1,
             equip_type=self.eq_type,
             equip_model_name='CMG-40T')
         self.project = Project.objects.create(
