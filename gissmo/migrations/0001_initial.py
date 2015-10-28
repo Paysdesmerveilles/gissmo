@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import smart_selects.db_fields
 import gissmo.models
 from django.conf import settings
 import django.core.files.storage
@@ -1345,11 +1344,8 @@ sur site'),
         migrations.AddField(
             model_name='equipmodeldoc',
             name='equip_model',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 to='gissmo.EquipModel',
-                chained_model_field=b'equip_type',
-                chained_field=b'equip_type',
                 verbose_name="modele d'equipement"),
         ),
         migrations.AddField(
@@ -1362,11 +1358,8 @@ sur site'),
         migrations.AddField(
             model_name='equipmodeldoc',
             name='equip_type',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 to='gissmo.EquipType',
-                chained_model_field=b'equip_supertype',
-                chained_field=b'equip_supertype',
                 verbose_name="type d'equipement"),
         ),
         migrations.AddField(
@@ -1384,21 +1377,15 @@ sur site'),
         migrations.AddField(
             model_name='equipmodel',
             name='equip_type',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 to='gissmo.EquipType',
-                chained_model_field=b'equip_supertype',
-                chained_field=b'equip_supertype',
                 verbose_name="type d'equipement"),
         ),
         migrations.AddField(
             model_name='equipment',
             name='equip_model',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 to='gissmo.EquipModel',
-                chained_model_field=b'equip_type',
-                chained_field=b'equip_type',
                 verbose_name="modele d'equipement"),
         ),
         migrations.AddField(
@@ -1411,10 +1398,8 @@ sur site'),
         migrations.AddField(
             model_name='equipment',
             name='equip_type',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True, to='gissmo.EquipType',
-                chained_model_field=b'equip_supertype',
-                chained_field=b'equip_supertype',
+            field=models.ForeignKey(
+                to='gissmo.EquipType',
                 verbose_name="type d'equipement"),
         ),
         migrations.AddField(
@@ -1436,21 +1421,15 @@ sur site'),
         migrations.AddField(
             model_name='equipdoc',
             name='equip',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 to='gissmo.Equipment',
-                chained_model_field=b'equip_model',
-                chained_field=b'equip_model',
                 verbose_name='equipement'),
         ),
         migrations.AddField(
             model_name='equipdoc',
             name='equip_model',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 to='gissmo.EquipModel',
-                chained_model_field=b'equip_type',
-                chained_field=b'equip_type',
                 verbose_name="modele d'equipement"),
         ),
         migrations.AddField(
@@ -1463,11 +1442,8 @@ sur site'),
         migrations.AddField(
             model_name='equipdoc',
             name='equip_type',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 to='gissmo.EquipType',
-                chained_model_field=b'equip_supertype',
-                chained_field=b'equip_supertype',
                 verbose_name="type d'equipement"),
         ),
         migrations.AddField(

@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import smart_selects.db_fields
 import gissmo.models
 import django.core.files.storage
 
@@ -160,62 +159,44 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipdoc',
             name='equip',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 verbose_name='equipement',
-                to='gissmo.Equipment',
-                chained_field='equip_model',
-                chained_model_field='equip_model'),
+                to='gissmo.Equipment'),
         ),
         migrations.AlterField(
             model_name='equipdoc',
             name='equip_model',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 verbose_name="modele d'equipement",
-                to='gissmo.EquipModel',
-                chained_field='equip_type',
-                chained_model_field='equip_type'),
+                to='gissmo.EquipModel'),
         ),
         migrations.AlterField(
             model_name='equipdoc',
             name='equip_type',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 verbose_name="type d'equipement",
-                to='gissmo.EquipType',
-                chained_field='equip_supertype',
-                chained_model_field='equip_supertype'),
+                to='gissmo.EquipType'),
         ),
         migrations.AlterField(
             model_name='equipment',
             name='equip_model',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 verbose_name="modele d'equipement",
-                to='gissmo.EquipModel',
-                chained_field='equip_type',
-                chained_model_field='equip_type'),
+                to='gissmo.EquipModel'),
         ),
         migrations.AlterField(
             model_name='equipment',
             name='equip_type',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 verbose_name="type d'equipement",
-                to='gissmo.EquipType',
-                chained_field='equip_supertype',
-                chained_model_field='equip_supertype'),
+                to='gissmo.EquipType'),
         ),
         migrations.AlterField(
             model_name='equipmodel',
             name='equip_type',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 verbose_name="type d'equipement",
-                to='gissmo.EquipType',
-                chained_field='equip_supertype',
-                chained_model_field='equip_supertype'),
+                to='gissmo.EquipType'),
         ),
         migrations.AlterField(
             model_name='equipmodeldoc',
@@ -230,22 +211,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipmodeldoc',
             name='equip_model',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 verbose_name="modele d'equipement",
-                to='gissmo.EquipModel',
-                chained_field='equip_type',
-                chained_model_field='equip_type'),
+                to='gissmo.EquipModel'),
         ),
         migrations.AlterField(
             model_name='equipmodeldoc',
             name='equip_type',
-            field=smart_selects.db_fields.ChainedForeignKey(
-                auto_choose=True,
+            field=models.ForeignKey(
                 verbose_name="type d'equipement",
-                to='gissmo.EquipType',
-                chained_field='equip_supertype',
-                chained_model_field='equip_supertype'),
+                to='gissmo.EquipType'),
         ),
         migrations.AlterField(
             model_name='intervequip',

@@ -1,5 +1,4 @@
 Django==1.8
-django-smart-selects==1.1.1
 ecdsa==0.13
 Fabric==1.10.2
 paramiko==1.15.2
