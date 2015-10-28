@@ -217,6 +217,7 @@ class EquipmentForm(autocomplete_light.ModelForm):
             self.fields['purchase_date'].label = ""
             self.fields['stockage_site'].widget = forms.HiddenInput()
             self.fields['stockage_site'].label = ""
+            self.fields['stockage_site'].required = False
         else:
             self.fields['purchase_date'].required = True
             self.fields['stockage_site'].required = True

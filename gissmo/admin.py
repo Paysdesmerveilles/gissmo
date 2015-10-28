@@ -57,7 +57,7 @@ class EquipModelDocInline(admin.TabularInline):
     fields = ('document_type', 'document_title', 'begin_effective',
               'end_effective', 'document_equip_model', 'private_link')
     form = EquipModelDocInlineForm
-    exclude = ['equip_supertype', 'equip_type', 'owner']
+    exclude = ['owner']
     extra = 0
     ordering = ['-begin_effective', ]
 

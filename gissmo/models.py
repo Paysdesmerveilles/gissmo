@@ -13,8 +13,6 @@ from django.contrib.auth.models import User
 
 from gissmo.helpers import format_date
 
-from smart_selects.db_fields import ChainedForeignKey
-
 fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 
 
@@ -1292,12 +1290,6 @@ class EquipModelDoc(models.Model):
 
     **Attributes :**
 
-    equip_supertype : integer (fk)
-        Catégorie ou supertype auquel appartient le modèle d'équipement
-
-    equip_type : integer (fk)
-        Sous-catégorie ou type auquel appartient le modèle d'équipement
-
     equip_model : integer (fk)
         Modèle de l'équipment auquel se rapporte le document
 
@@ -1313,23 +1305,8 @@ class EquipModelDoc(models.Model):
     document_equip_model : char(100) -- FILEFIELD
         Champ qui contient le chemin d'accès au document
     """
-    equip_supertype = models.ForeignKey(
-        "EquipSupertype",
-        verbose_name=_("supertype d'equipement"))
-    equip_type = ChainedForeignKey(
-        EquipType,
-        chained_field="equip_supertype",
-        chained_model_field="equip_supertype",
-        show_all=False,
-        auto_choose=True,
-        verbose_name=_("type d'equipement")
-    )
-    equip_model = ChainedForeignKey(
+    equip_model = models.ForeignKey(
         EquipModel,
-        chained_field="equip_type",
-        chained_model_field="equip_type",
-        show_all=False,
-        auto_choose=True,
         verbose_name=_("modele d'equipement")
     )
     owner = models.ForeignKey(User)

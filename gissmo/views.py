@@ -127,7 +127,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
         path = getattr(instance, field_name).file.name
         file_name = os.path.basename(path)
         mime_type_guess = mimetypes.guess_type(file_name)
-        fsock = open(path, "r")
+        fsock = open(path, "rb")
         if mime_type_guess is not None:
             response = HttpResponse(fsock, content_type=mime_type_guess[0])
         response['Content-Disposition'] = 'attachment; filename=' + \
