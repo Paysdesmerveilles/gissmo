@@ -141,10 +141,10 @@ class EquipModelDocInlineForm(forms.ModelForm):
 
 class EquipDocInlineForm(forms.ModelForm):
     """
-    Champ pour faire en sorte que les forms inline instancier
-    soit toujours avec un flag has_changed a True
-    De cette facon si on change le supertype, type ou le modele du parent cela
-    se repercute aux enfants
+    Champ pour faire en sorte que les forms inline instanciées
+    soient toujours avec un flag has_changed à True
+    De cette façon si on change le supertype, type ou le modèle du parent cela
+    se répercute aux enfants.
     """
     always_update = forms.IntegerField(
         required=False,

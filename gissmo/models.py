@@ -1405,15 +1405,6 @@ class EquipDoc(models.Model):
 
     **Attributes :**
 
-    equip_supertype : integer (fk)
-        Catégorie ou supertype auquel appartient l'équipement
-
-    equip_type : integer (fk)
-        Sous-catégorie ou type auquel appartient l'équipement
-
-    equip_model : integer (fk)
-        Modèle auquel appartient l'équipment
-
     equip : integer (fk)
         Equipement auquel se rapporte le document déposé
 
@@ -1429,31 +1420,8 @@ class EquipDoc(models.Model):
     document_equip : char(100) -- FILEFIELD
         Champ qui contient le chemin d'accès au document
     """
-    equip_supertype = models.ForeignKey(
-        "EquipSupertype",
-        verbose_name=_("supertype d'equipement"))
-    equip_type = ChainedForeignKey(
-        EquipType,
-        chained_field="equip_supertype",
-        chained_model_field="equip_supertype",
-        show_all=False,
-        auto_choose=True,
-        verbose_name=_("type d'equipement")
-    )
-    equip_model = ChainedForeignKey(
-        EquipModel,
-        chained_field="equip_type",
-        chained_model_field="equip_type",
-        show_all=False,
-        auto_choose=True,
-        verbose_name=_("modele d'equipement")
-    )
-    equip = ChainedForeignKey(
+    equip = models.ForeignKey(
         Equipment,
-        chained_field="equip_model",
-        chained_model_field="equip_model",
-        show_all=False,
-        auto_choose=True,
         verbose_name=_("equipement")
     )
     owner = models.ForeignKey(User)
