@@ -10,6 +10,8 @@ web:
     file: common.yml
     service: webapp
   command: python manage.py runserver 0.0.0.0:8000
+  ports:
+    - "8001:8000"
   links:
     - db
   environment:
