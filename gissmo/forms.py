@@ -201,12 +201,6 @@ class EquipmentForm(autocomplete_light.ModelForm):
         site_type=StationSite.OBSERVATOIRE
     )
 
-    purchase_date = forms.DateField(
-        widget=widgets.AdminDateWidget,
-        label='Date achat',
-        required=False
-    )
-
     stockage_site = forms.ModelChoiceField(queryset=observatories)
 
     def __init__(self, *args, **kwargs):

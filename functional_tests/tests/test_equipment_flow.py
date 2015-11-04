@@ -90,11 +90,12 @@ class EquipmentTest(FunctionalTest):
     def test_equipment_installation_on_a_site(self):
         # @EOST we receive a new equipment CMG-40T: T4Q31
         self.equipment_1 = Equipment.objects.create(
-            equip_supertype=self.supertype_1,
-            equip_type=self.eq_type,
             equip_model=self.equipment_model,
             serial_number='T4Q31',
-            owner=self.mandatory_actor)
+            owner=self.mandatory_actor,
+            stockage_site=self.station_1,
+            purchase_date='2015-10-01',
+            actor=self.superuser_actor.actor_name)
 
         # We test it in stockage place.
         # It becomes so available.

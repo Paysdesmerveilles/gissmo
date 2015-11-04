@@ -353,6 +353,10 @@ l'équipment
         blank=True,
         verbose_name=_("contact"))
     note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+    purchase_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_('Date achat'))
 
     def _get_type(self):
         "Returns the linked EquipType"
@@ -381,6 +385,76 @@ l'équipment
             self.equip_model,
             self.serial_number)
 
+    def check_mandatories_data(self):
+        """
+        Raise an error if these data are missing:
+          * stockage_site
+          * purchase_date
+        """
+        mandatories_fields = [
+            ('stockage_site', 'Stockage site'),
+            ('purchase_date', 'Purchase date')]
+        for field in mandatories_fields:
+            if not getattr(self, field[0], None):
+                raise ValidationError(
+                    _('%(property_name)s property is missing!'),
+                    params={'property_name': field[1]}
+                )
+
+    def get_or_create_intervention(self):
+        """
+        Interventions are needed for each equipment.
+        If no one, create them.
+        """
+        intervention, i_created = Intervention.objects.get_or_create(
+            station=self.stockage_site,
+            intervention_date=self.purchase_date,
+            defaults={'note': 'Automated creation'})
+        interv_equip, ie_created = IntervEquip.objects.get_or_create(
+            intervention=intervention,
+            equip_action=EquipAction.ACHETER,
+            equip=self,
+            equip_state=EquipState.A_TESTER,
+            station=self.stockage_site,
+            defaults={'note': 'Automated creation'})
+        if ie_created:
+            if not self.actor:
+                raise ValidationError(
+                    _('No logged user'),
+                )
+            actor = get_object_or_404(Actor, actor_name=self.actor)
+            IntervActor.objects.create(
+                intervention=intervention,
+                actor=actor)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Permit to add stockage_site and actor as keyword when creating new
+        Equipment.
+        """
+        new_kwargs = {}
+        fake_fields = ['stockage_site', 'actor']
+        for keyword in kwargs:
+            if keyword not in fake_fields:
+                new_kwargs[keyword] = kwargs[keyword]
+        super(Equipment, self).__init__(*args, **new_kwargs)
+        self.stockage_site = kwargs.get('stockage_site', None)
+        self.actor = kwargs.get('actor', None)
+
+    def save(self, *args, **kwargs):
+        """
+        If first time you save the object, then:
+          * check stockage_site and purchase_date presence
+          * create related interventions
+        """
+        if not self.id:
+            self.check_mandatories_data()
+            # First save object
+            res = super(Equipment, self).save(*args, **kwargs)
+            # Then create intervention if needed
+            self.get_or_create_intervention()
+            return res
+        return super(Equipment, self).save(*args, **kwargs)
 
 ####
 #

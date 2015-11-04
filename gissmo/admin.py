@@ -369,56 +369,13 @@ class EquipmentAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """
-        Overide save_model to generate intervention and intervequip object
-        Buy equipment as action and To Test for the state
+        Gives stockage_site and purchase_date to Equipment so that it can
+        generate interventions such as buying equipment and make Equipment in
+        'to test' state.
         """
+        obj.stockage_site = form.cleaned_data['stockage_site']
+        obj.actor = request.user.username
         obj.save()
-
-        if not change:
-            result_station = form.cleaned_data['stockage_site']
-            purchase_date = form.cleaned_data['purchase_date']
-
-            equipment = get_object_or_404(Equipment, pk=obj.id)
-            station = get_object_or_404(StationSite, pk=result_station.id)
-
-            """
-            Check that intervention exist to make multiple purchase
-            """
-            try:
-                intervention = Intervention.objects.get(
-                    station=station,
-                    intervention_date=purchase_date)
-                interv_equip = IntervEquip(
-                    intervention=intervention,
-                    equip_action=EquipAction.ACHETER,
-                    equip=equipment,
-                    equip_state=EquipState.A_TESTER,
-                    station=station,
-                    note="Creation automatique")
-                interv_equip.save()
-            except Intervention.DoesNotExist:
-                intervention = Intervention(
-                    station=station,
-                    intervention_date=purchase_date,
-                    note="Creation automatique")
-                intervention.save()
-                intervention = get_object_or_404(
-                    Intervention,
-                    pk=intervention.id)
-                interv_equip = IntervEquip(
-                    intervention=intervention,
-                    equip_action=EquipAction.ACHETER,
-                    equip=equipment,
-                    equip_state=EquipState.A_TESTER,
-                    station=station,
-                    note="Creation automatique")
-                interv_equip.save()
-
-                actor = get_object_or_404(
-                    Actor, actor_name=request.user.username)
-                interv_actor = IntervActor(
-                    intervention=intervention, actor=actor)
-                interv_actor.save()
         super(EquipmentAdmin, self).save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):
