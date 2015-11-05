@@ -55,7 +55,10 @@ class EquipmentTest(FunctionalTest):
             # TODO: add new ActorType model
             site_type=StationSite.OBSERVATOIRE,
             station_code='EOST',
-            operator=self.unknown_actor)
+            operator=self.unknown_actor,
+            creation_date='2015-09-27',
+            project=self.project,
+            actor=self.superuser)
         self.project.station.add(self.station_1.id)
 
     def test_equipment_creation(self):

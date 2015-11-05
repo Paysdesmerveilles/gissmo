@@ -544,32 +544,9 @@ class StationSiteAdmin(admin.ModelAdmin):
         Overide save_model to generate intervention and intervstation object
         Create station code as action and in construction for the state
         """
+        obj.project = form.cleaned_data['project']
+        obj.actor = request.user.username
         obj.save()
-
-        if not change:
-            station = get_object_or_404(StationSite, pk=obj.id)
-            intervention = Intervention(
-                station=station,
-                intervention_date=form.cleaned_data['creation_date'],
-                note="Creation automatique")
-            intervention.save()
-
-            intervention = get_object_or_404(Intervention, pk=intervention.id)
-            interv_station = IntervStation(
-                intervention=intervention,
-                station_action=StationAction.CREER,
-                station_state=StationState.INSTALLATION,
-                note="Creation automatique")
-            interv_station.save()
-
-            actor = get_object_or_404(Actor, actor_name=request.user.username)
-            interv_actor = IntervActor(intervention=intervention, actor=actor)
-            interv_actor.save()
-
-            # Each new station will be store in Resif by default
-            project_object = get_object_or_404(
-                Project, project_name=form.cleaned_data['project'])
-            project_object.station.add(obj.id)
         super(StationSiteAdmin, self).save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):

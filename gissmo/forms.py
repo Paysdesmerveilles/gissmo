@@ -271,10 +271,6 @@ class StationSiteForm(forms.ModelForm):
     Add of a field to obtain the date of the creation and the associated
 project only when it'a new station else hide the field and the label.
     """
-    creation_date = forms.DateField(
-        widget=widgets.AdminDateWidget,
-        label='Date creation',
-        required=False)
     project = forms.ModelChoiceField(
         queryset=Project.objects.all(),
         label='Projet',

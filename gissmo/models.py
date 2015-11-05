@@ -438,8 +438,8 @@ l'équipment
             if keyword not in fake_fields:
                 new_kwargs[keyword] = kwargs[keyword]
         super(Equipment, self).__init__(*args, **new_kwargs)
-        self.stockage_site = kwargs.get('stockage_site', None)
-        self.actor = kwargs.get('actor', None)
+        for field in fake_fields:
+            setattr(self, field, kwargs.get(field, None))
 
     def save(self, *args, **kwargs):
         """
@@ -1079,6 +1079,10 @@ class StationSite(models.Model):
         default="METERS")
     elevation_pluserror = models.FloatField(null=True, blank=True)
     elevation_minuserror = models.FloatField(null=True, blank=True)
+    creation_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_('Date création'))
 
     class Meta:
         ordering = ['station_code']
@@ -1087,6 +1091,75 @@ class StationSite(models.Model):
 
     def __str__(self):
         return self.station_code
+
+    def check_mandatories_data(self):
+        """
+        Raise an error if these data are missing:
+          * project
+          * creation_date
+        """
+        mandatories_fields = [
+            ('project', 'Project'),
+            ('creation_date', 'Creation date')]
+        for field in mandatories_fields:
+            if not getattr(self, field[0], None):
+                raise ValidationError(
+                    _('%(property_name)s property is missing!'),
+                    params={'property_name': field[1]}
+                )
+
+    def get_or_create_intervention(self):
+        """
+        Interventions are needed for each new StationSite.
+        If no one, create them.
+        """
+        intervention = Intervention.objects.create(
+            station=self,
+            intervention_date=self.creation_date,
+            note='Automated creation')
+        IntervStation.objects.create(
+            intervention=intervention,
+            station_action=StationAction.CREER,
+            station_state=StationState.INSTALLATION,
+            note='Automated creation')
+        if not self.actor:
+            raise ValidationError(_('No logged user'))
+        actor = get_object_or_404(Actor, actor_name=self.actor)
+        IntervActor.objects.create(
+            intervention=intervention,
+            actor=actor)
+
+        # Add station to a project
+        project = get_object_or_404(Project, project_name=self.project)
+        project.station.add(self.id)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Permit to add project as keyword when creating new StationSite.
+        """
+        new_kwargs = {}
+        fake_fields = ['project', 'actor']
+        for keyword in kwargs:
+            if keyword not in fake_fields:
+                new_kwargs[keyword] = kwargs[keyword]
+        super(StationSite, self).__init__(*args, **new_kwargs)
+        for field in fake_fields:
+            setattr(self, field, kwargs.get(field, None))
+
+    def save(self, *args, **kwargs):
+        """
+        Only add new StationSite if it correspond to a specific project.
+        If project given, create an new installation intervention on this
+        site.
+        """
+        if not self.id:
+            self.check_mandatories_data()
+            # First save object
+            res = super(StationSite, self).save(*args, **kwargs)
+            # Then create intervention if needed
+            self.get_or_create_intervention()
+            return res
+        return super(StationSite, self).save(*args, **kwargs)
 
 
 @python_2_unicode_compatible
