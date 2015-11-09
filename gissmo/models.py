@@ -12,6 +12,7 @@ from django.utils.timezone import localtime
 from django.contrib.auth.models import User
 
 from gissmo.helpers import format_date
+from gissmo.tools import make_date_aware
 
 fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 
@@ -408,7 +409,7 @@ l'équipment
         """
         intervention, i_created = Intervention.objects.get_or_create(
             station=self.stockage_site,
-            intervention_date=self.purchase_date,
+            intervention_date=make_date_aware(self.purchase_date),
             defaults={'note': 'Automated creation'})
         interv_equip, ie_created = IntervEquip.objects.get_or_create(
             intervention=intervention,
@@ -1115,7 +1116,7 @@ class StationSite(models.Model):
         """
         intervention = Intervention.objects.create(
             station=self,
-            intervention_date=self.creation_date,
+            intervention_date=make_date_aware(self.creation_date),
             note='Automated creation')
         IntervStation.objects.create(
             intervention=intervention,
