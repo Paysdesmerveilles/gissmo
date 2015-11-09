@@ -13,7 +13,7 @@ import time
 
 from django.test import LiveServerTestCase
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
+# from django.contrib.contenttypes.models import ContentType
 
 DEFAULT_ADMIN_LOGIN = os.getenv('USER', 'admin')
 DEFAULT_ADMIN_PASSWORD = os.getenv('PWD', 'admin')
@@ -84,7 +84,8 @@ class FunctionalTest(LiveServerTestCase):
         self.browser.quit()
 
         # Bug: https://code.djangoproject.com/ticket/10827
-        ContentType.objects.clear_cache()
+        # Note: Seems to be OK since Django 1.8
+        # ContentType.objects.clear_cache()
 
         # clean working directory
         csv_filename = self.DOWNLOADED_FILE

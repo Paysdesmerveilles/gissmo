@@ -2,6 +2,11 @@
 from __future__ import unicode_literals
 from .base import FunctionalTest
 from .input_field import InputField
+
+from datetime import datetime
+
+from django.utils.timezone import make_aware
+
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
@@ -51,12 +56,13 @@ class EquipmentTest(FunctionalTest):
         self.projectuser = ProjectUser.objects.create(
             user=self.superuser)
         self.projectuser.project.add(self.project.id)
+        station_date = datetime.strptime('2015-09-27', '%Y-%m-%d')
         self.station_1 = StationSite.objects.create(
             # TODO: add new ActorType model
             site_type=StationSite.OBSERVATOIRE,
             station_code='EOST',
             operator=self.unknown_actor,
-            creation_date='2015-09-27',
+            creation_date=make_aware(station_date),  # make it aware
             project=self.project,
             actor=self.superuser)
         self.project.station.add(self.station_1.id)
@@ -92,12 +98,13 @@ class EquipmentTest(FunctionalTest):
 
     def test_equipment_installation_on_a_site(self):
         # @EOST we receive a new equipment CMG-40T: T4Q31
+        purchase_date = datetime.strptime('2015-10-01', '%Y-%m-%d')
         self.equipment_1 = Equipment.objects.create(
             equip_model=self.equipment_model,
             serial_number='T4Q31',
             owner=self.mandatory_actor,
             stockage_site=self.station_1,
-            purchase_date='2015-10-01',
+            purchase_date=make_aware(purchase_date),
             actor=self.superuser_actor.actor_name)
 
         # We test it in stockage place.
