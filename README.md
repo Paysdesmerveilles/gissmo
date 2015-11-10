@@ -169,3 +169,9 @@ Which give us:
 ```bash
 USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=thefroid.u-strasbg.fr:8000
 ```
+
+### Contributors
+
+* [Olivier Dossmann](https://github.com/blankoworld)
+* [Fabien Engels](https://github.com/fabienengels)
+* [Martin Dutil](https://github.com/mdutil)
