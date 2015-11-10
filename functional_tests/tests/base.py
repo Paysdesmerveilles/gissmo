@@ -48,6 +48,7 @@ class FunctionalTest(LiveServerTestCase):
         """
         Launch Firefox as Web Testing Platform.
         """
+        super(FunctionalTest, self).setUp()
         self.superuser = User.objects.create_superuser(
             self.DEFAULT_ADMIN_LOGIN,
             'admin@mysite.com',
@@ -92,6 +93,8 @@ class FunctionalTest(LiveServerTestCase):
         filepath = '/'.join([self.DOWNLOAD_PATH, csv_filename])
         if os.path.exists(filepath):
             os.remove(filepath)
+
+        super(FunctionalTest, self).tearDown()
 
     def gissmo_login(self):
         """

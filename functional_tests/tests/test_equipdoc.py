@@ -88,6 +88,7 @@ class EquipDocTest(FunctionalTest):
             for name in files:
                 if name == UPLOADED_FILE:
                     os.remove(os.path.join(root, name))
+        super(EquipDocTest, self).tearDown()
 
     def test_document_upload(self):
         """
