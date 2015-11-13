@@ -808,12 +808,12 @@ pour etre retrouver' % (equip, EquipState.EQUIP_STATES[equip_state_todate(
                 unauthorized_states = [
                     EquipState.DEFAUT,
                     EquipState.PANNE]
-                equip_state = equip_state_todate(
+                latest_equip_state = equip_state_todate(
                     equip.id,
                     intervention_date,
                     int(intervention_id))
                 action_allowed = equip_action in authorized_actions
-                equip_state_ok = equip_state not in unauthorized_states
+                equip_state_ok = latest_equip_state not in unauthorized_states
                 if action_allowed and equip_state_ok:
                     raise forms.ValidationError(
                         'Equipement (%s) n\'est pas actuellement en \
