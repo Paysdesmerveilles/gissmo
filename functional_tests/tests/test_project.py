@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from .base import FunctionalTest
 from .input_field import InputField
 from selenium.webdriver.support.ui import Select
@@ -11,7 +12,8 @@ class ProjectTest(FunctionalTest):
 
     def setUp(self):
         """
-        Add user in order to test project creation with another user than admin.
+        Add user in order to test project creation with another user than
+        admin.
         """
         super(ProjectTest, self).setUp()
         self.user_1 = User.objects.create_user(

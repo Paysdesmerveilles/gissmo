@@ -1,18 +1,19 @@
-Django==1.5.4
-Fabric==1.7.0
-argparse==1.2.1
-distribute==0.6.24
-django-smart-selects==1.0.9
-ipython==1.1.0
-paramiko==1.11.0
-psycopg2==2.5.1
-pycrypto==2.6
-pytz==2013d
-six==1.4.1
-uWSGI==1.9.16
-wsgiref==0.1.2
+Django==1.8
+ecdsa==0.13
+Fabric==1.10.2
+paramiko==1.15.2
+psycopg2==2.6.1
+pycrypto==2.6.1
+pytz==2015.4
+six==1.9.0
+uWSGI==2.0.11.1
+wheel==0.24.0
+django-autocomplete-light>=2.0.0pre
 # For development purposes
-django-extensions==1.2.2
-flake8
+django-extensions==1.5.6
+flake8==2.4.1
+mccabe==0.3.1
+pep8==1.5.7
+pyflakes==0.8.1
 # functionnal tests dependancies
 selenium

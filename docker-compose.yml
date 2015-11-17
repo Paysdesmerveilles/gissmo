@@ -4,14 +4,14 @@ db:
     - POSTGRES_USER=gissmo
     - POSTGRES_PASSWORD=gissmo
   ports:
-    - "5433:5432"
+    - "5434:5432"
 web:
-  build: .
+  extends:
+    file: common.yml
+    service: webapp
   command: python manage.py runserver 0.0.0.0:8000
-  volumes:
-    - .:/opt/gissmo
   ports:
-    - "8000:8000"
+    - "8001:8000"
   links:
     - db
   environment:

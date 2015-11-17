@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from .base import FunctionalTest
 from .input_field import InputField
-from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
     EquipSupertype,
@@ -30,22 +30,18 @@ class EquipmentModelTest(FunctionalTest):
         # @EOST we often receive CMG-40T equipment. They are Scientific
         # velocimeters.
         # We check that CMG-40T appears in the given Equipment Model list
-        supertype = InputField(
-            name='equip_supertype',
-            content='01. Scientific',
-            _type=Select)
         _type = InputField(
             name='equip_type',
             content='Velocimeter',
-            _type=Select)
+            _type='autocomplete')
         name = InputField(
             name='equip_model_name',
             content='CMG-40T',
             check=True)
         manufacturer = InputField(
             name='manufacturer',
-            content=u'Güralp')
+            content='Güralp')
 
-        fields = [supertype, _type, name, manufacturer]
+        fields = [_type, name, manufacturer]
 
         self.add_item_in_admin('equipmodel/', fields, check=True)

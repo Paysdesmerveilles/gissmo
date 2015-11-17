@@ -187,7 +187,7 @@
              {% endif %}
              {% if sensor.id != None %}
                <Sensor>
-                 <Type>{{ sensor.equip_type.equip_type_name }}</Type>
+                 <Type>{{ sensor.equip_model.equip_type.equip_type_name }}</Type>
                  <Description></Description>
                  <Manufacturer>{{ sensor.equip_model.manufacturer }}</Manufacturer>
                  <Vendor>{{ sensor.vendor }}</Vendor>
@@ -200,7 +200,7 @@
              {% endif %}
              {% if preamplifier.id != None %}
                <PreAmplifier>
-                 <Type>{{preamplifier.equip_type.equip_type_name }}</Type>
+                 <Type>{{preamplifier.equip_model.equip_type.equip_type_name }}</Type>
                  <Description></Description>
                  <Manufacturer>{{ preamplifier.equip_model.manufacturer }}</Manufacturer>
                  <Vendor>{{ preamplifier.vendor }}</Vendor>
@@ -213,7 +213,7 @@
              {% endif %}
              {% if datalogger.id != None %}
                <DataLogger>
-                 <Type>{{ datalogger.equip_type.equip_type_name }}</Type>
+                 <Type>{{ datalogger.equip_model.equip_type.equip_type_name }}</Type>
                  <Description></Description>
                  <Manufacturer>{{ datalogger.equip_model.manufacturer }}</Manufacturer>
                  <Vendor>{{ datalogger.vendor }}</Vendor>

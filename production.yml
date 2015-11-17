@@ -1,0 +1,16 @@
+pdb:
+  image: postgres
+  environment:
+    - POSTGRES_USER=gissmo
+    - POSTGRES_PASSWORD=gissmo
+  ports:
+    - "5433:5432"
+pweb:
+  extends:
+    file: common.yml
+    service: webapp
+  links:
+    - pdb
+  environment:
+    - DJANGO_SETTINGS_MODULE=gissmo.settings.production
+  env_file: production.env

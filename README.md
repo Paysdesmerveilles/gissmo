@@ -19,7 +19,8 @@ and run the server:
 
 ```bash
 docker-compose build
-docker-compose run --rm web python manage.py syncdb
+docker-compose run --rm web python manage.py migrate
+docker-compose run --rm web python manage.py createsuperuser
 docker-compose run --rm --service-ports web
 ```
 
@@ -170,8 +171,44 @@ Which give us:
 USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=thefroid.u-strasbg.fr:8000
 ```
 
-### Contributors
+# Production environment
+
+To use the production environment, you need Docker and docker-compose. We assume you have a copy of Gissmo DB named **gissmo-1.dump**.
+
+Then add the new SECRET\_KEY in **production.env** file.
+
+Finally, do:
+
+```bash
+docker-compose -f production.yml build
+docker-compose -f production.yml up
+PGHOST=localhost PGPORT=5433 PGUSER=gissmo pg_restore -d gissmo gissmo-1.dump
+# password is gissmo
+# stop them with Ctrl + C
+docker-compose -f production.yml run --rm pweb python manage.py migrate admin 0001_initial --fake
+docker-compose -f production.yml run --rm pweb python manage.py migrate auth
+docker-compose -f production.yml run --rm pweb python manage.py migrate sessions 0001_initial --fake
+docker-compose -f production.yml run --rm pweb python manage.py migrate gissmo 0001_initial --fake
+docker-compose -f production.yml run --rm pweb python manage.py migrate gissmo
+```
+
+You can then create a new superuser as this:
+
+```bash
+docker-compose -f production.yml run --rm pweb python manage.py createsuperuser
+```
+
+And launch service like this:
+
+```bash
+docker-compose -f production.yml run --rm --service-ports pweb
+```
+
+**Note**: By default the Dockerfile use this port: **8000**.
+
+# Contributors
 
 * [Olivier Dossmann](https://github.com/blankoworld)
 * [Fabien Engels](https://github.com/fabienengels)
 * [Martin Dutil](https://github.com/mdutil)
+

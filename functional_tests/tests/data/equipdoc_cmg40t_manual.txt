@@ -1,0 +1,3 @@
+This document explain how the CMG-40T works.
+
+Some line should insert special chars àla Française!

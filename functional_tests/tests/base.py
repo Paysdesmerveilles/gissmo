@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from selenium import webdriver
 # from selenium.webdriver.common.desired_capabilities import \
 #        DesiredCapabilities
@@ -12,7 +13,7 @@ import time
 
 from django.test import LiveServerTestCase
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
+# from django.contrib.contenttypes.models import ContentType
 
 DEFAULT_ADMIN_LOGIN = os.getenv('USER', 'admin')
 DEFAULT_ADMIN_PASSWORD = os.getenv('PWD', 'admin')
@@ -47,6 +48,7 @@ class FunctionalTest(LiveServerTestCase):
         """
         Launch Firefox as Web Testing Platform.
         """
+        super(FunctionalTest, self).setUp()
         self.superuser = User.objects.create_superuser(
             self.DEFAULT_ADMIN_LOGIN,
             'admin@mysite.com',
@@ -83,13 +85,16 @@ class FunctionalTest(LiveServerTestCase):
         self.browser.quit()
 
         # Bug: https://code.djangoproject.com/ticket/10827
-        ContentType.objects.clear_cache()
+        # Note: Seems to be OK since Django 1.8
+        # ContentType.objects.clear_cache()
 
         # clean working directory
         csv_filename = self.DOWNLOADED_FILE
         filepath = '/'.join([self.DOWNLOAD_PATH, csv_filename])
         if os.path.exists(filepath):
             os.remove(filepath)
+
+        super(FunctionalTest, self).tearDown()
 
     def gissmo_login(self):
         """
@@ -109,14 +114,15 @@ class FunctionalTest(LiveServerTestCase):
             self.assertIn(
                 'Site administration',
                 self.browser.title,
-                'Login problem on %s: no administration interface found.')
+                'Login problem on %s: no administration interface found.' %
+                self.browser.current_url)
             self.logged = True
 
     def check_csv_file(self, filepath):
         """
         Browse the given CSV file to check if any error occured.
         """
-        with open(filepath, 'rb') as f:
+        with open(filepath) as f:
             reader = csv.reader(f)
             try:
                 # just browse rows
@@ -138,6 +144,21 @@ class FunctionalTest(LiveServerTestCase):
                     [str(value) for value in field.content]
                 if same_content and is_selected:
                     input_field.click()
+        elif field._type == 'autocomplete':
+            # autocomplete add a kind of new input field with -autocomplete
+            # at the end of the field name.
+            # So we first search this input. Then we send him some value
+            fieldname = field.name + '-autocomplete'
+            input_field = self.browser.find_element_by_name(fieldname)
+            input_field.clear()
+            input_field.send_keys(field.content)
+            # After a while, we select the first value displayed
+            self.browser.implicitly_wait(2)
+            select_element = '.yourlabs-autocomplete[data-input-id="id_' + \
+                fieldname + '"] [data-value]'
+            choices = self.browser.find_elements_by_css_selector(
+                select_element)
+            choices[0].click()
         elif field._type == Select:
             input_field = self.browser.find_element_by_name(field.name)
             input_field = Select(input_field)
