@@ -1,17 +1,25 @@
 from __future__ import unicode_literals
+
 from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+
 from autocomplete_light import shortcuts as al
 from autocomplete_light import urls as al_urls
 
 from gissmo import views
 
+from rest_framework import routers
+
 al.autodiscover()
 admin.autodiscover()
 admin.site.site_header = 'Gissmo'
 admin.site.site_title = 'Gissmo'
+
+# REST FRAMEWORK API
+router = routers.DefaultRouter()
+router.register(r'station', views.StationViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',
@@ -67,6 +75,8 @@ urlpatterns = [
         name='test_site'),
     url(r'^gissmo/', include(admin.site.urls)),
     url(r'^autocomplete/', include(al_urls)),
+    url(r'^api/', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Note about STATIC_URL: django.contrib.staticfils in INSTALLED_APPS do the job

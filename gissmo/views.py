@@ -4,10 +4,14 @@ import csv
 import os.path
 import mimetypes
 from datetime import datetime
+
 from gissmo.models import *  # NOQA
 from gissmo.tools import DecimalEncoder, timezone_aware
+from gissmo.serializers import StationSerializer
 
-from django.db.models import Q
+from django.db.models import (
+    Q,
+    get_model)
 from django.template import loader
 from django.shortcuts import (
     render,
@@ -16,13 +20,14 @@ from django.shortcuts import (
     HttpResponse)
 from django.core.exceptions import PermissionDenied
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import get_model
 # delete simplejson from django.utils as Django 1.7 deliver it not
 import json
 from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
+
+from rest_framework import viewsets
 
 
 def site_maps(request):
@@ -2001,3 +2006,11 @@ def site_shortcut(request, code):
     url = reverse('admin:gissmo_stationsite_change', args=(site.id,))
 
     return HttpResponseRedirect(url)
+
+
+class StationViewSet(viewsets.ModelViewSet):
+    """
+    Permit users to access Station data via API
+    """
+    serializer_class = StationSerializer
+    queryset = StationSite.objects.all()
