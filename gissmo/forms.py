@@ -1329,6 +1329,7 @@ class ChannelForm(forms.ModelForm):
             v_fail = code == 'V' and not(rate == 0.1)
             u_fail = code == 'U' and not(rate == 0.01)
             if any(
+                [
                     d_fail,
                     c_fail,
                     e_fail,
@@ -1338,7 +1339,7 @@ class ChannelForm(forms.ModelForm):
                     m_fail,
                     l_fail,
                     v_fail,
-                    u_fail):
+                    u_fail]):
                 self.add_error('sample_rate', _("Sample rate unexpected."))
                 self.add_error('accept_anyway', _("Bypass error."))
                 raise forms.ValidationError(
