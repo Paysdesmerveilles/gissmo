@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from .base import FunctionalTest
 from .input_field import InputField
 
@@ -157,3 +158,4 @@ class InterventionTest(FunctionalTest):
         sleep(3)
         input_save = self.browser.find_element_by_name('_save')
         input_save.send_keys(Keys.ENTER)
+        self.browser.implicitly_wait(3)
