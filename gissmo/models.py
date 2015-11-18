@@ -871,10 +871,10 @@ class StationSite(models.Model):
     address : char(100)
         Adresse civique du lieu où est située la station
 
-    city : char(100)
+    town : char(100)
         Commune où est située la station
 
-    department : char(100)
+    county : char(100)
         Département où est située la station
 
     region : char(100)

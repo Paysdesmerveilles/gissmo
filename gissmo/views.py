@@ -7,7 +7,9 @@ from datetime import datetime
 
 from gissmo.models import *  # NOQA
 from gissmo.tools import DecimalEncoder, timezone_aware
-from gissmo.serializers import StationSerializer
+from gissmo.serializers import (
+    ActorSerializer,
+    StationSerializer)
 
 from django.db.models import (
     Q,
@@ -2008,9 +2010,20 @@ def site_shortcut(request, code):
     return HttpResponseRedirect(url)
 
 
+# API SERIALIZERS
+
+
+class ActorViewSet(viewsets.ModelViewSet):
+    """
+    Actor data via RESTful API
+    """
+    serializer_class = ActorSerializer
+    queryset = Actor.objects.all()
+
+
 class StationViewSet(viewsets.ModelViewSet):
     """
-    Permit users to access Station data via API
+    Station data via RESTful API
     """
     serializer_class = StationSerializer
     queryset = StationSite.objects.all()

@@ -69,10 +69,10 @@
                {% endif %}>{{ station.elevation }}</Elevation>
            <Site>
              <Name>{{ station.site_name }}</Name>
-             {% if station.city %}
+             {% if station.town %}
                <Town>{{ station.town }}</Town>
              {% endif %}
-             {% if station.department %}
+             {% if station.county %}
                <County>{{ station.county }}</County>
              {% endif %}
              {% if station.region %}
