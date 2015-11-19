@@ -2036,15 +2036,17 @@ class ActorFilter(django_filters.FilterSet):
 class ActorViewSet(viewsets.ModelViewSet):
     """
     All kind of actors used for:
-      - buying equipment
-      - equipment creator
-      - site owner
-      - users
+
+      * buying equipment
+      * equipment creator
+      * site owner
+      * users
     """
     serializer_class = ActorSerializer
     queryset = Actor.objects.all()
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,)
     filter_class = ActorFilter
+    search_fields = ['actor_name']
 
 
 class SiteFilter(django_filters.FilterSet):
@@ -2086,5 +2088,6 @@ class SiteViewSet(viewsets.ModelViewSet):
     """
     serializer_class = SiteSerializer
     queryset = StationSite.objects.all()
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,)
     filter_class = SiteFilter
+    search_fields = ['station_code', 'site_name']

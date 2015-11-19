@@ -36,7 +36,7 @@ class ActorSerializer(serializers.HyperlinkedModelSerializer):
 class SiteSerializer(serializers.HyperlinkedModelSerializer):
     name = serializers.CharField(source='site_name')
     code = serializers.CharField(source='station_code')
-    type = EnumField(choices=StationSite.SITE_CHOICES, source='site_type', label='type')
+    type = EnumField(choices=StationSite.SITE_CHOICES, source='site_type', label='Type')
     restricted_status = EnumField(choices=StationSite.STATUS)
 
     class Meta:
