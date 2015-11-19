@@ -9,7 +9,7 @@ from gissmo.models import *  # NOQA
 from gissmo.tools import DecimalEncoder, timezone_aware
 from gissmo.serializers import (
     ActorSerializer,
-    StationSerializer)
+    SiteSerializer)
 
 from django.db.models import (
     Q,
@@ -30,6 +30,9 @@ from django.core.urlresolvers import reverse
 from django.db import connection
 
 from rest_framework import viewsets
+from rest_framework import filters
+
+import django_filters
 
 
 def site_maps(request):
@@ -2013,17 +2016,75 @@ def site_shortcut(request, code):
 # API SERIALIZERS
 
 
+class ActorFilter(django_filters.FilterSet):
+    """
+    Enables filtering on Actor.
+    """
+    name = django_filters.CharFilter(name='actor_name')
+    type = django_filters.ChoiceFilter(
+        name='actor_type',
+        choices=Actor.ACTOR_TYPE_CHOICES)
+
+    class Meta:
+        model = Actor
+        fields = [
+            'name',
+            'type',
+        ]
+
+
 class ActorViewSet(viewsets.ModelViewSet):
     """
-    Actor data via RESTful API
+    All kind of actors used for:
+      - buying equipment
+      - equipment creator
+      - site owner
+      - users
     """
     serializer_class = ActorSerializer
     queryset = Actor.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ActorFilter
 
 
-class StationViewSet(viewsets.ModelViewSet):
+class SiteFilter(django_filters.FilterSet):
     """
-    Station data via RESTful API
+    Enables filtering on Site.
     """
-    serializer_class = StationSerializer
+    name = django_filters.CharFilter(name="site_name")
+    code = django_filters.CharFilter(name="station_code")
+    type = django_filters.ChoiceFilter(
+        name="site_type",
+        choices=StationSite.SITE_CHOICES)
+    restricted_status = django_filters.ChoiceFilter(
+        choices=StationSite.STATUS)
+    alternate_code = django_filters.CharFilter()
+    historical_code = django_filters.CharFilter()
+    latitude_unit = django_filters.CharFilter()
+    longitude_unit = django_filters.CharFilter()
+    elevation_unit = django_filters.CharFilter()
+    town = django_filters.CharFilter()
+    county = django_filters.CharFilter()
+    region = django_filters.CharFilter()
+    country = django_filters.CharFilter()
+
+    class Meta:
+        model = StationSite
+        fields = [
+            'name',
+            'code',
+            'type',
+            'town',
+            'region',
+            'country',
+        ]
+
+
+class SiteViewSet(viewsets.ModelViewSet):
+    """
+    Site data via RESTful API
+    """
+    serializer_class = SiteSerializer
     queryset = StationSite.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = SiteFilter

@@ -20,7 +20,7 @@ admin.site.site_title = 'Gissmo'
 # REST FRAMEWORK API
 router = routers.DefaultRouter()
 router.register(r'actor', views.ActorViewSet)
-router.register(r'station', views.StationViewSet)
+router.register(r'site', views.SiteViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',
