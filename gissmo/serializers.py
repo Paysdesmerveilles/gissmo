@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from gissmo.models import (
     Actor,
+    CalibrationUnit,
     Channel,
     Network,
     StationSite)
@@ -68,7 +69,7 @@ class SiteSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class NetworkSerializer(serializers.HyperlinkedModelSerializer):
+class NetworkSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='network_name')
     code = serializers.CharField(source='network_code')
     restricted_status = EnumField(choices=Network.STATUS)
@@ -121,5 +122,15 @@ class ChannelSerializer(serializers.HyperlinkedModelSerializer):
             'storage_format',
             'clock_drift',
             'clock_drift_unit',
+            'calibration_units',
+        ]
 
+
+class CalibrationUnitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CalibrationUnit
+        fields = [
+            'id',
+            'name',
+            'description',
         ]

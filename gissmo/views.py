@@ -9,6 +9,7 @@ from gissmo.models import *  # NOQA
 from gissmo.tools import DecimalEncoder, timezone_aware
 from gissmo.serializers import (
     ActorSerializer,
+    CalibrationUnitSerializer,
     ChannelSerializer,
     NetworkSerializer,
     SiteSerializer)
@@ -2219,3 +2220,28 @@ class ChannelViewSet(viewsets.ModelViewSet):
     filter_class = ChannelFilter
     search_fields = ['channel_code__channel_code']
     ordering_fields = ['station__station_code']
+
+
+class CalibrationUnitFilter(django_filters.FilterSet):
+    class Meta:
+        model = CalibrationUnit
+        fields = [
+            'name',
+            'description',
+        ]
+
+
+class CalibrationUnitViewSet(viewsets.ModelViewSet):
+    """
+    All kind of Calibration Unit used by Channels.
+    """
+    serializer_class = CalibrationUnitSerializer
+    queryset = CalibrationUnit.objects.all()
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,)
+    filter_class = CalibrationUnitFilter
+    search_fields = ['name', 'description']
+    ordering_fields = ['name']
+    ordering = ['name']
