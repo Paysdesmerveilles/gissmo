@@ -1,4 +1,15 @@
-Current version (1.4-trunk)
+Current version (1.5-trunk):
+  - Scripts showing how to use the API are available in scripts directory:
+    - webservice_use_example: a simple script that fetch sites and display them
+  - API pagination available on HTML Web view
+  - API permits filtering, searching and ordering these objects
+  - New RESTful API available on /api with some objects:
+    - Site: /api/site
+    - Actor: /api/actor
+    - Network: /api/network
+    - Channel: /api/channel
+
+Version 1.4:
   - First Travis CI file (not tested)
   - Fix naive datetime error for Intervention when creating new Station objects
   - Take down Equipment and StationSite behaviour from Forms to Models
