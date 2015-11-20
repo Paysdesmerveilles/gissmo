@@ -9,6 +9,7 @@ from gissmo.models import *  # NOQA
 from gissmo.tools import DecimalEncoder, timezone_aware
 from gissmo.serializers import (
     ActorSerializer,
+    ChannelSerializer,
     NetworkSerializer,
     SiteSerializer)
 
@@ -2147,3 +2148,74 @@ class NetworkViewSet(viewsets.ModelViewSet):
     search_fields = ['network_code']
     ordering_fields = ['network_code']
     ordering = ['network_code']
+
+
+class ChannelFilter(django_filters.FilterSet):
+    """
+    Enables filter on Chanels.
+    """
+    station = django_filters.CharFilter(name='station__station_code')
+    network = django_filters.CharFilter(name='network__network_code')
+    code = django_filters.CharFilter(name='channel_code')
+    min_start_date = django_filters.DateTimeFilter(
+        name='start_date',
+        lookup_type='gte')
+    max_start_date = django_filters.DateTimeFilter(
+        name='start_date',
+        lookup_type='lte')
+    min_end_date = django_filters.DateTimeFilter(
+        name='end_date',
+        lookup_type='gte')
+    max_end_date = django_filters.DateTimeFilter(
+        name='end_date',
+        lookup_type='lte')
+
+    class Meta:
+        model = Channel
+        fields = [
+            'station',
+            'network',
+            'location_code',
+            'code',
+            'start_date',
+            'end_date',
+            'min_start_date',
+            'max_start_date',
+            'min_end_date',
+            'max_end_date',
+            'restricted_status',
+            'alternate_code',
+            'historical_code',
+            'latitude_unit',
+            'latitude',
+            'longitude_unit',
+            'longitude',
+            'elevation_unit',
+            'elevation',
+            'depth_unit',
+            'depth',
+            'azimuth_unit',
+            'azimuth',
+            'dip',
+            'dip_unit',
+            'sample_rate',
+            'sample_rate_unit',
+            'storage_format',
+            'clock_drift',
+            'clock_drift_unit',
+        ]
+
+
+class ChannelViewSet(viewsets.ModelViewSet):
+    """
+    All known channels in GISSMO without any filtering.
+    """
+    serializer_class = ChannelSerializer
+    queryset = Channel.objects.all()
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,)
+    filter_class = ChannelFilter
+    search_fields = ['channel_code__channel_code']
+    ordering_fields = ['station__station_code']

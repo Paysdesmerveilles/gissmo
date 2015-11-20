@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from gissmo.models import (
     Actor,
+    Channel,
     Network,
     StationSite)
 
@@ -84,4 +85,41 @@ class NetworkSerializer(serializers.HyperlinkedModelSerializer):
             'alternate_code',
             'historical_code',
             'description',
+        ]
+
+
+class ChannelSerializer(serializers.HyperlinkedModelSerializer):
+    code = serializers.CharField(source='channel_code')
+
+    class Meta:
+        model = Channel
+        fields = [
+            'id',
+            'station',
+            'network',
+            'location_code',
+            'code',
+            'start_date',
+            'end_date',
+            'restricted_status',
+            'alternate_code',
+            'historical_code',
+            'latitude_unit',
+            'latitude',
+            'longitude_unit',
+            'longitude',
+            'elevation_unit',
+            'elevation',
+            'depth_unit',
+            'depth',
+            'azimuth_unit',
+            'azimuth',
+            'dip',
+            'dip_unit',
+            'sample_rate',
+            'sample_rate_unit',
+            'storage_format',
+            'clock_drift',
+            'clock_drift_unit',
+
         ]

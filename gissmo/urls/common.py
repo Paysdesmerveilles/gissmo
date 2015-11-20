@@ -25,6 +25,7 @@ apirouter = routers.DefaultRouter()
 apirouter.register(r'actor', views.ActorViewSet)
 apirouter.register(r'site', views.SiteViewSet)
 apirouter.register(r'network', views.NetworkViewSet)
+apirouter.register(r'channel', views.ChannelViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',
