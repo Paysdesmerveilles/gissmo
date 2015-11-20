@@ -8,7 +8,7 @@ Current version (1.5-trunk):
     - Actor: /api/actor
     - Network: /api/network
     - Channel: /api/channel
-    - CalibrationUnit: /api/calibrationunit
+    - CalibrationUnit: /api/calibration_unit
 
 Version 1.4:
   - First Travis CI file (not tested)
