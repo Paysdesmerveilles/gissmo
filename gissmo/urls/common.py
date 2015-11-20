@@ -12,16 +12,19 @@ from gissmo import views
 
 from rest_framework import routers
 
+# autocomplete discovering for specific fields as Equipment model
 al.autodiscover()
+
+# Admin configuration
 admin.autodiscover()
 admin.site.site_header = 'Gissmo'
 admin.site.site_title = 'Gissmo'
 
 # REST FRAMEWORK API
-router = routers.DefaultRouter()
-router.register(r'actor', views.ActorViewSet)
-router.register(r'site', views.SiteViewSet)
-router.register(r'network', views.NetworkViewSet)
+apirouter = routers.DefaultRouter()
+apirouter.register(r'actor', views.ActorViewSet)
+apirouter.register(r'site', views.SiteViewSet)
+apirouter.register(r'network', views.NetworkViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',
@@ -77,7 +80,7 @@ urlpatterns = [
         name='test_site'),
     url(r'^gissmo/', include(admin.site.urls)),
     url(r'^autocomplete/', include(al_urls)),
-    url(r'^api/', include(router.urls)),
+    url(r'^api/', include(apirouter.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
