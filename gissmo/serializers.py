@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from gissmo.models import (
     Actor,
+    Network,
     StationSite)
 
 from rest_framework import serializers
@@ -64,3 +65,23 @@ class SiteSerializer(serializers.HyperlinkedModelSerializer):
             'geology',
             'operator',
         )
+
+
+class NetworkSerializer(serializers.HyperlinkedModelSerializer):
+    name = serializers.CharField(source='network_name')
+    code = serializers.CharField(source='network_code')
+    restricted_status = EnumField(choices=Network.STATUS)
+
+    class Meta:
+        model = Network
+        fields = [
+            'id',
+            'name',
+            'code',
+            'start_date',
+            'end_date',
+            'restricted_status',
+            'alternate_code',
+            'historical_code',
+            'description',
+        ]

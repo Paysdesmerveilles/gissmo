@@ -21,6 +21,7 @@ admin.site.site_title = 'Gissmo'
 router = routers.DefaultRouter()
 router.register(r'actor', views.ActorViewSet)
 router.register(r'site', views.SiteViewSet)
+router.register(r'network', views.NetworkViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',

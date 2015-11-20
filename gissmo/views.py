@@ -9,6 +9,7 @@ from gissmo.models import *  # NOQA
 from gissmo.tools import DecimalEncoder, timezone_aware
 from gissmo.serializers import (
     ActorSerializer,
+    NetworkSerializer,
     SiteSerializer)
 
 from django.db.models import (
@@ -2084,10 +2085,69 @@ class SiteFilter(django_filters.FilterSet):
 
 class SiteViewSet(viewsets.ModelViewSet):
     """
-    Site data via RESTful API
+    Main data about sites:
+
+      * Sites
+      * Stations
+      * Theoritical stations
+      * Observatories
     """
     serializer_class = SiteSerializer
     queryset = StationSite.objects.all()
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,)
     filter_class = SiteFilter
     search_fields = ['station_code', 'site_name']
+
+
+class NetworkFilter(django_filters.FilterSet):
+    """
+    Enables filtering on Network.
+    """
+    name = django_filters.CharFilter(name='network_name')
+    code = django_filters.CharFilter(name='network_code')
+    restricted_status = django_filters.ChoiceFilter(
+        choices=Network.STATUS)
+    min_start_date = django_filters.DateTimeFilter(
+        name='start_date',
+        lookup_type='gte')
+    max_start_date = django_filters.DateTimeFilter(
+        name='start_date',
+        lookup_type='lte')
+    min_end_date = django_filters.DateTimeFilter(
+        name='end_date',
+        lookup_type='gte')
+    max_end_date = django_filters.DateTimeFilter(
+        name='end_date',
+        lookup_type='lte')
+
+    class Meta:
+        model = Network
+        fields = [
+            'name',
+            'code',
+            'start_date',
+            'end_date',
+            'min_start_date',
+            'max_start_date',
+            'min_end_date',
+            'max_end_date',
+            'restricted_status',
+            'alternate_code',
+            'historical_code',
+        ]
+
+
+class NetworkViewSet(viewsets.ModelViewSet):
+    """
+    List of networks.
+    """
+    serializer_class = NetworkSerializer
+    queryset = Network.objects.all()
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,)
+    filter_class = NetworkFilter
+    search_fields = ['network_code']
+    ordering_fields = ['network_code']
+    ordering = ['network_code']
