@@ -11,7 +11,7 @@ service_url = 'http://%s/api/' % (server)
 auth_url = 'http://%s/api-auth/login/' % (server)
 
 print("### Display all sites: ###")
-url = service_url + 'site/?format=json'
+url = service_url + 'sites/?format=json'
 
 
 # Functions

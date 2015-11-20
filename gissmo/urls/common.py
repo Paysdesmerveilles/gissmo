@@ -22,12 +22,12 @@ admin.site.site_title = 'Gissmo'
 
 # REST FRAMEWORK API
 apirouter = routers.DefaultRouter()
-apirouter.register(r'actor', views.ActorViewSet)
-apirouter.register(r'site', views.SiteViewSet)
-apirouter.register(r'network', views.NetworkViewSet)
-apirouter.register(r'channel', views.ChannelViewSet)
-apirouter.register(r'calibration_unit', views.CalibrationUnitViewSet)
-apirouter.register(r'channel_datatype', views.ChannelDatatypeViewSet)
+apirouter.register(r'actors', views.ActorViewSet)
+apirouter.register(r'sites', views.SiteViewSet)
+apirouter.register(r'networks', views.NetworkViewSet)
+apirouter.register(r'channels', views.ChannelViewSet)
+apirouter.register(r'calibration_units', views.CalibrationUnitViewSet)
+apirouter.register(r'channel_datatypes', views.ChannelDatatypeViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',
