@@ -2061,21 +2061,17 @@ class SiteFilter(django_filters.FilterSet):
         choices=StationSite.SITE_CHOICES)
     restricted_status = django_filters.ChoiceFilter(
         choices=StationSite.STATUS)
-    alternate_code = django_filters.CharFilter()
-    historical_code = django_filters.CharFilter()
-    latitude_unit = django_filters.CharFilter()
-    longitude_unit = django_filters.CharFilter()
-    elevation_unit = django_filters.CharFilter()
-    town = django_filters.CharFilter()
-    county = django_filters.CharFilter()
-    region = django_filters.CharFilter()
-    country = django_filters.CharFilter()
 
     class Meta:
         model = StationSite
         fields = [
             'name',
             'code',
+            'alternate_code',
+            'historical_code',
+            'latitude_unit',
+            'longitude_unit',
+            'elevation_unit',
             'type',
             'town',
             'region',
