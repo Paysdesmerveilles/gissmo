@@ -4,6 +4,7 @@ from gissmo.models import (
     Actor,
     CalibrationUnit,
     Channel,
+    DataType,
     Network,
     StationSite)
 
@@ -89,8 +90,20 @@ class NetworkSerializer(serializers.ModelSerializer):
         ]
 
 
+class ChannelDatatypeSerializer(serializers.HyperlinkedModelSerializer):
+    name = serializers.CharField(source='type_description')
+
+    class Meta:
+        model = DataType
+        fields = [
+            'id',
+            'name',
+        ]
+
+
 class ChannelSerializer(serializers.HyperlinkedModelSerializer):
     code = serializers.CharField(source='channel_code')
+    datatypes = serializers.StringRelatedField(many=True, source='data_type')
 
     class Meta:
         model = Channel
@@ -123,6 +136,7 @@ class ChannelSerializer(serializers.HyperlinkedModelSerializer):
             'clock_drift',
             'clock_drift_unit',
             'calibration_units',
+            'datatypes',
         ]
 
 

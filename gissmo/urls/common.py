@@ -27,6 +27,7 @@ apirouter.register(r'site', views.SiteViewSet)
 apirouter.register(r'network', views.NetworkViewSet)
 apirouter.register(r'channel', views.ChannelViewSet)
 apirouter.register(r'calibration_unit', views.CalibrationUnitViewSet)
+apirouter.register(r'channel_datatype', views.ChannelDatatypeViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',

@@ -9,6 +9,7 @@ Current version (1.5-trunk):
     - Network: /api/network
     - Channel: /api/channel
     - CalibrationUnit: /api/calibration_unit
+    - ChannelDatatype: /api/channel_datatype
 
 Version 1.4:
   - First Travis CI file (not tested)

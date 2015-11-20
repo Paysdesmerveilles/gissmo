@@ -11,6 +11,7 @@ from gissmo.serializers import (
     ActorSerializer,
     CalibrationUnitSerializer,
     ChannelSerializer,
+    ChannelDatatypeSerializer,
     NetworkSerializer,
     SiteSerializer)
 
@@ -2151,6 +2152,34 @@ class NetworkViewSet(viewsets.ModelViewSet):
     ordering = ['network_code']
 
 
+class ChannelDatatypeFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(name='type_description')
+
+    class Meta:
+        model = DataType
+        fields = [
+            'name',
+        ]
+
+
+class ChannelDatatypeViewSet(viewsets.ModelViewSet):
+    """
+    The type of data a channel collects.
+
+    [Available types](https://github.com/FDSN/StationXML/blob/master/fdsn-station.xsd#L276)
+    """
+    serializer_class = ChannelDatatypeSerializer
+    queryset = DataType.objects.all()
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,)
+    filter_class = ChannelDatatypeFilter
+    search_fields = ['type_description']
+    ordering_fields = ['type_description']
+    ordering = ['type_description']
+
+
 class ChannelFilter(django_filters.FilterSet):
     """
     Enables filter on Chanels.
@@ -2170,6 +2199,7 @@ class ChannelFilter(django_filters.FilterSet):
     max_end_date = django_filters.DateTimeFilter(
         name='end_date',
         lookup_type='lte')
+    datatype = django_filters.CharFilter(name='data_type__type_description')
 
     class Meta:
         model = Channel
@@ -2204,6 +2234,7 @@ class ChannelFilter(django_filters.FilterSet):
             'storage_format',
             'clock_drift',
             'clock_drift_unit',
+            'datatype',
         ]
 
 
