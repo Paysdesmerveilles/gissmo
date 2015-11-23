@@ -2037,7 +2037,7 @@ class ActorFilter(django_filters.FilterSet):
         ]
 
 
-class ActorViewSet(viewsets.ModelViewSet):
+class ActorViewSet(viewsets.ReadOnlyModelViewSet):
     """
     All kind of actors used for:
 
@@ -2082,7 +2082,7 @@ class SiteFilter(django_filters.FilterSet):
         ]
 
 
-class SiteViewSet(viewsets.ModelViewSet):
+class SiteViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Main data about sites:
 
@@ -2136,7 +2136,7 @@ class NetworkFilter(django_filters.FilterSet):
         ]
 
 
-class NetworkViewSet(viewsets.ModelViewSet):
+class NetworkViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of networks.
     """
@@ -2162,7 +2162,7 @@ class ChannelDatatypeFilter(django_filters.FilterSet):
         ]
 
 
-class ChannelDatatypeViewSet(viewsets.ModelViewSet):
+class ChannelDatatypeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     The type of data a channel collects.
 
@@ -2238,7 +2238,7 @@ class ChannelFilter(django_filters.FilterSet):
         ]
 
 
-class ChannelViewSet(viewsets.ModelViewSet):
+class ChannelViewSet(viewsets.ReadOnlyModelViewSet):
     """
     All known channels in GISSMO without any filtering.
     """
@@ -2262,7 +2262,7 @@ class CalibrationUnitFilter(django_filters.FilterSet):
         ]
 
 
-class CalibrationUnitViewSet(viewsets.ModelViewSet):
+class CalibrationUnitViewSet(viewsets.ReadOnlyModelViewSet):
     """
     All kind of Calibration Unit used by Channels.
     """
