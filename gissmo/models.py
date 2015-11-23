@@ -1838,6 +1838,11 @@ class Channel(models.Model):
         default="SECONDS/SAMPLE")
     clock_drift_pluserror = models.FloatField(null=True, blank=True)
     clock_drift_minuserror = models.FloatField(null=True, blank=True)
+    equipments = models.ManyToManyField(
+        Equipment,
+        through='Chain',
+        verbose_name=_("Equipments"),
+    )
 
     class Meta:
         unique_together = (

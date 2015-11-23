@@ -139,6 +139,7 @@ class ChannelSerializer(serializers.HyperlinkedModelSerializer):
             'clock_drift_unit',
             'calibration_units',
             'datatypes',
+            'equipments',
         ]
 
 
