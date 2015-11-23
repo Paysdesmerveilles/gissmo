@@ -120,8 +120,14 @@ LOGGING = {
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'DEFAULT_PERMISSION_CLASSES': ('gissmo.permissions.WhitelistPermission',),
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     # 'PAGE_SIZE': 20,
 }
+
+# List of allowed IP that can make raquests on REST_FRAMEWORK_API
+API_ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+]

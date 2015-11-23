@@ -24,3 +24,8 @@ DATABASES['default'].update(
         'PORT': getenv('DB_PORT_5432_TCP_PORT', '5434'),
     }
 )
+
+# Add current developer IP (thefroid.u-strasbg.fr) to allowed hosts
+API_ALLOWED_HOSTS += [
+    '130.79.9.145',
+]

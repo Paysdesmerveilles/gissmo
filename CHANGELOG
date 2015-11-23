@@ -1,4 +1,6 @@
 Current version (1.5-trunk):
+  - API is available only for a given whitelist IPs
+  - API is read only
   - Scripts showing how to use the API are available in 
 scripts/webservice_examples directory:
   scripts/webservice_examples/00_my_first_use.py
