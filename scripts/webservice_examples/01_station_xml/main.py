@@ -59,19 +59,11 @@ class Channel(object):
         return result % (self.code, self.location_code, self.start_date)
 
 
-def get_result(request):
-    res = None
-    js = request.json()
-    if js:
-        res = js.get('results', None)
-    return res
-
-
 def get(url):
     data = []
     request = requests.get(url, auth=(username, password))
     if request:
-        data = get_result(request)
+        data = request.json()
     return data
 
 # Search Charmoille site

@@ -3,7 +3,6 @@ Current version (1.5-trunk):
 scripts/webservice_examples directory:
   scripts/webservice_examples/00_my_first_use.py
     - 00_my_first_use.py: a simple script that display sites
-  - API pagination available on HTML Web view
   - API permits filtering, searching and ordering these objects
   - New RESTful API available on /api with some objects:
     - Site: /api/sites
