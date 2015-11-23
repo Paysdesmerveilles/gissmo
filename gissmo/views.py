@@ -1142,10 +1142,7 @@ def station_xml(request):
     ChannelNetwork = Channel.objects.filter(
         station_id=query).distinct('network')
 
-    network_list = []
-    if ChannelNetwork:
-        for network in ChannelNetwork:
-            network_list.append(network.network.id)
+    network_list = [n.network.id for n in ChannelNetwork]
 
     ResNetwork = Network.objects.filter(id__in=network_list)
 
