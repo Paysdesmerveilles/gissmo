@@ -6,6 +6,7 @@ from gissmo.models import (
     CalibrationUnit,
     Channel,
     DataType,
+    Equipment,
     Network,
     StationSite)
 
@@ -148,4 +149,23 @@ class CalibrationUnitSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'description',
+        ]
+
+
+class EquipmentSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='equip_model')
+    type = serializers.CharField(source='equip_type')
+
+    class Meta:
+        model = Equipment
+        fields = [
+            'id',
+            'name',
+            'type',
+            'serial_number',
+            'vendor',
+        ]
+        read_only_fields = [
+            'name',
+            'type',
         ]

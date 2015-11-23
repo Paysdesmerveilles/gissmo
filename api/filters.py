@@ -6,6 +6,7 @@ from gissmo.models import (
     CalibrationUnit,
     Channel,
     DataType,
+    Equipment,
     Network,
     StationSite,
 )
@@ -171,4 +172,18 @@ class CalibrationUnitFilter(django_filters.FilterSet):
         fields = [
             'name',
             'description',
+        ]
+
+
+class EquipmentFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(name='equip_model__equip_model_name')
+    type = django_filters.CharFilter(name='equip_model__equip_type__equip_type_name')
+
+    class Meta:
+        model = Equipment
+        fields = [
+            'name',
+            'type',
+            'serial_number',
+            'vendor',
         ]

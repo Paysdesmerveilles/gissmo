@@ -13,6 +13,7 @@ scripts/webservice_examples directory:
     - Channel: /api/channels
     - CalibrationUnit: /api/calibration_units
     - ChannelDatatype: /api/channel_datatypes
+    - Equipment: /api/equipments
 
 Version 1.4:
   - First Travis CI file (not tested)

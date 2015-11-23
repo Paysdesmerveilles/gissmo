@@ -11,6 +11,7 @@ from gissmo.models import (
     CalibrationUnit,
     Channel,
     DataType,
+    Equipment,
     Network,
     StationSite,
 )
@@ -20,6 +21,7 @@ from api.serializers import (
     CalibrationUnitSerializer,
     ChannelSerializer,
     ChannelDatatypeSerializer,
+    EquipmentSerializer,
     NetworkSerializer,
     SiteSerializer)
 
@@ -28,6 +30,7 @@ from api.filters import (
     CalibrationUnitFilter,
     ChannelFilter,
     ChannelDatatypeFilter,
+    EquipmentFilter,
     NetworkFilter,
     SiteFilter)
 
@@ -127,3 +130,23 @@ class CalibrationUnitViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['name', 'description']
     ordering_fields = ['name']
     ordering = ['name']
+
+
+class EquipmentViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Gissmo registered equipments from years.
+    """
+    serializer_class = EquipmentSerializer
+    queryset = Equipment.objects.all()
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,)
+    filter_class = EquipmentFilter
+    search_fields = [
+        'equip_model__equip_model_name',
+        'equip_model__equip_type__equip_type_name',
+        'serial_number',
+    ]
+    ordering_fields = ['equip_model__equip_model_name', 'serial_number']
+    ordering = ['equip_model__equip_model_name']
