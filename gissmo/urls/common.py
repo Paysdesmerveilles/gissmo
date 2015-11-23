@@ -10,6 +10,8 @@ from autocomplete_light import urls as al_urls
 
 from gissmo import views
 
+from api import views as api_views
+
 from rest_framework import routers
 
 # autocomplete discovering for specific fields as Equipment model
@@ -22,12 +24,12 @@ admin.site.site_title = 'Gissmo'
 
 # REST FRAMEWORK API
 apirouter = routers.DefaultRouter()
-apirouter.register(r'actors', views.ActorViewSet)
-apirouter.register(r'sites', views.SiteViewSet)
-apirouter.register(r'networks', views.NetworkViewSet)
-apirouter.register(r'channels', views.ChannelViewSet)
-apirouter.register(r'calibration_units', views.CalibrationUnitViewSet)
-apirouter.register(r'channel_datatypes', views.ChannelDatatypeViewSet)
+apirouter.register(r'actors', api_views.ActorViewSet)
+apirouter.register(r'sites', api_views.SiteViewSet)
+apirouter.register(r'networks', api_views.NetworkViewSet)
+apirouter.register(r'channels', api_views.ChannelViewSet)
+apirouter.register(r'calibration_units', api_views.CalibrationUnitViewSet)
+apirouter.register(r'channel_datatypes', api_views.ChannelDatatypeViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',
