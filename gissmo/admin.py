@@ -302,7 +302,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         'equip_type',
         'equip_model',
         'serial_number',
-        'get_last_state',
+        'last_state',
         'get_last_place',
         'owner']
     list_display_links = ['serial_number']
@@ -336,10 +336,6 @@ class EquipmentAdmin(admin.ModelAdmin):
             'classes': ['collapse']})]
 
     inlines = [EquipDocInline]
-
-    def get_last_state(self, obj):
-        return '%s' % (equip_last_state(obj.id))
-    get_last_state.short_description = 'Etat'
 
     def get_last_place(self, obj):
         return '%s' % (equip_last_place(obj.id))

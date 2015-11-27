@@ -313,6 +313,66 @@ class ParameterValue(models.Model):
 
 
 @python_2_unicode_compatible
+class EquipState(models.Model):
+    """
+    **Description :** Etat dans lequel un équipement peut se retrouver
+
+    **Choices :**
+
+        1 : OPERATION : En opération
+
+        2 : A_TESTER : A tester
+
+        3 : DISPONIBLE : Disponible
+
+        4 : DEFAUT : En défaillance
+
+        5 : PANNE : En panne
+
+        6 : EN_TRANSIT : En transit
+
+        7 : HORS_USAGE : Hors d'usage
+
+        8 : DISPARU : Disparu
+
+        9 : AU_REBUT : Au rebut
+
+        10 : AUTRE : Autre
+
+    **Attributes :**
+
+    equip_state_name : char(50)
+        Nom utilisé pour décrire l'état d'un équipement
+    """
+    OPERATION = 1
+    A_TESTER = 2
+    DISPONIBLE = 3
+    DEFAUT = 4
+    PANNE = 5
+    EN_TRANSIT = 6
+    HORS_USAGE = 7
+    DISPARU = 8
+    AU_REBUT = 9
+    AUTRE = 10
+    EQUIP_STATES = (
+        (OPERATION, 'En opération'),
+        (A_TESTER, 'A tester'),
+        (DISPONIBLE, 'Disponible'),
+        (DEFAUT, 'En défaillance'),
+        (PANNE, 'En panne'),
+        (EN_TRANSIT, 'En transit'),
+        (HORS_USAGE, 'Hors d\'usage'),
+        (DISPARU, 'Disparu'),
+        (AU_REBUT, 'Au rebut'),
+        (AUTRE, 'Autre'),
+    )
+    equip_state_name = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        managed = False
+
+
+@python_2_unicode_compatible
 class Equipment(models.Model):
     """
     **Description :** Tout appareil installé dans une station sismologique ou
@@ -358,6 +418,12 @@ l'équipment
         null=True,
         blank=True,
         verbose_name=_('Date achat'))
+    # Last state makes equipment display faster. Interventions updates it.
+    last_state = models.IntegerField(
+        choices=EquipState.EQUIP_STATES,
+        null=True,
+        blank=True,
+        verbose_name=_('État'))
 
     def _get_type(self):
         "Returns the linked EquipType"
@@ -372,6 +438,18 @@ l'équipment
 
     equip_type = property(_get_type)
     equip_supertype = property(_get_supertype)
+
+    def get_last_state(self):
+        res = None
+        intervention = self.intervequip_set.filter(
+            equip_state__isnull=False).order_by(
+            'intervention__intervention_date')[:1].last()
+        if intervention:
+            res = intervention.equip_state
+        return res
+
+    def get_last_state_field(self):
+        return "%s" % EquipState.EQUIP_STATES[self.last_state - 1][1]
 
     class Meta:
         unique_together = (
@@ -745,63 +823,6 @@ class EquipAction(models.Model):
         (AUTRE, 'Autre'),
     )
     equip_action_name = models.CharField(max_length=50, null=True, blank=True)
-
-
-@python_2_unicode_compatible
-class EquipState(models.Model):
-    """
-    **Description :** Etat dans lequel un équipement peut se retrouver
-
-    **Choices :**
-
-        1 : OPERATION : En opération
-
-        2 : A_TESTER : A tester
-
-        3 : DISPONIBLE : Disponible
-
-        4 : DEFAUT : En défaillance
-
-        5 : PANNE : En panne
-
-        6 : EN_TRANSIT : En transit
-
-        7 : HORS_USAGE : Hors d'usage
-
-        8 : DISPARU : Disparu
-
-        9 : AU_REBUT : Au rebut
-
-        10 : AUTRE : Autre
-
-    **Attributes :**
-
-    equip_state_name : char(50)
-        Nom utilisé pour décrire l'état d'un équipement
-    """
-    OPERATION = 1
-    A_TESTER = 2
-    DISPONIBLE = 3
-    DEFAUT = 4
-    PANNE = 5
-    EN_TRANSIT = 6
-    HORS_USAGE = 7
-    DISPARU = 8
-    AU_REBUT = 9
-    AUTRE = 10
-    EQUIP_STATES = (
-        (OPERATION, 'En opération'),
-        (A_TESTER, 'A tester'),
-        (DISPONIBLE, 'Disponible'),
-        (DEFAUT, 'En défaillance'),
-        (PANNE, 'En panne'),
-        (EN_TRANSIT, 'En transit'),
-        (HORS_USAGE, 'Hors d\'usage'),
-        (DISPARU, 'Disparu'),
-        (AU_REBUT, 'Au rebut'),
-        (AUTRE, 'Autre'),
-    )
-    equip_state_name = models.CharField(max_length=50, null=True, blank=True)
 
 
 @python_2_unicode_compatible
@@ -1322,6 +1343,16 @@ répertoriées
 
     def __str__(self):
         return u'%s' % (self.intervention)
+
+    def save(self, *args, **kwargs):
+        """
+        Update equipment state in given Intervention.
+        """
+        res = super(IntervEquip, self).save(*args, **kwargs)
+        e = Equipment.objects.get(pk=self.equip_id)
+        e.last_state = e.get_last_state()
+        e.save()
+        return res
 
 
 @python_2_unicode_compatible

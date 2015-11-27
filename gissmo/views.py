@@ -385,20 +385,6 @@ def station_last_state(station):
         return 'Inconnu'
 
 
-def equip_last_state(equip):
-    """
-    Function to obtain the last state of an equipment
-    """
-    last_equip_state = IntervEquip.objects.filter(
-        equip__id=equip,
-        equip_state__isnull=False).order_by(
-            '-intervention__intervention_date')[:1]
-    if last_equip_state:
-        return EquipState.EQUIP_STATES[last_equip_state[0].equip_state - 1][1]
-    else:
-        return 'Inconnu'
-
-
 def equip_state_todate(equip, date, intervention_id):
     """
     Function to obtain the state of an equipment at a precise moment
