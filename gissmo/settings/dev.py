@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 from gissmo.settings.common import *  # NOQA
+
 from os import getenv
+import sys
 
 DEBUG = True
 
@@ -15,6 +17,11 @@ INSTALLED_APPS += (
     # Dev specifics
     'django_extensions',
     'functional_tests',
+    'debug_toolbar',
+)
+
+MIDDLEWARE_CLASSES += (
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 # Update DB settings for docker-compose use
@@ -24,3 +31,18 @@ DATABASES['default'].update(
         'PORT': getenv('DB_PORT_5432_TCP_PORT', '5434'),
     }
 )
+
+LOGGING['handlers'].update({
+    'console': {
+        'level': 'DEBUG',
+        'class': 'logging.StreamHandler',
+        'stream': sys.stdout,
+    },
+})
+
+LOGGING['loggers'].update({
+    'django.db.backends': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+})
