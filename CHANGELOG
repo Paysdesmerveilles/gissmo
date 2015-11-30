@@ -1,4 +1,5 @@
 Current version (1.4-trunk)
+  - Delete useless "Add intervention" button on Intervention list to avoid problem of making a new intervention
   - Add a filter on Intervenants
   - First Travis CI file (not tested)
   - Fix naive datetime error for Intervention when creating new Station objects
