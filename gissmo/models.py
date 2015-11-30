@@ -147,8 +147,7 @@ celui-ci d'un autre bâti
     built_type = models.ForeignKey("BuiltType", verbose_name=_("type de bati"))
     built_short_desc = models.CharField(
         max_length=40,
-        null=True,
-        blank=True,
+        default="Unknown",
         verbose_name=_("courte description"))
     built_note = models.TextField(
         null=True,
@@ -161,10 +160,7 @@ celui-ci d'un autre bâti
         verbose_name_plural = _("B1. Batis")
 
     def __str__(self):
-        return u'%s : %s : %s' % (
-            self.station.station_code,
-            self.built_type.built_type_name,
-            self.built_short_desc)
+        return '%s' % self.built_short_desc
 
 
 @python_2_unicode_compatible
@@ -459,8 +455,7 @@ l'équipment
         verbose_name_plural = _("D1. Equipements")
 
     def __str__(self):
-        return u'%s : %s : %s' % (
-            self.equip_model.equip_type,
+        return '%s : %s' % (
             self.equip_model,
             self.serial_number)
 
