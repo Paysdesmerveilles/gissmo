@@ -1,4 +1,5 @@
 Current version (1.4-trunk)
+  - Add a filter on Intervenants
   - First Travis CI file (not tested)
   - Fix naive datetime error for Intervention when creating new Station objects
   - Take down Equipment and StationSite behaviour from Forms to Models

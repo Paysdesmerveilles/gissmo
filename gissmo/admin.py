@@ -42,6 +42,7 @@ class ActorAdmin(admin.ModelAdmin):
     form = ActorForm
     list_display = ['actor_parent', 'actor_name', 'actor_type']
     list_display_links = ['actor_name']
+    list_filter = ['actor_type']
     ordering = ['actor_parent', 'actor_name']
     search_fields = ['actor_name']
 
