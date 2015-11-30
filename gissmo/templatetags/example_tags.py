@@ -196,37 +196,48 @@ def display_equip_locations(equip_id):
 @register.inclusion_tag('equip_last_locations.html')
 def display_equip_last_location(station_id):
     """
-    TODO: Obtain the last location of the equipment before link to station
-    This solution is not optimal.
-
-    For each equipment we obtain the last location.
-    We must validate that this location equal to the station we visualize
-
-    If the result is not empty compare that the last station is the station
-    that we visualize.
+    Main idea is to gives current Equipment on this station.
+    As Equipment are linked to Station with IntervEquip, we must search as:
+      - all equipment linked to this station (even in the past)
+      - for each equipment use its last intervention (even if it's in another
+station)
+      - filtering the result with only given station
     """
-    liste = []
-    equipments = Equipment.objects.all()
     # Obtain the app_label
     content_type = ContentType.objects.get_for_model(Equipment)
     url_redirection = "admin:%s_equipment_change" % (content_type.app_label)
 
-    for equip in equipments:
-        last_equip_location = IntervEquip.objects.filter(
-            equip__id=equip.id,
-            station__isnull=False).order_by(
-                '-intervention__intervention_date')[:1]
-        if last_equip_location:
-            for last in last_equip_location:
-                liste.append(last.id)
-    # Changing the order by fr presenting the equipment by
-    # supertype, type, model.
+    liste = []
+    # First we limit request to the given station
+    station_equipments = IntervEquip.objects.filter(
+        station_id=station_id)
+    station_equipments.query.group_by = ['equip']
+    # Then we will only take last intervention of each equipment
+    e_ids = [i.equip_id for i in station_equipments]
+    e_ids = set(e_ids)  # delete doublons
+    # station_id__isnull is important because it permit to take last
+    # intervention of each equipment that WAS in the given station.
+    # After that, we make a new query on intervention to limit equipment
+    # that is in the given station yet.
+    for e_id in e_ids:
+        i = IntervEquip.objects.filter(
+            equip_id=e_id,
+            station_id__isnull=False).order_by(
+                'intervention__intervention_date').last()
+        if i:
+            liste.append(i.id)
+    # Finally we sort result by supertype, type and model
     locations = IntervEquip.objects.filter(
-        station=station_id,
+        station_id=station_id,
         id__in=liste).order_by(
             'equip__equip_model__equip_type__equip_supertype',
             'equip__equip_model__equip_type',
-            'equip__equip_model')
+            'equip__equip_model',
+            '-intervention__intervention_date').prefetch_related(
+            'intervention',
+            'built',
+            'equip')
+
     return {'locations': locations, 'url_redirection': url_redirection}
 
 
