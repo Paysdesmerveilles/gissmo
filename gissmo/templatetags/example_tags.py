@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django import template
-from gissmo.models import *  # NOQA
-import operator
 
+from django import template
 from django.contrib.contenttypes.models import ContentType
+from django.utils.translation import ugettext_lazy as _
+
+from gissmo.models import *  # NOQA
+
+import operator
 
 register = template.Library()
 
@@ -98,54 +102,46 @@ def display_station_actions(station_id):
 
 @register.inclusion_tag('station_interventions.html')
 def display_station_interventions(station_id):
-    liste = []
-    intervs = []
-    intervs = Intervention.objects.filter(
-        station_id=station_id).order_by('-intervention_date')
+    """
+    Fetch all site interventions.
+    For each intervention on this site gives this informations:
+      - involved actors
+      - involved equipments
+    """
     # Obtain the app_label
     content_type = ContentType.objects.get_for_model(Intervention)
     url_redirection = "admin:%s_intervention_change" % (content_type.app_label)
 
-    # TODO: add global function to obtain that information
-    last_station_state = IntervStation.objects.filter(
+    # Station state
+    last_state = _('Unknown')
+    i = IntervStation.objects.filter(
         intervention__station__id=station_id,
         station_state__isnull=False).order_by(
-            '-intervention__intervention_date')
-    if last_station_state:
-        last_state = dict(StationState.STATION_STATES)[
-            last_station_state[0].station_state]
-    else:
-        last_state = 'Inconnu'
+            '-intervention__intervention_date').first()
+    if i:
+        last_state = StationState.STATION_STATES[i.station_state][1]
 
-    "Find the actors for each station intervention"
-    if intervs:
-        for interv in intervs:
-            intervactors = IntervActor.objects.filter(
-                intervention_id=interv.id)
-            intervstations = IntervStation.objects.filter(
-                intervention_id=interv.id)
-            intervequips = IntervEquip.objects.filter(
-                intervention_id=interv.id)
-            liste_actors = []
-            if intervactors:
-                for intervactor in intervactors:
-                    liste_actors.append(intervactor.actor)
-            liste_stations = []
-            if intervstations:
-                for intervstation in intervstations:
-                    liste_stations.append(intervstation)
-            liste_equips = []
-            if intervequips:
-                for intervequip in intervequips:
-                    liste_equips.append(intervequip)
+    # Fetch all interventions on the given site (and all related data)
+    liste = []
+    interventions = Intervention.objects.filter(
+        station_id=station_id).order_by(
+        '-intervention_date').prefetch_related(
+        'intervactor_set__actor',
+        'intervequip_set__equip__equip_model',
+        'intervequip_set__built',
+        'intervstation_set')
+    for intervention in interventions:
+        actors = [a.actor for a in intervention.intervactor_set.all()]
+        stations = [ivs for ivs in intervention.intervstation_set.all()]
+        equips = [ie for ie in intervention.intervequip_set.all()]
 
-            if intervstations.count() + intervequips.count() == 0:
-                nbrligne = 1
-            else:
-                nbrligne = intervstations.count() + intervequips.count()
+        if not stations and not equips:
+            line_number = 1
+        else:
+            line_number = len(stations) + len(equips)
 
-            liste.append([interv, liste_actors, liste_stations,
-                          liste_equips, nbrligne, last_state])
+        liste.append([intervention, actors, stations,
+                      equips, line_number, last_state])
     return {'intervs': liste, 'url_redirection': url_redirection}
 
 
