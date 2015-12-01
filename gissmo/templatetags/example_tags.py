@@ -241,88 +241,143 @@ station)
     return {'locations': locations, 'url_redirection': url_redirection}
 
 
+def intervention_history_element_process(element):
+    """
+    Exclude given elements:
+      - start_date = end_date
+      - start_date is None
+      - end_date is None
+    """
+    if element is not None:
+        start = element[1]
+        end = element[2]
+        if start == end or start is None or end is None:
+            return None
+    return element
+
+
+def intervention_history_process(last, current, start, station_id):
+    """
+    Process interventions (last one and current one) to detect some cases:
+      - equipement change
+      - station change
+      - built change
+    If any change, we need to set an element to be included in the history.
+    Element is composed of:
+      - Equipment object
+      - First date of intervention that add the Equipment in the station
+      - Last date of intervention in which we change this equipment from
+given station of last built
+      - The built from this station in which the equipment was
+
+
+    Return an history_element (or None) and the updated start date:
+      - if station change, start date is None
+      - otherwise start date is current intervention date
+    """
+    element = None
+    current_date = current.intervention.intervention_date
+    # first intervention have no previous one.
+    if last is None:
+        start = current_date
+        return element, start
+    # Cases where to create an new element
+    if current.equip_id != last.equip_id:
+        end_date = last.intervention.intervention_date
+        element = [
+            last.equip,
+            start,
+            end_date,
+            last.built]
+        start = current_date
+    elif current.station_id != last.station_id:
+        # Equipment left out the current station (last station was the current
+        # one)
+        if last.station_id == station_id:
+            end_date = current_date
+            element = [
+                current.equip,
+                start or last.intervention.intervention_date,
+                end_date,
+                last.built]
+            start = None
+        # Equipment join the current station
+        elif current.station_id == station_id:
+            start = current_date
+        # Equipment was in another station than the current one AND
+        # is now in another one that is not the current one.
+        else:
+            start = None
+    elif current.built_id != last.built_id and last.station_id == station_id:
+        end_date = current_date
+        element = [
+            current.equip,
+            start,
+            end_date,
+            last.built]
+        start = current_date
+
+    # Exclude some elements
+    element = intervention_history_element_process(element)
+    return element, start
+
+
 @register.inclusion_tag('hist_equip_station.html')
 def display_hist_equip_station(station_id):
     """
-    Obtain the equipment who was installed on the station.
+    Equipment history of the given site (station_id).
 
-    TODO: Check that this is the last place or find the end date on the
-    next intervention.
+    An history line is a period in which the equipment was on the given site.
 
-    Toutes les interventions pour lesquelles les equipements ont été
-    présents pour un moment a la station.
+    The start date begins when the equipment was attached to the given site.
+    The end date is when the equipment:
+      - change its built (in the same site)
+      - change its site
 
-    TODO: Historique of equipment location.
-    equip.id station_code str(built) start_date end_date
+    If the equipment is currently present on the site we don't show its last
+    date in which it joins the site.
 
-    trie en ordre descendent date intervention
-    iteration si station <> precedent sauvegarde precedent
-                                      end_date == date_precedent
-                                      start_date == date_courante
-
-              si station = precedent start_date == date_courante
-    end iteration sauvegarde
+    We sort list with end_date to have last one at the beginning.
     """
-    locations = IntervEquip.objects.filter(
-        station__id=station_id).order_by('-intervention__intervention_date')
-    liste = []
-    liste_sorted = []
-    for location in locations:
-        liste.append(location.equip.id)
+    # WARNING: station_id is a string. Must be an integer to do comparisons.
+    if not isinstance(station_id, int):
+        station_id = int(station_id)
 
-    # Tous les equipements ayant ete presents a un moment a la station
-    equipments = Equipment.objects.filter(id__in=liste)
     # Obtain the app_label
     content_type = ContentType.objects.get_for_model(Equipment)
     url_redirection = "admin:%s_equipment_change" % (content_type.app_label)
 
-    # Tous les emplacmements des équipements ayant été présents à un moment
-    # à la station.
-    liste = []
-    for equip in equipments:
-        last_equip_location = IntervEquip.objects.filter(
-            equip__id=equip.id).order_by('-intervention__intervention_date')
-        prec = ''
-        built_precedente = ''
-        start_date_precedente = ''
-        end_date_precedente = ''
-        etat_precedent = ''
-        if not isinstance(station_id, int):
-            station_id = int(station_id)
-        for location in last_equip_location:
-            loc_stat = location.station
-            if loc_stat != prec and prec != '':
-                # Ne conserver que les emplacements avec une date de fin et
-                # pour la station concernee
-                if prec.id == station_id and end_date_precedente != '':
-                    liste.append([
-                        equip,
-                        start_date_precedente,
-                        end_date_precedente,
-                        prec,
-                        built_precedente,
-                        etat_precedent])
-                end_date_precedente = start_date_precedente
-                prec = loc_stat
-                built_precedente = location.built
-                start_date_precedente = location.intervention.intervention_date
-            else:
-                if prec == '':
-                    etat_precedent = location.equip_state
-                prec = loc_stat
-                built_precedente = location.built
-                start_date_precedente = location.intervention.intervention_date
-        if prec.id == station_id and end_date_precedente != '':
-            liste.append([
-                equip,
-                start_date_precedente,
-                end_date_precedente,
-                prec,
-                built_precedente,
-                etat_precedent])
+    # First we search all equipments linked to this station
+    intervequip = IntervEquip.objects.filter(
+        station__id=station_id)
+    intervequip.query.group_by = ['equip_id']
+    equipment_ids = [i.equip_id for i in intervequip]
+    interventions = IntervEquip.objects.filter(
+        equip_id__in=equipment_ids).order_by(
+        'equip',
+        'intervention__intervention_date').prefetch_related(
+        'built',
+        'station',
+        'intervention',
+        'equip__equip_model__equip_type__equip_supertype')
 
-    # Trie descendant sur date de fin
-    liste_sorted = sorted(liste, key=operator.itemgetter(2), reverse=True)
+    # Then we browse interventions (ordered by equip) to fetch info
+    history = []
+    last_intervention = None
+    start_date = None
+
+    for current_intervention in interventions:
+        history_element, start_date = intervention_history_process(
+            last_intervention,
+            current_intervention,
+            start_date,
+            station_id)
+        if history_element is not None:
+            history.append(history_element)
+        last_intervention = current_intervention
+
+    # Finally sort history by end_date
+    liste_sorted = sorted(history, key=operator.itemgetter(2), reverse=True)
     return {'locations': liste_sorted, 'url_redirection': url_redirection}
 
 
