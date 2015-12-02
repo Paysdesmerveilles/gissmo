@@ -362,7 +362,6 @@ class EquipState(models.Model):
         (AU_REBUT, 'Au rebut'),
         (AUTRE, 'Autre'),
     )
-    equip_state_name = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         managed = False
@@ -1040,10 +1039,9 @@ class StationAction(models.Model):
         (DEMANTELER, 'Démanteler'),
         (AUTRE, 'Autre'),
     )
-    station_action_name = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True)
+
+    class Meta:
+        managed = False
 
 
 @python_2_unicode_compatible
@@ -1088,7 +1086,9 @@ class StationState(models.Model):
         (FERMEE, 'Fermée'),
         (AUTRE, 'Autre'),
     )
-    station_state_name = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        managed = False
 
 
 @python_2_unicode_compatible
@@ -1169,7 +1169,9 @@ class EquipAction(models.Model):
         (METTRE_AU_REBUT, 'Mettre au rebut'),
         (AUTRE, 'Autre'),
     )
-    equip_action_name = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        managed = False
 
 
 @python_2_unicode_compatible
