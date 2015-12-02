@@ -408,21 +408,19 @@ def channel_link(intervention_id):
 
 @register.inclusion_tag('station_channels.html')
 def display_station_channels(station_id):
-    liste = []
-    channels = []
+    channel_data = []
     channels = Channel.objects.filter(station__id=station_id).order_by(
-        '-start_date', 'location_code', '-channel_code')
+        '-start_date',
+        'location_code',
+        '-channel_code').prefetch_related(
+        'network',
+        'channel_code',
+        'chain_set__equip__equip_model__equip_type')
     # Obtain the app_label
     content_type = ContentType.objects.get_for_model(Channel)
     url_redirection = "admin:%s_channel_change" % (content_type.app_label)
-    "Find the equipments of the acquisition chain"
-    if channels:
-        for channel in channels:
-            chains = Chain.objects.filter(
-                channel_id=channel.id).order_by('order')
-            liste_equipments = []
-            if chains:
-                for chain in chains:
-                    liste_equipments.append(chain.equip)
-            liste.append([channel, liste_equipments])
-    return {'channels': liste, 'url_redirection': url_redirection}
+
+    # Find each equipment from the acquisition chain
+    for channel in channels:
+        channel_data.append([channel, channel.chain_set.all()])
+    return {'channels': channel_data, 'url_redirection': url_redirection}
