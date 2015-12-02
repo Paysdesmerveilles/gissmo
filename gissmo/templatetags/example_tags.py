@@ -232,7 +232,7 @@ station)
             '-intervention__intervention_date').prefetch_related(
             'intervention',
             'built',
-            'equip')
+            'equip__equip_model__equip_type__equip_supertype')
 
     return {'locations': locations, 'url_redirection': url_redirection}
 
