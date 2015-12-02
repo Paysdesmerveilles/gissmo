@@ -203,29 +203,27 @@ station)
     content_type = ContentType.objects.get_for_model(Equipment)
     url_redirection = "admin:%s_equipment_change" % (content_type.app_label)
 
-    liste = []
-    # First we limit request to the given station
-    station_equipments = IntervEquip.objects.filter(
-        station_id=station_id)
-    station_equipments.query.group_by = ['equip']
+    intervention_ids = []
+    # First we search equipments linked to this station
+    if not isinstance(station_id, int):
+        station_id = int(station_id)
+    equipments = StationSite.objects.get(
+        pk=station_id).equipment_set.all().prefetch_related(
+        'intervequip_set__intervention')
     # Then we will only take last intervention of each equipment
-    e_ids = [i.equip_id for i in station_equipments]
-    e_ids = set(e_ids)  # delete doublons
     # station_id__isnull is important because it permit to take last
     # intervention of each equipment that WAS in the given station.
     # After that, we make a new query on intervention to limit equipment
     # that is in the given station yet.
-    for e_id in e_ids:
-        i = IntervEquip.objects.filter(
-            equip_id=e_id,
-            station_id__isnull=False).order_by(
-                'intervention__intervention_date').last()
+    for equipment in equipments:
+        i = equipment.intervequip_set.order_by(
+            'intervention__intervention_date').last()
         if i:
-            liste.append(i.id)
+            intervention_ids.append(i.id)
     # Finally we sort result by supertype, type and model
     locations = IntervEquip.objects.filter(
         station_id=station_id,
-        id__in=liste).order_by(
+        id__in=intervention_ids).order_by(
             'equip__equip_model__equip_type__equip_supertype',
             'equip__equip_model__equip_type',
             'equip__equip_model',

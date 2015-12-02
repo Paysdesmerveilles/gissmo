@@ -369,6 +369,343 @@ class EquipState(models.Model):
 
 
 @python_2_unicode_compatible
+class StationSite(models.Model):
+    """
+    **Description :** Site ou station d'intérêt dans le cadre du CLB Resif
+
+    **Attributes :**
+
+    site_type : integer (choice)
+        Type de site
+
+        **Choices :**
+
+            1 : STATION :
+
+            2 : OBSERVATOIRE : Personne qui effectue une action sur une station
+
+            3 : SAV : Réseau
+
+            4 : NEANT : Unite economique de production de biens ou de services
+            à but commercial
+
+            7 : AUTRE : Autre
+
+    station_code : char(40)
+        Code attribué au site ou à la station lors de sa création
+
+    site_name : char(50)
+        Nom d'usage attribué au site. On y retrouve souvent le nom de la
+        commune à proximité.
+
+    latitude : decimal(8,6)
+        Latitude de la station
+
+    longitude : decimal(9,6)
+        Longitude de la station
+
+    elevation : decimal(5,1)
+        Elevation de la station par rapport au niveau de la mer
+
+    operator : integer (fk)
+        Observatoite/Laboratoire ayant la charge d'opérer la station ou le site
+
+    address : char(100)
+        Adresse civique du lieu où est située la station
+
+    city : char(100)
+        Commune où est située la station
+
+    department : char(100)
+        Département où est située la station
+
+    region : char(100)
+        Région où est située la station
+
+    country : char(50)
+        Pays où est située la station
+
+    zip_code : char(15)
+        Code postal
+
+    contact : text
+        Champ libre afin d'ajouter des informations sur les contacts
+
+    note : text
+        Champ libre afin d'ajouter des informations supplémentaires
+
+    private_link : char(200) -- URLFIELD
+        Champ dans lequel on peut inscrire un lien vers un outil interne
+        (wiki, etc.)
+    """
+    DT_INSU = 1
+    EOST = 2
+    IPGP = 3
+    ISTERRE = 4
+    OCA = 5
+    OMP = 6
+    OPGC = 7
+    OREME = 8
+    OSUNA = 9
+    AUTRE = 10
+    OSU_CHOICES = (
+        (DT_INSU, 'DT_INSU'),
+        (EOST, 'EOST'),
+        (IPGP, 'IPGP'),
+        (ISTERRE, 'ISTERRE'),
+        (OCA, 'OCA'),
+        (OMP, 'OMP'),
+        (OPGC, 'OPGC'),
+        (OREME, 'OREME'),
+        (OSUNA, 'OSUNA'),
+        (AUTRE, 'AUTRE'),
+    )
+
+    STATION = 1
+    OBSERVATOIRE = 2
+    SAV = 3
+    NEANT = 4
+    AUTRE = 5
+    SITE_TEST = 6
+    SITE_THEORIQUE = 7
+    SITE_CHOICES = (
+        (STATION, 'Station sismologique'),
+        (SITE_TEST, 'Site de test'),
+        (SITE_THEORIQUE, 'Site théorique'),
+        (OBSERVATOIRE, 'Observatoire'),
+        (SAV, 'Lieu de service après vente'),
+        (NEANT, 'Lieu indéterminé'),
+        (AUTRE, 'Autre'),
+    )
+
+    OPEN = 1
+    CLOSE = 2
+    PARTIAL = 3
+    STATUS = (
+        (OPEN, 'Ouvert'),
+        (CLOSE, 'Ferme'),
+        (PARTIAL, 'Partiel'),
+    )
+
+    site_type = models.IntegerField(
+        choices=SITE_CHOICES,
+        default=STATION,
+        verbose_name=_("type de site"))
+    station_code = models.CharField(
+        max_length=40,
+        unique=True,
+        verbose_name=_("code"))
+    site_name = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name=_("nom site"))
+    latitude = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name=_("latitude (degre decimal)"),
+        max_digits=8,
+        decimal_places=6)
+    longitude = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name=_("longitude (degre decimal)"),
+        max_digits=9,
+        decimal_places=6)
+    elevation = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name=_("elevation (m)"),
+        max_digits=5,
+        decimal_places=1)
+    operator = models.ForeignKey("Actor", verbose_name=_("operateur"))
+    address = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=_("adresse"))
+    town = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=_("commune"))
+    county = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=_("departement"))
+    region = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=_("region"))
+    country = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name=_("pays"))
+    zip_code = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        verbose_name=_("code postal"))
+    contact = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_("contact"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+    private_link = models.URLField(
+        null=True,
+        blank=True,
+        verbose_name=_("lien outil interne"))
+    station_parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        verbose_name=_("site referent"))
+    geology = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name=_("formation geologique"))
+    restricted_status = models.IntegerField(
+        choices=STATUS,
+        null=True,
+        blank=True,
+        verbose_name=_("etat restrictif"))
+    alternate_code = models.CharField(
+        max_length=5,
+        null=True,
+        blank=True,
+        verbose_name=_("code alternatif"))
+    historical_code = models.CharField(
+        max_length=5,
+        null=True,
+        blank=True,
+        verbose_name=_("code historique"))
+    station_description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_("description station"))
+    site_description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_("description site"))
+    latitude_unit = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        default="DEGREES")
+    latitude_pluserror = models.FloatField(null=True, blank=True)
+    latitude_minuserror = models.FloatField(null=True, blank=True)
+    latitude_datum = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        default="WSG84")
+    longitude_unit = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        default="DEGREES")
+    longitude_pluserror = models.FloatField(null=True, blank=True)
+    longitude_minuserror = models.FloatField(null=True, blank=True)
+    longitude_datum = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        default="WSG84")
+    elevation_unit = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        default="METERS")
+    elevation_pluserror = models.FloatField(null=True, blank=True)
+    elevation_minuserror = models.FloatField(null=True, blank=True)
+    creation_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_('Date création'))
+
+    class Meta:
+        ordering = ['station_code']
+        verbose_name = _("site")
+        verbose_name_plural = _("A1. Sites")
+
+    def __str__(self):
+        return self.station_code
+
+    def check_mandatories_data(self):
+        """
+        Raise an error if these data are missing:
+          * project
+          * creation_date
+        """
+        mandatories_fields = [
+            ('project', 'Project'),
+            ('creation_date', 'Creation date')]
+        for field in mandatories_fields:
+            if not getattr(self, field[0], None):
+                raise ValidationError(
+                    _('%(property_name)s property is missing!'),
+                    params={'property_name': field[1]}
+                )
+
+    def get_or_create_intervention(self):
+        """
+        Interventions are needed for each new StationSite.
+        If no one, create them.
+        """
+        intervention = Intervention.objects.create(
+            station=self,
+            intervention_date=make_date_aware(self.creation_date),
+            note='Automated creation')
+        IntervStation.objects.create(
+            intervention=intervention,
+            station_action=StationAction.CREER,
+            station_state=StationState.INSTALLATION,
+            note='Automated creation')
+        if not self.actor:
+            raise ValidationError(_('No logged user'))
+        actor = get_object_or_404(Actor, actor_name=self.actor)
+        IntervActor.objects.create(
+            intervention=intervention,
+            actor=actor)
+
+        # Add station to a project
+        project = get_object_or_404(Project, project_name=self.project)
+        project.station.add(self.id)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Permit to add project as keyword when creating new StationSite.
+        """
+        new_kwargs = {}
+        fake_fields = ['project', 'actor']
+        for keyword in kwargs:
+            if keyword not in fake_fields:
+                new_kwargs[keyword] = kwargs[keyword]
+        super(StationSite, self).__init__(*args, **new_kwargs)
+        for field in fake_fields:
+            setattr(self, field, kwargs.get(field, None))
+
+    def save(self, *args, **kwargs):
+        """
+        Only add new StationSite if it correspond to a specific project.
+        If project given, create an new installation intervention on this
+        site.
+        """
+        if not self.id:
+            self.check_mandatories_data()
+            # First save object
+            res = super(StationSite, self).save(*args, **kwargs)
+            # Then create intervention if needed
+            self.get_or_create_intervention()
+            return res
+        return super(StationSite, self).save(*args, **kwargs)
+
+
+@python_2_unicode_compatible
 class Equipment(models.Model):
     """
     **Description :** Tout appareil installé dans une station sismologique ou
@@ -420,6 +757,12 @@ l'équipment
         null=True,
         blank=True,
         verbose_name=_('État'))
+    # Last station makes equipment display faster. Interventions updates it.
+    last_station = models.ForeignKey(
+        StationSite,
+        null=True,
+        blank=True,
+        verbose_name=_('Emplacement'))
 
     def _get_type(self):
         "Returns the linked EquipType"
@@ -446,6 +789,15 @@ l'équipment
 
     def get_last_state_field(self):
         return "%s" % EquipState.EQUIP_STATES[self.last_state - 1][1]
+
+    def get_last_station(self):
+        res = None
+        intervention = self.intervequip_set.filter(
+            station__isnull=False).order_by(
+            '-intervention__intervention_date').first()
+        if intervention:
+            res = intervention.station
+        return res
 
     class Meta:
         unique_together = (
@@ -843,343 +1195,6 @@ class CommentStationSite(models.Model):
 
 
 @python_2_unicode_compatible
-class StationSite(models.Model):
-    """
-    **Description :** Site ou station d'intérêt dans le cadre du CLB Resif
-
-    **Attributes :**
-
-    site_type : integer (choice)
-        Type de site
-
-        **Choices :**
-
-            1 : STATION :
-
-            2 : OBSERVATOIRE : Personne qui effectue une action sur une station
-
-            3 : SAV : Réseau
-
-            4 : NEANT : Unite economique de production de biens ou de services
-            à but commercial
-
-            7 : AUTRE : Autre
-
-    station_code : char(40)
-        Code attribué au site ou à la station lors de sa création
-
-    site_name : char(50)
-        Nom d'usage attribué au site. On y retrouve souvent le nom de la
-        commune à proximité.
-
-    latitude : decimal(8,6)
-        Latitude de la station
-
-    longitude : decimal(9,6)
-        Longitude de la station
-
-    elevation : decimal(5,1)
-        Elevation de la station par rapport au niveau de la mer
-
-    operator : integer (fk)
-        Observatoite/Laboratoire ayant la charge d'opérer la station ou le site
-
-    address : char(100)
-        Adresse civique du lieu où est située la station
-
-    city : char(100)
-        Commune où est située la station
-
-    department : char(100)
-        Département où est située la station
-
-    region : char(100)
-        Région où est située la station
-
-    country : char(50)
-        Pays où est située la station
-
-    zip_code : char(15)
-        Code postal
-
-    contact : text
-        Champ libre afin d'ajouter des informations sur les contacts
-
-    note : text
-        Champ libre afin d'ajouter des informations supplémentaires
-
-    private_link : char(200) -- URLFIELD
-        Champ dans lequel on peut inscrire un lien vers un outil interne
-        (wiki, etc.)
-    """
-    DT_INSU = 1
-    EOST = 2
-    IPGP = 3
-    ISTERRE = 4
-    OCA = 5
-    OMP = 6
-    OPGC = 7
-    OREME = 8
-    OSUNA = 9
-    AUTRE = 10
-    OSU_CHOICES = (
-        (DT_INSU, 'DT_INSU'),
-        (EOST, 'EOST'),
-        (IPGP, 'IPGP'),
-        (ISTERRE, 'ISTERRE'),
-        (OCA, 'OCA'),
-        (OMP, 'OMP'),
-        (OPGC, 'OPGC'),
-        (OREME, 'OREME'),
-        (OSUNA, 'OSUNA'),
-        (AUTRE, 'AUTRE'),
-    )
-
-    STATION = 1
-    OBSERVATOIRE = 2
-    SAV = 3
-    NEANT = 4
-    AUTRE = 5
-    SITE_TEST = 6
-    SITE_THEORIQUE = 7
-    SITE_CHOICES = (
-        (STATION, 'Station sismologique'),
-        (SITE_TEST, 'Site de test'),
-        (SITE_THEORIQUE, 'Site théorique'),
-        (OBSERVATOIRE, 'Observatoire'),
-        (SAV, 'Lieu de service après vente'),
-        (NEANT, 'Lieu indéterminé'),
-        (AUTRE, 'Autre'),
-    )
-
-    OPEN = 1
-    CLOSE = 2
-    PARTIAL = 3
-    STATUS = (
-        (OPEN, 'Ouvert'),
-        (CLOSE, 'Ferme'),
-        (PARTIAL, 'Partiel'),
-    )
-
-    site_type = models.IntegerField(
-        choices=SITE_CHOICES,
-        default=STATION,
-        verbose_name=_("type de site"))
-    station_code = models.CharField(
-        max_length=40,
-        unique=True,
-        verbose_name=_("code"))
-    site_name = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        verbose_name=_("nom site"))
-    latitude = models.DecimalField(
-        null=True,
-        blank=True,
-        verbose_name=_("latitude (degre decimal)"),
-        max_digits=8,
-        decimal_places=6)
-    longitude = models.DecimalField(
-        null=True,
-        blank=True,
-        verbose_name=_("longitude (degre decimal)"),
-        max_digits=9,
-        decimal_places=6)
-    elevation = models.DecimalField(
-        null=True,
-        blank=True,
-        verbose_name=_("elevation (m)"),
-        max_digits=5,
-        decimal_places=1)
-    operator = models.ForeignKey("Actor", verbose_name=_("operateur"))
-    address = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True,
-        verbose_name=_("adresse"))
-    town = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True,
-        verbose_name=_("commune"))
-    county = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True,
-        verbose_name=_("departement"))
-    region = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True,
-        verbose_name=_("region"))
-    country = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        verbose_name=_("pays"))
-    zip_code = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        verbose_name=_("code postal"))
-    contact = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_("contact"))
-    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
-    private_link = models.URLField(
-        null=True,
-        blank=True,
-        verbose_name=_("lien outil interne"))
-    station_parent = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        verbose_name=_("site referent"))
-    geology = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        verbose_name=_("formation geologique"))
-    restricted_status = models.IntegerField(
-        choices=STATUS,
-        null=True,
-        blank=True,
-        verbose_name=_("etat restrictif"))
-    alternate_code = models.CharField(
-        max_length=5,
-        null=True,
-        blank=True,
-        verbose_name=_("code alternatif"))
-    historical_code = models.CharField(
-        max_length=5,
-        null=True,
-        blank=True,
-        verbose_name=_("code historique"))
-    station_description = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_("description station"))
-    site_description = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_("description site"))
-    latitude_unit = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        default="DEGREES")
-    latitude_pluserror = models.FloatField(null=True, blank=True)
-    latitude_minuserror = models.FloatField(null=True, blank=True)
-    latitude_datum = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        default="WSG84")
-    longitude_unit = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        default="DEGREES")
-    longitude_pluserror = models.FloatField(null=True, blank=True)
-    longitude_minuserror = models.FloatField(null=True, blank=True)
-    longitude_datum = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        default="WSG84")
-    elevation_unit = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        default="METERS")
-    elevation_pluserror = models.FloatField(null=True, blank=True)
-    elevation_minuserror = models.FloatField(null=True, blank=True)
-    creation_date = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name=_('Date création'))
-
-    class Meta:
-        ordering = ['station_code']
-        verbose_name = _("site")
-        verbose_name_plural = _("A1. Sites")
-
-    def __str__(self):
-        return self.station_code
-
-    def check_mandatories_data(self):
-        """
-        Raise an error if these data are missing:
-          * project
-          * creation_date
-        """
-        mandatories_fields = [
-            ('project', 'Project'),
-            ('creation_date', 'Creation date')]
-        for field in mandatories_fields:
-            if not getattr(self, field[0], None):
-                raise ValidationError(
-                    _('%(property_name)s property is missing!'),
-                    params={'property_name': field[1]}
-                )
-
-    def get_or_create_intervention(self):
-        """
-        Interventions are needed for each new StationSite.
-        If no one, create them.
-        """
-        intervention = Intervention.objects.create(
-            station=self,
-            intervention_date=make_date_aware(self.creation_date),
-            note='Automated creation')
-        IntervStation.objects.create(
-            intervention=intervention,
-            station_action=StationAction.CREER,
-            station_state=StationState.INSTALLATION,
-            note='Automated creation')
-        if not self.actor:
-            raise ValidationError(_('No logged user'))
-        actor = get_object_or_404(Actor, actor_name=self.actor)
-        IntervActor.objects.create(
-            intervention=intervention,
-            actor=actor)
-
-        # Add station to a project
-        project = get_object_or_404(Project, project_name=self.project)
-        project.station.add(self.id)
-
-    def __init__(self, *args, **kwargs):
-        """
-        Permit to add project as keyword when creating new StationSite.
-        """
-        new_kwargs = {}
-        fake_fields = ['project', 'actor']
-        for keyword in kwargs:
-            if keyword not in fake_fields:
-                new_kwargs[keyword] = kwargs[keyword]
-        super(StationSite, self).__init__(*args, **new_kwargs)
-        for field in fake_fields:
-            setattr(self, field, kwargs.get(field, None))
-
-    def save(self, *args, **kwargs):
-        """
-        Only add new StationSite if it correspond to a specific project.
-        If project given, create an new installation intervention on this
-        site.
-        """
-        if not self.id:
-            self.check_mandatories_data()
-            # First save object
-            res = super(StationSite, self).save(*args, **kwargs)
-            # Then create intervention if needed
-            self.get_or_create_intervention()
-            return res
-        return super(StationSite, self).save(*args, **kwargs)
-
-
-@python_2_unicode_compatible
 class Intervention(models.Model):
     """
     **Description :** Intervention ayant eu lieu dans le cadre de CLB Resif
@@ -1341,11 +1356,14 @@ répertoriées
 
     def save(self, *args, **kwargs):
         """
-        Update equipment state in given Intervention.
+        Update equipment in given Intervention:
+          - state
+          - station
         """
         res = super(IntervEquip, self).save(*args, **kwargs)
         e = Equipment.objects.get(pk=self.equip_id)
         e.last_state = e.get_last_state()
+        e.last_station = e.get_last_station()
         e.save()
         return res
 

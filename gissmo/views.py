@@ -460,19 +460,6 @@ def equip_with_state_todate(date, intervention_id):
                 liste.append(equip)
     return liste
 
-
-def equip_last_place(equip):
-    """
-    Function to obtain the last place where an equipment is
-    """
-    last_equip_place = IntervEquip.objects.filter(
-        equip__id=equip,
-        station__isnull=False).order_by('-intervention__intervention_date')[:1]
-    if last_equip_place:
-        return last_equip_place[0].station
-    else:
-        return 'Inconnu'
-
 #
 # TODO eliminate one of this function
 #

@@ -1,4 +1,5 @@
 Current version (1.4-trunk)
+  - Improve StationSite display. It takes 142 sec first to be displayed. Now approximatively 5 seconds.
   - Delete useless "Add intervention" button on Intervention list to avoid problem of making a new intervention
   - Add a filter on Intervenants
   - First Travis CI file (not tested)

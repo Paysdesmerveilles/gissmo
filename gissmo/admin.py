@@ -304,7 +304,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         'equip_model',
         'serial_number',
         'last_state',
-        'get_last_place',
+        'last_station',
         'owner']
     list_display_links = ['serial_number']
     list_filter = [EquipFilter]
@@ -338,15 +338,13 @@ class EquipmentAdmin(admin.ModelAdmin):
 
     inlines = [EquipDocInline]
 
-    def get_last_place(self, obj):
-        return '%s' % (equip_last_place(obj.id))
-    get_last_place.short_description = 'Emplacement'
-
     def get_queryset(self, request):
         """
         Show only equipment according to the user's project
         """
-        qs = super(EquipmentAdmin, self).get_queryset(request)
+        qs = super(EquipmentAdmin, self).get_queryset(
+            request).prefetch_related(
+            'last_station')
         check_forall = ProjectUser.objects.filter(
             user=request.user).values_list(
                 'project__project_name',
