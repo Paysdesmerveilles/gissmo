@@ -5,6 +5,7 @@ from os import getenv
 import sys
 
 DEBUG = True
+DISPLAY_SQL = False
 
 ADMINS = ()
 MANAGERS = ADMINS
@@ -32,17 +33,18 @@ DATABASES['default'].update(
     }
 )
 
-LOGGING['handlers'].update({
-    'console': {
-        'level': 'DEBUG',
-        'class': 'logging.StreamHandler',
-        'stream': sys.stdout,
-    },
-})
+if DISPLAY_SQL is True:
+    LOGGING['handlers'].update({
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+        },
+    })
 
-LOGGING['loggers'].update({
-    'django.db.backends': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
-})
+    LOGGING['loggers'].update({
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    })
