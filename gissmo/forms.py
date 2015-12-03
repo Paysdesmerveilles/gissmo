@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from datetime import datetime
 import time
@@ -15,6 +15,12 @@ from django.utils.safestring import mark_safe
 
 import autocomplete_light
 
+from equipment import states as EquipState
+from equipment import actions as EquipAction
+
+from station import states as StationState
+from station import actions as StationAction
+
 from gissmo.models import (
     Actor,
     EquipModelDoc,
@@ -25,6 +31,7 @@ from gissmo.models import (
     StationDoc,
     Chain,
     Channel,
+    ChannelCode,
     Built,
     DataType,
     Project,
@@ -37,12 +44,6 @@ from gissmo.views import (
     available_equip_state,
     available_station, available_built,
     available_equipment_scioper)
-from gissmo.models import (
-    EquipAction,
-    EquipState,
-    StationAction,
-    StationState,
-    ChannelCode)
 from gissmo.tools import timezone_aware
 
 

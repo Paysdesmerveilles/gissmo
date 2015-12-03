@@ -1,11 +1,12 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import csv
 import os.path
 import mimetypes
 from datetime import datetime
-from gissmo.models import *  # NOQA
-from gissmo.tools import DecimalEncoder, timezone_aware
+# delete simplejson from django.utils as Django 1.7 deliver it not
+import json
 
 from django.db.models import Q
 from django.template import loader
@@ -17,12 +18,19 @@ from django.shortcuts import (
 from django.core.exceptions import PermissionDenied
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import get_model
-# delete simplejson from django.utils as Django 1.7 deliver it not
-import json
 from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
+
+from equipment import states as EquipState
+from equipment import actions as EquipAction
+
+from station import states as StationState
+from station import actions as StationAction
+
+from gissmo.models import *  # NOQA
+from gissmo.tools import DecimalEncoder, timezone_aware
 
 
 def site_maps(request):

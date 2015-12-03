@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 from django.utils.encoding import python_2_unicode_compatible
@@ -10,6 +10,12 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.utils.timezone import localtime
 from django.contrib.auth.models import User
+
+from equipment import states as EquipState
+from equipment import actions as EquipAction
+
+from station import states as StationState
+from station import actions as StationAction
 
 from gissmo.helpers import format_date
 from gissmo.tools import make_date_aware
@@ -306,65 +312,6 @@ class ParameterValue(models.Model):
 
     def __str__(self):
         return u'%s' % (self.value)
-
-
-@python_2_unicode_compatible
-class EquipState(models.Model):
-    """
-    **Description :** Etat dans lequel un équipement peut se retrouver
-
-    **Choices :**
-
-        1 : OPERATION : En opération
-
-        2 : A_TESTER : A tester
-
-        3 : DISPONIBLE : Disponible
-
-        4 : DEFAUT : En défaillance
-
-        5 : PANNE : En panne
-
-        6 : EN_TRANSIT : En transit
-
-        7 : HORS_USAGE : Hors d'usage
-
-        8 : DISPARU : Disparu
-
-        9 : AU_REBUT : Au rebut
-
-        10 : AUTRE : Autre
-
-    **Attributes :**
-
-    equip_state_name : char(50)
-        Nom utilisé pour décrire l'état d'un équipement
-    """
-    OPERATION = 1
-    A_TESTER = 2
-    DISPONIBLE = 3
-    DEFAUT = 4
-    PANNE = 5
-    EN_TRANSIT = 6
-    HORS_USAGE = 7
-    DISPARU = 8
-    AU_REBUT = 9
-    AUTRE = 10
-    EQUIP_STATES = (
-        (OPERATION, 'En opération'),
-        (A_TESTER, 'A tester'),
-        (DISPONIBLE, 'Disponible'),
-        (DEFAUT, 'En défaillance'),
-        (PANNE, 'En panne'),
-        (EN_TRANSIT, 'En transit'),
-        (HORS_USAGE, 'Hors d\'usage'),
-        (DISPARU, 'Disparu'),
-        (AU_REBUT, 'Au rebut'),
-        (AUTRE, 'Autre'),
-    )
-
-    class Meta:
-        managed = False
 
 
 @python_2_unicode_compatible
@@ -975,203 +922,6 @@ class Network(models.Model):
 
     def __str__(self):
         return self.network_code
-
-
-@python_2_unicode_compatible
-class StationAction(models.Model):
-    """
-    **Description :** Action qui peut survenir sur une station
-
-    **Choices :**
-
-        1 : CREER : Créer code station
-
-        2 : INSTALLER : Installer station
-
-        3 : OPERER : Mettre en opération
-
-        4 : CONSTATER DEFAUT : Constater défaillance
-
-        5 : MAINT_PREV_DISTANTE : Effectuer maintenance préventive à distance
-
-        6 : MAINT_CORR_DISTANTE : Effectuer maintenance corrective à distance
-
-        7 : MAINT_PREV_SITE : Effectuer maintenance préventive sur site
-
-        8 : MAINT_CORR_SITE : Effectuer maintenance corrective sur site
-
-        9 : DEMANTELER : Démanteler
-
-        10 : AUTRE : Autre
-
-        11 : DEBUTER_TEST : Débuter test
-
-        12 : TERMINER_TEST : Terminer test
-
-    **Attributes :**
-
-    station_action_name : char(50)
-        Nom utilise pour décrire l'action effectuée
-    """
-    CREER = 1
-    INSTALLER = 2
-    OPERER = 3
-    CONSTATER_DEFAUT = 4
-    MAINT_PREV_DISTANTE = 5
-    MAINT_CORR_DISTANTE = 6
-    MAINT_PREV_SITE = 7
-    MAINT_CORR_SITE = 8
-    DEMANTELER = 9
-    AUTRE = 10
-    DEBUTER_TEST = 11
-    TERMINER_TEST = 12
-    STATION_ACTIONS = (
-        (CREER, 'Créer code station'),
-        (INSTALLER, 'Installer station'),
-        (DEBUTER_TEST, 'Débuter test'),
-        (TERMINER_TEST, 'Terminer test'),
-        (OPERER, 'Mettre en opération'),
-        (CONSTATER_DEFAUT, 'Constater défaillance'),
-        (MAINT_PREV_DISTANTE, 'Effectuer maintenance préventive à distance'),
-        (MAINT_CORR_DISTANTE, 'Effectuer maintenance corrective à distance'),
-        (MAINT_PREV_SITE, 'Effectuer maintenance préventive sur site'),
-        (MAINT_CORR_SITE, 'Effectuer maintenance corrective sur site'),
-        (DEMANTELER, 'Démanteler'),
-        (AUTRE, 'Autre'),
-    )
-
-    class Meta:
-        managed = False
-
-
-@python_2_unicode_compatible
-class StationState(models.Model):
-    """
-    **Description :** Etat dans lequel une station peut se retrouver
-
-    **Choices :**
-
-        1 : INSTALLATION : En installation
-
-        2 : OPERATION : En opération
-
-        3 : DEFAUT : En défaillance
-
-        4 : PANNE : En panne
-
-        5 : FERMEE : Fermée
-
-        6 : AUTRE : Autre
-
-        7 : EN_TEST : En test
-
-    **Attributes :**
-
-    station_state_name : char(50)
-        Nom utilisé pour décrire l'état d'une station
-    """
-    INSTALLATION = 1
-    OPERATION = 2
-    DEFAUT = 3
-    PANNE = 4
-    FERMEE = 5
-    AUTRE = 6
-    EN_TEST = 7
-    STATION_STATES = (
-        (INSTALLATION, 'En installation'),
-        (EN_TEST, 'En test'),
-        (OPERATION, 'En opération'),
-        (DEFAUT, 'En défaillance'),
-        (PANNE, 'En panne'),
-        (FERMEE, 'Fermée'),
-        (AUTRE, 'Autre'),
-    )
-
-    class Meta:
-        managed = False
-
-
-@python_2_unicode_compatible
-class EquipAction(models.Model):
-    """
-    **Description :** Action qui peut survenir sur un équipement
-
-    **Choices :**
-
-        1 : ACHETER : Acheter
-
-        2 : TESTER : Tester
-
-        3 : INSTALLER : Installer
-
-        4 : DESINSTALLER : Désinstaller
-
-        5 : CONSTATER_DEFAUT : Constater défaut
-
-        6 : MAINT_PREV_DISTANTE : Effectuer maintenance préventive à distance
-
-        7 : MAINT_CORR_DISTANTE : Effectuer maintenance corrective à distance
-
-        8 : MAINT_PREV_SITE : Effectuer maintenance préventive sur site
-
-        9 : MAINT_CORR_SITE : Effectuer maintenance corrective sur site
-
-        10 : EXPEDIER : Expédier
-
-        11 : RECEVOIR : Recevoir
-
-        12 : METTRE_HORS_USAGE : Mettre hors usage
-
-        13 : CONSTATER_DISPARITION : Constater disparition
-
-        14 : RETROUVER : Retrouver suite à une disparition
-
-        15 : METTRE_AU_REBUT : Mettre au rebut
-
-        16 : AUTRE : Autre
-
-    **Attributes :**
-
-    equip_action_name : char(50)
-        Nom utilisé pour décrire l'action effectuée
-    """
-    ACHETER = 1
-    TESTER = 2
-    INSTALLER = 3
-    DESINSTALLER = 4
-    CONSTATER_DEFAUT = 5
-    MAINT_PREV_DISTANTE = 6
-    MAINT_CORR_DISTANTE = 7
-    MAINT_PREV_SITE = 8
-    MAINT_CORR_SITE = 9
-    EXPEDIER = 10
-    RECEVOIR = 11
-    METTRE_HORS_USAGE = 12
-    CONSTATER_DISPARITION = 13
-    RETROUVER = 14
-    METTRE_AU_REBUT = 15
-    AUTRE = 16
-    EQUIP_ACTIONS = (
-        (ACHETER, 'Acheter'),
-        (TESTER, 'Tester'),
-        (INSTALLER, 'Installer'),
-        (DESINSTALLER, 'Désinstaller'),
-        (CONSTATER_DEFAUT, 'Constater défaut'),
-        (MAINT_PREV_DISTANTE, 'Effectuer maintenance préventive à distance'),
-        (MAINT_CORR_DISTANTE, 'Effectuer maintenance corrective à distance'),
-        (MAINT_PREV_SITE, 'Effectuer maintenance préventive sur site'),
-        (MAINT_CORR_SITE, 'Effectuer maintenance corrective sur site'),
-        (EXPEDIER, 'Expédier'),
-        (RECEVOIR, 'Recevoir'),
-        (METTRE_HORS_USAGE, 'Mettre hors usage'),
-        (CONSTATER_DISPARITION, 'Constater disparition'),
-        (RETROUVER, 'Retrouver suite à une disparition'),
-        (METTRE_AU_REBUT, 'Mettre au rebut'),
-        (AUTRE, 'Autre'),
-    )
-
-    class Meta:
-        managed = False
 
 
 @python_2_unicode_compatible
