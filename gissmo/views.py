@@ -1134,16 +1134,16 @@ def station_xml(request):
             station_count = Channel.objects.filter(
                 network_id=network.id).distinct('station').count()
 
-            # Obtain the comment for the network
-            ResCommentNetwork = CommentNetwork.objects.filter(
-                network_id=network.id)
+#            # Obtain the comment for the network
+#            ResCommentNetwork = CommentNetwork.objects.filter(
+#                network_id=network.id)
 
             comment_list = []
-            for comment in ResCommentNetwork:
-                # Obtain the authors for each comment
-                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
-                    comment_network_id=comment.id)
-                comment_list.append([comment, ResCommentNetworkAuthor])
+#            for comment in ResCommentNetwork:
+#                # Obtain the authors for each comment
+#                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
+#                    comment_network_id=comment.id)
+#                comment_list.append([comment, ResCommentNetworkAuthor])
 
             ResChannels = ResChannel.filter(network_id=network.id)
 
@@ -1428,16 +1428,16 @@ def station_xml(request):
                         # Here we have 0 or 1 occurence
                         other_5_uninstalled = other_5_removal[
                             0].intervention.intervention_date
-                # Obtain the comment for the channel
-                ResCommentChannel = CommentChannel.objects.filter(
-                    channel_id=channel.id)
+#                # Obtain the comment for the channel
+#                ResCommentChannel = CommentChannel.objects.filter(
+#                    channel_id=channel.id)
 
                 comment_list = []
-                for comment in ResCommentChannel:
-                    # Obtain the authors for each comment
-                    ResCommentChannelAuthor = CommentChannelAuthor.\
-                        objects.filter(comment_channel_id=comment.id)
-                    comment_list.append([comment, ResCommentChannelAuthor])
+#                for comment in ResCommentChannel:
+#                    # Obtain the authors for each comment
+#                    ResCommentChannelAuthor = CommentChannelAuthor.\
+#                        objects.filter(comment_channel_id=comment.id)
+#                    comment_list.append([comment, ResCommentChannelAuthor])
 
                 channel_list.append([
                     channel,
@@ -1654,16 +1654,16 @@ def network_xml(request):
                             datalogger_uninstalled = datalogger_removal[
                                 0].intervention.intervention_date
 
-                    # Obtain the comment for the channel
-                    ResCommentChannel = CommentChannel.objects.filter(
-                        channel_id=channel.id)
+#                    # Obtain the comment for the channel
+#                    ResCommentChannel = CommentChannel.objects.filter(
+#                        channel_id=channel.id)
 
                     comment_list = []
-                    for comment in ResCommentChannel:
-                        # Obtain the authors for each comment
-                        ResCommentChannelAuthor = CommentChannelAuthor.\
-                            objects.filter(comment_channel_id=comment.id)
-                        comment_list.append([comment, ResCommentChannelAuthor])
+#                    for comment in ResCommentChannel:
+#                        # Obtain the authors for each comment
+#                        ResCommentChannelAuthor = CommentChannelAuthor.\
+#                            objects.filter(comment_channel_id=comment.id)
+#                        comment_list.append([comment, ResCommentChannelAuthor])
 
                     channel_list.append([
                         channel,
@@ -1685,16 +1685,16 @@ def network_xml(request):
                     terminate_station,
                     channel_list])
 
-        # Obtain the comment for the network
-        ResCommentNetwork = CommentNetwork.objects.filter(
-            network_id=network.id)
+#        # Obtain the comment for the network
+#        ResCommentNetwork = CommentNetwork.objects.filter(
+#            network_id=network.id)
 
         comment_list = []
-        for comment in ResCommentNetwork:
-            # Obtain the authors for each comment
-            ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
-                comment_network_id=comment.id)
-            comment_list.append([comment, ResCommentNetworkAuthor])
+#        for comment in ResCommentNetwork:
+#            # Obtain the authors for each comment
+#            ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
+#                comment_network_id=comment.id)
+#            comment_list.append([comment, ResCommentNetworkAuthor])
         result.append([network, comment_list, station_count, station_list])
     t = loader.get_template('network_xml.xml')
     response.write(t.render({"ResNetwork": result}))

@@ -836,28 +836,6 @@ l'équipment
 
 
 @python_2_unicode_compatible
-class CommentNetworkAuthor(models.Model):
-    comment_network = models.ForeignKey(
-        "CommentNetwork",
-        verbose_name=_("commentaire"))
-    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
-
-
-@python_2_unicode_compatible
-class CommentNetwork(models.Model):
-    network = models.ForeignKey("Network", verbose_name=_("reseau"))
-    value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
-
-
-@python_2_unicode_compatible
 class Network(models.Model):
     """
     **Description :** Réseau
@@ -922,28 +900,6 @@ class Network(models.Model):
 
     def __str__(self):
         return self.network_code
-
-
-@python_2_unicode_compatible
-class CommentStationSiteAuthor(models.Model):
-    comment_station = models.ForeignKey(
-        "CommentStationSite",
-        verbose_name=_("commentaire"))
-    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
-
-
-@python_2_unicode_compatible
-class CommentStationSite(models.Model):
-    station = models.ForeignKey("StationSite", verbose_name=_("site"))
-    value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
 
 @python_2_unicode_compatible
@@ -1387,28 +1343,6 @@ class EquipDoc(models.Model):
             self.equip.serial_number,
             self.document_title,
             self.inscription_date)
-
-
-@python_2_unicode_compatible
-class CommentChannelAuthor(models.Model):
-    comment_channel = models.ForeignKey(
-        "CommentChannel",
-        verbose_name=_("commentaire"))
-    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
-
-
-@python_2_unicode_compatible
-class CommentChannel(models.Model):
-    channel = models.ForeignKey("Channel", verbose_name=_("canal"))
-    value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
 
 
 @python_2_unicode_compatible
