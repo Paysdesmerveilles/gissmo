@@ -956,6 +956,13 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                     obj,
                     post_url_continue)
 
+    def get_queryset(self, request):
+        qs = super(ChannelAdmin, self).get_queryset(request)
+        return qs.prefetch_related(
+            'channel_code',
+            'network',
+            'station')
+
 
 class ChainAdmin(admin.ModelAdmin):
     model = Chain
