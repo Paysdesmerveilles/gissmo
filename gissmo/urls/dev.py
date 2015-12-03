@@ -8,6 +8,8 @@ from django.conf.urls import (
     patterns,
     include)
 
+admin.site.site_header = 'Gissmo 1.4-trunk'
+
 if dev.DEBUG:
     import debug_toolbar
     urlpatterns += patterns(
