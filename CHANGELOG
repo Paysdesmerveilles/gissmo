@@ -1,4 +1,5 @@
 Current version (1.4-trunk)
+  - New theme: django-flat-theme
   - Delete comments on Network, Channel and StationSite. It will be back in a later stage
   - Improve StationSite display. It takes 142 sec first to be displayed. Now approximatively 5 seconds.
   - Delete useless "Add intervention" button on Intervention list to avoid problem of making a new intervention
