@@ -12,6 +12,7 @@ al.autodiscover()
 admin.autodiscover()
 admin.site.site_header = 'Gissmo'
 admin.site.site_title = 'Gissmo'
+admin.site.site_url = '/gissmo'
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',
