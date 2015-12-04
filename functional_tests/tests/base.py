@@ -18,7 +18,6 @@ from django.contrib.auth.models import User
 DEFAULT_ADMIN_LOGIN = os.getenv('USER', 'admin')
 DEFAULT_ADMIN_PASSWORD = os.getenv('PWD', 'admin')
 DOWNLOAD_PATH = os.getcwd()
-DOWNLOADED_FILE = 'test_site.csv'
 
 
 class FunctionalTest(LiveServerTestCase):
@@ -31,7 +30,6 @@ class FunctionalTest(LiveServerTestCase):
         cls.DEFAULT_ADMIN_LOGIN = DEFAULT_ADMIN_LOGIN
         cls.DEFAULT_ADMIN_PASSWORD = DEFAULT_ADMIN_PASSWORD
         cls.DOWNLOAD_PATH = DOWNLOAD_PATH
-        cls.DOWNLOADED_FILE = DOWNLOADED_FILE
         for arg in sys.argv:
             if 'liveserver' in arg:
                 cls.server_url = 'http://' + arg.split('=')[1]
@@ -87,12 +85,6 @@ class FunctionalTest(LiveServerTestCase):
         # Bug: https://code.djangoproject.com/ticket/10827
         # Note: Seems to be OK since Django 1.8
         # ContentType.objects.clear_cache()
-
-        # clean working directory
-        csv_filename = self.DOWNLOADED_FILE
-        filepath = '/'.join([self.DOWNLOAD_PATH, csv_filename])
-        if os.path.exists(filepath):
-            os.remove(filepath)
 
         super(FunctionalTest, self).tearDown()
 

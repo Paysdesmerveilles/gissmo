@@ -62,9 +62,6 @@ urlpatterns = [
     url(r'^gissmo/([A-Z0-9]{2,4})/$',
         views.site_shortcut,
         name='site_shortcut'),
-    url(r'^gissmo/test_site/$',
-        views.test_site,
-        name='test_site'),
     url(r'^gissmo/', include(admin.site.urls)),
     url(r'^autocomplete/', include(al_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

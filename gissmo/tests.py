@@ -85,7 +85,6 @@ class AdminPageTest(TestCase):
             # TODO: ValueError: invalid literal for int() with base 10: ''
             # '/gissmo/station_dataless/',
             # TODO: LINK TO TEST, [A-Z0-9]{2,4} to get site_shortcut
-            '/gissmo/test_site/',
             # '/gissmo/chaining/',
         ]
         # login first to the application
