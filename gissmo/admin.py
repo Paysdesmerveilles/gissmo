@@ -643,7 +643,7 @@ class IntervEquipInline(admin.TabularInline):
 class InterventionAdmin(admin.ModelAdmin):
     list_display = ['station', 'format_date']
     list_filter = ['station', ]
-    ordering = ['station', '-intervention_date', ]
+    ordering = ['-intervention_date', 'station']
     search_fields = ['station__station_code', 'intervention_date', ]
     form = InterventionForm
 
