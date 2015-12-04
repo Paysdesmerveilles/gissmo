@@ -378,21 +378,6 @@ def xhr_equip_state(request):
         return HttpResponse(status=400)
 
 
-def station_last_state(station):
-    """
-    Function to obtain the last state of a station
-    """
-    last_station_state = IntervStation.objects.filter(
-        intervention__station__id=station,
-        station_state__isnull=False).order_by(
-            '-intervention__intervention_date')
-    if last_station_state:
-        real_state = last_station_state[0].station_state
-        return dict(StationState.STATION_STATES)[real_state]
-    else:
-        return 'Inconnu'
-
-
 def equip_state_todate(equip, date, intervention_id):
     """
     Function to obtain the state of an equipment at a precise moment

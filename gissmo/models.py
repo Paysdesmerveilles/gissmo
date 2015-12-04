@@ -572,6 +572,24 @@ class StationSite(models.Model):
         null=True,
         blank=True,
         verbose_name=_('Date création'))
+    last_state = models.IntegerField(
+        choices=StationState.STATION_STATES,
+        null=True,
+        blank=True,
+        verbose_name=_('État'))
+
+    def get_last_state(self):
+        res = None
+        intervention = IntervStation.objects.filter(
+            intervention__station_id=self.id,
+            station_state__isnull=False).order_by(
+            '-intervention__intervention_date').first()
+        if intervention:
+            res = intervention.station_state
+        return res
+
+    def get_last_state_display(self):
+        return ''
 
     class Meta:
         ordering = ['station_code']
@@ -622,6 +640,9 @@ class StationSite(models.Model):
         project = get_object_or_404(Project, project_name=self.project)
         project.station.add(self.id)
 
+        # Return expected station state
+        return StationState.INSTALLATION
+
     def __init__(self, *args, **kwargs):
         """
         Permit to add project as keyword when creating new StationSite.
@@ -646,7 +667,8 @@ class StationSite(models.Model):
             # First save object
             res = super(StationSite, self).save(*args, **kwargs)
             # Then create intervention if needed
-            self.get_or_create_intervention()
+            state = self.get_or_create_intervention()
+            self.last_state = state
             return res
         return super(StationSite, self).save(*args, **kwargs)
 
@@ -1002,6 +1024,16 @@ la station
 
     def __str__(self):
         return u'%s' % (self.intervention)
+
+    def save(self, *args, **kwargs):
+        """
+        Update station state in given Intervention.
+        """
+        res = super(IntervStation, self).save(*args, **kwargs)
+        s = StationSite.objects.get(pk=self.intervention.station_id)
+        s.last_state = s.get_last_state()
+        s.save()
+        return res
 
 
 @python_2_unicode_compatible

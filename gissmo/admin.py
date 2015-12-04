@@ -471,8 +471,14 @@ class StationSiteFilter(SimpleListFilter):
 
 
 class StationSiteAdmin(admin.ModelAdmin):
-    list_display = ('station_code', 'site_name', 'operator', 'get_last_state',
-                    'site_type', 'latitude', 'longitude')
+    list_display = (
+        'station_code',
+        'site_name',
+        'operator',
+        'last_state',
+        'site_type',
+        'latitude',
+        'longitude')
     list_filter = [StationSiteFilter, 'site_type']
     ordering = ['station_code']
     search_fields = ['station_code', 'site_name', 'operator__actor_name']
@@ -509,11 +515,6 @@ class StationSiteAdmin(admin.ModelAdmin):
             'classes': ['collapse']}), ]
 
     inlines = [BuiltInline, StationDocInline, ]
-
-    def get_last_state(self, obj):
-        """ To display the last state of the station in the change_list """
-        return '%s' % (station_last_state(obj.id))
-    get_last_state.short_description = 'Etat'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
