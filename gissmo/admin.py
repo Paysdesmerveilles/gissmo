@@ -472,7 +472,7 @@ class StationSiteFilter(SimpleListFilter):
 
 class StationSiteAdmin(admin.ModelAdmin):
     list_display = ('station_code', 'site_name', 'operator', 'get_last_state',
-                    'site_type', 'latitude', 'longitude', 'elevation',)
+                    'site_type', 'latitude', 'longitude')
     list_filter = [StationSiteFilter, 'site_type']
     ordering = ['station_code']
     search_fields = ['station_code', 'site_name', 'operator__actor_name']
