@@ -1,7 +1,7 @@
 from django.conf.urls import include, url
 from django.contrib import admin
 
-admin.site.site_header = 'My Test'
+admin.site.site_header = 'The best sandbox area you ever seen!'
 
 urlpatterns = [
     # Examples:
