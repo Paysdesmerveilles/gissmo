@@ -5,10 +5,12 @@ from django.db.models.signals import (
     pre_save)
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError
 
 from polymorphic import PolymorphicModel
 
 from place import states as pstate
+from place import transitions as ptransition
 
 class State(PolymorphicModel):
     code = models.IntegerField(
@@ -19,13 +21,17 @@ class State(PolymorphicModel):
         null=True)
     site = models.ForeignKey('Site', related_name='linked_site')
 
-    def doTest(self, isConclusive=False):
-        assert 0, "Not implemented"
+    def allowed_transitions(self):
+        assert O, "Not implemented"
 
-    def observeFailure(self):
-        assert 0, "Not implemented"
+    def check_transition_allowed(self, transition):
+        if transition not in self.allowed_transitions:
+            raise ValidationError(
+                '%s is not allowed for the given state (%s).' % (
+                ptransition.TRANSITION_CHOICES[transition],
+                self.code))
 
-    def doFix(self):
+    def process(self, transition):
         assert 0, "Not implemented"
 
     def __str__(self):
@@ -33,6 +39,12 @@ class State(PolymorphicModel):
 
 
 class StateAvailable(State):
+    def allowed_transitions(self):
+        return [
+            ptransition.TEST_FAIL,
+            ptransition.TEST_SUCCESS,
+        ]
+
     def doTest(self, isConclusive=False):
         print('Test in progress…')
         site = Site.objects.get(pk=self.site_id)
@@ -42,7 +54,6 @@ class StateAvailable(State):
             site.save()
             print('…used')
         else:
-
             b = StateBroken.objects.create(site=self.site)
             site.state = b
             site.save()
@@ -50,11 +61,12 @@ class StateAvailable(State):
         self.end = timezone.now()
         self.save()
 
-    def observeFailure(self):
-        assert 0, "You cannot observe Failure on an available Site."
-
-    def doFix(self):
-        assert 0, "Site is not broken!"
+    def process(self, transition):
+        self.check_transition_allowed(transition)
+        if transition == ptransition.TEST_FAIL:
+            return self.doTest(False)
+        if transition == ptransition.TEST_SUCCESS:
+            return self.doTest(True)
 
 
 @receiver(pre_save, sender=StateAvailable)
@@ -63,11 +75,8 @@ def get_available_code(sender, instance, **kwargs):
 
 
 class StateBroken(State):
-    def doTest(self, isConclusive=False):
-        assert 0, "You cannot make test on a broken Site."
-
-    def observeFailure(self):
-        assert 0, "You're already broken"
+    def allowed_transitions(self):
+        return [ptransition.FIX]
 
     def doFix(self):
         print('Fixing…')
@@ -79,6 +88,10 @@ class StateBroken(State):
         self.end = timezone.now()
         self.save()
 
+    def process(self, transition):
+        self.check_transition_allowed(transition)
+        if transition == ptransition.FIX:
+            return self.doFix()
 
 @receiver(pre_save, sender=StateBroken)
 def get_broken_code(sender, instance, **kwargs):
@@ -86,8 +99,8 @@ def get_broken_code(sender, instance, **kwargs):
 
 
 class StateUsed(State):
-    def doTest(self, isConclusive=False):
-        assert 0, "You cannot make test on a used Site."
+    def allowed_transitions(self):
+        return [ptransition.FAILURE]
 
     def observeFailure(self):
         print('Failure detected!')
@@ -99,8 +112,10 @@ class StateUsed(State):
         self.end = timezone.now()
         self.save()
 
-    def doFix(self):
-        assert 0, "Site is not broken!"
+    def process(self, transition):
+        self.check_transition_allowed(transition)
+        if transition == ptransition.FAILURE:
+            return self.observeFailure()
 
 
 @receiver(pre_save, sender=StateUsed)
