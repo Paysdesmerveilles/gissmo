@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
 from polymorphic import PolymorphicModel
@@ -8,7 +7,7 @@ from place import transitions as ptransition
 
 
 class Player(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField('auth.User')
 
     def __str__(self):
         return self.user.username
