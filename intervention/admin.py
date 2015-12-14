@@ -9,6 +9,8 @@ from intervention.models import (
     InterventionPlayer,
     Player)
 
+from intervention.forms import InterventionForm
+
 
 class PlayerInline(admin.StackedInline):
     model = Player
@@ -38,6 +40,10 @@ class InterventionAdmin(admin.ModelAdmin):
     fields = ['site', 'date', 'note']
     list_display = ['date', 'site']
     inlines = [InterventionPlayer, ActionSiteInline, ActionEquipmentInline]
+    form = InterventionForm
+
+    class Media:
+        js = ["/static/intervention/admin/pageadmin.js"]
 
 
 # Players
