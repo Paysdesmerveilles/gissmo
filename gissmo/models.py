@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
+from equipment import protocols as Protocol
 
 from station import states as StationState
 from station import actions as StationAction
@@ -849,6 +850,28 @@ l'équipment
             self.get_or_create_intervention()
             return res
         return super(Equipment, self).save(*args, **kwargs)
+
+
+class Service(models.Model):
+    protocol = models.IntegerField(
+        choices=Protocol.PROTOCOL_CHOICES,
+        verbose_name=_('Protocol'))
+    ip = models.GenericIPAddressField(
+        protocol='both',
+        verbose_name=_('IP Address'))
+    port = models.PositiveIntegerField(verbose_name=_('Port'))
+    login = models.CharField(verbose_name=_('Login'), max_length=256)
+    password = models.CharField(verbose_name=_('Password'), max_length=256)
+    description = models.CharField(
+        max_length=256,
+        blank=True,
+        null=True,
+        verbose_name=_('Description'))
+    equipment = models.ForeignKey('Equipment')
+
+    def __str__(self):
+        return '%s' % Protocol.PROTOCOL_CHOICES[self.protocol][1]
+
 
 ####
 #

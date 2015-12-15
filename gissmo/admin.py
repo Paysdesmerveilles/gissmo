@@ -192,6 +192,12 @@ class EquipDocInline(admin.TabularInline):
         models.URLField: {'widget': URLFieldWidget},
     }
 
+
+class ServiceInline(admin.TabularInline):
+    model = Service
+    extra = 0
+
+
 """
 Custom filter for the equipment change list
 """
@@ -336,7 +342,7 @@ class EquipmentAdmin(admin.ModelAdmin):
             'fields': [('note')],
             'classes': ['collapse']})]
 
-    inlines = [EquipDocInline]
+    inlines = [EquipDocInline, ServiceInline]
 
     def get_queryset(self, request):
         """
