@@ -5,17 +5,11 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from autocomplete_light import shortcuts as al
-from autocomplete_light import urls as al_urls
-
 from gissmo import views
 
 from api import views as api_views
 
 from rest_framework import routers
-
-# autocomplete discovering for specific fields as Equipment model
-al.autodiscover()
 
 # Admin configuration
 admin.autodiscover()
@@ -83,7 +77,7 @@ urlpatterns = [
         views.site_shortcut,
         name='site_shortcut'),
     url(r'^gissmo/', include(admin.site.urls)),
-    url(r'^autocomplete/', include(al_urls)),
+    url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^api/', include(apirouter.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
