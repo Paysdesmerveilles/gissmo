@@ -19,7 +19,7 @@
          <th></th>
      </tr></thead>
      <tbody>
-     {% for channel, equipment in channels %}
+     {% for channel, chains in channels %}
         <tr>
         <td class="location_code">
           <p>{{ channel.network }}</p>
@@ -70,7 +70,7 @@
         </td>
 
         <td class="acquisition_chain">
-          <textarea readonly="readonly" rows="1" cols="40">{% for equip in equipment %}{{ equip }}{% if forloop.last %}.{% else %},&#13;{% endif %}{% endfor %}</textarea>
+          <textarea readonly="readonly" rows="1" cols="40">{% for chain in chains %}{{ chain.equip.equip_type }} : {{ chain.equip }}{% if forloop.last %}.{% else %},&#13;{% endif %}{% endfor %}</textarea>
         </td>
 
         <td class="configuration">

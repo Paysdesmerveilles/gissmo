@@ -11,6 +11,12 @@ from django.conf import settings
 from django.utils.timezone import localtime
 from django.contrib.auth.models import User
 
+from equipment import states as EquipState
+from equipment import actions as EquipAction
+
+from station import states as StationState
+from station import actions as StationAction
+
 from gissmo.helpers import format_date
 from gissmo.tools import make_date_aware
 
@@ -147,8 +153,7 @@ celui-ci d'un autre bâti
     built_type = models.ForeignKey("BuiltType", verbose_name=_("type de bati"))
     built_short_desc = models.CharField(
         max_length=40,
-        null=True,
-        blank=True,
+        default="Unknown",
         verbose_name=_("courte description"))
     built_note = models.TextField(
         null=True,
@@ -161,10 +166,7 @@ celui-ci d'un autre bâti
         verbose_name_plural = _("B1. Batis")
 
     def __str__(self):
-        return u'%s : %s : %s' % (
-            self.station.station_code,
-            self.built_type.built_type_name,
-            self.built_short_desc)
+        return '%s' % self.built_short_desc
 
 
 @python_2_unicode_compatible
@@ -313,520 +315,6 @@ class ParameterValue(models.Model):
 
 
 @python_2_unicode_compatible
-class Equipment(models.Model):
-    """
-    **Description :** Tout appareil installé dans une station sismologique ou
-conserver dans l'inventaire des OSU
-
-    **Attributes :**
-
-    equip_model : integer (fk)
-        Modèle auquel appartient l'équipment
-
-    serial_number : char(50)
-        Numéro de série, numéro de produit ou numéro d'inventaire de
-l'équipment
-
-    owner : integer (fk)
-        Propriétaire de l'équipement
-
-    contact : text
-        Champ libre afin d'ajouter des informations sur les contacts
-
-    note : text
-        Champ libre afin d'ajouter des informations supplémentaires
-    """
-    equip_model = models.ForeignKey(
-        EquipModel,
-        verbose_name=_("modele d'equipement")
-    )
-    serial_number = models.CharField(
-        max_length=50,
-        verbose_name=_("numero de serie"))
-    owner = models.ForeignKey("Actor", verbose_name=_("proprietaire"))
-    vendor = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        verbose_name=_("vendeur"))
-    contact = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_("contact"))
-    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
-    purchase_date = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name=_('Date achat'))
-
-    def _get_type(self):
-        "Returns the linked EquipType"
-        return '%s' % (self.equip_model.equip_type)
-
-    def _get_supertype(self):
-        "Returns the linked EquipSuperType"
-        return '%s' % (self.equip_model.equip_type.equip_supertype)
-
-    _get_type.short_description = _('type d\'équipement')
-    _get_supertype.short_description = _('supertype d\'équipement')
-
-    equip_type = property(_get_type)
-    equip_supertype = property(_get_supertype)
-
-    class Meta:
-        unique_together = (
-            "equip_model",
-            "serial_number")
-        verbose_name = _("equipement")
-        verbose_name_plural = _("D1. Equipements")
-
-    def __str__(self):
-        return u'%s : %s : %s' % (
-            self.equip_model.equip_type,
-            self.equip_model,
-            self.serial_number)
-
-    def check_mandatories_data(self):
-        """
-        Raise an error if these data are missing:
-          * stockage_site
-          * purchase_date
-        """
-        mandatories_fields = [
-            ('stockage_site', 'Stockage site'),
-            ('purchase_date', 'Purchase date')]
-        for field in mandatories_fields:
-            if not getattr(self, field[0], None):
-                raise ValidationError(
-                    _('%(property_name)s property is missing!'),
-                    params={'property_name': field[1]}
-                )
-
-    def get_or_create_intervention(self):
-        """
-        Interventions are needed for each equipment.
-        If no one, create them.
-        """
-        intervention, i_created = Intervention.objects.get_or_create(
-            station=self.stockage_site,
-            intervention_date=make_date_aware(self.purchase_date),
-            defaults={'note': 'Automated creation'})
-        interv_equip, ie_created = IntervEquip.objects.get_or_create(
-            intervention=intervention,
-            equip_action=EquipAction.ACHETER,
-            equip=self,
-            equip_state=EquipState.A_TESTER,
-            station=self.stockage_site,
-            defaults={'note': 'Automated creation'})
-        if ie_created:
-            if not self.actor:
-                raise ValidationError(
-                    _('No logged user'),
-                )
-            actor = get_object_or_404(Actor, actor_name=self.actor)
-            IntervActor.objects.create(
-                intervention=intervention,
-                actor=actor)
-
-    def __init__(self, *args, **kwargs):
-        """
-        Permit to add stockage_site and actor as keyword when creating new
-        Equipment.
-        """
-        new_kwargs = {}
-        fake_fields = ['stockage_site', 'actor']
-        for keyword in kwargs:
-            if keyword not in fake_fields:
-                new_kwargs[keyword] = kwargs[keyword]
-        super(Equipment, self).__init__(*args, **new_kwargs)
-        for field in fake_fields:
-            setattr(self, field, kwargs.get(field, None))
-
-    def save(self, *args, **kwargs):
-        """
-        If first time you save the object, then:
-          * check stockage_site and purchase_date presence
-          * create related interventions
-        """
-        if not self.id:
-            self.check_mandatories_data()
-            # First save object
-            res = super(Equipment, self).save(*args, **kwargs)
-            # Then create intervention if needed
-            self.get_or_create_intervention()
-            return res
-        return super(Equipment, self).save(*args, **kwargs)
-
-####
-#
-# Network's section
-#
-####
-
-
-@python_2_unicode_compatible
-class CommentNetworkAuthor(models.Model):
-    comment_network = models.ForeignKey(
-        "CommentNetwork",
-        verbose_name=_("commentaire"))
-    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
-
-
-@python_2_unicode_compatible
-class CommentNetwork(models.Model):
-    network = models.ForeignKey("Network", verbose_name=_("reseau"))
-    value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
-
-
-@python_2_unicode_compatible
-class Network(models.Model):
-    """
-    **Description :** Réseau
-
-    **Attributes :**
-
-    network_code : char(5)
-        Code qui est atribué au réseau
-
-    network_name : char(50)
-        Nom d'usage que l'on utilise pour dénommer le réseau
-    """
-    OPEN = 1
-    CLOSE = 2
-    PARTIAL = 3
-    STATUS = (
-        (OPEN, 'Ouvert'),
-        (CLOSE, 'Ferme'),
-        (PARTIAL, 'Partiel'),
-    )
-
-    network_code = models.CharField(
-        max_length=5,
-        verbose_name=_("network code"))
-    network_name = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        verbose_name=_("nom du reseau"))
-    code = models.CharField(max_length=5, verbose_name=_("code reseau"))
-    start_date = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("date debut (aaaa-mm-jj)"))
-    end_date = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("date fin (aaaa-mm-jj)"))
-    restricted_status = models.IntegerField(
-        choices=STATUS,
-        null=True,
-        blank=True,
-        verbose_name=_("etat restrictif"))
-    alternate_code = models.CharField(
-        max_length=5,
-        null=True,
-        blank=True,
-        verbose_name=_("code alternatif"))
-    historical_code = models.CharField(
-        max_length=5,
-        null=True,
-        blank=True,
-        verbose_name=_("code historique"))
-    description = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_("description"))
-
-    class Meta:
-        verbose_name = _("reseau")
-        verbose_name_plural = _("N1. Reseaux")
-
-    def __str__(self):
-        return self.network_code
-
-
-@python_2_unicode_compatible
-class StationAction(models.Model):
-    """
-    **Description :** Action qui peut survenir sur une station
-
-    **Choices :**
-
-        1 : CREER : Créer code station
-
-        2 : INSTALLER : Installer station
-
-        3 : OPERER : Mettre en opération
-
-        4 : CONSTATER DEFAUT : Constater défaillance
-
-        5 : MAINT_PREV_DISTANTE : Effectuer maintenance préventive à distance
-
-        6 : MAINT_CORR_DISTANTE : Effectuer maintenance corrective à distance
-
-        7 : MAINT_PREV_SITE : Effectuer maintenance préventive sur site
-
-        8 : MAINT_CORR_SITE : Effectuer maintenance corrective sur site
-
-        9 : DEMANTELER : Démanteler
-
-        10 : AUTRE : Autre
-
-        11 : DEBUTER_TEST : Débuter test
-
-        12 : TERMINER_TEST : Terminer test
-
-    **Attributes :**
-
-    station_action_name : char(50)
-        Nom utilise pour décrire l'action effectuée
-    """
-    CREER = 1
-    INSTALLER = 2
-    OPERER = 3
-    CONSTATER_DEFAUT = 4
-    MAINT_PREV_DISTANTE = 5
-    MAINT_CORR_DISTANTE = 6
-    MAINT_PREV_SITE = 7
-    MAINT_CORR_SITE = 8
-    DEMANTELER = 9
-    AUTRE = 10
-    DEBUTER_TEST = 11
-    TERMINER_TEST = 12
-    STATION_ACTIONS = (
-        (CREER, 'Créer code station'),
-        (INSTALLER, 'Installer station'),
-        (DEBUTER_TEST, 'Débuter test'),
-        (TERMINER_TEST, 'Terminer test'),
-        (OPERER, 'Mettre en opération'),
-        (CONSTATER_DEFAUT, 'Constater défaillance'),
-        (MAINT_PREV_DISTANTE, 'Effectuer maintenance préventive à distance'),
-        (MAINT_CORR_DISTANTE, 'Effectuer maintenance corrective à distance'),
-        (MAINT_PREV_SITE, 'Effectuer maintenance préventive sur site'),
-        (MAINT_CORR_SITE, 'Effectuer maintenance corrective sur site'),
-        (DEMANTELER, 'Démanteler'),
-        (AUTRE, 'Autre'),
-    )
-    station_action_name = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True)
-
-
-@python_2_unicode_compatible
-class StationState(models.Model):
-    """
-    **Description :** Etat dans lequel une station peut se retrouver
-
-    **Choices :**
-
-        1 : INSTALLATION : En installation
-
-        2 : OPERATION : En opération
-
-        3 : DEFAUT : En défaillance
-
-        4 : PANNE : En panne
-
-        5 : FERMEE : Fermée
-
-        6 : AUTRE : Autre
-
-        7 : EN_TEST : En test
-
-    **Attributes :**
-
-    station_state_name : char(50)
-        Nom utilisé pour décrire l'état d'une station
-    """
-    INSTALLATION = 1
-    OPERATION = 2
-    DEFAUT = 3
-    PANNE = 4
-    FERMEE = 5
-    AUTRE = 6
-    EN_TEST = 7
-    STATION_STATES = (
-        (INSTALLATION, 'En installation'),
-        (EN_TEST, 'En test'),
-        (OPERATION, 'En opération'),
-        (DEFAUT, 'En défaillance'),
-        (PANNE, 'En panne'),
-        (FERMEE, 'Fermée'),
-        (AUTRE, 'Autre'),
-    )
-    station_state_name = models.CharField(max_length=50, null=True, blank=True)
-
-
-@python_2_unicode_compatible
-class EquipAction(models.Model):
-    """
-    **Description :** Action qui peut survenir sur un équipement
-
-    **Choices :**
-
-        1 : ACHETER : Acheter
-
-        2 : TESTER : Tester
-
-        3 : INSTALLER : Installer
-
-        4 : DESINSTALLER : Désinstaller
-
-        5 : CONSTATER_DEFAUT : Constater défaut
-
-        6 : MAINT_PREV_DISTANTE : Effectuer maintenance préventive à distance
-
-        7 : MAINT_CORR_DISTANTE : Effectuer maintenance corrective à distance
-
-        8 : MAINT_PREV_SITE : Effectuer maintenance préventive sur site
-
-        9 : MAINT_CORR_SITE : Effectuer maintenance corrective sur site
-
-        10 : EXPEDIER : Expédier
-
-        11 : RECEVOIR : Recevoir
-
-        12 : METTRE_HORS_USAGE : Mettre hors usage
-
-        13 : CONSTATER_DISPARITION : Constater disparition
-
-        14 : RETROUVER : Retrouver suite à une disparition
-
-        15 : METTRE_AU_REBUT : Mettre au rebut
-
-        16 : AUTRE : Autre
-
-    **Attributes :**
-
-    equip_action_name : char(50)
-        Nom utilisé pour décrire l'action effectuée
-    """
-    ACHETER = 1
-    TESTER = 2
-    INSTALLER = 3
-    DESINSTALLER = 4
-    CONSTATER_DEFAUT = 5
-    MAINT_PREV_DISTANTE = 6
-    MAINT_CORR_DISTANTE = 7
-    MAINT_PREV_SITE = 8
-    MAINT_CORR_SITE = 9
-    EXPEDIER = 10
-    RECEVOIR = 11
-    METTRE_HORS_USAGE = 12
-    CONSTATER_DISPARITION = 13
-    RETROUVER = 14
-    METTRE_AU_REBUT = 15
-    AUTRE = 16
-    EQUIP_ACTIONS = (
-        (ACHETER, 'Acheter'),
-        (TESTER, 'Tester'),
-        (INSTALLER, 'Installer'),
-        (DESINSTALLER, 'Désinstaller'),
-        (CONSTATER_DEFAUT, 'Constater défaut'),
-        (MAINT_PREV_DISTANTE, 'Effectuer maintenance préventive à distance'),
-        (MAINT_CORR_DISTANTE, 'Effectuer maintenance corrective à distance'),
-        (MAINT_PREV_SITE, 'Effectuer maintenance préventive sur site'),
-        (MAINT_CORR_SITE, 'Effectuer maintenance corrective sur site'),
-        (EXPEDIER, 'Expédier'),
-        (RECEVOIR, 'Recevoir'),
-        (METTRE_HORS_USAGE, 'Mettre hors usage'),
-        (CONSTATER_DISPARITION, 'Constater disparition'),
-        (RETROUVER, 'Retrouver suite à une disparition'),
-        (METTRE_AU_REBUT, 'Mettre au rebut'),
-        (AUTRE, 'Autre'),
-    )
-    equip_action_name = models.CharField(max_length=50, null=True, blank=True)
-
-
-@python_2_unicode_compatible
-class EquipState(models.Model):
-    """
-    **Description :** Etat dans lequel un équipement peut se retrouver
-
-    **Choices :**
-
-        1 : OPERATION : En opération
-
-        2 : A_TESTER : A tester
-
-        3 : DISPONIBLE : Disponible
-
-        4 : DEFAUT : En défaillance
-
-        5 : PANNE : En panne
-
-        6 : EN_TRANSIT : En transit
-
-        7 : HORS_USAGE : Hors d'usage
-
-        8 : DISPARU : Disparu
-
-        9 : AU_REBUT : Au rebut
-
-        10 : AUTRE : Autre
-
-    **Attributes :**
-
-    equip_state_name : char(50)
-        Nom utilisé pour décrire l'état d'un équipement
-    """
-    OPERATION = 1
-    A_TESTER = 2
-    DISPONIBLE = 3
-    DEFAUT = 4
-    PANNE = 5
-    EN_TRANSIT = 6
-    HORS_USAGE = 7
-    DISPARU = 8
-    AU_REBUT = 9
-    AUTRE = 10
-    EQUIP_STATES = (
-        (OPERATION, 'En opération'),
-        (A_TESTER, 'A tester'),
-        (DISPONIBLE, 'Disponible'),
-        (DEFAUT, 'En défaillance'),
-        (PANNE, 'En panne'),
-        (EN_TRANSIT, 'En transit'),
-        (HORS_USAGE, 'Hors d\'usage'),
-        (DISPARU, 'Disparu'),
-        (AU_REBUT, 'Au rebut'),
-        (AUTRE, 'Autre'),
-    )
-    equip_state_name = models.CharField(max_length=50, null=True, blank=True)
-
-
-@python_2_unicode_compatible
-class CommentStationSiteAuthor(models.Model):
-    comment_station = models.ForeignKey(
-        "CommentStationSite",
-        verbose_name=_("commentaire"))
-    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
-
-
-@python_2_unicode_compatible
-class CommentStationSite(models.Model):
-    station = models.ForeignKey("StationSite", verbose_name=_("site"))
-    value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
-
-
-@python_2_unicode_compatible
 class StationSite(models.Model):
     """
     **Description :** Site ou station d'intérêt dans le cadre du CLB Resif
@@ -961,13 +449,13 @@ class StationSite(models.Model):
     latitude = models.DecimalField(
         null=True,
         blank=True,
-        verbose_name=_("latitude (degre decimal)"),
+        verbose_name=_("latitude (°)"),
         max_digits=8,
         decimal_places=6)
     longitude = models.DecimalField(
         null=True,
         blank=True,
-        verbose_name=_("longitude (degre decimal)"),
+        verbose_name=_("longitude (°)"),
         max_digits=9,
         decimal_places=6)
     elevation = models.DecimalField(
@@ -1084,6 +572,24 @@ class StationSite(models.Model):
         null=True,
         blank=True,
         verbose_name=_('Date création'))
+    last_state = models.IntegerField(
+        choices=StationState.STATION_STATES,
+        null=True,
+        blank=True,
+        verbose_name=_('État'))
+
+    def get_last_state(self):
+        res = None
+        intervention = IntervStation.objects.filter(
+            intervention__station_id=self.id,
+            station_state__isnull=False).order_by(
+            '-intervention__intervention_date').first()
+        if intervention:
+            res = intervention.station_state
+        return res
+
+    def get_last_state_display(self):
+        return ''
 
     class Meta:
         ordering = ['station_code']
@@ -1134,6 +640,9 @@ class StationSite(models.Model):
         project = get_object_or_404(Project, project_name=self.project)
         project.station.add(self.id)
 
+        # Return expected station state
+        return StationState.INSTALLATION
+
     def __init__(self, *args, **kwargs):
         """
         Permit to add project as keyword when creating new StationSite.
@@ -1158,9 +667,261 @@ class StationSite(models.Model):
             # First save object
             res = super(StationSite, self).save(*args, **kwargs)
             # Then create intervention if needed
-            self.get_or_create_intervention()
+            state = self.get_or_create_intervention()
+            self.last_state = state
             return res
         return super(StationSite, self).save(*args, **kwargs)
+
+
+@python_2_unicode_compatible
+class Equipment(models.Model):
+    """
+    **Description :** Tout appareil installé dans une station sismologique ou
+conserver dans l'inventaire des OSU
+
+    **Attributes :**
+
+    equip_model : integer (fk)
+        Modèle auquel appartient l'équipment
+
+    serial_number : char(50)
+        Numéro de série, numéro de produit ou numéro d'inventaire de
+l'équipment
+
+    owner : integer (fk)
+        Propriétaire de l'équipement
+
+    contact : text
+        Champ libre afin d'ajouter des informations sur les contacts
+
+    note : text
+        Champ libre afin d'ajouter des informations supplémentaires
+    """
+    equip_model = models.ForeignKey(
+        EquipModel,
+        verbose_name=_("modele d'equipement")
+    )
+    serial_number = models.CharField(
+        max_length=50,
+        verbose_name=_("numero de serie"))
+    owner = models.ForeignKey("Actor", verbose_name=_("proprietaire"))
+    vendor = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name=_("vendeur"))
+    contact = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_("contact"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+    purchase_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_('Date achat'))
+    # Last state makes equipment display faster. Interventions updates it.
+    last_state = models.IntegerField(
+        choices=EquipState.EQUIP_STATES,
+        null=True,
+        blank=True,
+        verbose_name=_('État'))
+    # Last station makes equipment display faster. Interventions updates it.
+    last_station = models.ForeignKey(
+        StationSite,
+        null=True,
+        blank=True,
+        verbose_name=_('Emplacement'))
+
+    def _get_type(self):
+        "Returns the linked EquipType"
+        return '%s' % (self.equip_model.equip_type)
+
+    def _get_supertype(self):
+        "Returns the linked EquipSuperType"
+        return '%s' % (self.equip_model.equip_type.equip_supertype)
+
+    _get_type.short_description = _('type d\'équipement')
+    _get_supertype.short_description = _('supertype d\'équipement')
+
+    equip_type = property(_get_type)
+    equip_supertype = property(_get_supertype)
+
+    def get_last_state(self):
+        res = None
+        intervention = self.intervequip_set.filter(
+            equip_state__isnull=False).order_by(
+            'intervention__intervention_date')[:1].last()
+        if intervention:
+            res = intervention.equip_state
+        return res
+
+    def get_last_state_field(self):
+        return "%s" % EquipState.EQUIP_STATES[self.last_state - 1][1]
+
+    def get_last_station(self):
+        res = None
+        intervention = self.intervequip_set.filter(
+            station__isnull=False).order_by(
+            '-intervention__intervention_date').first()
+        if intervention:
+            res = intervention.station
+        return res
+
+    class Meta:
+        unique_together = (
+            "equip_model",
+            "serial_number")
+        verbose_name = _("equipement")
+        verbose_name_plural = _("D1. Equipements")
+
+    def __str__(self):
+        return '%s : %s' % (
+            self.equip_model,
+            self.serial_number)
+
+    def check_mandatories_data(self):
+        """
+        Raise an error if these data are missing:
+          * stockage_site
+          * purchase_date
+        """
+        mandatories_fields = [
+            ('stockage_site', 'Stockage site'),
+            ('purchase_date', 'Purchase date')]
+        for field in mandatories_fields:
+            if not getattr(self, field[0], None):
+                raise ValidationError(
+                    _('%(property_name)s property is missing!'),
+                    params={'property_name': field[1]}
+                )
+
+    def get_or_create_intervention(self):
+        """
+        Interventions are needed for each equipment.
+        If no one, create them.
+        """
+        intervention, i_created = Intervention.objects.get_or_create(
+            station=self.stockage_site,
+            intervention_date=make_date_aware(self.purchase_date),
+            defaults={'note': 'Automated creation'})
+        interv_equip, ie_created = IntervEquip.objects.get_or_create(
+            intervention=intervention,
+            equip_action=EquipAction.ACHETER,
+            equip=self,
+            equip_state=EquipState.A_TESTER,
+            station=self.stockage_site,
+            defaults={'note': 'Automated creation'})
+        if ie_created:
+            if not self.actor:
+                raise ValidationError(
+                    _('No logged user'),
+                )
+            actor = get_object_or_404(Actor, actor_name=self.actor)
+            IntervActor.objects.create(
+                intervention=intervention,
+                actor=actor)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Permit to add stockage_site and actor as keyword when creating new
+        Equipment.
+        """
+        new_kwargs = {}
+        fake_fields = ['stockage_site', 'actor']
+        for keyword in kwargs:
+            if keyword not in fake_fields:
+                new_kwargs[keyword] = kwargs[keyword]
+        super(Equipment, self).__init__(*args, **new_kwargs)
+        for field in fake_fields:
+            setattr(self, field, kwargs.get(field, None))
+
+    def save(self, *args, **kwargs):
+        """
+        If first time you save the object, then:
+          * check stockage_site and purchase_date presence
+          * create related interventions
+        """
+        if not self.id:
+            self.check_mandatories_data()
+            # First save object
+            res = super(Equipment, self).save(*args, **kwargs)
+            # Then create intervention if needed
+            self.get_or_create_intervention()
+            return res
+        return super(Equipment, self).save(*args, **kwargs)
+
+####
+#
+# Network's section
+#
+####
+
+
+@python_2_unicode_compatible
+class Network(models.Model):
+    """
+    **Description :** Réseau
+
+    **Attributes :**
+
+    network_code : char(5)
+        Code qui est atribué au réseau
+
+    network_name : char(50)
+        Nom d'usage que l'on utilise pour dénommer le réseau
+    """
+    OPEN = 1
+    CLOSE = 2
+    PARTIAL = 3
+    STATUS = (
+        (OPEN, 'Ouvert'),
+        (CLOSE, 'Ferme'),
+        (PARTIAL, 'Partiel'),
+    )
+
+    network_code = models.CharField(
+        max_length=5,
+        verbose_name=_("network code"))
+    network_name = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name=_("nom du reseau"))
+    code = models.CharField(max_length=5, verbose_name=_("code reseau"))
+    start_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("date debut (aaaa-mm-jj)"))
+    end_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("date fin (aaaa-mm-jj)"))
+    restricted_status = models.IntegerField(
+        choices=STATUS,
+        null=True,
+        blank=True,
+        verbose_name=_("etat restrictif"))
+    alternate_code = models.CharField(
+        max_length=5,
+        null=True,
+        blank=True,
+        verbose_name=_("code alternatif"))
+    historical_code = models.CharField(
+        max_length=5,
+        null=True,
+        blank=True,
+        verbose_name=_("code historique"))
+    description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_("description"))
+
+    class Meta:
+        verbose_name = _("reseau")
+        verbose_name_plural = _("N1. Reseaux")
+
+    def __str__(self):
+        return self.network_code
 
 
 @python_2_unicode_compatible
@@ -1264,6 +1025,16 @@ la station
     def __str__(self):
         return u'%s' % (self.intervention)
 
+    def save(self, *args, **kwargs):
+        """
+        Update station state in given Intervention.
+        """
+        res = super(IntervStation, self).save(*args, **kwargs)
+        s = StationSite.objects.get(pk=self.intervention.station_id)
+        s.last_state = s.get_last_state()
+        s.save()
+        return res
+
 
 @python_2_unicode_compatible
 class IntervEquip(models.Model):
@@ -1322,6 +1093,19 @@ répertoriées
 
     def __str__(self):
         return u'%s' % (self.intervention)
+
+    def save(self, *args, **kwargs):
+        """
+        Update equipment in given Intervention:
+          - state
+          - station
+        """
+        res = super(IntervEquip, self).save(*args, **kwargs)
+        e = Equipment.objects.get(pk=self.equip_id)
+        e.last_state = e.get_last_state()
+        e.last_station = e.get_last_station()
+        e.save()
+        return res
 
 
 @python_2_unicode_compatible
@@ -1594,28 +1378,6 @@ class EquipDoc(models.Model):
 
 
 @python_2_unicode_compatible
-class CommentChannelAuthor(models.Model):
-    comment_channel = models.ForeignKey(
-        "CommentChannel",
-        verbose_name=_("commentaire"))
-    author = models.ForeignKey("Actor", verbose_name=_("auteur"))
-
-
-@python_2_unicode_compatible
-class CommentChannel(models.Model):
-    channel = models.ForeignKey("Channel", verbose_name=_("canal"))
-    value = models.TextField(verbose_name=_("commentaire"))
-    begin_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
-    end_effective = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
-
-
-@python_2_unicode_compatible
 class CalibrationUnit(models.Model):
     name = models.CharField(max_length=50, verbose_name=_("Nom unite"))
     description = models.TextField(
@@ -1703,11 +1465,11 @@ class Channel(models.Model):
         max_length=2,
         verbose_name=_("code localisation"))
     latitude = models.DecimalField(
-        verbose_name=_("latitude (degre decimal)"),
+        verbose_name=_("latitude (°)"),
         max_digits=8,
         decimal_places=6)
     longitude = models.DecimalField(
-        verbose_name=_("longitude (degre decimal)"),
+        verbose_name=_("longitude (°)"),
         max_digits=9,
         decimal_places=6)
     elevation = models.DecimalField(

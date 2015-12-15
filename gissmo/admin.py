@@ -42,6 +42,7 @@ class ActorAdmin(admin.ModelAdmin):
     form = ActorForm
     list_display = ['actor_parent', 'actor_name', 'actor_type']
     list_display_links = ['actor_name']
+    list_filter = ['actor_type']
     ordering = ['actor_parent', 'actor_name']
     search_fields = ['actor_name']
 
@@ -302,8 +303,8 @@ class EquipmentAdmin(admin.ModelAdmin):
         'equip_type',
         'equip_model',
         'serial_number',
-        'get_last_state',
-        'get_last_place',
+        'last_state',
+        'last_station',
         'owner']
     list_display_links = ['serial_number']
     list_filter = [EquipFilter]
@@ -337,19 +338,13 @@ class EquipmentAdmin(admin.ModelAdmin):
 
     inlines = [EquipDocInline]
 
-    def get_last_state(self, obj):
-        return '%s' % (equip_last_state(obj.id))
-    get_last_state.short_description = 'Etat'
-
-    def get_last_place(self, obj):
-        return '%s' % (equip_last_place(obj.id))
-    get_last_place.short_description = 'Emplacement'
-
     def get_queryset(self, request):
         """
         Show only equipment according to the user's project
         """
-        qs = super(EquipmentAdmin, self).get_queryset(request)
+        qs = super(EquipmentAdmin, self).get_queryset(
+            request).prefetch_related(
+            'last_station')
         check_forall = ProjectUser.objects.filter(
             user=request.user).values_list(
                 'project__project_name',
@@ -476,8 +471,14 @@ class StationSiteFilter(SimpleListFilter):
 
 
 class StationSiteAdmin(admin.ModelAdmin):
-    list_display = ('station_code', 'site_name', 'operator', 'get_last_state',
-                    'site_type', 'latitude', 'longitude', 'elevation',)
+    list_display = (
+        'station_code',
+        'site_name',
+        'operator',
+        'last_state',
+        'site_type',
+        'latitude',
+        'longitude')
     list_filter = [StationSiteFilter, 'site_type']
     ordering = ['station_code']
     search_fields = ['station_code', 'site_name', 'operator__actor_name']
@@ -514,11 +515,6 @@ class StationSiteAdmin(admin.ModelAdmin):
             'classes': ['collapse']}), ]
 
     inlines = [BuiltInline, StationDocInline, ]
-
-    def get_last_state(self, obj):
-        """ To display the last state of the station in the change_list """
-        return '%s' % (station_last_state(obj.id))
-    get_last_state.short_description = 'Etat'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
@@ -648,7 +644,7 @@ class IntervEquipInline(admin.TabularInline):
 class InterventionAdmin(admin.ModelAdmin):
     list_display = ['station', 'format_date']
     list_filter = ['station', ]
-    ordering = ['station', '-intervention_date', ]
+    ordering = ['-intervention_date', 'station']
     search_fields = ['station__station_code', 'intervention_date', ]
     form = InterventionForm
 
@@ -961,6 +957,13 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                     obj,
                     post_url_continue)
 
+    def get_queryset(self, request):
+        qs = super(ChannelAdmin, self).get_queryset(request)
+        return qs.prefetch_related(
+            'channel_code',
+            'network',
+            'station')
+
 
 class ChainAdmin(admin.ModelAdmin):
     model = Chain
@@ -1042,71 +1045,6 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         return {}
 
 
-class CommentNetworkAuthorInline(admin.TabularInline):
-    model = CommentNetworkAuthor
-    extra = 0
-
-
-class CommentNetworkAdmin(admin.ModelAdmin):
-    model = CommentNetwork
-
-    fieldsets = [
-        ('', {'fields': [
-            ('network', 'begin_effective', 'end_effective'),
-            ('value')]})]
-
-    inlines = [CommentNetworkAuthorInline]
-
-    def response_change(self, request, obj):
-        is_continue = '_continue' in request.POST
-        is_saveas = '_saveasnew' in request.POST
-        is_add = '_addanother' in request.POST
-        if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
-            # Trick to get the app label
-            content_type = ContentType.objects.get_for_model(obj.__class__)
-            return HttpResponseRedirect(reverse(
-                "admin:%s_network_change" % (content_type.app_label),
-                args=(obj.network.id,)))
-        else:
-            if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement modifié')
-                return HttpResponseRedirect("../%s" % obj.id)
-            else:
-                return super(CommentNetworkAdmin, self).response_change(
-                    request,
-                    obj)
-
-    def response_add(self, request, obj, post_url_continue=None):
-        is_continue = '_continue' in request.POST
-        is_saveas = '_saveasnew' in request.POST
-        is_add = '_addanother' in request.POST
-        if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
-            # Trick to get the app label
-            content_type = ContentType.objects.get_for_model(obj.__class__)
-            return HttpResponseRedirect(reverse(
-                "admin:%s_network_change" % (content_type.app_label),
-                args=(obj.network.id,)))
-        else:
-            # This makes the response go to the newly created model's change
-            # page without using reverse
-            if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement ajouté')
-                return HttpResponseRedirect("../%s" % obj.id)
-            else:
-                return super(CommentNetworkAdmin, self).response_add(
-                    request,
-                    obj,
-                    post_url_continue)
-
-    def get_model_perms(self, request):
-        """
-        Return empty perms dict thus hiding the model from admin index.
-        """
-        return {}
-
-
 class NetworkAdmin(admin.ModelAdmin):
     model = Network
     ordering = ['network_code']
@@ -1118,136 +1056,6 @@ class NetworkAdmin(admin.ModelAdmin):
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status')],
             'classes': ['collapse']})]
-
-
-class CommentChannelAuthorInline(admin.TabularInline):
-    model = CommentChannelAuthor
-    extra = 0
-
-
-class CommentChannelAdmin(admin.ModelAdmin):
-    model = CommentChannel
-
-    fieldsets = [
-        ('', {'fields': [
-            ('channel', 'begin_effective', 'end_effective'),
-            ('value')]})]
-
-    inlines = [CommentChannelAuthorInline]
-
-    def response_change(self, request, obj):
-        is_continue = '_continue' in request.POST
-        is_saveas = '_saveasnew' in request.POST
-        is_add = '_addanother' in request.POST
-        if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
-            # Trick to get the app label
-            content_type = ContentType.objects.get_for_model(obj.__class__)
-            return HttpResponseRedirect(reverse(
-                "admin:%s_channel_change" % (content_type.app_label),
-                args=(obj.channel.id,)))
-        else:
-            if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement modifié')
-                return HttpResponseRedirect("../%s" % obj.id)
-            else:
-                return super(CommentChannelAdmin, self).response_change(
-                    request,
-                    obj)
-
-    def response_add(self, request, obj, post_url_continue=None):
-        is_continue = '_continue' in request.POST
-        is_saveas = '_saveasnew' in request.POST
-        is_add = '_addanother' in request.POST
-        if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
-            # Trick to get the app label
-            content_type = ContentType.objects.get_for_model(obj.__class__)
-            return HttpResponseRedirect(reverse(
-                "admin:%s_channel_change" % (content_type.app_label),
-                args=(obj.channel.id,)))
-        else:
-            # This makes the response go to the newly created model's change
-            # page without using reverse
-            if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement ajouté')
-                return HttpResponseRedirect("../%s" % obj.id)
-            else:
-                return super(CommentChannelAdmin, self).response_add(
-                    request,
-                    obj,
-                    post_url_continue)
-
-    def get_model_perms(self, request):
-        """
-        Return empty perms dict thus hiding the model from admin index.
-        """
-        return {}
-
-
-class CommentStationSiteAuthorInline(admin.TabularInline):
-    model = CommentStationSiteAuthor
-    extra = 0
-
-
-class CommentStationSiteAdmin(admin.ModelAdmin):
-    model = CommentStationSite
-
-    fieldsets = [
-        ('', {'fields': [
-            ('station', 'begin_effective', 'end_effective'),
-            ('value')]})]
-
-    inlines = [CommentStationSiteAuthorInline, ]
-
-    def response_change(self, request, obj):
-        is_continue = '_continue' in request.POST
-        is_saveas = '_saveasnew' in request.POST
-        is_add = '_addanother' in request.POST
-        if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
-            # Trick to get the app label
-            content_type = ContentType.objects.get_for_model(obj.__class__)
-            return HttpResponseRedirect(reverse(
-                "admin:%s_stationsite_change" % (content_type.app_label),
-                args=(obj.station.id,)))
-        else:
-            if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement modifié')
-                return HttpResponseRedirect("../%s" % obj.id)
-            else:
-                return super(CommentStationSiteAdmin, self).response_change(
-                    request,
-                    obj)
-
-    def response_add(self, request, obj, post_url_continue=None):
-        is_continue = '_continue' in request.POST
-        is_saveas = '_saveasnew' in request.POST
-        is_add = '_addanother' in request.POST
-        if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
-            # Trick to get the app label
-            content_type = ContentType.objects.get_for_model(obj.__class__)
-            return HttpResponseRedirect(reverse(
-                "admin:%s_stationsite_change" % (content_type.app_label),
-                args=(obj.station.id,)))
-        else:
-            # This makes the response go to the newly created model's change
-            # page without using reverse
-            if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement ajouté')
-                return HttpResponseRedirect("../%s" % obj.id)
-            else:
-                return super(CommentStationSiteAdmin, self).response_add(
-                    request,
-                    obj,
-                    post_url_continue)
-
-    def get_model_perms(self, request):
-        """
-        Return empty perms dict thus hiding the model from admin index.
-        """
-        return {}
 
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -1379,9 +1187,6 @@ admin.site.register(StationDocType)
 admin.site.register(EquipType)
 
 admin.site.register(Intervention, InterventionAdmin)
-admin.site.register(CommentNetwork, CommentNetworkAdmin)
-admin.site.register(CommentChannel, CommentChannelAdmin)
-admin.site.register(CommentStationSite, CommentStationSiteAdmin)
 
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectUser, ProjectUserAdmin)

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import csv
 import os.path
 import mimetypes
 from datetime import datetime
 
-from gissmo.models import *  # NOQA
-from gissmo.tools import DecimalEncoder, timezone_aware
+# delete simplejson from django.utils as Django 1.7 deliver it not
+import json
 
 from django.db.models import (
     Q,
@@ -19,12 +20,19 @@ from django.shortcuts import (
     HttpResponse)
 from django.core.exceptions import PermissionDenied
 from django.contrib.admin.views.decorators import staff_member_required
-# delete simplejson from django.utils as Django 1.7 deliver it not
-import json
 from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
+
+from equipment import states as EquipState
+from equipment import actions as EquipAction
+
+from station import states as StationState
+from station import actions as StationAction
+
+from gissmo.models import *  # NOQA
+from gissmo.tools import DecimalEncoder, timezone_aware
 
 
 def site_maps(request):
@@ -372,35 +380,6 @@ def xhr_equip_state(request):
         return HttpResponse(status=400)
 
 
-def station_last_state(station):
-    """
-    Function to obtain the last state of a station
-    """
-    last_station_state = IntervStation.objects.filter(
-        intervention__station__id=station,
-        station_state__isnull=False).order_by(
-            '-intervention__intervention_date')
-    if last_station_state:
-        real_state = last_station_state[0].station_state
-        return dict(StationState.STATION_STATES)[real_state]
-    else:
-        return 'Inconnu'
-
-
-def equip_last_state(equip):
-    """
-    Function to obtain the last state of an equipment
-    """
-    last_equip_state = IntervEquip.objects.filter(
-        equip__id=equip,
-        equip_state__isnull=False).order_by(
-            '-intervention__intervention_date')[:1]
-    if last_equip_state:
-        return EquipState.EQUIP_STATES[last_equip_state[0].equip_state - 1][1]
-    else:
-        return 'Inconnu'
-
-
 def equip_state_todate(equip, date, intervention_id):
     """
     Function to obtain the state of an equipment at a precise moment
@@ -475,19 +454,6 @@ def equip_with_state_todate(date, intervention_id):
             if last_equip_state[0].equip_state == 3:
                 liste.append(equip)
     return liste
-
-
-def equip_last_place(equip):
-    """
-    Function to obtain the last place where an equipment is
-    """
-    last_equip_place = IntervEquip.objects.filter(
-        equip__id=equip,
-        station__isnull=False).order_by('-intervention__intervention_date')[:1]
-    if last_equip_place:
-        return last_equip_place[0].station
-    else:
-        return 'Inconnu'
 
 #
 # TODO eliminate one of this function
@@ -1152,16 +1118,16 @@ def station_xml(request):
             station_count = Channel.objects.filter(
                 network_id=network.id).distinct('station').count()
 
-            # Obtain the comment for the network
-            ResCommentNetwork = CommentNetwork.objects.filter(
-                network_id=network.id)
+#            # Obtain the comment for the network
+#            ResCommentNetwork = CommentNetwork.objects.filter(
+#                network_id=network.id)
 
             comment_list = []
-            for comment in ResCommentNetwork:
-                # Obtain the authors for each comment
-                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
-                    comment_network_id=comment.id)
-                comment_list.append([comment, ResCommentNetworkAuthor])
+#            for comment in ResCommentNetwork:
+#                # Obtain the authors for each comment
+#                ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
+#                    comment_network_id=comment.id)
+#                comment_list.append([comment, ResCommentNetworkAuthor])
 
             ResChannels = ResChannel.filter(network_id=network.id)
 
@@ -1446,16 +1412,16 @@ def station_xml(request):
                         # Here we have 0 or 1 occurence
                         other_5_uninstalled = other_5_removal[
                             0].intervention.intervention_date
-                # Obtain the comment for the channel
-                ResCommentChannel = CommentChannel.objects.filter(
-                    channel_id=channel.id)
+#                # Obtain the comment for the channel
+#                ResCommentChannel = CommentChannel.objects.filter(
+#                    channel_id=channel.id)
 
                 comment_list = []
-                for comment in ResCommentChannel:
-                    # Obtain the authors for each comment
-                    ResCommentChannelAuthor = CommentChannelAuthor.\
-                        objects.filter(comment_channel_id=comment.id)
-                    comment_list.append([comment, ResCommentChannelAuthor])
+#                for comment in ResCommentChannel:
+#                    # Obtain the authors for each comment
+#                    ResCommentChannelAuthor = CommentChannelAuthor.\
+#                        objects.filter(comment_channel_id=comment.id)
+#                    comment_list.append([comment, ResCommentChannelAuthor])
 
                 channel_list.append([
                     channel,
@@ -1672,16 +1638,16 @@ def network_xml(request):
                             datalogger_uninstalled = datalogger_removal[
                                 0].intervention.intervention_date
 
-                    # Obtain the comment for the channel
-                    ResCommentChannel = CommentChannel.objects.filter(
-                        channel_id=channel.id)
+#                    # Obtain the comment for the channel
+#                    ResCommentChannel = CommentChannel.objects.filter(
+#                        channel_id=channel.id)
 
                     comment_list = []
-                    for comment in ResCommentChannel:
-                        # Obtain the authors for each comment
-                        ResCommentChannelAuthor = CommentChannelAuthor.\
-                            objects.filter(comment_channel_id=comment.id)
-                        comment_list.append([comment, ResCommentChannelAuthor])
+#                    for comment in ResCommentChannel:
+#                        # Obtain the authors for each comment
+#                        ResCommentChannelAuthor = CommentChannelAuthor.\
+#                            objects.filter(comment_channel_id=comment.id)
+#                        comment_list.append([comment, ResCommentChannelAuthor])
 
                     channel_list.append([
                         channel,
@@ -1703,16 +1669,16 @@ def network_xml(request):
                     terminate_station,
                     channel_list])
 
-        # Obtain the comment for the network
-        ResCommentNetwork = CommentNetwork.objects.filter(
-            network_id=network.id)
+#        # Obtain the comment for the network
+#        ResCommentNetwork = CommentNetwork.objects.filter(
+#            network_id=network.id)
 
         comment_list = []
-        for comment in ResCommentNetwork:
-            # Obtain the authors for each comment
-            ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
-                comment_network_id=comment.id)
-            comment_list.append([comment, ResCommentNetworkAuthor])
+#        for comment in ResCommentNetwork:
+#            # Obtain the authors for each comment
+#            ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
+#                comment_network_id=comment.id)
+#            comment_list.append([comment, ResCommentNetworkAuthor])
         result.append([network, comment_list, station_count, station_list])
     t = loader.get_template('network_xml.xml')
     response.write(t.render({"ResNetwork": result}))
@@ -1810,89 +1776,6 @@ def station_dataless(request):
 
 site_maps = staff_member_required(site_maps)
 
-
-def test_site(request):
-
-    query = request.GET.get('Station', '')
-    # Create the HttpResponse object with the appropriate CSV header.
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="test_site.csv"'
-
-    # Use 'with connection.cursor()' instead of c = connection.cursor() as
-    # explained in https://docs.djangoproject.com/en/1.8/releases/1.7/
-    # using-database-cursors-as-context-managers
-    with connection.cursor() as cursor:
-        sql = """
-        SELECT DISTINCT
-            gissmo_stationsite.station_code AS "Code du site",
-            gissmo_stationsite.site_name AS "Nom du site",
-            gissmo_stationsite.address AS "Adresse",
-            gissmo_stationsite.town AS "Commune",
-            gissmo_stationsite.county AS "Departement",
-            gissmo_stationsite.region AS "Region",
-            gissmo_stationsite.country AS "Pays",
-            gissmo_stationsite.latitude AS "Latitude",
-            gissmo_stationsite.longitude AS "Longitude",
-            gissmo_stationsite.note AS "Note",
-            gissmo_stationdoc.private_link AS "Lien vers document prive",
-            (
-                SELECT gissmo_stationstate.station_state_name
-                FROM
-                    public.gissmo_intervention,
-                    public.gissmo_intervstation,
-                    public.gissmo_stationstate
-                WHERE gissmo_intervention.station_id = gissmo_stationsite.id
-                AND gissmo_intervstation.intervention_id =
-                    gissmo_intervention.id
-                AND gissmo_intervstation.station_state IS NOT NULL
-                AND gissmo_intervstation.station_state = gissmo_stationstate.id
-                ORDER BY gissmo_intervention.intervention_date DESC
-                LIMIT 1
-            ) AS "Etat",
-            (
-                SELECT gissmo_actor.actor_name
-                FROM gissmo_actor
-                WHERE gissmo_stationsite.operator_id = gissmo_actor.id
-            ) AS "Operateur"
-            FROM public.gissmo_stationsite
-                LEFT JOIN public.gissmo_stationdoc
-                ON (gissmo_stationdoc.station_id = gissmo_stationsite.id)
-            WHERE gissmo_stationsite.site_type = 6
-            ORDER BY gissmo_stationsite.station_code
-        """
-        cursor.execute(sql, [query])
-        dictrow = dictfetchall(cursor)
-        writer = csv.writer(response)
-        writer.writerow([
-            "Code du site",
-            "Nom du site",
-            "Adresse",
-            "Commune",
-            "Departement",
-            "Region",
-            "Pays",
-            "Latitude",
-            "Longitude",
-            "Note",
-            "Lien vers document prive",
-            "Etat",
-            "Operateur"])
-        for row in dictrow:
-            writer.writerow([
-                unicode(s).encode("utf-8") for s in (
-                    row["Code du site"], row["Nom du site"],
-                    row["Adresse"],
-                    row["Commune"],
-                    row["Departement"],
-                    row["Region"],
-                    row["Pays"],
-                    row["Latitude"],
-                    row["Longitude"],
-                    row["Note"],
-                    row["Lien vers document prive"],
-                    row["Etat"],
-                    row["Operateur"])])
-    return response
 """
 from pghstore import loads
 

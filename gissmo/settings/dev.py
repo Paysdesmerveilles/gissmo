@@ -1,8 +1,11 @@
 from __future__ import unicode_literals
 from gissmo.settings.common import *  # NOQA
+
 from os import getenv
+import sys
 
 DEBUG = True
+DISPLAY_SQL = False
 
 ADMINS = ()
 MANAGERS = ADMINS
@@ -15,6 +18,11 @@ INSTALLED_APPS += (
     # Dev specifics
     'django_extensions',
     'functional_tests',
+    'debug_toolbar',
+)
+
+MIDDLEWARE_CLASSES += (
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 # Update DB settings for docker-compose use
@@ -29,3 +37,19 @@ DATABASES['default'].update(
 API_ALLOWED_HOSTS += [
     '130.79.9.145',
 ]
+
+if DISPLAY_SQL is True:
+    LOGGING['handlers'].update({
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+        },
+    })
+
+    LOGGING['loggers'].update({
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    })

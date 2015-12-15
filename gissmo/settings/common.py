@@ -81,6 +81,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'gissmo.wsgi.application'
 
 INSTALLED_APPS = (
+    'flat',
     'autocomplete_light',
     'django.contrib.admin',
     'django.contrib.admindocs',
@@ -90,6 +91,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     'rest_framework',
+    'equipment',
+    'station',
     'gissmo',
     'api',
 )

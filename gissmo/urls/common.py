@@ -21,6 +21,7 @@ al.autodiscover()
 admin.autodiscover()
 admin.site.site_header = 'Gissmo'
 admin.site.site_title = 'Gissmo'
+admin.site.site_url = '/gissmo'
 
 # REST FRAMEWORK API
 apirouter = routers.DefaultRouter()
@@ -81,9 +82,6 @@ urlpatterns = [
     url(r'^gissmo/([A-Z0-9]{2,4})/$',
         views.site_shortcut,
         name='site_shortcut'),
-    url(r'^gissmo/test_site/$',
-        views.test_site,
-        name='test_site'),
     url(r'^gissmo/', include(admin.site.urls)),
     url(r'^autocomplete/', include(al_urls)),
     url(r'^api/', include(apirouter.urls)),

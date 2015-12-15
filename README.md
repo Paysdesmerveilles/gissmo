@@ -44,7 +44,7 @@ GISSMO is available here: http://localhost:8000/gissmo/ .
 
 Get the source code and create a virtual environment :
 ```bash
-apt-get install libpq-dev python-dev virtualenvwrapper git-core python-pip
+apt-get install libpq-dev python3-dev virtualenvwrapper git-core python-pip
 git clone git@github.com:eost/gissmo.git
 (or your fork repos if you tend to contribute)
 cd gissmo
