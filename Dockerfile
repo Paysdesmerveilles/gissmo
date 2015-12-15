@@ -12,7 +12,8 @@ ENV GISSMO_STATIC_DIR $GISSMO_DIR/static
 
 # GISSMO directory
 RUN mkdir -p $GISSMO_DIR
-RUN mkdir -p $GISSMO_DIR/upload # For upload purpose
+RUN mkdir -p $GISSMO_DIR/static # For production purposes
+RUN mkdir -p $GISSMO_DIR/upload # For upload purposes
 WORKDIR $GISSMO_DIR
 
 # Install Django dependancies

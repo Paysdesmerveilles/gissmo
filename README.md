@@ -124,11 +124,22 @@ As previously with docker-compose:
 
 ### Prepare test environment
 
-Just do:
+**WARNING**: As autocomplete module use static files to work, we need to
+collect them.
+
+So first do:
+
+```bash
+mkdir static
+python manage.py collectstatic --noinput --clear -v 1
+```
+
+Then do:
 
 ```bash
 docker-compose start db
 ```
+
 
 ### Run functional tests
 
