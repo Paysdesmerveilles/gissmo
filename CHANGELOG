@@ -5,6 +5,7 @@ Current version (1.5-trunk):
 scripts/webservice_examples directory:
   scripts/webservice_examples/00_my_first_use.py
     - 00_my_first_use.py: a simple script that display sites
+    - 02_station_services.py: displays services for each equipment of each site
   - API permits filtering, searching and ordering these objects
   - New RESTful API available on /api with some objects:
     - Site: /api/sites
@@ -14,6 +15,7 @@ scripts/webservice_examples directory:
     - CalibrationUnit: /api/calibration_units
     - ChannelDatatype: /api/channel_datatypes
     - Equipment: /api/equipments
+    - Service: /api/services
 
 Version 1.4:
   - New theme: django-flat-theme

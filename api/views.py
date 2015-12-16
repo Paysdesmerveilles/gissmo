@@ -13,6 +13,7 @@ from gissmo.models import (
     DataType,
     Equipment,
     Network,
+    Service,
     StationSite,
 )
 
@@ -23,6 +24,7 @@ from api.serializers import (
     ChannelDatatypeSerializer,
     EquipmentSerializer,
     NetworkSerializer,
+    ServiceSerializer,
     SiteSerializer)
 
 from api.filters import (
@@ -32,6 +34,7 @@ from api.filters import (
     ChannelDatatypeFilter,
     EquipmentFilter,
     NetworkFilter,
+    ServiceFilter,
     SiteFilter)
 
 
@@ -158,3 +161,16 @@ class EquipmentViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     ordering_fields = ['equip_model__equip_model_name', 'serial_number']
     ordering = ['equip_model__equip_model_name']
+
+
+class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Available services linked to a specific equipment.
+    """
+    serializer_class = ServiceSerializer
+    queryset = Service.objects.all().prefetch_related('equipment')
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,)
+    filter_class = ServiceFilter
+    search_fields = ['protocol']

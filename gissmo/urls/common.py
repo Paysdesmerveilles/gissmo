@@ -26,6 +26,7 @@ apirouter.register(r'channels', api_views.ChannelViewSet)
 apirouter.register(r'calibration_units', api_views.CalibrationUnitViewSet)
 apirouter.register(r'channel_datatypes', api_views.ChannelDatatypeViewSet)
 apirouter.register(r'equipments', api_views.EquipmentViewSet)
+apirouter.register(r'services', api_views.ServiceViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',

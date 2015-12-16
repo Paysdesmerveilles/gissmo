@@ -8,6 +8,7 @@ from gissmo.models import (
     DataType,
     Equipment,
     Network,
+    Service,
     StationSite,
 )
 
@@ -188,4 +189,16 @@ class EquipmentFilter(django_filters.FilterSet):
             'serial_number',
             'vendor',
             'station',
+        ]
+
+
+class ServiceFilter(django_filters.FilterSet):
+    equipment = django_filters.CharFilter(name='equipment__id')
+    class Meta:
+        model = Service
+        fields = [
+            'protocol',
+            'ip',
+            'port',
+            'equipment',
         ]

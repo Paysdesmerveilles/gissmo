@@ -8,7 +8,10 @@ from gissmo.models import (
     DataType,
     Equipment,
     Network,
+    Service,
     StationSite)
+
+from equipment.protocols import PROTOCOL_CHOICES
 
 from rest_framework import serializers
 
@@ -170,4 +173,20 @@ class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
             'serial_number',
             'vendor',
             'station',
+        ]
+
+
+class ServiceSerializer(serializers.HyperlinkedModelSerializer):
+    protocol = EnumField(choices=PROTOCOL_CHOICES)
+
+    class Meta:
+        model = Service
+        fields = [
+            'protocol',
+            'ip',
+            'port',
+            'login',
+            'password',
+            'description',
+            'equipment',
         ]
