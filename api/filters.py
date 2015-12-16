@@ -178,6 +178,7 @@ class CalibrationUnitFilter(django_filters.FilterSet):
 class EquipmentFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(name='equip_model__equip_model_name')
     type = django_filters.CharFilter(name='equip_model__equip_type__equip_type_name')
+    station = django_filters.CharFilter(name='last_station__station_code')
 
     class Meta:
         model = Equipment
@@ -186,4 +187,5 @@ class EquipmentFilter(django_filters.FilterSet):
             'type',
             'serial_number',
             'vendor',
+            'station',
         ]

@@ -144,7 +144,8 @@ class EquipmentViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = EquipmentSerializer
     queryset = Equipment.objects.all().prefetch_related(
-        'equip_model__equip_type')
+        'equip_model__equip_type',
+        'last_station')
     filter_backends = (
         filters.DjangoFilterBackend,
         filters.SearchFilter,

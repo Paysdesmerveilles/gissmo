@@ -153,9 +153,13 @@ class CalibrationUnitSerializer(serializers.ModelSerializer):
         ]
 
 
-class EquipmentSerializer(serializers.ModelSerializer):
+class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
     name = serializers.CharField(source='equip_model')
     type = serializers.CharField(source='equip_type')
+    station = serializers.HyperlinkedRelatedField(
+        source='last_station',
+        view_name='site-detail',
+        read_only=True)
 
     class Meta:
         model = Equipment
@@ -165,8 +169,5 @@ class EquipmentSerializer(serializers.ModelSerializer):
             'type',
             'serial_number',
             'vendor',
-        ]
-        read_only_fields = [
-            'name',
-            'type',
+            'station',
         ]
