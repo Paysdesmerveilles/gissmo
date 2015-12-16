@@ -20,7 +20,7 @@ admin.site.site_url = '/gissmo'
 # REST FRAMEWORK API
 apirouter = routers.DefaultRouter()
 apirouter.register(r'actors', api_views.ActorViewSet)
-apirouter.register(r'sites', api_views.SiteViewSet, base_name='site')
+apirouter.register(r'sites', api_views.SiteViewSet)
 apirouter.register(r'networks', api_views.NetworkViewSet)
 apirouter.register(r'channels', api_views.ChannelViewSet)
 apirouter.register(r'calibration_units', api_views.CalibrationUnitViewSet)

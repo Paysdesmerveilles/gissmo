@@ -161,7 +161,7 @@ class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
     type = serializers.CharField(source='equip_type')
     station = serializers.HyperlinkedRelatedField(
         source='last_station',
-        view_name='site-detail',
+        view_name='stationsite-detail',
         read_only=True)
 
     class Meta:
