@@ -106,7 +106,13 @@ class ChannelViewSet(viewsets.ReadOnlyModelViewSet):
     All known channels in GISSMO without any filtering.
     """
     serializer_class = ChannelSerializer
-    queryset = Channel.objects.all()
+    queryset = Channel.objects.all().prefetch_related(
+        'channel_code',
+        'station',
+        'network',
+        'data_type',
+        'calibration_units',
+        'equipments__equip_model')
     filter_backends = (
         filters.DjangoFilterBackend,
         filters.SearchFilter,
@@ -137,7 +143,8 @@ class EquipmentViewSet(viewsets.ReadOnlyModelViewSet):
     Gissmo registered equipments from years.
     """
     serializer_class = EquipmentSerializer
-    queryset = Equipment.objects.all()
+    queryset = Equipment.objects.all().prefetch_related(
+        'equip_model__equip_type')
     filter_backends = (
         filters.DjangoFilterBackend,
         filters.SearchFilter,
