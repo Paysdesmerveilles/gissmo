@@ -3,12 +3,12 @@
 import requests
 
 # Configuration
-server = 'localhost:8002'
-username = 'olivier'
-password = 'olivier'
+server = 'localhost'
+port = '8000'
+if port:
+    server = ':'.join([server, port])
 
 service_url = 'http://%s/api/' % (server)
-auth_url = 'http://%s/api-auth/login/' % (server)
 pagination = False  # If True, fetch info regarding pagination axis
 
 print("### Display all sites: ###")
@@ -19,7 +19,7 @@ url = service_url + 'sites/?format=json'
 def fetch_data(url):
     next_page = None
     # Fetch URL
-    request = requests.get(url, auth=(username, password))
+    request = requests.get(url)
     if request.status_code != 200:
         request.raise_for_status()
     # Use JSON result
