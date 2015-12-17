@@ -128,6 +128,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     # 'PAGE_SIZE': 20,
+    'UNICODE_JSON': True,
 }
 
 # List of allowed IP that can make raquests on REST_FRAMEWORK_API
