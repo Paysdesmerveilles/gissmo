@@ -849,6 +849,10 @@ class ChannelAdmin(admin.ModelAdmin):
                 ('storage_format', 'clock_drift', 'calibration_units')],
             'classes': ['collapse']})]
 
+    search_fields = [
+        'network__code',
+        'station__station_code',
+        'channel_code__channel_code']
     inlines = [ChainInline, ChannelChainInline]
 
     class Media:
