@@ -110,6 +110,11 @@ class ChannelDatatypeSerializer(serializers.HyperlinkedModelSerializer):
 class ChannelSerializer(serializers.HyperlinkedModelSerializer):
     code = serializers.CharField(source='channel_code')
     datatypes = serializers.StringRelatedField(many=True, source='data_type')
+    chains = serializers.HyperlinkedRelatedField(
+        source='chain_set',
+        view_name='chain-detail',
+        read_only=True,
+        many=True)
 
     class Meta:
         model = Channel
@@ -144,6 +149,7 @@ class ChannelSerializer(serializers.HyperlinkedModelSerializer):
             'calibration_units',
             'datatypes',
             'equipments',
+            'chains',
         ]
 
 
