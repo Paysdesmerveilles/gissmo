@@ -9,6 +9,7 @@ from rest_framework import (
 from gissmo.models import (
     Actor,
     CalibrationUnit,
+    Chain,
     Channel,
     DataType,
     Equipment,
@@ -20,6 +21,7 @@ from gissmo.models import (
 from api.serializers import (
     ActorSerializer,
     CalibrationUnitSerializer,
+    ChainSerializer,
     ChannelSerializer,
     ChannelDatatypeSerializer,
     EquipmentSerializer,
@@ -30,6 +32,7 @@ from api.serializers import (
 from api.filters import (
     ActorFilter,
     CalibrationUnitFilter,
+    ChainFilter,
     ChannelFilter,
     ChannelDatatypeFilter,
     EquipmentFilter,
@@ -174,3 +177,17 @@ class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,)
     filter_class = ServiceFilter
     search_fields = ['protocol']
+
+class ChainViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Acquisition Chain that link a canal to a given equipment.
+    By searching all chains linked to a given canal, you will have it's
+    acquisition chain.
+    """
+    serializer_class = ChainSerializer
+    queryset = Chain.objects.all()
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,)
+    filter_class = ChainFilter
+    search_fields = ['type']

@@ -16,6 +16,7 @@ scripts/webservice_examples directory:
     - ChannelDatatype: /api/channel_datatypes
     - Equipment: /api/equipments
     - Service: /api/services
+    - Chain: /api/chains
 
 Version 1.4:
   - New theme: django-flat-theme

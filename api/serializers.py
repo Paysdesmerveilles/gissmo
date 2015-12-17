@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from gissmo.models import (
     Actor,
     CalibrationUnit,
+    Chain,
     Channel,
     DataType,
     Equipment,
@@ -188,5 +189,22 @@ class ServiceSerializer(serializers.HyperlinkedModelSerializer):
             'login',
             'password',
             'description',
+            'equipment',
+        ]
+
+
+class ChainSerializer(serializers.HyperlinkedModelSerializer):
+    type = EnumField(choices=Chain.ORDER_CHOICES, source='order')
+    equipment = serializers.HyperlinkedRelatedField(
+        source='equip',
+        view_name='equipment-detail',
+        read_only=True)
+
+    class Meta:
+        model = Chain
+        fields = [
+            'id',
+            'type',
+            'channel',
             'equipment',
         ]

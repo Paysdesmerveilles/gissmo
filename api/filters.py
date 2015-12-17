@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from gissmo.models import (
     Actor,
     CalibrationUnit,
+    Chain,
     Channel,
     DataType,
     Equipment,
@@ -193,7 +194,8 @@ class EquipmentFilter(django_filters.FilterSet):
 
 
 class ServiceFilter(django_filters.FilterSet):
-    equipment = django_filters.CharFilter(name='equipment__id')
+    equipment = django_filters.NumberFilter(name='equipment__id')
+
     class Meta:
         model = Service
         fields = [
@@ -201,4 +203,16 @@ class ServiceFilter(django_filters.FilterSet):
             'ip',
             'port',
             'equipment',
+        ]
+
+
+class ChainFilter(django_filters.FilterSet):
+    type = django_filters.ChoiceFilter(
+        name='order',
+        choices=Chain.ORDER_CHOICES)
+
+    class Meta:
+        model = Chain
+        fields = [
+            'type',
         ]
