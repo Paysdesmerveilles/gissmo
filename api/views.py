@@ -118,7 +118,9 @@ class ChannelViewSet(viewsets.ReadOnlyModelViewSet):
         'network',
         'data_type',
         'calibration_units',
-        'equipments__equip_model')
+        'chain_set__channel',
+        'chain_set__equip__equip_model',
+        'equipments__equip_model__equip_type')
     filter_backends = (
         filters.DjangoFilterBackend,
         filters.SearchFilter,
@@ -177,6 +179,7 @@ class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,)
     filter_class = ServiceFilter
     search_fields = ['protocol']
+
 
 class ChainViewSet(viewsets.ReadOnlyModelViewSet):
     """
