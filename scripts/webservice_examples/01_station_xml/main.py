@@ -5,14 +5,16 @@ from __future__ import unicode_literals
 import sys
 
 from tools import get
-from models import *
+from models import (
+    Channel,
+    Station)
 
 
 searched_site_code = 'CHMF'
 
 # Configuration
 server = 'localhost'
-port = '8000'
+port = '8002'
 if port:
     server = ':'.join([server, port])
 api_url = 'http://%s/api/' % server
@@ -29,13 +31,13 @@ stations = get(url)
 result = []
 for station in stations:
     # Fetch its ID and some info
-    s = Station(station)
+    s = Station(api_url, station)
     # Search linked channels
     url = channel_url + '&station=%s' % s.code
     channels = get(url)
     for channel in channels:
         # Fetch code, location code
-        c = Channel(channel)
+        c = Channel(api_url, channel)
         c.station = s  # Add a link from channel to station
         s.channels.append(c)
         if c.network and c.network.code not in s.networks:
