@@ -1,4 +1,7 @@
 Current version (1.5-trunk):
+  - Equipments display Services and IPAddresses only if Equipments'Model have a
+  field named "Could contains network configuration?" set to True
+  - Equipment's Model have now a new field: "Could contains network configuration?"
   - API is available only for a given whitelist IPs
   - API is read only
   - Scripts showing how to use the API are available in 
@@ -15,6 +18,7 @@ scripts/webservice_examples directory:
     - CalibrationUnit: /api/calibration_units
     - ChannelDatatype: /api/channel_datatypes
     - Equipment: /api/equipments
+    - IPAddress: /api/ipaddresses
     - Service: /api/services
     - Chain: /api/chains
 

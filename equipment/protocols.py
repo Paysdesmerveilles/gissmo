@@ -15,8 +15,16 @@ Protocols:
 
 SSH = 0
 SEED_LINK = 1
+HTTP = 2
+HTTPS = 3
+SNMP = 4
+ICMP = 5
 
 PROTOCOL_CHOICES = (
     (SSH, _('SSH protocol')),
     (SEED_LINK, _('Seed link protocol')),
+    (HTTP, _('HTTP')),
+    (HTTPS, _('HTTPS')),
+    (SNMP, _('SNMP')),
+    (ICMP, _('ICMP')),
 )

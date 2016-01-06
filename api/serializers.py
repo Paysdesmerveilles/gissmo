@@ -8,6 +8,7 @@ from gissmo.models import (
     Channel,
     DataType,
     Equipment,
+    IPAddress,
     Network,
     Service,
     StationSite)
@@ -190,11 +191,18 @@ class ServiceSerializer(serializers.HyperlinkedModelSerializer):
         model = Service
         fields = [
             'protocol',
-            'ip',
             'port',
-            'login',
-            'password',
             'description',
+            'equipment',
+        ]
+
+
+class IPAddressSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = IPAddress
+        fields = [
+            'ip',
+            'netmask',
             'equipment',
         ]
 

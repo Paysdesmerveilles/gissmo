@@ -13,6 +13,7 @@ from gissmo.models import (
     Channel,
     DataType,
     Equipment,
+    IPAddress,
     Network,
     Service,
     StationSite,
@@ -25,6 +26,7 @@ from api.serializers import (
     ChannelSerializer,
     ChannelDatatypeSerializer,
     EquipmentSerializer,
+    IPAddressSerializer,
     NetworkSerializer,
     ServiceSerializer,
     SiteSerializer)
@@ -36,6 +38,7 @@ from api.filters import (
     ChannelFilter,
     ChannelDatatypeFilter,
     EquipmentFilter,
+    IPAddressFilter,
     NetworkFilter,
     ServiceFilter,
     SiteFilter)
@@ -179,6 +182,17 @@ class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,)
     filter_class = ServiceFilter
     search_fields = ['protocol']
+
+
+class IPAddressViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Available IP linked to a specific equipment.
+    """
+    serializer_class = IPAddressSerializer
+    queryset = IPAddress.objects.all().prefetch_related('equipment')
+    filter_backends = (
+        filters.DjangoFilterBackend,)
+    filter_class = IPAddressFilter
 
 
 class ChainViewSet(viewsets.ReadOnlyModelViewSet):

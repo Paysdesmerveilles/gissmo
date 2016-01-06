@@ -249,6 +249,9 @@ nom d'usage utilisé par la communauté des instrumentalistes
         null=True,
         blank=True,
         verbose_name=_("manufacturier"))
+    is_network_model = models.BooleanField(
+        verbose_name=_('Could contains network configuration?'),
+        default=False)
 
     def _get_supertype(self):
         "Returns the linked EquipSuperType"
@@ -856,12 +859,7 @@ class Service(models.Model):
     protocol = models.IntegerField(
         choices=Protocol.PROTOCOL_CHOICES,
         verbose_name=_('Protocol'))
-    ip = models.GenericIPAddressField(
-        protocol='both',
-        verbose_name=_('IP Address'))
     port = models.PositiveIntegerField(verbose_name=_('Port'))
-    login = models.CharField(verbose_name=_('Login'), max_length=256)
-    password = models.CharField(verbose_name=_('Password'), max_length=256)
     description = models.CharField(
         max_length=256,
         blank=True,
@@ -872,6 +870,18 @@ class Service(models.Model):
     def __str__(self):
         return '%s' % Protocol.PROTOCOL_CHOICES[self.protocol][1]
 
+
+class IPAddress(models.Model):
+    ip = models.GenericIPAddressField(
+        protocol='both',
+        verbose_name=_('IP Address'))
+    netmask = models.GenericIPAddressField(
+        protocol='both',
+        verbose_name=_('Netmask'))
+    equipment = models.ForeignKey('Equipment')
+
+    def __str__(self):
+        return '%s' % self.ip
 
 ####
 #

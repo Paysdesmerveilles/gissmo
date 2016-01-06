@@ -154,7 +154,8 @@ class EquipModelAdmin(admin.ModelAdmin):
                   (
                       'equip_type',
                       'equip_model_name',
-                      'manufacturer')]})]
+                      'manufacturer',
+                      'is_network_model')]})]
 
     inlines = [EquipModelDocInline, ParameterEquipInline]
 
@@ -195,15 +196,18 @@ class EquipDocInline(admin.TabularInline):
 
 class ServiceInline(admin.TabularInline):
     model = Service
-    extra = 0
+    extra = 3
 
 
-"""
-Custom filter for the equipment change list
-"""
+class IPAddressInline(admin.TabularInline):
+    model = IPAddress
+    extra = 1
 
 
 class EquipFilter(SimpleListFilter):
+    """
+    Custom filter for the equipment change list
+    """
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
     title = _('Supertype, Type or Model')
@@ -342,7 +346,30 @@ class EquipmentAdmin(admin.ModelAdmin):
             'fields': [('note')],
             'classes': ['collapse']})]
 
-    inlines = [EquipDocInline, ServiceInline]
+    inlines = [EquipDocInline]
+
+    def _get_equipment_inlines_regarding_model(self, equip_model):
+        """
+        Only display IPAddress and Services Inlines if Equipment's Model
+        contains 'Contains network configuration' set to True.
+        """
+        res = self.inlines
+        inlines = [IPAddressInline, ServiceInline]
+        if equip_model.is_network_model is True:
+            [res.append(x) for x in inlines if x not in res]
+        else:
+            [res.remove(x) for x in inlines if x in res]
+        return res
+
+    def get_formsets_with_inlines(self, request, obj=None, **kwargs):
+        """
+        Change inlines regarding model content.
+        """
+        res = super(EquipmentAdmin, self).get_formsets_with_inlines(request, obj, **kwargs)
+        if obj and obj.equip_model:
+            self.inlines = self._get_equipment_inlines_regarding_model(
+                obj.equip_model)
+        return res
 
     def get_queryset(self, request):
         """

@@ -8,6 +8,7 @@ from gissmo.models import (
     Channel,
     DataType,
     Equipment,
+    IPAddress,
     Network,
     Service,
     StationSite,
@@ -200,8 +201,17 @@ class ServiceFilter(django_filters.FilterSet):
         model = Service
         fields = [
             'protocol',
+            'equipment',
+        ]
+
+
+class IPAddressFilter(django_filters.FilterSet):
+    equipment = django_filters.NumberFilter(name='equipment__id')
+
+    class Meta:
+        model = IPAddress
+        fields = [
             'ip',
-            'port',
             'equipment',
         ]
 
