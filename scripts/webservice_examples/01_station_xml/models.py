@@ -229,13 +229,13 @@ class Equipment(APIObject):
             'name',
             'type',
             'serial_number',
-            'vendor',
+            'manufacturer',
             'station',
         ]
         super(Equipment, self).__init__(api_url, fields, data_dict)
         # Specific process
-        if not self.vendor:
-            self.vendor = ''
+        if not self.manufacturer:
+            self.manufacturer = ''
         # Additionnal field
         self.chain_order = 'Unknown'
         self.channel = None
@@ -283,11 +283,11 @@ class Equipment(APIObject):
 
     def __str__(self):
         result = """  %s (%s)
-    Vendor:  %s"""
+    Manufacturer:  %s"""
         data = [
             self.name,
             self.serial_number,
-            self.vendor]
+            self.manufacturer]
         # Add Network configuration
         if self.addresses:
             result += """

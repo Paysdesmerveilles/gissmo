@@ -171,6 +171,7 @@ class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
         source='last_station',
         view_name='stationsite-detail',
         read_only=True)
+    manufacturer = serializers.CharField(source='equip_model.manufacturer')
 
     class Meta:
         model = Equipment
@@ -179,7 +180,7 @@ class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
             'name',
             'type',
             'serial_number',
-            'vendor',
+            'manufacturer',
             'station',
         ]
 
