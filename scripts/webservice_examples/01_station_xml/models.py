@@ -162,6 +162,8 @@ class Channel(APIObject):
             'sample_rate_unit',
             'azimuth',
             'azimuth_unit',
+            'depth',
+            'depth_unit',
             'chains',
             'equipments',
             'network',
@@ -193,6 +195,9 @@ class Channel(APIObject):
         # Fix missing rate unit
         if not self.sample_rate_unit:
             self.sample_rate_unit = default_sample_unit
+        # Fix missing meter unit
+        if not self.depth_unit:
+            self.depth_unit = default_elevation_unit
 
     def get_equipments(self):
         res = ''
@@ -207,7 +212,8 @@ class Channel(APIObject):
         return res
 
     def __str__(self):
-        result = """» Channel %s [rate: %s%s, location: %s] (%s)%s"""
+        result = """» Channel %s [rate: %s%s, location: %s] \
+(%s) Depth: %s %s%s"""
         name = '_'.join([
             self.network.code,
             self.station.code,
@@ -219,6 +225,8 @@ class Channel(APIObject):
             self.sample_rate_unit,
             self.location_code,
             name,
+            self.depth,
+            self.depth_unit,
             self.get_equipments())
 
 
