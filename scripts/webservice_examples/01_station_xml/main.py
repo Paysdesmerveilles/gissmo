@@ -7,6 +7,7 @@ import sys
 from tools import get
 from models import (
     Channel,
+    Equipment,
     Station)
 
 
@@ -42,6 +43,12 @@ for station in stations:
         s.channels.append(c)
         if c.network and c.network.code not in s.networks:
             s.networks.append(c.network.code)
+    # Search equipments linked to the station, but not linked to a channel
+    station_equipment_url = equipment_url + '&station=%s' % searched_site_code
+    equipments = get(station_equipment_url)
+    for equipment in equipments:
+        e = Equipment(api_url, equipment)
+        s.equipments.append(e)
     # Remember station
     result.append(s)
 

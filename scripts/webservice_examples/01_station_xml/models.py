@@ -43,8 +43,6 @@ class Station(APIObject):
             'longitude_unit',
             'elevation',
             'elevation_unit',
-            'azimuth',
-            'azimuth_unit',
             'name',
             'region',
             'county',
@@ -56,6 +54,7 @@ class Station(APIObject):
         super(Station, self).__init__(api_url, fields, data_dict)
         self.channels = []
         self.networks = []
+        self.equipments = []
         # Fetch operator if needed
         self.operator_link = self.operator
         self.operator = ''
@@ -63,8 +62,8 @@ class Station(APIObject):
             data = get(self.operator_link)
             if data:
                 self.operator = Actor(api_url, data)
-        # Fix unit for longitude, latitude
-        for field in ['latitude', 'longitude', 'azimuth']:
+        # Fix unit for longitude, latitude, azimuth
+        for field in ['latitude', 'longitude']:
             field_unit = '_'.join([field, 'unit'])
             if not getattr(self, field_unit, None):
                 setattr(self, field_unit, default_degree_unit)
@@ -81,21 +80,31 @@ class Station(APIObject):
             res += '\n%s' % str(channel)
         return res
 
+    def _get_equipment(self, equipment):
+        return '\n'.join(" " * 2 + x for x in equipment.split('\n'))
+
+    def get_equipments(self):
+        res = ''
+        for equipment in self.equipments:
+            res += '\n%s' % self._get_equipment(str(equipment))
+        return res
+
     def __str__(self):
         result = """STATION: %s
   Name: %s
   Operator: %s
   Networks: %s
-  Latitude: %s%s
-  Longitude: %s%s
-  Elevation: %s%s
+  Latitude: %s %s
+  Longitude: %s %s
+  Elevation: %s %s
   Geology: %s
+  Equipments (all):%s
   %s"""
         return result % (
             self.code,
             self.name,
             self.operator,
-            self.networks,
+            self.networks and self.networks[0] or '',
             self.latitude,
             self.latitude_unit,
             self.longitude,
@@ -103,6 +112,7 @@ class Station(APIObject):
             self.elevation,
             self.elevation_unit,
             self.geology,
+            self.get_equipments(),
             self.get_channels())
 
 
@@ -150,6 +160,8 @@ class Channel(APIObject):
             'start_date',
             'sample_rate',
             'sample_rate_unit',
+            'azimuth',
+            'azimuth_unit',
             'chains',
             'equipments',
             'network',
@@ -175,6 +187,9 @@ class Channel(APIObject):
             n_data = get(self.network_link)
             if n_data:
                 self.network = Network(api_url, n_data)
+        # Fix missing degree unit
+        if not self.azimuth_unit:
+            self.azimuth_unit = default_degree_unit
         # Fix missing rate unit
         if not self.sample_rate_unit:
             self.sample_rate_unit = default_sample_unit
@@ -182,7 +197,13 @@ class Channel(APIObject):
     def get_equipments(self):
         res = ''
         for equipment in self.equipments:
-            res += '\n%s' % str(equipment)
+            res += """
+|  → %s (%s): %s""" % (
+                equipment.chain_order,
+                equipment.name,
+                equipment.serial_number)
+            if equipment.chain_order == 'Sensor':
+                res += " | Azimuth: %s %s" % (self.azimuth, self.azimuth_unit)
         return res
 
     def __str__(self):
@@ -251,41 +272,30 @@ class Equipment(APIObject):
     def get_addresses(self):
         res = ''
         for address in self.addresses:
-            res += '\n|        ⋅ %s' % str(address)
+            res += '\n      ⋅ %s' % str(address)
         return res
 
     def get_services(self):
         res = ''
         for service in self.services:
-            res += '\n|        ⋅ %s: %s' % (service.port, service.protocol)
+            res += '\n      ⋅ %s: %s' % (service.port, service.protocol)
         return res
 
     def __str__(self):
-        result = """|  → EQUIPMENT (%s)
-|      Vendor: %s
-|      Model:  %s
-|      S/N:    %s"""
+        result = """  %s (%s)
+    Vendor:  %s"""
         data = [
-            self.chain_order,
-            self.vendor,
             self.name,
-            self.serial_number]
-        if self.chain_order == 'Sensor':
-            result += """
-|      Azimuth: %s%s"""
-            azimuth = self.channel.station.azimuth
-            if azimuth:
-                data += [azimuth, self.channel.station.azimuth_unit]
-            else:
-                data += ['', '']
+            self.serial_number,
+            self.vendor]
         # Add Network configuration
         if self.addresses:
             result += """
-|      IP/Netmask: %s"""
+    IP/Netmask: %s"""
             data += [self.get_addresses()]
         if self.services:
             result += """
-|      Services: %s"""
+    Services: %s"""
             data += [self.get_services()]
         return result % tuple(data)
 
