@@ -5,6 +5,7 @@ from gissmo.models import (
     Actor,
     CalibrationUnit,
     Chain,
+    ChainConfig,
     Channel,
     DataType,
     Equipment,
@@ -226,4 +227,18 @@ class ChainFilter(django_filters.FilterSet):
         model = Chain
         fields = [
             'type',
+        ]
+
+
+class ChannelParameterFilter(django_filters.FilterSet):
+    parameter = django_filters.CharFilter(name='parameter__parameter_name')
+    value = django_filters.CharFilter(name='value__value')
+    channel = django_filters.NumberFilter(name='channel__id')
+
+    class Meta:
+        model = ChainConfig
+        fields = [
+            'parameter',
+            'value',
+            'channel',
         ]

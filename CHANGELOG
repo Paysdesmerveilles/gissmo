@@ -21,6 +21,7 @@ scripts/webservice_examples directory:
     - IPAddress: /api/ipaddresses
     - Service: /api/services
     - Chain: /api/chains
+    - ChannelParameter: /api/channel_parameters
 
 Version 1.4:
   - New theme: django-flat-theme

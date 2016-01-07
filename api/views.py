@@ -10,6 +10,7 @@ from gissmo.models import (
     Actor,
     CalibrationUnit,
     Chain,
+    ChainConfig,
     Channel,
     DataType,
     Equipment,
@@ -25,6 +26,7 @@ from api.serializers import (
     ChainSerializer,
     ChannelSerializer,
     ChannelDatatypeSerializer,
+    ChannelParameterSerializer,
     EquipmentSerializer,
     IPAddressSerializer,
     NetworkSerializer,
@@ -37,6 +39,7 @@ from api.filters import (
     ChainFilter,
     ChannelFilter,
     ChannelDatatypeFilter,
+    ChannelParameterFilter,
     EquipmentFilter,
     IPAddressFilter,
     NetworkFilter,
@@ -208,3 +211,21 @@ class ChainViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,)
     filter_class = ChainFilter
     search_fields = ['type']
+
+
+class ChannelParameterViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Each channel have some specific parameters needed to understand how
+    read the signal.
+    This view informs you which parameter each channel owns.
+    """
+    serializer_class = ChannelParameterSerializer
+    queryset = ChainConfig.objects.all().prefetch_related(
+        'parameter',
+        'value',
+        'channel')
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,)
+    filter_class = ChannelParameterFilter
+    search_fields = ['parameter']

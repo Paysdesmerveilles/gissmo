@@ -5,6 +5,7 @@ from gissmo.models import (
     Actor,
     CalibrationUnit,
     Chain,
+    ChainConfig,
     Channel,
     DataType,
     Equipment,
@@ -222,4 +223,17 @@ class ChainSerializer(serializers.HyperlinkedModelSerializer):
             'type',
             'channel',
             'equipment',
+        ]
+
+
+class ChannelParameterSerializer(serializers.HyperlinkedModelSerializer):
+    parameter = serializers.CharField(source='parameter.parameter_name')
+    value = serializers.CharField(source='value.value')
+
+    class Meta:
+        model = ChainConfig
+        fields = [
+            'channel',
+            'parameter',
+            'value',
         ]
