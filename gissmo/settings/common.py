@@ -135,5 +135,5 @@ REST_FRAMEWORK = {
 API_ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'gavrinis.u-strasbg.fr',
+    '130.79.10.231',  # gavrinis.u-strasbg.fr
 ]
