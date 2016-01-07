@@ -11,17 +11,17 @@ scripts/webservice_examples directory:
     - 02_station_services.py: displays services for each equipment of each site
   - API permits filtering, searching and ordering these objects
   - New RESTful API available on /api with some objects:
-    - Site: /api/sites
     - Actor: /api/actors
-    - Network: /api/networks
-    - Channel: /api/channels
     - CalibrationUnit: /api/calibration_units
+    - Chain: /api/chains
+    - Channel: /api/channels
     - ChannelDatatype: /api/channel_datatypes
+    - ChannelParameter: /api/channel_parameters
     - Equipment: /api/equipments
     - IPAddress: /api/ipaddresses
+    - Network: /api/networks
     - Service: /api/services
-    - Chain: /api/chains
-    - ChannelParameter: /api/channel_parameters
+    - Site: /api/sites
 
 Version 1.4:
   - New theme: django-flat-theme
