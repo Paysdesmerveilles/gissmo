@@ -170,6 +170,7 @@ class Channel(APIObject):
         ]
         super(Channel, self).__init__(api_url, fields, data_dict)
         self.station = None
+        self.parameters = []
         # Equipment preparation
         self.equipment_links = self.equipments
         self.equipments = []
@@ -211,9 +212,17 @@ class Channel(APIObject):
                 res += " | Azimuth: %s %s" % (self.azimuth, self.azimuth_unit)
         return res
 
+    def get_parameters(self):
+        res = ''
+        for parameter in self.parameters:
+            res += """
+|    ⋅ %s""" % (str(parameter))
+        return res
+
     def __str__(self):
         result = """» Channel %s [rate: %s%s, location: %s] \
-(%s) Depth: %s %s%s"""
+(%s) Depth: %s %s%s
+|  PARAMETERS:%s"""
         name = '_'.join([
             self.network.code,
             self.station.code,
@@ -227,7 +236,8 @@ class Channel(APIObject):
             name,
             self.depth,
             self.depth_unit,
-            self.get_equipments())
+            self.get_equipments(),
+            self.get_parameters())
 
 
 class Equipment(APIObject):
@@ -320,3 +330,18 @@ class Chain(APIObject):
 
     def __str__(self):
         return '%s' % self.type
+
+
+class Parameter(APIObject):
+    def __init__(self, api_url, data_dict):
+        fields = [
+            'channel',
+            'parameter',
+            'value',
+        ]
+        super(Parameter, self).__init__(api_url, fields, data_dict)
+        self.name = self.parameter
+        self.parameter = None
+
+    def __str__(self):
+        return '%s: %s' % (self.name, self.value)

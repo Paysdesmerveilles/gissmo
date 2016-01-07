@@ -8,6 +8,7 @@ from tools import get
 from models import (
     Channel,
     Equipment,
+    Parameter,
     Station)
 
 
@@ -22,6 +23,7 @@ api_url = 'http://%s/api/v1/' % server
 site_url = api_url + 'sites/?format=json'
 channel_url = api_url + 'channels/?format=json'
 equipment_url = api_url + 'equipments/?format=json'
+params_url = api_url + 'channel_parameters/?format=json'
 
 
 # Search Charmoille site
@@ -37,12 +39,17 @@ for station in stations:
     url = channel_url + '&station=%s' % s.code
     channels = get(url)
     for channel in channels:
-        # Fetch code, location code
         c = Channel(api_url, channel)
         c.station = s  # Add a link from channel to station
         s.channels.append(c)
         if c.network and c.network.code not in s.networks:
             s.networks.append(c.network.code)
+        # Search linked parameters
+        url = params_url + '&channel=%s' % c.id
+        params = get(url)
+        for param in params:
+            p = Parameter(api_url, param)
+            c.parameters.append(p)
     # Search equipments linked to the station, but not linked to a channel
     station_equipment_url = equipment_url + '&station=%s' % searched_site_code
     equipments = get(station_equipment_url)
