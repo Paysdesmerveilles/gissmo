@@ -1,4 +1,5 @@
 Current version (1.5-trunk):
+  - Set API to v1 version to prevent future changes on it in few Gissmo versions
   - Equipments display Services and IPAddresses only if Equipments'Model have a
   field named "Could contains network configuration?" set to True
   - Equipment's Model have now a new field: "Could contains network configuration?"

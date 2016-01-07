@@ -9,16 +9,18 @@ port = '8000'
 if port:
     server = ':'.join([server, port])
 
-service_url = 'http://%s/api/' % (server)
+service_url = 'http://%s/api/v1/' % (server)
 
 # Exact URL to parse sites.
 site_url = service_url + 'sites/?format=json'
 equipment_url = service_url + 'equipments/?format=json'
 service_url = service_url + 'services/?format=json'
 
+
 def fetch_data(url):
     request = requests.get(url)
     return request.json()
+
 
 def main():
     sites = fetch_data(site_url)

@@ -18,7 +18,7 @@ server = 'localhost'
 port = '8002'
 if port:
     server = ':'.join([server, port])
-api_url = 'http://%s/api/' % server
+api_url = 'http://%s/api/v1/' % server
 site_url = api_url + 'sites/?format=json'
 channel_url = api_url + 'channels/?format=json'
 equipment_url = api_url + 'equipments/?format=json'

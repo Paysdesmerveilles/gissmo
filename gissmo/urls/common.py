@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.views.generic.base import RedirectView
 
 from gissmo import views
 
@@ -18,18 +19,18 @@ admin.site.site_title = 'Gissmo'
 admin.site.site_url = '/gissmo'
 
 # REST FRAMEWORK API
-apirouter = routers.DefaultRouter()
-apirouter.register(r'actors', api_views.ActorViewSet)
-apirouter.register(r'calibration_units', api_views.CalibrationUnitViewSet)
-apirouter.register(r'chains', api_views.ChainViewSet)
-apirouter.register(r'channel_datatypes', api_views.ChannelDatatypeViewSet)
-apirouter.register(r'channel_parameters', api_views.ChannelParameterViewSet)
-apirouter.register(r'channels', api_views.ChannelViewSet)
-apirouter.register(r'equipments', api_views.EquipmentViewSet)
-apirouter.register(r'ipaddresses', api_views.IPAddressViewSet)
-apirouter.register(r'networks', api_views.NetworkViewSet)
-apirouter.register(r'services', api_views.ServiceViewSet)
-apirouter.register(r'sites', api_views.SiteViewSet)
+v1_apirouter = routers.DefaultRouter()
+v1_apirouter.register(r'actors', api_views.ActorViewSet)
+v1_apirouter.register(r'calibration_units', api_views.CalibrationUnitViewSet)
+v1_apirouter.register(r'chains', api_views.ChainViewSet)
+v1_apirouter.register(r'channel_datatypes', api_views.ChannelDatatypeViewSet)
+v1_apirouter.register(r'channel_parameters', api_views.ChannelParameterViewSet)
+v1_apirouter.register(r'channels', api_views.ChannelViewSet)
+v1_apirouter.register(r'equipments', api_views.EquipmentViewSet)
+v1_apirouter.register(r'ipaddresses', api_views.IPAddressViewSet)
+v1_apirouter.register(r'networks', api_views.NetworkViewSet)
+v1_apirouter.register(r'services', api_views.ServiceViewSet)
+v1_apirouter.register(r'sites', api_views.SiteViewSet)
 
 urlpatterns = [
     url(r'^gissmo/xhr_station$',
@@ -82,7 +83,8 @@ urlpatterns = [
         name='site_shortcut'),
     url(r'^gissmo/', include(admin.site.urls)),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^api/', include(apirouter.urls)),
+    url(r'^api/v1/', include(v1_apirouter.urls), name='api'),
+    url(r'^api/$', RedirectView.as_view(url='v1', permanent=False), name='api_redirect'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

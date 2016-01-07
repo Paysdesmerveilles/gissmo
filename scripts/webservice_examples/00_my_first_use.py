@@ -8,7 +8,7 @@ port = '8000'
 if port:
     server = ':'.join([server, port])
 
-service_url = 'http://%s/api/' % (server)
+service_url = 'http://%s/api/v1/' % (server)
 pagination = False  # If True, fetch info regarding pagination axis
 
 print("### Display all sites: ###")
