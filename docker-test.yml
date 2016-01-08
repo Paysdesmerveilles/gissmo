@@ -4,13 +4,13 @@ db:
     - POSTGRES_USER=gissmo
     - POSTGRES_PASSWORD=gissmo
   ports:
-    - "5434:5432"
+    - "5433:5432"
 web:
   build: .
-  command: development
-  volumes:
-    - .:/opt/gissmo
+  command: test
   ports:
-    - "8002:8000"
+    - "8000:8001"
   links:
     - db
+  environment:
+    - SECRET_KEY="abcdefghijklmnopqrstuvwxyz"

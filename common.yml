@@ -1,6 +1,0 @@
-webapp:
-  build: .
-  volumes:
-    - .:/opt/gissmo
-  ports:
-    - "8000:8000"

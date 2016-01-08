@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 from gissmo.settings.common import *  # NOQA
 
-from os import getenv
 import sys
 
 DEBUG = True
@@ -23,14 +22,6 @@ INSTALLED_APPS += (
 
 MIDDLEWARE_CLASSES += (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-)
-
-# Update DB settings for docker-compose use
-DATABASES['default'].update(
-    {
-        'HOST': getenv('DB_PORT_5432_TCP_ADDR', '127.0.0.1'),
-        'PORT': getenv('DB_PORT_5432_TCP_PORT', '5434'),
-    }
 )
 
 if DISPLAY_SQL is True:

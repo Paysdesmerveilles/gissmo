@@ -1,79 +1,114 @@
-# Development environment
+# Requirements
 
-## With docker-compose
+You need:
 
-### Prerequisites
+  * docker (Cf. http://docs.docker.com/installation/ubuntulinux/)
+  * [optional] docker-compose (Cf. https://docs.docker.com/compose/install/)
+  * python3
+  * python-virtualenv
+  * python-pip
+  * git-core
+  * libpq-dev
+  * python3-dev
 
-You need **Docker** and **docker-compose**.
-
-Cf. http://docs.docker.com/installation/ubuntulinux/
-
-and
-
-Cf. https://docs.docker.com/compose/install/
-
-### Quick setup
-
-With docker-compose you only need to build image, build container, deploy models
-and run the server:
+For an example, you can install them on Ubuntu like this:
 
 ```bash
-docker-compose build
-docker-compose run --rm web python manage.py migrate
-docker-compose run --rm web python manage.py createsuperuser
-docker-compose run --rm --service-ports web
+sudo apt-get install libpq-dev python3-dev python-virtualenv git-core python3-pip
 ```
 
-It will launch the server on the current terminal.
+# Installation
 
-To stop the server, press Ctrl+C.
+A python-virtualenv directory is needed in which you can install all required libraries and the GISSMO project.
 
-To stop the database, just do:
+To prepare it:
 
-    docker-compose stop db
-
-And it will stop our DB.
-
-### Access the GISSMO application
-
-GISSMO is available here: http://localhost:8000/gissmo/ .
-
-## With virtualenv
-
-### Clone the repository
-
-Get the source code and create a virtual environment :
 ```bash
-apt-get install libpq-dev python3-dev virtualenvwrapper git-core python-pip
-git clone git@github.com:eost/gissmo.git
-(or your fork repos if you tend to contribute)
+mkdir gissmo_project/
+virtualenv -p python3 gissmo_project
+cd gissmo_project
+git clone git@github.com:eost/gissmo.git gissmo
 cd gissmo
-mkvirtualenv gissmo
 pip install -r requirements.txt
 ```
 
-### Database server
+# Docker
 
-By default, Gissmo expects a PostGreSQL database named "gissmo" and an user "gissmo" with the password "gissmo" :
+Gissmo application takes advantage of Docker. There is a **Dockerfile** that permit to launch Gissmo in a Docker container.
+
+But pay attention, you need to launch a postgreSQL Docker container before, then link it to Gissmo Docker.
+
+For an example:
+
 ```bash
-sudo apt-get install postgresql
-sudo -u postgres createuser -E -P gissmo
-(enter "gissmo" as password)
-sudo -u postgres createdb -O gissmo gissmo
-./manage syncdb
-(create a superuser)
+docker run -it --rm --name postgres postgres -e POSTGRES_USER=gissmo -e POSTGRES_PASSWORD=gissmo
 ```
 
-### Launch a test instance
+## Build
 
-Start the test server using this command:
+Go to gissmo git repository, then:
+
 ```bash
-./manage runserver
+docker build -t gissmo .
 ```
 
-Open this following url : [http://127.0.0.1/gissmo]() using your superuser account. Finally submit your pull request ;)
+## Launch
 
-## Check its code with flake8
+Now you can start Gissmo like this:
+
+```bash
+docker run -it --rm -p 8000:8000 --link postgres:db gissmo development
+```
+
+Gissmo is now available, in development mode, at http://127.0.0.1:8000/.
+
+## Ways Docker container works
+
+It gives 3 possibilities:
+
+  * development
+  * test
+  * production
+
+These words are keywords to launch Docker container in multiple ways. So if you need to launch the test mode, do this:
+```bash
+docker run -it --rm -p 8000:8000 --link postgres:db gissmo test
+```
+
+**By default the production mode is launched**. Which makes an error because you need a SECRET_KEY variable for it to be used.
+
+### development keyword
+
+Django is launched via ```python manage.py runserver 0.0.0.0:8000``` command.
+
+You're so in development version, with DEBUG=True (you can see errors).
+
+### test keyword
+
+Django is launched using **uwsgi** with DEBUG=True (you can see errors).
+
+A known SECRET_KEY is used for your application.
+
+### production keyword
+
+Django is launched using **uwsgi** with **DEBUG=False** (Django gives you 404 error pages instead of errors).
+
+You **need to give a SECRET_KEY** for this mode to work.
+
+For an example:
+```bash
+docker run -it --rm -P 8001 --link postgres:db -e SECRET_KEY="abcdefghijkl" gissmo production
+```
+
+# How to use launch Django into the virtualenv while using Docker postgres container
+
+You need to set DB_PORT_5432_TCP_PORT variable before. Then just launch Django like this:
+
+```bash
+DB_PORT_5432_TCP_PORT=5433 python manage.py runserver
+```
+
+# Check code with flake8
 
 Create the following **.git/hooks/pre-commit** file:
 
@@ -113,18 +148,19 @@ Then use a python virtual environment to use it.
 
 # Tests
 
+Test server works the same way as the development one.
+
+Just launch the machine like this (need docker-compose installed):
+
+```bash
+docker-compose run --rm --service-ports web test
+```
+
+This will launch Django application in uwsgi with DEBUG=True.
+
 ## Functional tests
 
-### Prerequisites
-
-As previously with docker-compose:
-
-  * docker
-  * docker-compose
-
-### Prepare test environment
-
-Just do:
+You need only database launched for tests. For an example with docker-compose, you can launch database like this:
 
 ```bash
 docker-compose start db
@@ -135,9 +171,9 @@ docker-compose start db
 Then launch functional tests **in a virtualenv** (as previously explained):
 
 ```bash
-cd gissmo
+cd gissmo_project
 source bin/activate
-pip install -r requirements
+cd gissmo
 python manage.py test functional_tests
 ```
 
@@ -171,44 +207,28 @@ Which give us:
 USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=thefroid.u-strasbg.fr:8000
 ```
 
-# Production environment
+# Database migration
 
-To use the production environment, you need Docker and docker-compose. We assume you have a copy of Gissmo DB named **gissmo-1.dump**.
+## Migration from 1.3 to 1.4
 
-Then add the new SECRET\_KEY in **production.env** file.
+To migrate the database you need:
 
-Finally, do:
+  * to have a docker postgresql database launched (and know its name)
+  * have a dump from your current database
 
-```bash
-docker-compose -f production.yml build
-docker-compose -f production.yml up
-PGHOST=localhost PGPORT=5433 PGUSER=gissmo pg_restore -d gissmo gissmo-1.dump
-# password is gissmo
-# stop them with Ctrl + C
-docker-compose -f production.yml run --rm pweb python manage.py migrate admin 0001_initial --fake
-docker-compose -f production.yml run --rm pweb python manage.py migrate auth
-docker-compose -f production.yml run --rm pweb python manage.py migrate sessions 0001_initial --fake
-docker-compose -f production.yml run --rm pweb python manage.py migrate gissmo 0001_initial --fake
-docker-compose -f production.yml run --rm pweb python manage.py migrate gissmo
-```
-
-You can then create a new superuser as this:
+Then, just do this:
 
 ```bash
-docker-compose -f production.yml run --rm pweb python manage.py createsuperuser
+PGHOST=localhost PGPORT=5433 PGUSER=gissmo PGPASSWORD=gissmo pg_restore -d gissmo gissmo-1.dump
+docker run -it --rm --link postgres:db gissmo python manage.py migrate admin 0001_initial --fake
+docker run -it --rm --link postgres:db gissmo python manage.py migrate auth
+docker run -it --rm --link postgres:db gissmo python manage.py migrate sessions 0001_initial --fake
+docker run -it --rm --link postgres:db gissmo python manage.py migrate gissmo 0001_initial --fake
+docker run -it --rm --link postgres:db gissmo python manage.py migrate gissmo
 ```
-
-And launch service like this:
-
-```bash
-docker-compose -f production.yml run --rm --service-ports pweb
-```
-
-**Note**: By default the Dockerfile use this port: **8000**.
 
 # Contributors
 
 * [Olivier Dossmann](https://github.com/blankoworld)
 * [Fabien Engels](https://github.com/fabienengels)
 * [Martin Dutil](https://github.com/mdutil)
-
