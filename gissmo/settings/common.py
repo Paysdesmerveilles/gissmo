@@ -12,8 +12,8 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_NAME', 'gissmo'),
         'USER': os.getenv('POSTGRES_USER', 'gissmo'),
         'PASSWORD': os.getenv('POSTGRES_PASS', 'gissmo'),
-        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        'HOST': os.getenv('DB_PORT_5432_TCP_ADDR', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT_5432_TCP_PORT', '5432'),
     }
 }
 

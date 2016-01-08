@@ -26,11 +26,9 @@ ADD . $GISSMO_DIR
 # Collect static files
 RUN python manage.py collectstatic --noinput --clear -v 1
 
-# Exposed port
+COPY scripts/docker-start.sh /
+
+ENTRYPOINT ["/docker-start.sh"]
+
 EXPOSE 8000
-
-# Install and run uwsgi
-RUN apt-get update && \
-  apt-get install -y uwsgi
-
-CMD uwsgi --ini $GISSMO_DIR/uwsgi.ini --pythonpath $GISSMO_DIR --static-map=/gissmo/static/=$GISSMO_STATIC_DIR
+CMD ["production"]

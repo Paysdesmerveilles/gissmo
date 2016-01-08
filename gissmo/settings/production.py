@@ -14,10 +14,3 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 ROOT_URLCONF = 'gissmo.urls.production'
 
 ALLOWED_HOSTS = ['*']
-
-DATABASES['default'].update(
-    {
-        'HOST': 'pdb',
-        'PORT': '5432',
-    }
-)
