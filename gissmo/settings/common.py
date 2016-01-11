@@ -124,10 +124,10 @@ LOGGING = {
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': ('gissmo.permissions.WhitelistPermission',),
+    # This permission class allow only listed IP in API_ALLOWED_HOSTS.
+    # 'DEFAULT_PERMISSION_CLASSES': ('gissmo.permissions.WhitelistPermission',),
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
-    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    # 'PAGE_SIZE': 20,
     'UNICODE_JSON': True,
 }
 
