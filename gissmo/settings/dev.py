@@ -29,6 +29,9 @@ API_ALLOWED_HOSTS += [
     '*',
 ]
 
+# Add Docker IP to display django debug toolbar
+INTERNAL_IPS = ('172.17.0.1',)
+
 if DISPLAY_SQL is True:
     LOGGING['handlers'].update({
         'console': {
