@@ -230,12 +230,14 @@ Then, just do this:
 
 ```bash
 PGHOST=localhost PGPORT=5433 PGUSER=gissmo PGPASSWORD=gissmo pg_restore -d gissmo gissmo-1.dump
-docker run -it --rm --link postgres:db gissmo python manage.py migrate admin 0001_initial --fake
+docker run -it --rm --link postgres:db gissmo python manage.py migrate admin 0001_initial --fake --noinput
 docker run -it --rm --link postgres:db gissmo python manage.py migrate auth
 docker run -it --rm --link postgres:db gissmo python manage.py migrate sessions 0001_initial --fake
 docker run -it --rm --link postgres:db gissmo python manage.py migrate gissmo 0001_initial --fake
 docker run -it --rm --link postgres:db gissmo python manage.py migrate gissmo
 ```
+
+**WARNING: New document upload area is located in /opt/gissmo/upload** (in Docker container). So it needs to mount a volume.
 
 # Contributors
 
