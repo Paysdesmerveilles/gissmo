@@ -26,7 +26,7 @@ MIDDLEWARE_CLASSES += (
 
 # Add current developer IP (thefroid.u-strasbg.fr) to allowed hosts
 API_ALLOWED_HOSTS += [
-    '130.79.9.145',
+    '*',
 ]
 
 if DISPLAY_SQL is True:
