@@ -9,7 +9,7 @@ web:
   build: .
   command: test
   ports:
-    - "8000:8001"
+    - "8000:8000"
   links:
     - db
   environment:
