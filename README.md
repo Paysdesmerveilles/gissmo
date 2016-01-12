@@ -49,7 +49,7 @@ docker run -d --volumes-from dbdata --name gissmo_db postgres:9.5
 Go to gissmo git repository, then:
 
 ```bash
-docker build -t gissmo .
+docker build -t gissmo:1.5 .
 ```
 
 ## Configure
@@ -59,7 +59,7 @@ If you have a previous database that you want to restore, have a look to the *Da
 Otherwise you can launch the database creation command like this:
 
 ```bash
-docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate
+docker run -it --rm --link gissmo_db:db gissmo:1.5 python manage.py migrate
 ```
 
 **Note**: We suggest you to create an admin user with this command:
@@ -73,7 +73,7 @@ docker run -it --rm --link gissmo_db:db gissmo python manage.py createsuperuser
 Now you can start Gissmo like this:
 
 ```bash
-docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo:1.5
 ```
 
 **WARNING**: For Gissmo to work we **need that the link alias is db**. So always name it **db**.
@@ -90,7 +90,7 @@ It gives 3 possibilities:
 
 These words are keywords to launch Docker container in multiple ways. So if you need to launch the test mode, do this:
 ```bash
-docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo test
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo:1.5 test
 ```
 
 **By default the production mode is launched**. Which makes an error because you need a SECRET\_KEY variable for it to be used.
@@ -115,7 +115,7 @@ You **need to give a SECRET\_KEY** for this mode to work.
 
 For an example:
 ```bash
-docker run -it --rm -P 8001 --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo production
+docker run -it --rm -P 8001 --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo:1.5 production
 ```
 
 # How to use launch Django into the virtualenv while using Docker postgres container
@@ -171,7 +171,7 @@ Test server works the same way as the development one.
 Just launch the machine like this:
 
 ```bash
-docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo test
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo:1.5 test
 ```
 
 This will launch Django application in uwsgi with DEBUG=True.
@@ -263,14 +263,22 @@ Then to migrate database to the given version of Gissmo, follow related explanat
 Just do:
 
 ```bash
-docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate admin 0001_initial --fake --noinput
-docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate auth
-docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate sessions 0001_initial --fake
-docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate gissmo 0001_initial --fake
-docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate gissmo
+docker run -it --rm --link gissmo_db:db gissmo:1.4 python manage.py migrate admin 0001_initial --fake --noinput
+docker run -it --rm --link gissmo_db:db gissmo:1.4 python manage.py migrate auth
+docker run -it --rm --link gissmo_db:db gissmo:1.4 python manage.py migrate sessions 0001_initial --fake
+docker run -it --rm --link gissmo_db:db gissmo:1.4 python manage.py migrate gissmo 0001_initial --fake
+docker run -it --rm --link gissmo_db:db gissmo:1.4 python manage.py migrate gissmo
 ```
 
 **WARNING: New document upload area is located in /opt/gissmo/upload** (in Docker container). So it needs to mount a supplementary volume.
+
+## From 1.4 to 1.5
+
+Just do:
+
+```bash
+docker run -it --rm --link gissmo_db:db gissmo:1.5 python manage.py migrate gissmo
+```
 
 # Contributors
 
