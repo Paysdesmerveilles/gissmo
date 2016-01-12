@@ -10,6 +10,10 @@ ENV PYTHONBUFFERED 1
 ENV GISSMO_DIR /opt/gissmo
 ENV GISSMO_STATIC_DIR $GISSMO_DIR/static
 
+# Add new GISSMO user
+RUN useradd -m gissmo
+RUN echo "gissmo:gissmo" | chpasswd
+
 # GISSMO directory
 RUN mkdir -p $GISSMO_DIR
 RUN mkdir -p $GISSMO_DIR/upload # For upload purpose
@@ -30,4 +34,7 @@ COPY scripts/docker-start.sh /
 ENTRYPOINT ["/docker-start.sh"]
 
 EXPOSE 8000
+
+USER gissmo
+
 CMD ["production"]

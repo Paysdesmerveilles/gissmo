@@ -3,7 +3,6 @@
 You need:
 
   * docker (Cf. http://docs.docker.com/installation/ubuntulinux/)
-  * [optional] docker-compose (Cf. https://docs.docker.com/compose/install/)
   * python3
   * python-virtualenv
   * python-pip
@@ -41,7 +40,8 @@ But pay attention, you need to launch a postgreSQL Docker container before, then
 For an example:
 
 ```bash
-docker run -it --rm --name postgres postgres -e POSTGRES_USER=gissmo -e POSTGRES_PASSWORD=gissmo
+docker create -v /dbdata:/var/lib/postgresql/data --name dbdata postgres:9.5
+docker run -d --volumes-from dbdata --name gissmo_db postgres:9.5
 ```
 
 ## Build
@@ -52,15 +52,33 @@ Go to gissmo git repository, then:
 docker build -t gissmo .
 ```
 
+## Configure
+
+If you have a previous database that you want to restore, have a look to the *Database migration* chapter of this documentation. Then read *Launch* chapter to know how to launch a Gissmo application with it.
+
+Otherwise you can launch the database creation command like this:
+
+```bash
+docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate
+```
+
+**Note**: We suggest you to create an admin user with this command:
+
+```bash
+docker run -it --rm --link gissmo_db:db gissmo python manage.py createsuperuser
+```
+
 ## Launch
 
 Now you can start Gissmo like this:
 
 ```bash
-docker run -it --rm -p 8000:8000 --link postgres:db gissmo development
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo
 ```
 
-Gissmo is now available, in development mode, at http://127.0.0.1:8000/.
+**WARNING**: For Gissmo to work we **need that the link alias is db**. So always name it **db**.
+
+Gissmo is now available, in production mode, at http://127.0.0.1:8000/.
 
 ## Ways Docker container works
 
@@ -72,10 +90,10 @@ It gives 3 possibilities:
 
 These words are keywords to launch Docker container in multiple ways. So if you need to launch the test mode, do this:
 ```bash
-docker run -it --rm -p 8000:8000 --link postgres:db gissmo test
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo test
 ```
 
-**By default the production mode is launched**. Which makes an error because you need a SECRET_KEY variable for it to be used.
+**By default the production mode is launched**. Which makes an error because you need a SECRET\_KEY variable for it to be used.
 
 ### development keyword
 
@@ -87,22 +105,22 @@ You're so in development version, with DEBUG=True (you can see errors).
 
 Django is launched using **uwsgi** with DEBUG=True (you can see errors).
 
-A known SECRET_KEY is used for your application.
+A known SECRET\_KEY is used for your application.
 
 ### production keyword
 
 Django is launched using **uwsgi** with **DEBUG=False** (Django gives you 404 error pages instead of errors).
 
-You **need to give a SECRET_KEY** for this mode to work.
+You **need to give a SECRET\_KEY** for this mode to work.
 
 For an example:
 ```bash
-docker run -it --rm -P 8001 --link postgres:db -e SECRET_KEY="abcdefghijkl" gissmo production
+docker run -it --rm -P 8001 --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo production
 ```
 
 # How to use launch Django into the virtualenv while using Docker postgres container
 
-You need to set DB_PORT_5432_TCP_PORT variable before. Then just launch Django like this:
+You need to set DB\_PORT\_5432\_TCP\_PORT variable before. Then just launch Django like this:
 
 ```bash
 DB_PORT_5432_TCP_PORT=5433 python manage.py runserver
@@ -150,20 +168,26 @@ Then use a python virtual environment to use it.
 
 Test server works the same way as the development one.
 
-Just launch the machine like this (need docker-compose installed):
+Just launch the machine like this:
 
 ```bash
-docker-compose run --rm --service-ports web test
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo test
 ```
 
 This will launch Django application in uwsgi with DEBUG=True.
 
 ## Functional tests
 
-You need only database launched for tests. For an example with docker-compose, you can launch database like this:
+Check that a postgreSQL docker is launched before.
 
-```bash
-docker-compose start db
+**WARNING**: Autocomplete module use static files to work, so be sure to
+collect them.
+
+Do this:
+
+```bash                                                                             
+mkdir static                                                                        
+python manage.py collectstatic --noinput --clear -v 1                               
 ```
 
 ### Run functional tests
@@ -174,7 +198,7 @@ Then launch functional tests **in a virtualenv** (as previously explained):
 cd gissmo_project
 source bin/activate
 cd gissmo
-python manage.py test functional_tests
+DB_PORT_5432_TCP_PORT=5434 python manage.py test functional_tests
 ```
 
 It will launch Firefox and check some URLs.
@@ -209,25 +233,34 @@ USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=the
 
 # Database migration
 
-## Migration from 1.3 to 1.4
+**You have to always make a backup before any change. So backup your database first!**
 
-To migrate the database you need:
+If you have a previous working database, you need to flush it. For an example we previously mount a volume on /psql_data.
 
-  * to have a docker postgresql database launched (and know its name)
-  * have a dump from your current database
-
-Then, just do this:
+So we do this (we assume that /home/gissmo/project is a directory in which we have a database dump: **gissmo-1.dump**):
 
 ```bash
-PGHOST=localhost PGPORT=5433 PGUSER=gissmo PGPASSWORD=gissmo pg_restore -d gissmo gissmo-1.dump
-docker run -it --rm --link postgres:db gissmo python manage.py migrate admin 0001_initial --fake --noinput
-docker run -it --rm --link postgres:db gissmo python manage.py migrate auth
-docker run -it --rm --link postgres:db gissmo python manage.py migrate sessions 0001_initial --fake
-docker run -it --rm --link postgres:db gissmo python manage.py migrate gissmo 0001_initial --fake
-docker run -it --rm --link postgres:db gissmo python manage.py migrate gissmo
+docker stop gissmo_db && docker rm gissmo_db
+sudo rm -rf /psql_data
+docker run -d --volumes-from dbdata --name gissmo_db postgres:9.5
+docker run -it --rm --link gissmo_db:db -v /home/gissmo/project/:/backup -e PGHOST="`docker inspect -f {{.NetworkSettings.IPAddress}} gissmo_db`" -e PGUSER=postgres postgres:9.5 pg_restore -d postgres /backup/gissmo-1.dump
 ```
 
-**WARNING: New document upload area is located in /opt/gissmo/upload** (in Docker container). So it needs to mount a volume.
+Then to migrate database to the given version of Gissmo, follow related explanations.
+
+## From 1.3 to 1.4
+
+Just do:
+
+```bash
+docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate admin 0001_initial --fake --noinput
+docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate auth
+docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate sessions 0001_initial --fake
+docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate gissmo 0001_initial --fake
+docker run -it --rm --link gissmo_db:db gissmo python manage.py migrate gissmo
+```
+
+**WARNING: New document upload area is located in /opt/gissmo/upload** (in Docker container). So it needs to mount a supplementary volume.
 
 # Contributors
 

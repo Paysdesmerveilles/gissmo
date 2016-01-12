@@ -1,10 +1,5 @@
 db:
   image: postgres
-  environment:
-    - POSTGRES_USER=gissmo
-    - POSTGRES_PASSWORD=gissmo
-  ports:
-    - "5433:5432"
 web:
   build: .
   command: test
