@@ -41,7 +41,7 @@ For an example:
 
 ```bash
 docker create -v /dbdata:/var/lib/postgresql/data --name dbdata postgres:9.5
-docker run -d --volumes-from dbdata --name gissmo_db postgres:9.5
+docker run -d -P --volumes-from dbdata --name gissmo_db postgres:9.5
 ```
 
 ## Build
@@ -115,7 +115,7 @@ You **need to give a SECRET\_KEY** for this mode to work.
 
 For an example:
 ```bash
-docker run -it --rm -P 8001 --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo:1.5 production
+docker run -it --rm -P --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo:1.5 production
 ```
 
 # How to use launch Django into the virtualenv while using Docker postgres container
@@ -128,41 +128,14 @@ DB_PORT_5432_TCP_PORT=5433 python manage.py runserver
 
 # Check code with flake8
 
-Create the following **.git/hooks/pre-commit** file:
-
-```python
-#!/usr/bin/env python
-
-import glob
-import os
-import sys
-
-site_packages = glob.glob('%s/lib/*/site-packages' % os.environ['VIRTUAL_ENV'])[0]
-sys.path.insert(0, site_packages)
-
-from flake8.run import git_hook
-
-COMPLEXITY = os.getenv('FLAKE8_COMPLEXITY', 10)
-STRICT = os.getenv('FLAKE8_STRICT', True)
-IGNORE = os.getenv('FLAKE8_IGNORE', 'E501')
-LAZY = os.getenv('FLAKE8_LAZY', False)
-
-if __name__ == '__main__':
-        sys.exit(git_hook(
-        complexity=COMPLEXITY,
-        strict=STRICT,
-        ignore=IGNORE,
-        lazy=LAZY,
-    ))
-```
-
-Change it to an executable one:
+Copy **scripts/git\_hooks/pre-commit** file to the following: **.git/hooks/pre-commit**.
 
 ```bash
+cp scripts/git_hooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
-Then use a python virtual environment to use it.
+Then use a python virtual environment to commit. It will so check your code.
 
 # Tests
 
@@ -245,16 +218,7 @@ USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=the
 
 **You have to always make a backup before any change. So backup your database first!**
 
-If you have a previous working database, you need to flush it. For an example we previously mount a volume on /psql_data.
-
-So we do this (we assume that /home/gissmo/project is a directory in which we have a database dump: **gissmo-1.dump**):
-
-```bash
-docker stop gissmo_db && docker rm gissmo_db
-sudo rm -rf /psql_data
-docker run -d --volumes-from dbdata --name gissmo_db postgres:9.5
-docker run -it --rm --link gissmo_db:db -v /home/gissmo/project/:/backup -e PGHOST="`docker inspect -f {{.NetworkSettings.IPAddress}} gissmo_db`" -e PGUSER=postgres postgres:9.5 pg_restore -d postgres /backup/gissmo-1.dump
-```
+If you have a previous working database, you need to flush it.
 
 Then to migrate database to the given version of Gissmo, follow related explanations.
 
