@@ -41,7 +41,7 @@ For an example:
 
 ```bash
 docker create -v /dbdata:/var/lib/postgresql/data --name dbdata postgres:9.5
-docker run -d --volumes-from dbdata --name gissmo_db postgres:9.5
+docker run -d -P --volumes-from dbdata --name gissmo_db postgres:9.5
 ```
 
 ## Build
@@ -115,7 +115,7 @@ You **need to give a SECRET\_KEY** for this mode to work.
 
 For an example:
 ```bash
-docker run -it --rm -P 8001 --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo production
+docker run -it --rm -P --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo production
 ```
 
 # How to use launch Django into the virtualenv while using Docker postgres container
@@ -235,16 +235,7 @@ USER=olivier PWD=olivier python manage.py test functional_tests --liveserver=the
 
 **You have to always make a backup before any change. So backup your database first!**
 
-If you have a previous working database, you need to flush it. For an example we previously mount a volume on /psql_data.
-
-So we do this (we assume that /home/gissmo/project is a directory in which we have a database dump: **gissmo-1.dump**):
-
-```bash
-docker stop gissmo_db && docker rm gissmo_db
-sudo rm -rf /psql_data
-docker run -d --volumes-from dbdata --name gissmo_db postgres:9.5
-docker run -it --rm --link gissmo_db:db -v /home/gissmo/project/:/backup -e PGHOST="`docker inspect -f {{.NetworkSettings.IPAddress}} gissmo_db`" -e PGUSER=postgres postgres:9.5 pg_restore -d postgres /backup/gissmo-1.dump
-```
+If you have a previous working database, you need to flush it.
 
 Then to migrate database to the given version of Gissmo, follow related explanations.
 
