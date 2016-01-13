@@ -128,41 +128,14 @@ DB_PORT_5432_TCP_PORT=5433 python manage.py runserver
 
 # Check code with flake8
 
-Create the following **.git/hooks/pre-commit** file:
-
-```python
-#!/usr/bin/env python
-
-import glob
-import os
-import sys
-
-site_packages = glob.glob('%s/lib/*/site-packages' % os.environ['VIRTUAL_ENV'])[0]
-sys.path.insert(0, site_packages)
-
-from flake8.run import git_hook
-
-COMPLEXITY = os.getenv('FLAKE8_COMPLEXITY', 10)
-STRICT = os.getenv('FLAKE8_STRICT', True)
-IGNORE = os.getenv('FLAKE8_IGNORE', 'E501')
-LAZY = os.getenv('FLAKE8_LAZY', False)
-
-if __name__ == '__main__':
-        sys.exit(git_hook(
-        complexity=COMPLEXITY,
-        strict=STRICT,
-        ignore=IGNORE,
-        lazy=LAZY,
-    ))
-```
-
-Change it to an executable one:
+Copy **scripts/git\_hooks/pre-commit** file to the following: **.git/hooks/pre-commit**.
 
 ```bash
+cp scripts/git_hooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
-Then use a python virtual environment to use it.
+Then use a python virtual environment to commit. It will so check your code.
 
 # Tests
 
