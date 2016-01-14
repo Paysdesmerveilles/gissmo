@@ -16,7 +16,6 @@ from rest_framework import routers
 admin.autodiscover()
 admin.site.site_header = 'Gissmo'
 admin.site.site_title = 'Gissmo'
-admin.site.site_url = '/gissmo'
 
 # REST FRAMEWORK API
 v1_apirouter = routers.DefaultRouter()
@@ -86,6 +85,7 @@ urlpatterns = [
     url(r'^api/v1/', include(v1_apirouter.urls), name='api'),
     url(r'^api/$', RedirectView.as_view(url='v1', permanent=False), name='api_redirect'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^$', RedirectView.as_view(url='gissmo', permanent=False), name='homepage'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Note about STATIC_URL: django.contrib.staticfils in INSTALLED_APPS do the job
