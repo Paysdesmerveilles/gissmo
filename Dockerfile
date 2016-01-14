@@ -32,6 +32,8 @@ RUN python manage.py collectstatic --noinput --clear -v 1
 
 COPY scripts/docker-start.sh /
 
+RUN chown gissmo $GISSMO_DIR -R
+
 ENTRYPOINT ["/docker-start.sh"]
 
 EXPOSE 8000
