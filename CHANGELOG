@@ -1,4 +1,6 @@
 Current version (1.5-trunk):
+  - New field on Equipment's Model: "Manufacturer?" that informs user if
+  Manufacturer was forgotten. By default Manufacturer is "Unknown"
   - Set API to v1 version to prevent future changes on it in few Gissmo versions
   - Equipments display Services and IPAddresses only if Equipments'Model have a
   field named "Could contains network configuration?" set to True

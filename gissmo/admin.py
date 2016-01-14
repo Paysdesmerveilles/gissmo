@@ -140,7 +140,8 @@ class EquipModelAdmin(admin.ModelAdmin):
     list_display = [
         'equip_supertype',
         'equip_type',
-        'equip_model_name']
+        'equip_model_name',
+        'have_a_manufacturer']
     list_display_links = ['equip_model_name']
     list_filter = [EquipModelFilter]
     ordering = [

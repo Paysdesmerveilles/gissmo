@@ -237,6 +237,9 @@ nom d'usage utilisé par la communauté des instrumentalistes
 
     equip_model_name : char(50)
         Nom du modèle de l'équipment
+
+    manufacturer : char(50)
+        Fabricant du modèle d'équipement
     """
     equip_type = models.ForeignKey(
         EquipType,
@@ -246,9 +249,8 @@ nom d'usage utilisé par la communauté des instrumentalistes
         verbose_name=_("modele d'equipement"))
     manufacturer = models.CharField(
         max_length=50,
-        null=True,
-        blank=True,
-        verbose_name=_("manufacturier"))
+        default='Unknown',  # keep it untranslated for functional purposes
+        verbose_name=_("manufacturer"))
     is_network_model = models.BooleanField(
         verbose_name=_('Could contains network configuration?'),
         default=False)
@@ -260,6 +262,15 @@ nom d'usage utilisé par la communauté des instrumentalistes
     _get_supertype.short_description = _('supertype d\'équipement')
 
     equip_supertype = property(_get_supertype)
+
+    # Check which Equipment Model don't have any Manufacturer
+    def have_a_manufacturer(self):
+        if self.manufacturer and self.manufacturer != 'Unknown':
+            return True
+        return False
+
+    have_a_manufacturer.boolean = True
+    have_a_manufacturer.short_description = _('Manufacturer?')
 
     class Meta:
         ordering = ['equip_model_name']
