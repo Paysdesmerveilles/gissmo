@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FDSNStationXML schemaVersion="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
-     <Source>Noeud A</Source>
-     <Sender>Noeud A</Sender>
+     <Source>A Node</Source>
+     <Sender>A Node</Sender>
      <Created>{{ aujourdhui|date:"Y-m-d\TH:i:s" }}</Created>
      {% for network, comments, station_count, station, station_vault, channels_count, create_station, terminate_station, channels in ResNetwork %}
      <Network code="{{ network.network_code }}"
