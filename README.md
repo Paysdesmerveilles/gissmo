@@ -123,7 +123,7 @@ docker run -it --rm -P --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo:1.5 pr
 You need to set DB\_PORT\_5432\_TCP\_PORT variable before. Then just launch Django like this:
 
 ```bash
-DB_PORT_5432_TCP_PORT=5433 python manage.py runserver
+DB_PORT_5432_TCP_PORT=`docker inspect -f '{{ (index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' gissmo_db` python manage.py runserver
 ```
 
 # Check code with flake8
@@ -163,16 +163,6 @@ mkdir static
 python manage.py collectstatic --noinput --clear -v 1                               
 ```
 
-**WARNING**: As autocomplete module use static files to work, we need to
-collect them.
-
-So first do:
-
-```bash
-mkdir static
-python manage.py collectstatic --noinput --clear -v 1
-```
-
 ### Run functional tests
 
 Then launch functional tests **in a virtualenv** (as previously explained):
@@ -181,7 +171,7 @@ Then launch functional tests **in a virtualenv** (as previously explained):
 cd gissmo_project
 source bin/activate
 cd gissmo
-DB_PORT_5432_TCP_PORT=5434 python manage.py test functional_tests
+DB_PORT_5432_TCP_PORT=`docker inspect -f '{{ (index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' gissmo_db` python manage.py test functional_tests
 ```
 
 It will launch Firefox and check some URLs.
