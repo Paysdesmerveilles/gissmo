@@ -174,6 +174,15 @@ cd gissmo
 DB_PORT_5432_TCP_PORT=`docker inspect -f '{{ (index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' gissmo_db` python manage.py test functional_tests
 ```
 
+or more simply:
+
+```bash
+cd gissmo_project
+source bin/activate
+cd gissmo
+./scripts/launch-tests.sh functional_tests
+```
+
 It will launch Firefox and check some URLs.
 
 **TIP**: You can only launch some tests by using this syntax:
