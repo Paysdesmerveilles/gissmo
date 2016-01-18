@@ -30,11 +30,11 @@ ADD . $GISSMO_DIR
 # Collect static files
 RUN python manage.py collectstatic --noinput --clear -v 1
 
-COPY scripts/docker-start.sh /
+COPY scripts/docker-entrypoint.sh /
 
 RUN chown gissmo $GISSMO_DIR -R
 
-ENTRYPOINT ["/docker-start.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 8000
 
