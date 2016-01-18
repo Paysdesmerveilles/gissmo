@@ -202,6 +202,7 @@ class ServiceInline(admin.TabularInline):
 
 class IPAddressInline(admin.TabularInline):
     model = IPAddress
+    form = IPAddressInlineForm
     extra = 1
 
 

@@ -18,6 +18,7 @@ from equipment import protocols as Protocol
 from station import states as StationState
 from station import actions as StationAction
 
+from gissmo.validators import validate_ipaddress
 from gissmo.helpers import format_date
 from gissmo.tools import make_date_aware
 
@@ -883,9 +884,10 @@ class Service(models.Model):
 
 
 class IPAddress(models.Model):
-    ip = models.GenericIPAddressField(
-        protocol='both',
-        verbose_name=_('IP Address'))
+    ip = models.CharField(
+        max_length=255,
+        verbose_name=_('IP Address'),
+        validators=[validate_ipaddress])
     netmask = models.GenericIPAddressField(
         protocol='both',
         verbose_name=_('Netmask'))

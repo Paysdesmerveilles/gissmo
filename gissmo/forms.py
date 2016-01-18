@@ -23,21 +23,22 @@ from station import actions as StationAction
 
 from gissmo.models import (
     Actor,
+    Built,
+    Chain,
+    Channel,
+    ChannelCode,
+    DataType,
     EquipModelDoc,
     Equipment,
     EquipModel,
     EquipDoc,
-    StationSite,
-    StationDoc,
-    Chain,
-    Channel,
-    ChannelCode,
-    Built,
-    DataType,
+    IPAddress,
     Project,
     ProjectUser,
     ParameterEquip,
-    ParameterValue)
+    ParameterValue,
+    StationSite,
+    StationDoc)
 from gissmo.views import (
     equip_state_todate,
     equip_place_todate_id,
@@ -45,6 +46,7 @@ from gissmo.views import (
     available_station, available_built,
     available_equipment_scioper)
 from gissmo.tools import timezone_aware
+from gissmo.validators import validate_ipaddress
 
 
 class AdminFileWidget(forms.FileInput):
@@ -170,6 +172,16 @@ class EquipDocInlineForm(forms.ModelForm):
                     'id': instance_document.id
                 }
             )
+
+
+class IPAddressInlineForm(forms.ModelForm):
+    ip = forms.CharField(validators=[validate_ipaddress])
+
+    class Meta:
+        model = IPAddress
+        fields = [
+            "ip",
+            "netmask"]
 
 
 class InterventionForm(forms.ModelForm):
