@@ -180,6 +180,30 @@ class FunctionalTest(LiveServerTestCase):
         for field in fields:
             self.assertIn(field.content, [row.text for row in rows])
 
+    def fill_in_form(self, url, fields):
+        """
+        Complete a specific form (given by URL) and validate it.
+        """
+        # Useless to do something without data
+        if not fields:
+            self.fail('No data given!')
+            return
+        # Login and get URL
+        self.gissmo_login()
+        self.browser.get(url)
+        self.browser.implicitly_wait(3)
+
+        # Complete all fields
+        for field in fields:
+            self.fill_in_field(field)
+
+        # Wait a moment to permit a developer to see if any problem
+        time.sleep(3)
+
+        # Save form
+        input_save = self.browser.find_element_by_name('_save')
+        input_save.send_keys(Keys.ENTER)
+
     def add_item_in_admin(
             self,
             objectlisturl='/',
@@ -192,31 +216,16 @@ class FunctionalTest(LiveServerTestCase):
         'objectlisturl'.
         'fields' is a list of fields (InputField class)
         """
-        # Useless to do something without data
-        if not fields:
-            self.fail('No data given!')
-            return
-        # Login and get URL
-        self.gissmo_login()
         url = self.appurl + objectlisturl + 'add'
-        self.browser.get(url)
-        self.browser.implicitly_wait(3)
 
-        # Complete all fields and keep those that needs to be checked after
+        # Keep fields that needs to be checked after
         to_check_fields = []
         for field in fields:
-            self.fill_in_field(field)
-
             # aggregate fields to check
             if field.check:
                 to_check_fields.append(field)
 
-        # Wait a moment to permit a developer to see if any problem
-        time.sleep(3)
-
-        # Save form
-        input_save = self.browser.find_element_by_name('_save')
-        input_save.send_keys(Keys.ENTER)
+        self.fill_in_form(url, fields)
 
         if check:
             if not to_check_fields:
