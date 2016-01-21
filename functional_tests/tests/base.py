@@ -180,7 +180,7 @@ class FunctionalTest(LiveServerTestCase):
         for field in fields:
             self.assertIn(field.content, [row.text for row in rows])
 
-    def fill_in_form(self, url, fields):
+    def fill_in_form(self, url, fields, click_paths=[]):
         """
         Complete a specific form (given by URL) and validate it.
         """
@@ -193,6 +193,11 @@ class FunctionalTest(LiveServerTestCase):
         self.browser.get(url)
         self.browser.implicitly_wait(3)
 
+        # Prepare forms if needed
+        for click_path in click_paths:
+            link = self.browser.find_element_by_xpath(click_path)
+            link.click()
+
         # Complete all fields
         for field in fields:
             self.fill_in_field(field)
@@ -203,6 +208,7 @@ class FunctionalTest(LiveServerTestCase):
         # Save form
         input_save = self.browser.find_element_by_name('_save')
         input_save.send_keys(Keys.ENTER)
+        self.browser.implicitly_wait(3)
 
     def add_item_in_admin(
             self,
