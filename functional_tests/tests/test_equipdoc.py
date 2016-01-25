@@ -145,7 +145,8 @@ class EquipDocTest(FunctionalTest):
         self.assertTrue(os.path.exists(file_path))
         _file = InputField(
             name='equipdoc_set-0-document_equip',
-            content=file_path)
+            content=file_path,
+            _type='file')
         fields = [_type, title, _file]
         for field in fields:
             self.fill_in_field(field)

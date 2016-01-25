@@ -18,6 +18,7 @@ INSTALLED_APPS += (
     'django_extensions',
     'functional_tests',
     'debug_toolbar',
+    'selenium',
 )
 
 MIDDLEWARE_CLASSES += (
@@ -47,3 +48,10 @@ if DISPLAY_SQL is True:
             'level': 'DEBUG',
         },
     })
+
+# Add this to avoid some problems of "already exists" in DB between each test
+# regarding this link:
+# http://stackoverflow.com/questions/29226869/django-transactiontestcase-with-rollback-emulation
+TEST_NON_SERIALIZED_APPS = [
+    'django.contrib.contenttypes',
+    'django.contrib.auth']

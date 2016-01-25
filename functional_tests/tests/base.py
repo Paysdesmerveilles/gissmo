@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 from selenium import webdriver
 # from selenium.webdriver.common.desired_capabilities import \
-#        DesiredCapabilities
+#     DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
@@ -24,6 +24,7 @@ class FunctionalTest(LiveServerTestCase):
     """
     A set of tests that only load some webpages from Gissmo.
     """
+    serialized_rollback = True
 
     @classmethod
     def setUpClass(cls):
@@ -44,13 +45,19 @@ class FunctionalTest(LiveServerTestCase):
 
     def setUp(self):
         """
-        Launch Firefox as Web Testing Platform.
+        Launch a browser as Web Testing Platform.
         """
         super(FunctionalTest, self).setUp()
-        self.superuser = User.objects.create_superuser(
-            self.DEFAULT_ADMIN_LOGIN,
-            'admin@mysite.com',
-            self.DEFAULT_ADMIN_PASSWORD)
+        users = User.objects.filter(username=self.DEFAULT_ADMIN_LOGIN)
+        if not users:
+            self.superuser = User.objects.create_superuser(
+                self.DEFAULT_ADMIN_LOGIN,
+                'admin@mysite.com',
+                self.DEFAULT_ADMIN_PASSWORD)
+        else:
+            self.superuser = users[0]
+
+        # #### FIREFOX #####
         # Set Firefox profile to DL CSV files
         fp = webdriver.FirefoxProfile()
 
@@ -58,7 +65,9 @@ class FunctionalTest(LiveServerTestCase):
         fp.set_preference("browser.download.manager.showWhenStarting", False)
         fp.set_preference("browser.download.dir", self.DOWNLOAD_PATH)
         fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "text/csv")
+        self.browser = webdriver.Firefox(firefox_profile=fp)
 
+        # #### REMOTE SERVER #####
 #        # Create a connection to a Remote Selenium Node
 #        self.browser = webdriver.Remote(
 #            command_executor='http://selenium:4444/wd/hub',
@@ -66,7 +75,14 @@ class FunctionalTest(LiveServerTestCase):
 #            browser_profile=fp,
 #        )
 
-        self.browser = webdriver.Firefox(firefox_profile=fp)
+        # #### PHANTOMJS #####
+#        capabilities = DesiredCapabilities.FIREFOX.copy()
+#        capabilities['platform'] = "ANY"
+#        capabilities['version'] = 10
+#
+#        self.browser = webdriver.PhantomJS(desired_capabilities=capabilities)
+#        self.browser.set_window_size(1024, 768)
+
         self.browser.implicitly_wait(3)
 
         self.url = self.server_url + '/'
@@ -93,15 +109,19 @@ class FunctionalTest(LiveServerTestCase):
         Log in to Gissmo application.
         """
         if not self.logged:
+            from selenium.webdriver.support.wait import WebDriverWait
+            timeout = 2
             url = self.adminurl
             self.browser.get(url)
             inputlogin = self.browser.find_element_by_name('username')
             inputpassword = self.browser.find_element_by_name('password')
             inputlogin.send_keys(self.DEFAULT_ADMIN_LOGIN)
             inputpassword.send_keys(self.DEFAULT_ADMIN_PASSWORD)
-            inputpassword.send_keys(Keys.ENTER)
+            self.browser.find_element_by_xpath(
+                '//input[@value="Log in"]').click()
+            WebDriverWait(self.browser, timeout).until(
+                lambda driver: self.browser.find_element_by_tag_name('body'))
 
-            self.browser.implicitly_wait(3)
             # Stop tests if login failed
             self.assertIn(
                 'Site administration',
@@ -158,7 +178,8 @@ class FunctionalTest(LiveServerTestCase):
         else:
             input_field = self.browser.find_element_by_name(field.name)
             # Delete content first
-            input_field.clear()
+            if field._type != 'file':
+                input_field.clear()
             input_field.send_keys(field.content)
 
     def check_presence_in_list(self, url, fields):
