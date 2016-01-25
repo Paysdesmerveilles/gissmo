@@ -229,6 +229,8 @@ class ChainSerializer(serializers.HyperlinkedModelSerializer):
 class ChannelParameterSerializer(serializers.HyperlinkedModelSerializer):
     parameter = serializers.CharField(source='parameter.parameter_name')
     value = serializers.CharField(source='value.value')
+    model = serializers.CharField(
+        source='parameter.equip_model.equip_model_name')
 
     class Meta:
         model = ChainConfig
@@ -236,4 +238,5 @@ class ChannelParameterSerializer(serializers.HyperlinkedModelSerializer):
             'channel',
             'parameter',
             'value',
+            'model',
         ]

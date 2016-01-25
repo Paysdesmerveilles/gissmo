@@ -338,10 +338,11 @@ class Parameter(APIObject):
             'channel',
             'parameter',
             'value',
+            'model',
         ]
         super(Parameter, self).__init__(api_url, fields, data_dict)
         self.name = self.parameter
         self.parameter = None
 
     def __str__(self):
-        return '%s: %s' % (self.name, self.value)
+        return '(%s) %s: %s' % (self.model, self.name, self.value)

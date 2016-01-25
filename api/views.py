@@ -221,7 +221,7 @@ class ChannelParameterViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ChannelParameterSerializer
     queryset = ChainConfig.objects.all().prefetch_related(
-        'parameter',
+        'parameter__equip_model',
         'value',
         'channel')
     filter_backends = (
