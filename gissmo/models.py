@@ -18,7 +18,9 @@ from equipment import protocols as Protocol
 from station import states as StationState
 from station import actions as StationAction
 
-from gissmo.validators import validate_ipaddress
+from gissmo.validators import (
+    validate_ipaddress,
+    validate_equip_model)
 from gissmo.helpers import format_date
 from gissmo.tools import make_date_aware
 
@@ -715,7 +717,8 @@ l'équipment
     """
     equip_model = models.ForeignKey(
         EquipModel,
-        verbose_name=_("modele d'equipement")
+        verbose_name=_("modele d'equipement"),
+        validators=[validate_equip_model],
     )
     serial_number = models.CharField(
         max_length=50,
@@ -811,6 +814,21 @@ l'équipment
                     params={'property_name': field[1]}
                 )
 
+    def check_forbidden_equipment_model(self):
+        """
+        Raise an error if equipment model is forbidden.
+        Error message will advice user to use the right one.
+        """
+        if not self.equip_model:
+            return
+        forbidden = ForbiddenEquipmentModel.objects.filter(
+            original=self.equip_model).first()
+        if forbidden:
+            raise ValidationError(
+                _('%(choosen_model)s is forbidden!'),
+                params={'choosen_model': self.equip_model}
+            )
+
     def get_or_create_intervention(self):
         """
         Interventions are needed for each equipment.
@@ -856,15 +874,33 @@ l'équipment
         If first time you save the object, then:
           * check stockage_site and purchase_date presence
           * create related interventions
+          * check that no forbidden equipment model is used
         """
         if not self.id:
             self.check_mandatories_data()
+            self.check_forbidden_equipment_model()
             # First save object
             res = super(Equipment, self).save(*args, **kwargs)
             # Then create intervention if needed
             self.get_or_create_intervention()
             return res
         return super(Equipment, self).save(*args, **kwargs)
+
+
+class ForbiddenEquipmentModel(models.Model):
+    # OneToOneField is used not to have multiple line about the same original
+    # equipment.
+    original = models.OneToOneField(
+        'EquipModel',
+        verbose_name=_('Forbidden Model'))
+    recommended = models.ForeignKey(
+        'EquipModel',
+        verbose_name=_('Recommended Model'),
+        related_name='recommended_model')
+
+    class Meta:
+        verbose_name = _("Forbidden Equipment Models")
+        verbose_name_plural = _('C2. Forbidden Equipment Models')
 
 
 class Service(models.Model):

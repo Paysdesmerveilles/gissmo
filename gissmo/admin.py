@@ -428,6 +428,16 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
             else:
                 formset.save()
 
+
+class ForbiddenEquipmentModelAdmin(admin.ModelAdmin):
+    list_display = [
+        'original',
+        'recommended']
+    ordering = ['original']
+    search_fields = ['original', 'recommended']
+    form = ForbiddenEquipmentModelForm
+
+
 ####
 #
 # StationAdmin's section
@@ -1202,6 +1212,7 @@ admin.site.register(Actor, ActorAdmin)
 
 admin.site.register(EquipModel, EquipModelAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
+admin.site.register(ForbiddenEquipmentModel, ForbiddenEquipmentModelAdmin)
 
 admin.site.register(StationSite, StationSiteAdmin)
 # admin.site.register(StationDoc, StationDocAdmin)

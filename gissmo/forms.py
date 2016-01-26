@@ -32,6 +32,7 @@ from gissmo.models import (
     Equipment,
     EquipModel,
     EquipDoc,
+    ForbiddenEquipmentModel,
     IPAddress,
     Project,
     ProjectUser,
@@ -257,6 +258,18 @@ class EquipModelForm(autocomplete_light.ModelForm):
         model = EquipModel
         fields = "__all__"
         autocomplete_fields = ('equip_type')
+
+
+class ForbiddenEquipmentModelForm(autocomplete_light.ModelForm):
+    """
+    Add autocomplete on these fields:
+      - original
+      - recommended
+    """
+    class Meta:
+        model = ForbiddenEquipmentModel
+        fields = ['original', 'recommended']
+        autocomplete_fields = ('original', 'recommended')
 
 
 class StationDocInlineForm(forms.ModelForm):
