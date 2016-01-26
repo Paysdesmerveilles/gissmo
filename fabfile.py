@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from fabric.api import env, put, roles, run
 from fabric.tasks import execute
 from fabric.contrib.project import rsync_project
@@ -22,7 +23,7 @@ def uwsgi():
 @roles('webserver')
 def deploy():
     rsync_project(
-        local_dir=project_dir+'/',
+        local_dir=project_dir + '/',
         remote_dir='/srv/app/gissmo',
         exclude=('.git', '.gitignore', '*.pyc'),
         delete=True
@@ -30,7 +31,8 @@ def deploy():
 
     run('/srv/env/gissmo/bin/pip install -r /srv/app/gissmo/requirements.txt')
     run('mkdir -p /srv/app/gissmo/static')
-    run('/srv/env/gissmo/bin/python /srv/app/gissmo/manage.py collectstatic --noinput --clear')
+    run('/srv/env/gissmo/bin/python \
+/srv/app/gissmo/manage.py collectstatic --noinput --clear')
 
 
 def all():

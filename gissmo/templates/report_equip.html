@@ -81,8 +81,8 @@ return false;
       <TR>
       {% for equip in ResEquip %}
       <TR>
-        <TD> {{ equip.equip_supertype.equip_supertype_name|escape }} </TD>
-        <TD> {{ equip.equip_type.equip_type_name|escape }} </TD>
+        <TD> {{ equip.equip_model.equip_type.equip_supertype.equip_supertype_name|escape }} </TD>
+        <TD> {{ equip.equip_model.equip_type.equip_type_name|escape }} </TD>
         <TD> {{ equip.equip_model.equip_model_name|escape }} </TD>
         <TD> {{ equip.serial_number|escape }} </TD>
       </TR>

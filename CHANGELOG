@@ -1,0 +1,24 @@
+Current version (1.4-trunk)
+  - New theme: django-flat-theme
+  - Delete comments on Network, Channel and StationSite. It will be back in a later stage
+  - Improve StationSite display. It takes 142 sec first to be displayed. Now approximatively 5 seconds.
+  - Delete useless "Add intervention" button on Intervention list to avoid problem of making a new intervention
+  - Add a filter on Intervenants
+  - First Travis CI file (not tested)
+  - Fix naive datetime error for Intervention when creating new Station objects
+  - Take down Equipment and StationSite behaviour from Forms to Models
+  - Delete ChainedForeignKey fields and delete 8 links between Equipment/Type/SuperType
+  - Replace smart-selects module by autocomplete-light
+  - Make the website title editable (in settings)
+  - Developer documentation improved (Cf. README.md)
+  - Make the project PEP8 and flake8 compatible
+  - Functional tests with Selenium
+  - Tests are now available in this project
+  - Use Docker to generate a development/production environment
+  - Porting application to Python 3.4 (but keep python2 compatible)
+  - Migrate from Django 1.7 to 1.8
+  - Migrate from Django 1.6 to 1.7
+  - Migrate from Django 1.5 to 1.6
+  - Create initial fixtures loaded during migrations
+  - Create migration files (to generate the database and migrate the current one)
+  - Clean dependancies (requirements.txt)

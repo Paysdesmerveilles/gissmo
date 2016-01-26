@@ -1,11 +1,11 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_static admin_modify %}
-{% load url from future %}
 {% load admin_urls %}
 {% load example_tags %}
+{% load static from staticfiles %}
 
 {% block extrahead %}{{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}admin/js/jquery.min.js"></script>
+<script type="text/javascript" src="{% static "admin/js/jquery.min.js" %}"></script>
 <script type="text/javascript">
     $(function(){
         $("select+a.add-another").each(function(){
@@ -33,11 +33,9 @@
 {% endblock %}
 
 {% block object-tools-items %}
-  <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}commentchannel/add/?channel={{ object_id }}">Add comment</a></li>
   <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
 {% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
 {% endblock %}
 
 {% block submit_buttons_bottom %}{% submit_row %}
-{% if object_id %}{% display_channel_comments object_id %}{% endif %}
 {% endblock %}

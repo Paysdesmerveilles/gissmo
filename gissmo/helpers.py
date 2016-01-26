@@ -1,5 +1,5 @@
+from __future__ import unicode_literals
 import pytz
-
 from django.conf import settings
 from django.utils.datetime_safe import new_datetime
 

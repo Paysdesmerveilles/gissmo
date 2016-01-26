@@ -1,6 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
-{% load url from future %}
+{% load static from staticfiles %}
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
@@ -129,36 +129,36 @@
       {
       case 'Theo':
       /** Site theorique */
-          {image = '{{ STATIC_URL }}img/placemark_square.png'};
+        {image = '{% static "img/placemark_square.png" %}'};
           {label = 'T'};
           break;
       case 'Test':
       /** Site de test */
-          {image = '{{ STATIC_URL }}img/placemark_square_highlight.png'};
+          {image = '{% static "img/placemark_square_highlight.png" %}'};
           break;
       case 6:
       /** Autre */
-          {image = '{{ STATIC_URL }}img/feu_orange.png'};
+          {image = '{% static "img/feu_orange.png" %}'};
           break;
       case 5:
       /** Fermee */
-          {image = '{{ STATIC_URL }}img/feu_bleu.png'};
+          {image = '{% static "img/feu_bleu.png" %}'};
           break;
       case 4:
       /** En panne */
-          {image = '{{ STATIC_URL }}img/feu_rouge.png'};
+          {image = '{% static "img/feu_rouge.png" %}'};
           break;
       case 3:
       /** En defaillance */
-          {image = '{{ STATIC_URL }}img/feu_jaune.png'}
+          {image = '{% static "img/feu_jaune.png" %}'}
           break;
       /** En operation */
       case 2:
-          {image = "{{ STATIC_URL }}img/feu_vert.png"}
+          {image = '{% static "img/feu_vert.png" %}'}
           break;
       /** En installation */
       case 1:
-          {image = '{{ STATIC_URL }}img/feu_blanc.png'}
+          {image = '{% static "img/feu_blanc.png" %}'}
           break;
       /** Observatoires - classification inconue */
       default:   
@@ -240,17 +240,17 @@
   <div id="map_canvas" style="position: absolute; left:0%; width:50%; height:800px"></div>
   <div style="position: absolute; left:55%; width:25%; height:100%">Légende
   <table border="1">
-      <tr><td><img src="{{ STATIC_URL }}img/feu_blanc.png"/></td><td>En installation</td><td><script type="text/javascript">document.write(denombre_station(1))</script></td></tr>
-      <tr><td><img src="{{ STATIC_URL }}img/feu_vert.png"/></td><td>En opération</td><td><script type="text/javascript">document.write(denombre_station(2))</script></td></tr>
-      <tr><td><img src="{{ STATIC_URL }}img/feu_jaune.png"/></td><td>En défaillance</td><td><script type="text/javascript">document.write(denombre_station(3))</script></td></tr>
-      <tr><td><img src="{{ STATIC_URL }}img/feu_rouge.png"/></td><td>En panne</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
-      <tr><td><img src="{{ STATIC_URL }}img/feu_bleu.png"/></td><td>Fermée</td><td><script type="text/javascript">document.write(denombre_station(5))</script></td></tr>
-      <tr><td><img src="{{ STATIC_URL }}img/feu_orange.png"/></td><td>Autre</td><td><script type="text/javascript">document.write(denombre_station(6))</script></td></tr>
+      <tr><td><img src="{% static "img/feu_blanc.png" %}"/></td><td>En installation</td><td><script type="text/javascript">document.write(denombre_station(1))</script></td></tr>
+      <tr><td><img src="{% static "img/feu_vert.png" %}"/></td><td>En opération</td><td><script type="text/javascript">document.write(denombre_station(2))</script></td></tr>
+      <tr><td><img src="{% static "img/feu_jaune.png" %}"/></td><td>En défaillance</td><td><script type="text/javascript">document.write(denombre_station(3))</script></td></tr>
+      <tr><td><img src="{% static "img/feu_rouge.png" %}"/></td><td>En panne</td><td><script type="text/javascript">document.write(denombre_station(4))</script></td></tr>
+      <tr><td><img src="{% static "img/feu_bleu.png" %}"/></td><td>Fermée</td><td><script type="text/javascript">document.write(denombre_station(5))</script></td></tr>
+      <tr><td><img src="{% static "img/feu_orange.png" %}"/></td><td>Autre</td><td><script type="text/javascript">document.write(denombre_station(6))</script></td></tr>
       <tr><td></td><td>Total</td><td><script type="text/javascript">document.write(denombre_station(1)+denombre_station(2)+denombre_station(3)+denombre_station(4)+denombre_station(5)+denombre_station(6))</script></td></tr>
   </table><br></br>
   <table border="1">
-      <tr><td><img src="{{ STATIC_URL }}img/placemark_square.png"/></td><td>Site Théorique</td><td><script type="text/javascript">document.write(denombre_station('Theo'))</script></td></tr>
-      <tr><td><img src="{{ STATIC_URL }}img/placemark_square_highlight.png"/></td><td>Site de test</td><td><script type="text/javascript">document.write(denombre_station('Test'))</script></td></tr>
+      <tr><td><img src="{% static "img/placemark_square.png" %}"/></td><td>Site Théorique</td><td><script type="text/javascript">document.write(denombre_station('Theo'))</script></td></tr>
+      <tr><td><img src="{% static "img/placemark_square_highlight.png" %}"/></td><td>Site de test</td><td><script type="text/javascript">document.write(denombre_station('Test'))</script></td></tr>
   </table><br></br>
 </div>
 </body>
