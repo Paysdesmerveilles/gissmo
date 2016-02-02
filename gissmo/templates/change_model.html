@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load admin_urls %}
+{% load example_tags %}
+{% load static from staticfiles %}
+
+{% block content %}
+ID: {{ identifier }}<br />
+MODEL: {{ equipment.equip_model }}<br />
+SN: {{ equipment.serial_number }}<br />
+{% endblock %}

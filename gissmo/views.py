@@ -22,6 +22,7 @@ from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
+from django.utils.translation import ugettext_lazy as _
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
@@ -1411,3 +1412,17 @@ def site_shortcut(request, code):
     url = reverse('admin:gissmo_stationsite_change', args=(site.id,))
 
     return HttpResponseRedirect(url)
+
+
+def change_model(request, equip_id):
+    from django.contrib import admin
+    equip = Equipment.objects.get(id=equip_id)
+    return render(request, "change_model.html", {
+        "title": _("Change equipment's model"),
+        "has_permission": admin.site.has_permission(request),
+        "site_title": admin.site.site_title,
+        "site_header": admin.site.site_header,
+        "site_url": admin.site.site_url,
+        "identifier": equip_id,
+        "equipment": equip,
+    })
