@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load admin_urls %}
+{% load example_tags %}
+{% load static from staticfiles %}
+
+{% block content %}
+{% if form.subject.errors %}
+<ol>
+  {% for error in form.subject.errors %}
+  <li><strong>{{ error|escape }}</strong></li>
+  {% endfor %}
+</ol>
+{% endif %}
+<h3>{% trans "Impacted channel" %}</h3>
+<ul>
+{% for channel in channels %}
+  <li>{{ channel }}</li>
+{% endfor %}
+</ul>
+{% endblock %}

@@ -12,11 +12,14 @@ from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
+from django.conf.urls import url
+from django.forms.formsets import formset_factory
 
 from gissmo.models import *  # NOQA
 from gissmo.forms import *  # NOQA
 from gissmo.views import *  # NOQA
 from gissmo.helpers import format_date
+from gissmo.validators import validate_equip_model
 
 
 class URLFieldWidget(AdminURLFieldWidget):
@@ -349,6 +352,99 @@ class EquipmentAdmin(admin.ModelAdmin):
             'classes': ['collapse']})]
 
     inlines = [EquipDocInline]
+
+    def changemodel_formset(self, equipment):
+        """
+        Formset factory that will create an Equipment change model form
+        with a list of Equipment's model that are compatible with the choosen
+        model.
+        """
+        class EquipmentChangeModelForm(forms.Form):
+            """
+            Forms that permit to give the new Equipment's Model for
+            a given Equipment.
+            Filtering regarding given equipment type.
+            """
+            equip_model = forms.ModelChoiceField(
+                queryset=EquipModel.objects.filter(
+                    equip_type=equipment.equip_model.equip_type),
+                label=_('New model'),
+                validators=[validate_equip_model])
+
+        return formset_factory(form=EquipmentChangeModelForm, )
+
+    def get_urls(self):
+        """
+        Add new 'changemodel' possibility
+        """
+        urls = super(EquipmentAdmin, self).get_urls()
+        my_urls = [
+            url(
+                r'^(.+)/changemodel/$',
+                self.changemodel_view,
+                name='changemodel'),
+        ]
+        return my_urls + urls
+
+    def changemodel_process(self, equipment, models):
+        """
+        Search all channels that are impacted
+        """
+        channels = []
+        chains = Chain.objects.filter(equip_id=equipment.id).prefetch_related(
+            'channel__channel_code',
+            'channel__network',
+            'channel__station')
+        channels = [chain.channel for chain in chains]
+        return channels
+
+    def changemodel_view(self, request, equipment_id):
+        """
+        Display changemodel view that permits to change equipment's model for
+        a given Equipment ID.
+        """
+        # Default values
+        template = "changemodel.html"
+        equipment = Equipment.objects.get(pk=equipment_id)
+        title = _("Change equipment's model for: %(model)s, %(serial)s" % {
+            'model': equipment.equip_model,
+            'serial': equipment.serial_number})
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+            equipment=equipment,
+        )
+        if request.method == 'POST':
+            # Deal with errors by instanciating the formset then fill in with
+            # given request.POST data
+            EquipmentFormSet = self.changemodel_formset(equipment)
+            formset = EquipmentFormSet(request.POST)
+            # If errors, show them
+            if not formset.is_valid():
+                context.update({'form': formset})
+                return render(request, "changemodel.html", context)
+            else:
+                # TODO: manage case where empty equipment model with a
+                # specific view
+                models = []
+                for form in formset.cleaned_data:
+                    model = form.get('equip_model', None)
+                    if model:
+                        models.append(model)
+                title = _("Simulation from %(model)s to %(new_model)s" % {
+                    'model': equipment.equip_model,
+                    'new_model': len(models) > 0 and models[0] or ''})
+                # Process data to find which objects are impacted by the change
+                channels = self.changemodel_process(equipment, models)
+                context.update({
+                    'title': title,
+                    'channels': channels})
+                template = "changemodel_simulation.html"
+        else:
+            form = self.changemodel_formset(equipment)
+            context.update({'form': form})
+
+        return render(request, template, context)
 
     def _get_equipment_inlines_regarding_model(self, equip_model):
         """
@@ -1194,6 +1290,7 @@ class ChannelCodeAdmin(admin.ModelAdmin):
     search_fields = ['channel_code', ]
 
     list_display = ['channel_code', 'presentation_rank', ]
+
 
 """
 Disabling the action "delete_selected" for all the site
