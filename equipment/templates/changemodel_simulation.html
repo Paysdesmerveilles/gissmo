@@ -13,9 +13,26 @@
 </ol>
 {% endif %}
 <h3>{% trans "Impacted channel" %}</h3>
+<p>Some explanation about how to proceed</p>
 <ul>
-{% for channel in channels %}
-  <li>{{ channel }}</li>
+{% for channel in elements %}
+  <li>{{ channel.0 }}<table>
+    <tr>
+      <th>{% trans "Parameter" %}</th>
+      <th>{% trans "Current" %}</th>
+      <th>{% trans "New" %}</th>
+      <th>{% trans "State" %}</th>
+    </tr>
+      {% for modification in channel.1 %}
+      <tr>
+        <td>{{ modification.name }}</td>
+        <td>{{ modification.old_value }}</td>
+        <td>{{ modification.new_value }}</td>
+        <td>{{ modification.state }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </li>
 {% endfor %}
 </ul>
 {% endblock %}

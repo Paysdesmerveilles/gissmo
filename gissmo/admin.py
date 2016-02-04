@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django import forms
 from django.contrib import (
@@ -20,6 +20,7 @@ from gissmo.forms import *  # NOQA
 from gissmo.views import *  # NOQA
 from gissmo.helpers import format_date
 from gissmo.validators import validate_equip_model
+from equipment.models import ChangeModelModification
 
 
 class URLFieldWidget(AdminURLFieldWidget):
@@ -386,17 +387,77 @@ class EquipmentAdmin(admin.ModelAdmin):
         ]
         return my_urls + urls
 
-    def changemodel_process(self, equipment, models):
+    def changemodel_display(self, modifications):
         """
-        Search all channels that are impacted
+        Parse modifications to get the right display for this template:
+          changemodel_simulation.html.
         """
-        channels = []
-        chains = Chain.objects.filter(equip_id=equipment.id).prefetch_related(
-            'channel__channel_code',
-            'channel__network',
-            'channel__station')
-        channels = [chain.channel for chain in chains]
-        return channels
+        channels = [m.channel for m in modifications]
+        channel_modifications = {}
+        for modif in modifications:
+            if modif.channel and modif.channel not in channel_modifications:
+                channel_modifications[modif.channel] = []
+            channel_modifications[modif.channel].append(modif)
+        return zip(channels, channel_modifications.values())
+
+    def changemodel_search_new_value(self, name, params):
+        result = None
+        if not name or not params:
+            return result
+        for p in params:
+            if name == p.parameter_name:
+                param_value = p.parametervalue_set.filter(
+                    default_value=True)
+                if param_value:
+                    result = param_value[0].value
+        return result
+
+    def changemodel_get_modifications(self, chains, params):
+        """
+        Do comparison between given <chains> configurations (parameter and
+        values) and given parameters (<params>).
+        """
+        result = []
+        configurations = ChainConfig.objects.filter(
+            chain__in=[c.id for c in chains]).prefetch_related(
+                'channel__channel_code',
+                'channel__network',
+                'channel__station',
+                'value__parameter')
+        possible_values = []
+        for param in params:
+            for value in param.parametervalue_set.all():
+                possible_values.append(value.value)
+        for config in configurations:
+            m = ChangeModelModification(str(config.channel))  # useful for display
+            m.name = config.value.parameter.parameter_name
+            m.old_value = config.value.value
+            m.new_value = self.changemodel_search_new_value(m.name, params)
+            m.state = m.get_state(possible_values)
+            result.append(m)
+        return result
+
+    def changemodel_get_elements(self, equipment, models):
+        """
+        Search chain that make the link to configuration between an Equipment
+        and a Channel.
+        Then get possible new values for parameters linked to the new model.
+        Compare new parameters to old ones.
+        Finally display result for the template.
+        """
+        chains = Chain.objects.filter(equip_id=equipment.id)
+
+        possible_params = []
+        for model in models:
+            params = ParameterEquip.objects.filter(
+                equip_model=model.id).prefetch_related(
+                    'parametervalue_set')
+            possible_params += params
+
+        modifications = self.changemodel_get_modifications(
+            chains,
+            possible_params)
+        return self.changemodel_display(modifications)
 
     def changemodel_view(self, request, equipment_id):
         """
@@ -424,7 +485,7 @@ class EquipmentAdmin(admin.ModelAdmin):
                 context.update({'form': formset})
                 return render(request, "changemodel.html", context)
             else:
-                # TODO: manage case where empty equipment model with a
+                # TODO: manage case where equipment model is emtpy with a
                 # specific view
                 models = []
                 for form in formset.cleaned_data:
@@ -435,10 +496,10 @@ class EquipmentAdmin(admin.ModelAdmin):
                     'model': equipment.equip_model,
                     'new_model': len(models) > 0 and models[0] or ''})
                 # Process data to find which objects are impacted by the change
-                channels = self.changemodel_process(equipment, models)
+                elements = self.changemodel_get_elements(equipment, models)
                 context.update({
                     'title': title,
-                    'channels': channels})
+                    'elements': elements})
                 template = "changemodel_simulation.html"
         else:
             form = self.changemodel_formset(equipment)
