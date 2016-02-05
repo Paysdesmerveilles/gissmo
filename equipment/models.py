@@ -16,7 +16,7 @@ class ChangeModelModification(object):
     """
     total_number = 0
 
-    def __init__(self, channel):
+    def __init__(self, channel=None):
         self.number = ChangeModelModification.total_number + 1
         self.channel = channel
         self.old_value = None
@@ -39,3 +39,6 @@ class ChangeModelModification(object):
             return 'conflict'
         # default behaviour
         return 'unknown'
+
+    def __str__(self):
+        return "%s" % self.name or ''

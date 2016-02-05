@@ -391,57 +391,114 @@ class EquipmentAdmin(admin.ModelAdmin):
         """
         Parse modifications to get the right display for this template:
           changemodel_simulation.html.
+        Include modification that have no linked channel to all channels.
         """
         channels = [m.channel for m in modifications]
+
         channel_modifications = {}
+        nochannel_modifications = []
+
         for modif in modifications:
             if modif.channel and modif.channel not in channel_modifications:
                 channel_modifications[modif.channel] = []
-            channel_modifications[modif.channel].append(modif)
+            if modif.channel:
+                channel_modifications[modif.channel].append(modif)
+            else:
+                nochannel_modifications.append(modif)
+
+        if nochannel_modifications:
+            for channel in channel_modifications:
+                channel_modifications[channel] += nochannel_modifications
+
         return zip(channels, channel_modifications.values())
 
-    def changemodel_search_new_value(self, name, params):
+    def changemodel_new_paramvalue(self, name, params):
         result = None
         if not name or not params:
             return result
-        for p in params:
-            if name == p.parameter_name:
-                param_value = p.parametervalue_set.filter(
-                    default_value=True)
-                if param_value:
-                    result = param_value[0].value
+        if name in params:
+            result = params[name].get('default', None)
         return result
 
-    def changemodel_get_modifications(self, chains, params):
+    def changemodel_get_modifications(self, chains, param_objs):
         """
-        Do comparison between given <chains> configurations (parameter and
-        values) and given parameters (<params>).
+        We need to compare old param/value to new available ones.
+        So old configuration with new possible ones.
+        Pay attention to not forget new possible ones that are not available
+        in previous model.
+        <chains> are linked to old parameter.
+        <param_objs> are new parameter
         """
         result = []
+
+        # new params from the new choosen Equipment's Model
+        params = {}
+        for param in param_objs:
+            name = param.parameter_name
+            values = []
+            default = None
+            for value in param.parametervalue_set.all():
+                values.append(value.value)
+                if value.default_value:
+                    default = value
+            params[name] = {
+                'values': values,
+                'default': default}
+
+        # Old params (already setted)
         configurations = ChainConfig.objects.filter(
             chain__in=[c.id for c in chains]).prefetch_related(
                 'channel__channel_code',
                 'channel__network',
                 'channel__station',
                 'value__parameter')
-        possible_values = []
-        for param in params:
-            for value in param.parametervalue_set.all():
-                possible_values.append(value.value)
+        old_params = {}
         for config in configurations:
-            m = ChangeModelModification(str(config.channel))  # useful for display
-            m.name = config.value.parameter.parameter_name
-            m.old_value = config.value.value
-            m.new_value = self.changemodel_search_new_value(m.name, params)
-            m.state = m.get_state(possible_values)
+            name = config.value.parameter.parameter_name
+            value = config.value.value
+            old_params[name] = {
+                'value': value,
+                'channel': str(config.channel)}
+
+        # Create modification lines (linked to a channel): current params
+        # in fact.
+        new_checked_params = []
+        for old_param in old_params:
+            data = old_params[old_param]
+            value = data.get('value', None)
+            channel = data.get('channel', None)
+            values = []
+            m = ChangeModelModification(channel)
+            m.name = old_param
+            m.old_value = value
+            m.new_value = self.changemodel_new_paramvalue(old_param, params)
+            if m.new_value:
+                values = params[old_param].get('values', [])
+            m.state = m.get_state(values)
+            if old_param in params:
+                new_checked_params.append(old_param)
             result.append(m)
+
+        # Create modification lines (linked to no channel): new params not
+        # present in current ones
+        for param in params:
+            if param not in new_checked_params:
+                data = params[param]
+                default = data.get('default', None)
+                values = data.get('values', None)
+                m = ChangeModelModification()
+                m.name = param
+                m.new_value = default
+                m.state = m.get_state(values)
+                result.append(m)
         return result
 
     def changemodel_get_elements(self, equipment, models):
         """
         Search chain that make the link to configuration between an Equipment
-        and a Channel.
+        and a Channel. This comes from the initial model.
         Then get possible new values for parameters linked to the new model.
+        This comes from the destination model.
         Compare new parameters to old ones.
         Finally display result for the template.
         """
@@ -524,7 +581,8 @@ class EquipmentAdmin(admin.ModelAdmin):
         """
         Change inlines regarding model content.
         """
-        res = super(EquipmentAdmin, self).get_formsets_with_inlines(request, obj, **kwargs)
+        res = super(EquipmentAdmin, self).get_formsets_with_inlines(
+            request, obj, **kwargs)
         if obj and obj.equip_model:
             self.inlines = self._get_equipment_inlines_regarding_model(
                 obj.equip_model)
