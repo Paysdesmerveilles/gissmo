@@ -1239,7 +1239,7 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
         if index is not None:
             try:
-                channel_station_id = self.instance.station.id
+                channel_station_id = self.instance.station_id
                 channel_date = self.instance.start_date
                 form.fields['equip'] = forms.ModelChoiceField(
                     queryset=available_equipment_scioper(

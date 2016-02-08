@@ -510,7 +510,7 @@ def equip_place_todate_id(equip, date, intervention_id):
 
     if last_equip_place:
         for last in last_equip_place:
-            result = last.station.id
+            result = last.station_id
     return result
 
 
@@ -877,6 +877,8 @@ def available_equipment_scioper(station, date):
     xhr_equip_oper function.
     """
     equipment_list = []
+    if not isinstance(station, int):
+        station = int(station)
     # TODO find a better way to filter
     # Not the best way to filter
     # If the supertype name change we have to change the code too
@@ -887,7 +889,7 @@ def available_equipment_scioper(station, date):
         Q(equip_model__equip_type__equip_supertype__equip_supertype_name=b))
 
     for equip in equipments:
-        if int(equip_place_todate_id(equip.id, date, None)) == int(station):
+        if int(equip_place_todate_id(equip.id, date, None)) == station:
             equipment_list.append(equip.id)
 
     equip_dispo = Equipment.objects.filter(
