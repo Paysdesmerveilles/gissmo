@@ -14,13 +14,13 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from django.conf.urls import url
 from django.forms.formsets import formset_factory
+from django.shortcuts import redirect
 
 from gissmo.models import *  # NOQA
 from gissmo.forms import *  # NOQA
 from gissmo.views import *  # NOQA
 from gissmo.helpers import format_date
 from gissmo.validators import validate_equip_model
-from equipment.models import ChangeModelModification
 
 
 class URLFieldWidget(AdminURLFieldWidget):
@@ -382,149 +382,28 @@ class EquipmentAdmin(admin.ModelAdmin):
         my_urls = [
             url(
                 r'^(.+)/changemodel/$',
-                self.changemodel_view,
-                name='changemodel'),
+                self.changemodel_view_step1,
+                name='changemodel_step1'),
+            url(
+                r'^(.+)/changemodel/(.+)$',
+                self.changemodel_view_step2,
+                name='changemodel_step2'),
         ]
         return my_urls + urls
 
-    def changemodel_display(self, modifications):
-        """
-        Parse modifications to get the right display for this template:
-          changemodel_simulation.html.
-        Include modification that have no linked channel to all channels.
-        """
-        channels = [m.channel for m in modifications]
-
-        channel_modifications = {}
-        nochannel_modifications = []
-
-        for modif in modifications:
-            if modif.channel and modif.channel not in channel_modifications:
-                channel_modifications[modif.channel] = []
-            if modif.channel:
-                channel_modifications[modif.channel].append(modif)
-            else:
-                nochannel_modifications.append(modif)
-
-        if nochannel_modifications:
-            for channel in channel_modifications:
-                channel_modifications[channel] += nochannel_modifications
-
-        return zip(channels, channel_modifications.values())
-
-    def changemodel_new_paramvalue(self, name, params):
-        result = None
-        if not name or not params:
-            return result
-        if name in params:
-            result = params[name].get('default', None)
-        return result
-
-    def changemodel_get_modifications(self, chains, param_objs):
-        """
-        We need to compare old param/value to new available ones.
-        So old configuration with new possible ones.
-        Pay attention to not forget new possible ones that are not available
-        in previous model.
-        <chains> are linked to old parameter.
-        <param_objs> are new parameter
-        """
-        result = []
-
-        # new params from the new choosen Equipment's Model
-        params = {}
-        for param in param_objs:
-            name = param.parameter_name
-            values = []
-            default = None
-            for value in param.parametervalue_set.all():
-                values.append(value.value)
-                if value.default_value:
-                    default = value
-            params[name] = {
-                'values': values,
-                'default': default}
-
-        # Old params (already setted)
-        configurations = ChainConfig.objects.filter(
-            chain__in=[c.id for c in chains]).prefetch_related(
-                'channel__channel_code',
-                'channel__network',
-                'channel__station',
-                'value__parameter')
-        old_params = {}
-        for config in configurations:
-            name = config.value.parameter.parameter_name
-            value = config.value.value
-            old_params[name] = {
-                'value': value,
-                'channel': str(config.channel)}
-
-        # Create modification lines (linked to a channel): current params
-        # in fact.
-        new_checked_params = []
-        for old_param in old_params:
-            data = old_params[old_param]
-            value = data.get('value', None)
-            channel = data.get('channel', None)
-            values = []
-            m = ChangeModelModification(channel)
-            m.name = old_param
-            m.old_value = value
-            m.new_value = self.changemodel_new_paramvalue(old_param, params)
-            if m.new_value:
-                values = params[old_param].get('values', [])
-            m.state = m.get_state(values)
-            if old_param in params:
-                new_checked_params.append(old_param)
-            result.append(m)
-
-        # Create modification lines (linked to no channel): new params not
-        # present in current ones
-        for param in params:
-            if param not in new_checked_params:
-                data = params[param]
-                default = data.get('default', None)
-                values = data.get('values', None)
-                m = ChangeModelModification()
-                m.name = param
-                m.new_value = default
-                m.state = m.get_state(values)
-                result.append(m)
-        return result
-
-    def changemodel_get_elements(self, equipment, models):
-        """
-        Search chain that make the link to configuration between an Equipment
-        and a Channel. This comes from the initial model.
-        Then get possible new values for parameters linked to the new model.
-        This comes from the destination model.
-        Compare new parameters to old ones.
-        Finally display result for the template.
-        """
-        chains = Chain.objects.filter(equip_id=equipment.id)
-
-        possible_params = []
-        for model in models:
-            params = ParameterEquip.objects.filter(
-                equip_model=model.id).prefetch_related(
-                    'parametervalue_set')
-            possible_params += params
-
-        modifications = self.changemodel_get_modifications(
-            chains,
-            possible_params)
-        return self.changemodel_display(modifications)
-
-    def changemodel_view(self, request, equipment_id):
+    def changemodel_view_step1(self, request, equipment_id):
         """
         Display changemodel view that permits to change equipment's model for
         a given Equipment ID.
         """
         # Default values
-        template = "changemodel.html"
-        equipment = Equipment.objects.get(pk=equipment_id)
-        title = _("Change equipment's model for: %(model)s, %(serial)s" % {
+        equips = Equipment.objects.filter(id=equipment_id).prefetch_related(
+            'chain_set__chainconfig_set__value__parameter',
+            'chain_set__chainconfig_set__channel__channel_code',
+            'chain_set__chainconfig_set__channel__network',
+            'chain_set__chainconfig_set__channel__station',)
+        equipment = equips[0]
+        title = _("Change equipment's model for: %(model)s (%(serial)s)" % {
             'model': equipment.equip_model,
             'serial': equipment.serial_number})
         context = dict(
@@ -540,29 +419,44 @@ class EquipmentAdmin(admin.ModelAdmin):
             # If errors, show them
             if not formset.is_valid():
                 context.update({'form': formset})
-                return render(request, "changemodel.html", context)
             else:
                 # TODO: manage case where equipment model is emtpy with a
                 # specific view
-                models = []
                 for form in formset.cleaned_data:
                     model = form.get('equip_model', None)
-                    if model:
-                        models.append(model)
-                title = _("Simulation from %(model)s to %(new_model)s" % {
-                    'model': equipment.equip_model,
-                    'new_model': len(models) > 0 and models[0] or ''})
-                # Process data to find which objects are impacted by the change
-                elements = self.changemodel_get_elements(equipment, models)
-                context.update({
-                    'title': title,
-                    'elements': elements})
-                template = "changemodel_simulation.html"
+                return redirect(reverse('admin:changemodel_step2', args=(equipment_id, model.id)))
         else:
             form = self.changemodel_formset(equipment)
             context.update({'form': form})
 
-        return render(request, template, context)
+        return render(request, "changemodel_step1.html", context)
+
+    def changemodel_view_step2(self, request, equipment_id, model_id):
+        equipment = Equipment.objects.get(pk=equipment_id)
+        model = EquipModel.objects.get(pk=model_id)
+        title = _("Simulation from: %(model)s (%(serial)s), to: %(new_model)s" % {
+            'model': equipment.equip_model,
+            'serial': equipment.serial_number,
+            'new_model': model})
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+        )
+        if request.method == 'POST':
+            print("TODO: check form")
+        else:
+            elements, message = changemodel_simulation(equipment, model)
+            context.update({
+                'elements': elements,
+                'dynamic_states': [
+                    'missing',
+                    'new',
+                    'conflict',
+                ],
+                'message': message,
+            })
+
+        return render(request, "changemodel_step2.html", context)
 
     def _get_equipment_inlines_regarding_model(self, equip_model):
         """

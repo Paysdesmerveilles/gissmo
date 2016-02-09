@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
-class ChangeModelModification(object):
+
+class ChangeModelModification(models.Model):
     """
     This class represents a modification from a specific parameter value
     to a new one.
@@ -14,31 +17,67 @@ class ChangeModelModification(object):
       - new: no old value. Just a new value
       - missing: no new value
     """
-    total_number = 0
+    NEUTRAL = 0
+    UNKNOWN = 1
+    NEW = 2
+    VALID = 3
+    CONFLICT = 4
+    MISSING = 5
 
-    def __init__(self, channel=None):
-        self.number = ChangeModelModification.total_number + 1
-        self.channel = channel
-        self.old_value = None
-        self.new_value = None
-        self.name = None
-        self.state = None
+    STATE_CHOICES = (
+        (NEUTRAL, _('neutral')),
+        (UNKNOWN, _('unknown')),
+        (NEW, _('new')),
+        (VALID, _('valid')),
+        (CONFLICT, _('conflict')),
+        (MISSING, _('missing')),
+    )
 
-    def get_state(self, compared_values):
+    channel = models.ForeignKey('gissmo.Channel')
+    name = models.CharField(max_length=255)
+    old_value = models.ForeignKey(
+        'gissmo.ParameterValue',
+        null=True,
+        blank=True,
+        related_name='old_modif')
+    new_value = models.ForeignKey(
+        'gissmo.ParameterValue',
+        null=True,
+        blank=True,
+        related_name='new_modif')
+    state = models.IntegerField(
+        choices=STATE_CHOICES,
+        default=UNKNOWN)
+
+    def get_state(self):
         if not self.new_value:
-            return 'missing'
+            return self.MISSING
         if not self.old_value:
-            return 'new'
-        both_same = self.old_value == self.new_value
-        compatible = self.old_value in compared_values
+            return self.NEW
+        both_same = self.old_value.value == self.new_value.value
+        values = self.new_value.parameter.parametervalue_set.all()
+        compared_values = []
+        for value in values:
+            compared_values.append(value.value)
+        compatible = self.old_value.value in compared_values
         if both_same:
-            return 'neutral'
+            return self.NEUTRAL
         elif not both_same and compatible:
-            return 'valid'
+            return self.VALID
         elif not both_same and not compatible:
-            return 'conflict'
+            return self.CONFLICT
         # default behaviour
-        return 'unknown'
+        return self.UNKNOWN
+
+    def _get_values(self):
+        "Return all possible values linked to new_value parameter."
+        if self.new_value:
+            return self.new_value.parameter.parametervalue_set.all()
+        return []
+
+    _get_values.short_description = _('values')
+
+    values = property(_get_values)
 
     def __str__(self):
         return "%s" % self.name or ''

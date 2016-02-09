@@ -25,6 +25,7 @@ from django.db import connection
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
+from equipment.models import ChangeModelModification
 
 from station import states as StationState
 from station import actions as StationAction
@@ -1413,3 +1414,104 @@ def site_shortcut(request, code):
     url = reverse('admin:gissmo_stationsite_change', args=(site.id,))
 
     return HttpResponseRedirect(url)
+
+
+def changemodel_display(modifications):
+    """
+    Parse modifications to get the right display for this template:
+      changemodel_simulation.html.
+    Include modification that have no linked channel to all channels.
+    """
+    channels = [m.channel for m in modifications if m.channel is not None]
+    msg = ''
+
+    if not channels:
+        msg = _('No channel found.')
+        return [], msg
+
+    channel_modifications = {}
+    nochannel_modifications = []
+
+    for modif in modifications:
+        if modif.channel and modif.channel not in channel_modifications:
+            channel_modifications[modif.channel] = []
+        if modif.channel:
+            channel_modifications[modif.channel].append(modif)
+        else:
+            nochannel_modifications.append(modif)
+
+    # 'if' statement avoids problem with empty list in result
+    if nochannel_modifications:
+        for channel in channel_modifications:
+            channel_modifications[channel] += nochannel_modifications
+
+    return zip(channels, channel_modifications.values()), msg
+
+
+def changemodel_compare_params(configs, new_params):
+    result = []
+
+    def get_default_value(name, parameter_ids):
+        return ParameterValue.objects.filter(
+            parameter__parameter_name=name,
+            parameter_id__in=parameter_ids,
+            default_value=True).first() or None
+
+    new_param_ids = [p.id for p in new_params]
+
+    # Browse current configuration
+    checked_new_params = []
+    channels = []
+    for config in configs:
+        name = config.parameter.parameter_name
+        channel = config.channel
+        if channel not in channels:
+            channels.append(channel)
+        p = get_default_value(name, new_param_ids)
+        m = ChangeModelModification.objects.create(
+            channel=config.channel,
+            name=name,
+            old_value=config.value)
+        if p:
+            m.new_value = p
+        m.state = m.get_state()
+        m.save()
+        checked_new_params.append(p)
+        result.append(m)
+
+    # Create modification lines (linked to no channel): new params not
+    # present in current ones.
+    for channel in channels:
+        for param in new_params:
+            if param not in checked_new_params:
+                name = param.parameter_name
+                m = ChangeModelModification.objects.create(
+                    channel=channel,
+                    name=name,
+                    new_value=get_default_value(name, [param.id]))
+                m.state = m.get_state()
+                m.save()
+                result.append(m)
+    return result
+
+
+def changemodel_simulation(equipment, model):
+    """
+    Take current configuration from given equipment and compare it to given
+    model.
+    Then display the result.
+    """
+    configs = []
+    for chain in equipment.chain_set.all():
+        for config in chain.chainconfig_set.all():
+            configs.append(config)
+
+    new_params = ParameterEquip.objects.filter(
+        equip_model=model.id).prefetch_related(
+            'parametervalue_set')
+
+    modifications = changemodel_compare_params(
+        configs,
+        new_params)
+
+    return changemodel_display(modifications)

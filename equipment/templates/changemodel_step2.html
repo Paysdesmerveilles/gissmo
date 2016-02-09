@@ -1,0 +1,107 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load admin_static %}
+
+{% block content %}
+<style>
+tr.neutral  { color: black; }
+tr.valid    { color: darkgreen; }
+tr.conflict { color: red; }
+tr.new      { color: blue; }
+tr.missing  { color: lightcoral; }
+td.center { text-align: center; }
+</style>
+{% if form.subject.errors %}
+<ol>
+  {% for error in form.subject.errors %}
+  <li><strong>{{ error|escape }}</strong></li>
+  {% endfor %}
+</ol>
+{% endif %}
+<h3>{% trans "Impacted channel" %}</h3>
+<p>{% trans "Here you can see the difference between old equipment's model parameters and new ones." %}</p>
+{% if elements %}
+    <form action="" method="post">
+      {% csrf_token %}
+    <ul>
+    {% for channel in elements %}
+      <li>{{ channel.0 }}<table>
+        <tr>
+          <th>{% trans "Parameter" %}</th>
+          <th>{% trans "Current" %}</th>
+          <th>{% trans "New" %}</th>
+          <th>{% trans "State" %}</th>
+          <th>{% trans "Include" %}</th>
+          <th>{% trans "Exclude" %}</th>
+          <th>{% trans "Choosen value" %}</th>
+          <th>{% trans "Available values" %}</th>
+        </tr>
+          {% for modification in channel.1 %}
+          <tr class="{{ modification.get_state_display }}">
+            {% if modification.get_state_display in dynamic_states %}
+            <input type="hidden" name="modif-id-{{ modification.id }}" value="{{ modification.id }}" />
+            {% endif %}
+            <td>{{ modification.name }}</td>
+            <td>{{ modification.old_value|default:"" }}</td>
+            <td>{{ modification.new_value|default:"" }}</td>
+            <td class="center">{{ modification.get_state_display }}</td>
+            <td class="center">{% if modification.get_state_display == 'missing' %}
+              <input type="checkbox" name="modif-include-{{ modification.id }}" title="" />
+            {% endif %}
+            </td>
+            <td class="center">{% if modification.get_state_display == 'new' %}
+              <input type="checkbox" name="modif-exclude-{{ modification.id }}" title="" />
+            {% endif %}
+            </td>
+            <td>{% if modification.get_state_display == 'conflict' %}
+              <input type="text" name="modif-value-{{ modification.id }}" />
+            {% endif %}
+            </td>
+            <td>
+              {% if modification.get_state_display == 'conflict' %}
+                {% for value in modification.values %}
+                  {{ value.value }}<br />
+                {% endfor %}
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </li>
+    {% endfor %}
+    </ul>
+      <input type="submit" value="{% trans "Submit" %}" />
+    </form>
+{% else %}
+<p>{{ message }}</p>
+{% endif %}
+
+<h3>Legend</h3>
+<table>
+  <tr>
+    <th>{% trans "State" %}</th>
+    <th>{% trans "Signification" %}</th>
+  </tr>
+  <tr class="neutral">
+    <td>neutral</td>
+    <td>{% trans "We keep the old value. New default one is equal." %}</td>
+  </tr>
+  <tr class="valid">
+    <td>valid</td>
+    <td>{% trans "We keep the old value. This one is available in available new values." %}</td>
+  </tr>
+  <tr class="conflict">
+    <td>conflict</td>
+    <td>{% trans "New value needed as the old one is not available in new values!" %}</td>
+  </tr>
+  <tr class="new">
+    <td>new</td>
+    <td>{% trans "We will create a new parameter with a new default value. Execpt if you exclude it." %}</td>
+  </tr>
+  <tr class="missing">
+    <td>missing</td>
+    <td>{% trans "We will discard this parameter. Except you include it." %}</td>
+  </tr>
+</table>
+
+{% endblock %}
