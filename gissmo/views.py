@@ -22,6 +22,7 @@ from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
+from django.utils.translation import ugettext as _
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
@@ -1416,39 +1417,53 @@ def site_shortcut(request, code):
     return HttpResponseRedirect(url)
 
 
-def changemodel_display(modifications):
+def changemodel_display(modifications, equipment):
     """
-    Parse modifications to get the right display for this template:
-      changemodel_simulation.html.
-    Include modification that have no linked channel to all channels.
+    Set modification per channel.
     """
-    channels = [m.channel for m in modifications if m.channel is not None]
+    channels = []
+    channel_ids = []
+    channel_chain_links = []
     msg = ''
-
-    if not channels:
-        msg = _('No channel found.')
-        return [], msg
 
     channel_modifications = {}
     nochannel_modifications = []
 
     for modif in modifications:
-        if modif.channel and modif.channel not in channel_modifications:
-            channel_modifications[modif.channel] = []
+        channel = modif.channel
+        if channel is not None and channel not in channels:
+            channels.append(channel)
+            channel_ids.append(channel.id)
+            for chain in channel.chain_set.filter(equip=equipment):
+                channel_chain_links.append(chain.id)
+        if channel and channel not in channel_modifications:
+            channel_modifications[channel] = []
         if modif.channel:
-            channel_modifications[modif.channel].append(modif)
+            channel_modifications[channel].append(modif)
         else:
             nochannel_modifications.append(modif)
+
+    if not channels:
+        msg = _('No channel found.')
+        return [], msg
 
     # 'if' statement avoids problem with empty list in result
     if nochannel_modifications:
         for channel in channel_modifications:
             channel_modifications[channel] += nochannel_modifications
 
-    return zip(channels, channel_modifications.values()), msg
+    return zip(
+        channels,
+        channel_ids,
+        channel_chain_links,
+        channel_modifications.values()), msg
 
 
 def changemodel_compare_params(configs, new_params):
+    """
+    Make a synthesis about old configuration parameters and new one (regarding
+    default value)
+    """
     result = []
 
     def get_default_value(name, parameter_ids):
@@ -1499,7 +1514,7 @@ def changemodel_simulation(equipment, model):
     """
     Take current configuration from given equipment and compare it to given
     model.
-    Then display the result.
+    Then return a list of modification objects.
     """
     configs = []
     for chain in equipment.chain_set.all():
@@ -1514,4 +1529,4 @@ def changemodel_simulation(equipment, model):
         configs,
         new_params)
 
-    return changemodel_display(modifications)
+    return modifications

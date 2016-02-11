@@ -432,7 +432,13 @@ class EquipmentAdmin(admin.ModelAdmin):
         return render(request, "changemodel_step1.html", context)
 
     def changemodel_view_step2(self, request, equipment_id, model_id):
-        equipment = Equipment.objects.get(pk=equipment_id)
+        equips = Equipment.objects.filter(id=equipment_id).prefetch_related(
+            'chain_set__chainconfig_set__value__parameter',
+            'chain_set__chainconfig_set__parameter',
+            'chain_set__chainconfig_set__channel__channel_code',
+            'chain_set__chainconfig_set__channel__network',
+            'chain_set__chainconfig_set__channel__station',)
+        equipment = equips[0]
         model = EquipModel.objects.get(pk=model_id)
         title = _("Simulation from: %(model)s (%(serial)s), to: %(new_model)s" % {
             'model': equipment.equip_model,
@@ -442,19 +448,17 @@ class EquipmentAdmin(admin.ModelAdmin):
             self.admin_site.each_context(request),
             title=title,
         )
-        if request.method == 'POST':
-            print("TODO: check form")
-        else:
-            elements, message = changemodel_simulation(equipment, model)
-            context.update({
-                'elements': elements,
-                'dynamic_states': [
-                    'missing',
-                    'new',
-                    'conflict',
-                ],
-                'message': message,
-            })
+        modifications = changemodel_simulation(equipment, model)
+        elements, message = changemodel_display(modifications, equipment)
+        context.update({
+            'elements': elements,
+            'dynamic_states': [
+                'missing',
+                'new',
+                'conflict',
+            ],
+            'message': message,
+        })
 
         return render(request, "changemodel_step2.html", context)
 
