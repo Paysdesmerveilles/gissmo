@@ -15,6 +15,7 @@ from gissmo.models import (
     StationSite)
 
 from equipment.protocols import PROTOCOL_CHOICES
+from equipment.states import EQUIP_STATES
 
 from rest_framework import serializers
 
@@ -173,6 +174,7 @@ class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
         view_name='stationsite-detail',
         read_only=True)
     manufacturer = serializers.CharField(source='equip_model.manufacturer')
+    state = EnumField(choices=EQUIP_STATES, source='last_state')
 
     class Meta:
         model = Equipment
@@ -183,6 +185,7 @@ class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
             'serial_number',
             'manufacturer',
             'station',
+            'state',
         ]
 
 
