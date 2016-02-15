@@ -166,7 +166,7 @@ def xhr_station_state(request):
         select_choice.insert(
             0, ({
                 "optionValue": '',
-                "optionDisplay": '-- choisir une action en premier --'}))
+                "optionDisplay": _('-- first select an action --')}))
         is_creer = action == StationAction.CREER
         is_installer = action == StationAction.INSTALLER
         prev_and_corr_actions = [
@@ -250,7 +250,7 @@ def available_equip_state(action):
     """
     # Prepare some values
     select_choice = [(c[0], c[1]) for c in EquipState.EQUIP_STATES]
-    select_choice.insert(0, ('', '-- choisir une action en premier --'))
+    select_choice.insert(0, ('', _('-- first select an action --')))
     if not isinstance(action, int):
         action = int(action)
     is_prev_dist = action == EquipAction.MAINT_PREV_DISTANTE
@@ -824,7 +824,7 @@ def xhr_station(request):
         else:
             select_choice = [{
                 "optionValue": "",
-                "optionDisplay": "-- choisir un site --"}]
+                "optionDisplay": _("-- select a site --")}]
         for station in station_dispo:
             select_choice.append(({
                 "optionValue": station.id,
@@ -881,7 +881,7 @@ def available_equipment_scioper(station, date):
     equipment_list = []
     if not isinstance(station, int):
         station = int(station)
-    # TODO find a better way to filter
+    # TODO: find a better way to filter
     # Not the best way to filter
     # If the supertype name change we have to change the code too
     a = "01. Scientifique"

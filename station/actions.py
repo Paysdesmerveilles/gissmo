@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from django.utils.translation import ugettext_lazy as _
 
 
 """
@@ -33,16 +34,16 @@ AUTRE = 10
 DEBUTER_TEST = 11
 TERMINER_TEST = 12
 STATION_ACTIONS = (
-    (CREER, 'Créer code station'),
-    (INSTALLER, 'Installer station'),
-    (DEBUTER_TEST, 'Débuter test'),
-    (TERMINER_TEST, 'Terminer test'),
-    (OPERER, 'Mettre en opération'),
-    (CONSTATER_DEFAUT, 'Constater défaillance'),
-    (MAINT_PREV_DISTANTE, 'Effectuer maintenance préventive à distance'),
-    (MAINT_CORR_DISTANTE, 'Effectuer maintenance corrective à distance'),
-    (MAINT_PREV_SITE, 'Effectuer maintenance préventive sur site'),
-    (MAINT_CORR_SITE, 'Effectuer maintenance corrective sur site'),
-    (DEMANTELER, 'Démanteler'),
-    (AUTRE, 'Autre'),
+    (CREER, _('Create station code')),
+    (INSTALLER, _('Install station')),
+    (DEBUTER_TEST, _('Start test')),
+    (TERMINER_TEST, _('Finish test')),
+    (OPERER, _('Run')),
+    (CONSTATER_DEFAUT, _('Observe failure')),
+    (MAINT_PREV_DISTANTE, _('Perform REMOTE PREVentive maintenance')),
+    (MAINT_CORR_DISTANTE, _('Perform REMOTE CORrective maintenance')),
+    (MAINT_PREV_SITE, _('Perform LOCAL PREVentive maintenance')),
+    (MAINT_CORR_SITE, _('Perform LOCAL CORrective maintenance')),
+    (DEMANTELER, _('Shut down')),
+    (AUTRE, _('Other')),
 )

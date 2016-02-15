@@ -10,11 +10,11 @@
         {% if StationUnique %}
           <a href="{% url 'admin:gissmo_stationsite_change' StationUnique.id %}">{{StationUnique.station_code}}</a> &rsaquo;
         {% endif %}
-        Carte des stations
+        {% trans "Stations map" %}
     </div>
 {% endblock %}
 
-{% block title %}Recherche des informations de la construction RESIF{% endblock %}
+{% block title %}{% trans "Data search on RESIF builts" %}{% endblock %}
 
 {% block content %}
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from django.utils.translation import ugettext_lazy as _
 
 
 """
@@ -29,14 +30,14 @@ DISPARU = 8
 AU_REBUT = 9
 AUTRE = 10
 EQUIP_STATES = (
-    (OPERATION, 'En opération'),
-    (A_TESTER, 'A tester'),
-    (DISPONIBLE, 'Disponible'),
-    (DEFAUT, 'En défaillance'),
-    (PANNE, 'En panne'),
-    (EN_TRANSIT, 'En transit'),
-    (HORS_USAGE, 'Hors d\'usage'),
-    (DISPARU, 'Disparu'),
-    (AU_REBUT, 'Au rebut'),
-    (AUTRE, 'Autre'),
+    (OPERATION, _('Operation in progress')),
+    (A_TESTER, _('To be tested')),
+    (DISPONIBLE, _('Available')),
+    (DEFAUT, _('Failure')),
+    (PANNE, _('Breakdown')),
+    (EN_TRANSIT, _('Transit in progress')),
+    (HORS_USAGE, _('Out of use')),
+    (DISPARU, _('Lost')),
+    (AU_REBUT, _('Waste')),
+    (AUTRE, _('Other')),
 )

@@ -1,14 +1,14 @@
-
+{% load i18n %}
 <fieldset class="module aligned collapse">
-  <h2>Interventions sur l'equipement (Dernier état : {{ intervs.0.get_equip_state_display }}) - (Dernier emplacement : {{ intervs.0.station.station_code }}-{{ intervs.0.built }})</h2>
+  <h2>{% blocktrans with last_state=intervs.0.get_equip_state_display last_place=intervs.0.station.station_code built=intervs.0.built %}Interventions on equipement. Last state: {{ last_state }}. Last place: {{ last_place }}. Built: {{ built }}{% endblocktrans %}</h2>
    <table>
      <thead><tr>
-         <th>Action</th>
-         <th>Etat</th>
-         <th>Site</th>
-         <th>Built</th>
-         <th>Date et heure</th>
-         <th>Note</th>
+         <th>{% trans "Action" %}</th>
+         <th>{% trans "State" %}</th>
+         <th>{% trans "Site" %}</th>
+         <th>{% trans "Built" %}</th>
+         <th>{% trans "Date and time" %}</th>
+         <th>{% trans "Note" %}</th>
          <th></th>
      </tr></thead>
      <tbody>
@@ -39,13 +39,10 @@
         </td>
 
         <td class="intervention">
-          <a href="{% url url_redirection interv.intervention.id %}">Edit</a>
+          <a href="{% url url_redirection interv.intervention.id %}">{% trans "Edit" %}</a>
         </td>
         </tr>
      {% endfor %}
      </tbody>
    </table>
 </fieldset>
-
-
-

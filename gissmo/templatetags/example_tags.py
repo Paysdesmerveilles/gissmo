@@ -87,16 +87,6 @@ def display_equip_states(equip_id):
     return {'states': states}
 
 
-@register.inclusion_tag('equip_actions.html')
-def display_equip_actions(equip_id):
-    """
-    """
-    actions = []
-    actions = IntervEquip.objects.filter(equip__id=equip_id).order_by(
-        '-intervention__intervention_date')
-    return {'actions': actions}
-
-
 @register.inclusion_tag('equip_interventions.html')
 def display_equip_interventions(equip_id):
     intervs = []
@@ -319,22 +309,6 @@ def equip_last_station(equip_id):
         station = StationSite.objects.get(station_code='NEANT')
         liste.append(station.id)
     return {'locations': liste}
-
-#
-# Channel link chech it s use
-#
-#
-
-
-@register.inclusion_tag('channel_link.html')
-def channel_link(intervention_id):
-    intervention = Intervention.objects.get(id=intervention_id)
-    # Obtain the app_label
-    content_type = ContentType.objects.get_for_model(Intervention)
-    url_redirection = "admin:%s_protochannel_add" % (content_type.app_label)
-    return {
-        'station': intervention.station.id,
-        'url_redirection': url_redirection}
 
 
 @register.inclusion_tag('station_channels.html')

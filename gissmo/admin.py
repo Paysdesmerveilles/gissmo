@@ -51,12 +51,6 @@ class ActorAdmin(admin.ModelAdmin):
     search_fields = ['actor_name']
 
 
-class BuiltAdmin(admin.ModelAdmin):
-    list_display = ['station', 'built_type', 'built_short_desc']
-    ordering = ['station']
-    search_fields = ['station__station_code']
-
-
 class EquipModelDocInline(admin.TabularInline):
     model = EquipModelDoc
     fields = ('document_type', 'document_title', 'begin_effective',
@@ -69,12 +63,6 @@ class EquipModelDocInline(admin.TabularInline):
     formfield_overrides = {
         models.URLField: {'widget': URLFieldWidget},
     }
-
-"""
-class ParamEquipModelInline(admin.TabularInline):
-    model = ParamEquipModel
-    extra = 0
-"""
 
 
 class ParameterEquipInline(admin.TabularInline):
@@ -335,7 +323,7 @@ class EquipmentAdmin(admin.ModelAdmin):
     form = EquipmentForm
 
     fieldsets = [
-        ('Equipements', {
+        (_('Equipements'), {
             'fields': [
                 (
                     'equip_model',
@@ -343,12 +331,13 @@ class EquipmentAdmin(admin.ModelAdmin):
                     'owner',
                     'purchase_date',
                     'stockage_site')]}),
-        ('Information sur les contacts', {
+        (_('Contacts'), {
             'fields': [
-                ('vendor',
+                (
+                    'vendor',
                     'contact')],
             'classes': ['collapse']}),
-        ('Informations complementaires', {
+        (_('Further information'), {
             'fields': [('note')],
             'classes': ['collapse']})]
 
@@ -589,7 +578,7 @@ Custom filter for the stationsite change list
 class StationSiteFilter(SimpleListFilter):
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
-    title = _('Operateur')
+    title = _('Operator')
 
     # Parameter for the filter that will be used in the URL query.
     # I use cf as the parameter_name for the custom filter
@@ -643,7 +632,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     form = StationSiteForm
 
     fieldsets = [
-        ('Information sur le site', {
+        (_('General informations'), {
             'fields': [
                 ('site_type',
                     'station_code',
@@ -654,19 +643,19 @@ class StationSiteAdmin(admin.ModelAdmin):
                     'project'),
                 ('latitude', 'longitude', 'elevation'),
                 ('geology')]}),
-        ('Information sur les contacts', {
+        (_('Contacts'), {
             'fields': [('contact')],
             'classes': ['collapse']}),
-        ('Adresse du site', {
+        (_('Address'), {
             'fields': [
                 ('site_description'),
                 ('address', 'zip_code', 'town'),
                 ('county', 'region', 'country')],
             'classes': ['collapse']}),
-        ('Autre information pertinente', {
+        (_('Other relevant informations'), {
             'fields': [('note'), ('private_link')],
             'classes': ['collapse']}),
-        ('Informations complementaires', {
+        (_('Further informations'), {
             'fields': [
                 ('station_description'),
                 ('alternate_code', 'historical_code', 'restricted_status')],
@@ -769,8 +758,6 @@ class IntervStationInline(admin.TabularInline):
     extra = 0
     max_num = 1
     formset = IntervStationInlineFormset
-#    Test of the modified tabular template to hide the Add at the inline
-#    template = 'tabulartest.html'
 
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
@@ -781,11 +768,8 @@ class IntervEquipInline(admin.TabularInline):
     model = IntervEquip
     extra = 0
     formset = IntervEquipInlineFormset
-#    readonly_fields=['equip', 'station', 'built', 'note',]
 
     def get_formset(self, request, obj=None, **kwargs):
-        """ Pourquoi est-ce que station est necessaire """
-        # station = request.GET.get('station', '')  # variable never used?
         equip = request.GET.get('equip', '')
         initial = []
         initial.append(equip)
@@ -831,7 +815,7 @@ class InterventionAdmin(admin.ModelAdmin):
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
+            messages.success(request, _('Element successfully modified'))
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -845,7 +829,7 @@ class InterventionAdmin(admin.ModelAdmin):
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
+            messages.success(request, _('Element successfully added'))
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -860,7 +844,7 @@ class InterventionAdmin(admin.ModelAdmin):
     def format_date(self, obj):
         return format_date(obj.intervention_date)
 
-    format_date.short_description = 'Date (aaaa-mm-jj hh24:mi)'
+    format_date.short_description = _('Date (yyyy-mm-dd HH24:MM)')
     format_date.admin_order_field = 'intervention_date'
 
 
@@ -909,27 +893,6 @@ class ChainInline(admin.TabularInline):
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
     }
 
-"""
-class ChainConfigInline(admin.TabularInline):
-    model = ChainConfig
-    extra = 0
-#    formset = ChainConfigInlineFormset
-
-    fields = ('parameter', 'value')
-
-    # Hack to pass the channel id to the formset
-#    def get_formset(self, request, obj=None, **kwargs):
-#        channel = request.GET.get('channel', '')
-#        initial = []
-#        initial.append(channel)
-#        formset = super(ChainConfigInline, self).get_formset(
-#            request,
-#            obj,
-#            **kwargs)
-#        formset.__init__ = curry(formset.__init__, initial=initial)
-#        return formset
-"""
-
 
 class ChainConfigInline(admin.TabularInline):
     model = ChainConfig
@@ -945,7 +908,6 @@ class ChannelChainInline(admin.TabularInline):
     max_num = 0
     formset = ChannelChainInlineFormset
 
-#    readonly_fields = ['chain']
     fields = ('chain', 'parameter', 'value')
 
     def formfield_for_dbfield(self, db_field, **kwargs):
@@ -953,7 +915,6 @@ class ChannelChainInline(admin.TabularInline):
         if db_field.name == 'chain':
             kwargs['widget'] = forms.TextInput(
                 attrs={'readonly': 'readonly', 'style': 'width: 1px'})
-#            kwargs['widget'] = forms.HiddenInput()
             kwargs.pop('request', None)  # erreur sinon
             return db_field.formfield(**kwargs)
         return super(ChannelChainInline, self).formfield_for_dbfield(
@@ -991,10 +952,10 @@ class ChannelAdmin(admin.ModelAdmin):
                     'azimuth',
                     'dip'),
                 ('sample_rate', 'accept_anyway', 'start_date', 'end_date')]}),
-        ('Types des donnees produites', {
+        (_('Produced data types'), {
             'fields': [('data_type')],
             'classes': ['collapse']}),
-        ('Informations complementaires', {
+        (_('Further informations'), {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status'),
@@ -1082,8 +1043,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         is_continue = '_continue' in request.POST
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
+        msg = _('Element successfully modified')
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
+            messages.success(request, msg)
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -1091,7 +1053,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                 args=(obj.station.id,)))
         else:
             if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement modifié')
+                messages.success(request, msg)
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(ChannelAdmin, self).response_change(request, obj)
@@ -1100,8 +1062,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         is_continue = '_continue' in request.POST
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
+        msg = _('Element successfully added')
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
+            messages.success(request, msg)
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -1111,7 +1074,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
             # This makes the response go to the newly created model's change
             # page without using reverse
             if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement ajouté')
+                messages.success(request, msg)
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(ChannelAdmin, self).response_add(
@@ -1163,8 +1126,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         is_continue = '_continue' in request.POST
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
+        msg = _('Element successfully modified')
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
+            messages.success(request, msg)
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -1172,7 +1136,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                 args=(obj.channel.id,)))
         else:
             if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement modifié')
+                messages.success(request, msg)
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(ChainAdmin, self).response_change(request, obj)
@@ -1181,8 +1145,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         is_continue = '_continue' in request.POST
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
+        msg = _("Element successfully added")
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
+            messages.success(request, msg)
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -1192,7 +1157,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
             # This makes the response go to the newly created model's change
             # page without using reverse
             if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement ajouté')
+                messages.success(request, msg)
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(ChainAdmin, self).response_add(
@@ -1213,7 +1178,7 @@ class NetworkAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ('', {'fields': [('network_code', 'start_date', 'end_date'), ]}),
-        ('Informations complementaires', {
+        (_('Further informations'), {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status')],
@@ -1234,7 +1199,9 @@ class ProjectAdmin(admin.ModelAdmin):
 
     def delete_model(self, request, obj):
         if obj.project_name == 'ALL':
-            messages.error(request, 'Delete of the project ALL is forbidden')
+            messages.error(
+                request,
+                _('Delete of the project ALL is forbidden'))
         else:
             obj.delete()
             return super(ProjectAdmin, self).delete_model(request, obj)
@@ -1317,45 +1284,22 @@ admin.site.disable_action('delete_selected')
 
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
-# admin.site.register(ProtoConfig)
-
-
 admin.site.register(Actor, ActorAdmin)
-# admin.site.register(Built, BuiltAdmin)
-# admin.site.register(BuiltType)
-
 admin.site.register(EquipModel, EquipModelAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
 admin.site.register(ForbiddenEquipmentModel, ForbiddenEquipmentModelAdmin)
-
 admin.site.register(StationSite, StationSiteAdmin)
-# admin.site.register(StationDoc, StationDocAdmin)
-# admin.site.register(EquipModelDoc, EquipModelDocAdmin)
-# admin.site.register(EquipDoc, EquipDocAdmin)
-
-# admin.site.register(AcquisitionChain,AcquisitionChainAdmin)
-# admin.site.register(ChainComponent)
-# admin.site.register(Channel, ChannelAdmin)
-
 admin.site.register(Network, NetworkAdmin)
 admin.site.register(BuiltType)
 admin.site.register(CalibrationUnit)
 admin.site.register(DataType)
-# admin.site.register(ParamEquipModel)
-# admin.site.register(ParamValueEquipModel, ParamValueEquipModelAdmin)
-# admin.site.register(ParamValue)
 admin.site.register(EquipModelDocType)
 admin.site.register(EquipDocType)
 admin.site.register(StationDocType)
-
 admin.site.register(EquipType)
-
 admin.site.register(Intervention, InterventionAdmin)
-
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectUser, ProjectUserAdmin)
-# admin.site.register(LoggedActions)
 admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)
-# admin.site.register(ChainConfigTest)

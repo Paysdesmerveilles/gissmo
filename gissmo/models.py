@@ -73,36 +73,35 @@ d'une intervention.
     INCONNU = 6
     AUTRE = 7
     ACTOR_TYPE_CHOICES = (
-        (OBSERVATOIRE, 'Observatoire/Laboratoire'),
-        (INSTRUMENTALISTE, 'Ingénieur/Technicien'),
-        (ORGANISME, 'Réseau'),
-        (ENTREPRISE, 'Entreprise'),
-        (ENTREPRISE_SAV, 'Entreprise SAV'),
-        (INCONNU, 'Inconnu'),
-        (AUTRE, 'Autre'),
+        (OBSERVATOIRE, _('Observatory/Laboratory')),
+        (INSTRUMENTALISTE, _('Engineer/Technician')),
+        (ORGANISME, _('Network')),
+        (ENTREPRISE, _('Business')),
+        (ENTREPRISE_SAV, _('Customer service Company')),
+        (INCONNU, _('Unknown')),
+        (AUTRE, _('Other')),
     )
     actor_type = models.IntegerField(
         choices=ACTOR_TYPE_CHOICES,
         default=AUTRE,
-        verbose_name=_("Type d\'intervenant"))
+        verbose_name=_("Type"))
     actor_name = models.CharField(
         max_length=50,
         unique=True,
-        verbose_name=_("nom"))
+        verbose_name=_("Name"))
     actor_note = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("note"))
+        verbose_name=_("Note"))
     actor_parent = models.ForeignKey(
         'self',
         null=True,
         blank=True,
-        verbose_name=_("Groupe d\'appartenance"))
+        verbose_name=_("Membership group"))
 
     class Meta:
         ordering = ['actor_name']
-        verbose_name = _("intervenant")
-        verbose_name_plural = _("F1. Intervenants")
+        verbose_name = _("Player")
 
     def __str__(self):
         return self.actor_name
@@ -121,12 +120,11 @@ class BuiltType(models.Model):
 
     built_type_name = models.CharField(
         max_length=40,
-        verbose_name=_("type de bati"))
+        verbose_name=_("Built type"))
 
     class Meta:
         ordering = ['built_type_name']
-        verbose_name = _("type de bati")
-        verbose_name_plural = _("T1. Types of building")
+        verbose_name = _("Built type")
 
     def __str__(self):
         return self.built_type_name
@@ -153,21 +151,20 @@ celui-ci d'un autre bâti
     built_note : text
         Champ libre afin d'ajouter des informations supplémentaires
     """
-    station = models.ForeignKey("StationSite", verbose_name=_("site"))
-    built_type = models.ForeignKey("BuiltType", verbose_name=_("type de bati"))
+    station = models.ForeignKey("StationSite", verbose_name=_("Site"))
+    built_type = models.ForeignKey("BuiltType", verbose_name=_("Type"))
     built_short_desc = models.CharField(
         max_length=40,
         default="Unknown",
-        verbose_name=_("courte description"))
+        verbose_name=_("Short description"))
     built_note = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("note"))
+        verbose_name=_("Note"))
 
     class Meta:
         unique_together = ("station", "built_type", "built_short_desc")
-        verbose_name = _("bati")
-        verbose_name_plural = _("B1. Batis")
+        verbose_name = _("Built")
 
     def __str__(self):
         return '%s' % self.built_short_desc
@@ -185,13 +182,12 @@ class EquipSupertype(models.Model):
     """
     equip_supertype_name = models.CharField(
         max_length=40,
-        verbose_name=_("supertype d'equipement"))
+        verbose_name=_("Name"))
     presentation_rank = models.IntegerField()
 
     class Meta:
         ordering = ['equip_supertype_name']
-        verbose_name = _("supertype de l'equipement")
-        verbose_name_plural = _("supertypes des equipements")
+        verbose_name = _("Equipment Supertype")
 
     def __str__(self):
         return self.equip_supertype_name
@@ -212,16 +208,15 @@ class EquipType(models.Model):
     """
     equip_supertype = models.ForeignKey(
         "EquipSupertype",
-        verbose_name=_("supertype d'equipement"))
+        verbose_name=_("Supertype"))
     equip_type_name = models.CharField(
         max_length=40,
-        verbose_name=_("type d'equipement"))
+        verbose_name=_("Type"))
     presentation_rank = models.IntegerField()
 
     class Meta:
         ordering = ['equip_type_name']
-        verbose_name = _("type d'equipement")
-        verbose_name_plural = _("types des equipements")
+        verbose_name = _("Equipment type")
 
     def __str__(self):
         return self.equip_type_name
@@ -246,23 +241,23 @@ nom d'usage utilisé par la communauté des instrumentalistes
     """
     equip_type = models.ForeignKey(
         EquipType,
-        verbose_name=_("type d'equipement"))
+        verbose_name=_("Type"))
     equip_model_name = models.CharField(
         max_length=50,
-        verbose_name=_("modele d'equipement"))
+        verbose_name=_("Model"))
     manufacturer = models.CharField(
         max_length=50,
         default='Unknown',  # keep it untranslated for functional purposes
-        verbose_name=_("manufacturer"))
+        verbose_name=_("Manufacturer"))
     is_network_model = models.BooleanField(
-        verbose_name=_('Could contains network configuration?'),
+        verbose_name=_('Network configurable?'),
         default=False)
 
     def _get_supertype(self):
         "Returns the linked EquipSuperType"
         return '%s' % (self.equip_type.equip_supertype)
 
-    _get_supertype.short_description = _('supertype d\'équipement')
+    _get_supertype.short_description = _('Supertype')
 
     equip_supertype = property(_get_supertype)
 
@@ -277,8 +272,7 @@ nom d'usage utilisé par la communauté des instrumentalistes
 
     class Meta:
         ordering = ['equip_model_name']
-        verbose_name = _("modele d'equipement")
-        verbose_name_plural = _("C1. Modeles des equipements")
+        verbose_name = _("Equipment model")
 
     def __str__(self):
         return self.equip_model_name
@@ -288,15 +282,14 @@ nom d'usage utilisé par la communauté des instrumentalistes
 class ParameterEquip(models.Model):
     equip_model = models.ForeignKey(
         "EquipModel",
-        verbose_name=_("modele d'equipement"))
+        verbose_name=_("Equipment model"))
     parameter_name = models.CharField(
         max_length=50,
-        verbose_name=_("nom du parametre"))
+        verbose_name=_("Name"))
 
     class Meta:
         unique_together = ("equip_model", "parameter_name")
-        verbose_name = _("parametre equip")
-        verbose_name_plural = _("W1. Parametres equip")
+        verbose_name = _("Equipment's parameter")
 
     def __str__(self):
         return u'%s : %s' % (self.equip_model, self.parameter_name)
@@ -306,16 +299,15 @@ class ParameterEquip(models.Model):
 class ParameterValue(models.Model):
     parameter = models.ForeignKey(
         "ParameterEquip",
-        verbose_name=_("Parametre modele d'equipement"))
-    value = models.CharField(max_length=50, verbose_name=_("valeur"))
+        verbose_name=_("Parameter"))
+    value = models.CharField(max_length=50, verbose_name=_("Value"))
     default_value = models.BooleanField(
-        verbose_name=_("valeur par defaut"),
+        verbose_name=_("Default value"),
         default=None)
 
     class Meta:
         unique_together = ("parameter", "value")
-        verbose_name = _("valeur du parametre")
-        verbose_name_plural = _("X1. Valeurs des parametres")
+        verbose_name = _("Parameter's value")
 
     # Validation to check that there is only one value choose by default for
     # a parameter
@@ -326,7 +318,7 @@ class ParameterValue(models.Model):
                 default_value__exact=True)
             if c:
                 raise ValidationError(
-                    "The chosen one is already here! Too late")
+                    _("The chosen one is already here! Too late"))
 
     def __str__(self):
         return u'%s' % (self.value)
@@ -433,128 +425,128 @@ class StationSite(models.Model):
     SITE_TEST = 6
     SITE_THEORIQUE = 7
     SITE_CHOICES = (
-        (STATION, 'Station sismologique'),
-        (SITE_TEST, 'Site de test'),
-        (SITE_THEORIQUE, 'Site théorique'),
-        (OBSERVATOIRE, 'Observatoire'),
-        (SAV, 'Lieu de service après vente'),
-        (NEANT, 'Lieu indéterminé'),
-        (AUTRE, 'Autre'),
+        (STATION, _('Seismological station')),
+        (SITE_TEST, _('Testing site')),
+        (SITE_THEORIQUE, _('Theoretical site')),
+        (OBSERVATOIRE, _('Observatory')),
+        (SAV, _('Customer service place')),
+        (NEANT, _('Undefined')),
+        (AUTRE, _('Other')),
     )
 
     OPEN = 1
     CLOSE = 2
     PARTIAL = 3
     STATUS = (
-        (OPEN, 'Ouvert'),
-        (CLOSE, 'Ferme'),
-        (PARTIAL, 'Partiel'),
+        (OPEN, _('Open')),
+        (CLOSE, _('Closed')),
+        (PARTIAL, _('Partial')),
     )
 
     site_type = models.IntegerField(
         choices=SITE_CHOICES,
         default=STATION,
-        verbose_name=_("type de site"))
+        verbose_name=_("Type"))
     station_code = models.CharField(
         max_length=40,
         unique=True,
-        verbose_name=_("code"))
+        verbose_name=_("Code"))
     site_name = models.CharField(
         max_length=50,
         null=True,
         blank=True,
-        verbose_name=_("nom site"))
+        verbose_name=_("Name"))
     latitude = models.DecimalField(
         null=True,
         blank=True,
-        verbose_name=_("latitude (°)"),
+        verbose_name=_("Latitude (°)"),
         max_digits=8,
         decimal_places=6)
     longitude = models.DecimalField(
         null=True,
         blank=True,
-        verbose_name=_("longitude (°)"),
+        verbose_name=_("Longitude (°)"),
         max_digits=9,
         decimal_places=6)
     elevation = models.DecimalField(
         null=True,
         blank=True,
-        verbose_name=_("elevation (m)"),
+        verbose_name=_("Elevation (m)"),
         max_digits=5,
         decimal_places=1)
-    operator = models.ForeignKey("Actor", verbose_name=_("operateur"))
+    operator = models.ForeignKey("Actor", verbose_name=_("Operator"))
     address = models.CharField(
         max_length=100,
         null=True,
         blank=True,
-        verbose_name=_("adresse"))
+        verbose_name=_("Address"))
     town = models.CharField(
         max_length=100,
         null=True,
         blank=True,
-        verbose_name=_("commune"))
+        verbose_name=_("City"))
     county = models.CharField(
         max_length=100,
         null=True,
         blank=True,
-        verbose_name=_("departement"))
+        verbose_name=_("District"))
     region = models.CharField(
         max_length=100,
         null=True,
         blank=True,
-        verbose_name=_("region"))
+        verbose_name=_("Region"))
     country = models.CharField(
         max_length=50,
         null=True,
         blank=True,
-        verbose_name=_("pays"))
+        verbose_name=_("Country"))
     zip_code = models.CharField(
         max_length=15,
         null=True,
         blank=True,
-        verbose_name=_("code postal"))
+        verbose_name=_("Zip code"))
     contact = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("contact"))
-    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+        verbose_name=_("Contact"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("Note"))
     private_link = models.URLField(
         null=True,
         blank=True,
-        verbose_name=_("lien outil interne"))
+        verbose_name=_("Specific tool link"))
     station_parent = models.ForeignKey(
         'self',
         null=True,
         blank=True,
-        verbose_name=_("site referent"))
+        verbose_name=_("Linked site (referent)"))
     geology = models.CharField(
         max_length=50,
         null=True,
         blank=True,
-        verbose_name=_("formation geologique"))
+        verbose_name=_("Geological formation"))
     restricted_status = models.IntegerField(
         choices=STATUS,
         null=True,
         blank=True,
-        verbose_name=_("etat restrictif"))
+        verbose_name=_("Restrictive state"))
     alternate_code = models.CharField(
         max_length=5,
         null=True,
         blank=True,
-        verbose_name=_("code alternatif"))
+        verbose_name=_("Alternate code"))
     historical_code = models.CharField(
         max_length=5,
         null=True,
         blank=True,
-        verbose_name=_("code historique"))
+        verbose_name=_("Historical code"))
     station_description = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("description station"))
+        verbose_name=_("Station description"))
     site_description = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("description site"))
+        verbose_name=_("Site description"))
     latitude_unit = models.CharField(
         max_length=15,
         null=True,
@@ -589,12 +581,12 @@ class StationSite(models.Model):
     creation_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_('Date création'))
+        verbose_name=_('Creation date'))
     last_state = models.IntegerField(
         choices=StationState.STATION_STATES,
         null=True,
         blank=True,
-        verbose_name=_('État'))
+        verbose_name=_('Last state'))
 
     def get_last_state(self):
         res = None
@@ -611,8 +603,7 @@ class StationSite(models.Model):
 
     class Meta:
         ordering = ['station_code']
-        verbose_name = _("site")
-        verbose_name_plural = _("A1. Sites")
+        verbose_name = _("Site")
 
     def __str__(self):
         return self.station_code
@@ -717,39 +708,39 @@ l'équipment
     """
     equip_model = models.ForeignKey(
         EquipModel,
-        verbose_name=_("modele d'equipement"),
+        verbose_name=_("Model"),
         validators=[validate_equip_model],
     )
     serial_number = models.CharField(
         max_length=50,
-        verbose_name=_("numero de serie"))
-    owner = models.ForeignKey("Actor", verbose_name=_("proprietaire"))
+        verbose_name=_("Serial number"))
+    owner = models.ForeignKey("Actor", verbose_name=_("Owner"))
     vendor = models.CharField(
         max_length=50,
         null=True,
         blank=True,
-        verbose_name=_("vendeur"))
+        verbose_name=_("Seller"))
     contact = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("contact"))
-    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+        verbose_name=_("Contact"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("Note"))
     purchase_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_('Date achat'))
+        verbose_name=_('Purchase date'))
     # Last state makes equipment display faster. Interventions updates it.
     last_state = models.IntegerField(
         choices=EquipState.EQUIP_STATES,
         null=True,
         blank=True,
-        verbose_name=_('État'))
+        verbose_name=_('Last state'))
     # Last station makes equipment display faster. Interventions updates it.
     last_station = models.ForeignKey(
         StationSite,
         null=True,
         blank=True,
-        verbose_name=_('Emplacement'))
+        verbose_name=_('Last place'))
 
     def _get_type(self):
         "Returns the linked EquipType"
@@ -759,8 +750,8 @@ l'équipment
         "Returns the linked EquipSuperType"
         return '%s' % (self.equip_model.equip_type.equip_supertype)
 
-    _get_type.short_description = _('type d\'équipement')
-    _get_supertype.short_description = _('supertype d\'équipement')
+    _get_type.short_description = _('Type')
+    _get_supertype.short_description = _('Supertype')
 
     equip_type = property(_get_type)
     equip_supertype = property(_get_supertype)
@@ -790,8 +781,7 @@ l'équipment
         unique_together = (
             "equip_model",
             "serial_number")
-        verbose_name = _("equipement")
-        verbose_name_plural = _("D1. Equipements")
+        verbose_name = _("Equipment")
 
     def __str__(self):
         return '%s : %s' % (
@@ -899,8 +889,7 @@ class ForbiddenEquipmentModel(models.Model):
         related_name='recommended_model')
 
     class Meta:
-        verbose_name = _("Forbidden Equipment Models")
-        verbose_name_plural = _('C2. Forbidden Equipment Models')
+        verbose_name = _("Forbidden Equipment's model")
 
 
 class Service(models.Model):
@@ -956,51 +945,49 @@ class Network(models.Model):
     CLOSE = 2
     PARTIAL = 3
     STATUS = (
-        (OPEN, 'Ouvert'),
-        (CLOSE, 'Ferme'),
-        (PARTIAL, 'Partiel'),
+        (OPEN, _('Open')),
+        (CLOSE, _('Closed')),
+        (PARTIAL, _('Partial')),
     )
 
     network_code = models.CharField(
         max_length=5,
-        verbose_name=_("network code"))
+        verbose_name=_("Code"))
     network_name = models.CharField(
         max_length=50,
         null=True,
         blank=True,
-        verbose_name=_("nom du reseau"))
-    code = models.CharField(max_length=5, verbose_name=_("code reseau"))
+        verbose_name=_("Name"))
     start_date = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name=_("date debut (aaaa-mm-jj)"))
+        verbose_name=_("Starting date (yyyy-mm-dd)"))
     end_date = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name=_("date fin (aaaa-mm-jj)"))
+        verbose_name=_("Ending date (yyyy-mm-dd)"))
     restricted_status = models.IntegerField(
         choices=STATUS,
         null=True,
         blank=True,
-        verbose_name=_("etat restrictif"))
+        verbose_name=_("Restricted status"))
     alternate_code = models.CharField(
         max_length=5,
         null=True,
         blank=True,
-        verbose_name=_("code alternatif"))
+        verbose_name=_("Alternate code"))
     historical_code = models.CharField(
         max_length=5,
         null=True,
         blank=True,
-        verbose_name=_("code historique"))
+        verbose_name=_("Historical code"))
     description = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("description"))
+        verbose_name=_("Description"))
 
     class Meta:
-        verbose_name = _("reseau")
-        verbose_name_plural = _("N1. Reseaux")
+        verbose_name = _("Network")
 
     def __str__(self):
         return self.network_code
@@ -1022,15 +1009,14 @@ class Intervention(models.Model):
     note : text
         Champ libre afin d'ajouter des informations supplémentaires
     """
-    station = models.ForeignKey("StationSite", verbose_name=_("site"))
+    station = models.ForeignKey("StationSite", verbose_name=_("Site"))
     intervention_date = models.DateTimeField(
-        verbose_name=_("date (aaaa-mm-jj)"))
-    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+        verbose_name=_("Date (yyyy-mm-dd)"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("Note"))
 
     class Meta:
         unique_together = ("station", "intervention_date")
         verbose_name = _("Intervention")
-        verbose_name_plural = _("E1. Interventions")
 
     def __str__(self):
         return u'%s : %s' % (
@@ -1057,12 +1043,12 @@ l'intervention
     """
     intervention = models.ForeignKey(
         "Intervention",
-        verbose_name=_("intervention"))
-    actor = models.ForeignKey("Actor", verbose_name=_("intervenant"))
-    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+        verbose_name=_("Intervention"))
+    actor = models.ForeignKey("Actor", verbose_name=_("Protagonist"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("Note"))
 
     class Meta:
-        verbose_name_plural = _("Intervenants")
+        verbose_name = _("Protagonist")
 
     def __str__(self):
         return u'%s : %s' % (self.intervention, self.actor)
@@ -1090,19 +1076,19 @@ la station
     """
     intervention = models.ForeignKey(
         "Intervention",
-        verbose_name=_("intervention"))
+        verbose_name=_("Intervention"))
     station_action = models.IntegerField(
         choices=StationAction.STATION_ACTIONS,
-        verbose_name=_("action"))
+        verbose_name=_("Action"))
     station_state = models.IntegerField(
         choices=StationState.STATION_STATES,
         null=True,
         blank=True,
-        verbose_name=_("etat"))
-    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+        verbose_name=_("State"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("Note"))
 
     class Meta:
-        verbose_name_plural = _("Actions sur le site")
+        verbose_name = _("Site intervention")
 
     def __str__(self):
         return u'%s' % (self.intervention)
@@ -1150,28 +1136,28 @@ répertoriées
     """
     intervention = models.ForeignKey(
         "Intervention",
-        verbose_name=_("intervention"))
+        verbose_name=_("Intervention"))
     equip_action = models.IntegerField(
         choices=EquipAction.EQUIP_ACTIONS,
-        verbose_name=_("action"))
-    equip = models.ForeignKey("Equipment", verbose_name=_("equipement"))
+        verbose_name=_("Action"))
+    equip = models.ForeignKey("Equipment", verbose_name=_("Equipement"))
     equip_state = models.IntegerField(
         choices=EquipState.EQUIP_STATES,
-        verbose_name=_("etat"))
+        verbose_name=_("State"))
     station = models.ForeignKey(
         "StationSite",
         null=True,
         blank=True,
-        verbose_name=_("site"))
+        verbose_name=_("Site"))
     built = models.ForeignKey(
         "Built",
         null=True,
         blank=True,
-        verbose_name=_("bati"))
-    note = models.TextField(null=True, blank=True, verbose_name=_("note"))
+        verbose_name=_("Built"))
+    note = models.TextField(null=True, blank=True, verbose_name=_("Note"))
 
     class Meta:
-        verbose_name_plural = _("Actions sur les equipements")
+        verbose_name = _("Equipment intervention")
 
     def __str__(self):
         return u'%s' % (self.intervention)
@@ -1194,10 +1180,11 @@ répertoriées
 class StationDocType(models.Model):
     stationdoc_type_name = models.CharField(
         max_length=40,
-        verbose_name=_("type de document"))
+        verbose_name=_("Type"))
 
     class Meta:
-        verbose_name_plural = _("S1. Types of document (station)")
+        verbose_name = _("Document type (station)")
+        verbose_name_plural = _("Document types (station)")
 
     def __str__(self):
         return u'%s' % (self.stationdoc_type_name)
@@ -1233,42 +1220,42 @@ class StationDoc(models.Model):
         Champ qui contient le chemin d'accès au document
     """
 
-    station = models.ForeignKey("StationSite", verbose_name=_("site"))
+    station = models.ForeignKey("StationSite", verbose_name=_("Site"))
     owner = models.ForeignKey(User)
     document_type = models.ForeignKey(
         StationDocType,
         null=True,
         blank=True,
-        verbose_name=_("type de document"))
+        verbose_name=_("Type"))
     document_title = models.CharField(
         max_length=40,
-        verbose_name=_("titre document"))
+        verbose_name=_("Title"))
     inscription_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("date inscription (aaaa-mm-jj)"))
+        verbose_name=_("Registration date (yyyy-mm-dd)"))
     document_station = models.FileField(
         storage=fs,
-        verbose_name=_("document"),
+        verbose_name=_("Document"),
         upload_to=stationdoc_file_name,
         blank=True)
     private_link = models.URLField(
         null=True,
         blank=True,
-        verbose_name=_("lien document prive"))
+        verbose_name=_("Private document link"))
     begin_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+        verbose_name=_("Effective starting date (yyyy-mm-dd)"))
     end_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+        verbose_name=_("Effective ending date (yyyy-mm-dd)"))
 
     class Meta:
         unique_together = ("station", "document_title", "inscription_date")
-        verbose_name = _("Document concernant le site")
-        verbose_name_plural = _("G1. Documents concernants le site")
+        verbose_name = _("Document (station)")
+        verbose_name_plural = _("Documents (station)")
 
     def __str__(self):
         return u'%s %s %s' % (
@@ -1281,10 +1268,11 @@ class StationDoc(models.Model):
 class EquipModelDocType(models.Model):
     equipmodeldoc_type_name = models.CharField(
         max_length=40,
-        verbose_name=_("type de document"))
+        verbose_name=_("Type"))
 
     class Meta:
-        verbose_name_plural = _("Q1. Types of document (equip. model)")
+        verbose_name = _("Document type (equip. model)")
+        verbose_name_plural = _("Document types (equip. model)")
 
     def __str__(self):
         return u'%s' % (self.equipmodeldoc_type_name)
@@ -1321,43 +1309,43 @@ class EquipModelDoc(models.Model):
     """
     equip_model = models.ForeignKey(
         EquipModel,
-        verbose_name=_("modele d'equipement")
+        verbose_name=_("Equipment model")
     )
     owner = models.ForeignKey(User)
     document_type = models.ForeignKey(
         EquipModelDocType,
         null=True,
         blank=True,
-        verbose_name=_("type de document"))
+        verbose_name=_("Type"))
     document_title = models.CharField(
         max_length=40,
-        verbose_name=_("titre document"))
+        verbose_name=_("Title"))
     inscription_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("date inscription (aaaa-mm-jj)"))
+        verbose_name=_("Registration date (yyyy-mm-dd)"))
     document_equip_model = models.FileField(
         storage=fs,
-        verbose_name=_("document"),
+        verbose_name=_("Document"),
         upload_to=equipmodeldoc_file_name,
         blank=True)
     private_link = models.URLField(
         null=True,
         blank=True,
-        verbose_name=_("lien document prive"))
+        verbose_name=_("Private document link"))
     begin_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+        verbose_name=_("Effective starting date (yyyy-mm-dd)"))
     end_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+        verbose_name=_("Effective ending date (yyyy-mm-dd)"))
 
     class Meta:
         unique_together = ("equip_model", "document_title", "inscription_date")
-        verbose_name = _("Document du modele d'equipement")
-        verbose_name_plural = _("G2. Documents des modeles d'equipement")
+        verbose_name = _("Document (equip.'s model)")
+        verbose_name_plural = _("Documents (equip.'s model)")
 
     def __str__(self):
         return u'%s %s %s' % (
@@ -1370,10 +1358,11 @@ class EquipModelDoc(models.Model):
 class EquipDocType(models.Model):
     equipdoc_type_name = models.CharField(
         max_length=40,
-        verbose_name=_("type de document"))
+        verbose_name=_("Type"))
 
     class Meta:
-        verbose_name_plural = _("R1. Types of document (equipment)")
+        verbose_name = _("Document type (equip.)")
+        verbose_name_plural = _("Document types (equip.)")
 
     def __str__(self):
         return u'%s' % (self.equipdoc_type_name)
@@ -1413,43 +1402,43 @@ class EquipDoc(models.Model):
     """
     equip = models.ForeignKey(
         Equipment,
-        verbose_name=_("equipement")
+        verbose_name=_("Equipement")
     )
     owner = models.ForeignKey(User)
     document_type = models.ForeignKey(
         EquipDocType,
         null=True,
         blank=True,
-        verbose_name=_("type de document"))
+        verbose_name=_("Type"))
     document_title = models.CharField(
         max_length=40,
-        verbose_name=_("titre document"))
+        verbose_name=_("Title"))
     inscription_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("date inscription (aaaa-mm-jj)"))
+        verbose_name=_("Registration date (yyyy-mm-dd)"))
     document_equip = models.FileField(
         storage=fs,
-        verbose_name=_("document"),
+        verbose_name=_("Document"),
         upload_to=equipdoc_file_name,
         blank=True)
     private_link = models.URLField(
         null=True,
         blank=True,
-        verbose_name=_("lien document prive"))
+        verbose_name=_("Private document link"))
     begin_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("debut effectivite (aaaa-mm-jj)"))
+        verbose_name=_("Effective starting date (yyyy-mm-dd)"))
     end_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name=_("fin effectivite (aaaa-mm-jj)"))
+        verbose_name=_("Effective ending date (yyyy-mm-dd)"))
 
     class Meta:
         unique_together = ("equip", "document_title", "inscription_date")
-        verbose_name = _("Document de l'equipement")
-        verbose_name_plural = _("G3. Documents des equipements")
+        verbose_name = _("Document (equip.)")
+        verbose_name_plural = _("Documents (equip.)")
 
     def __str__(self):
         return u'%s %s %s %s' % (
@@ -1461,14 +1450,14 @@ class EquipDoc(models.Model):
 
 @python_2_unicode_compatible
 class CalibrationUnit(models.Model):
-    name = models.CharField(max_length=50, verbose_name=_("Nom unite"))
+    name = models.CharField(max_length=50, verbose_name=_("Name"))
     description = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("description"))
+        verbose_name=_("Description"))
 
     class Meta:
-        verbose_name_plural = _("U1. Types of unit")
+        verbose_name = _("Unit type")
 
     def __str__(self):
         return u'%s' % (self.name)
@@ -1478,10 +1467,10 @@ class CalibrationUnit(models.Model):
 class DataType(models.Model):
     type_description = models.CharField(
         max_length=50,
-        verbose_name=_("type de donnees"))
+        verbose_name=_("Type"))
 
     class Meta:
-        verbose_name_plural = _("V1. Types of collected data")
+        verbose_name = _("Data type")
 
     def __str__(self):
         return u'%s' % (self.type_description)
@@ -1492,16 +1481,15 @@ class ChannelCode(models.Model):
     channel_code = models.CharField(
         max_length=3,
         primary_key=True,
-        verbose_name=_("code du canal"))
+        verbose_name=_("Code"))
     presentation_rank = models.IntegerField(null=True, blank=True)
     validation_rule = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("regle validation"))
+        verbose_name=_("Validation rule"))
 
     class Meta:
-        verbose_name = _("Code du canal")
-        verbose_name_plural = _("Z3. Codes des canaux")
+        verbose_name = _("Channel code")
 
     def __str__(self):
         return u'%s' % (self.channel_code)
@@ -1513,9 +1501,9 @@ class Channel(models.Model):
     CLOSE = 2
     PARTIAL = 3
     STATUS = (
-        (OPEN, 'Ouvert'),
-        (CLOSE, 'Ferme'),
-        (PARTIAL, 'Partiel'),
+        (OPEN, _('Open')),
+        (CLOSE, _('Closed')),
+        (PARTIAL, _('Partial')),
     )
     """
     CHANNEL_CHOICES = (
@@ -1536,86 +1524,86 @@ class Channel(models.Model):
         ('HN2','HN2'),('HN3','HN3'),
     )
     """
-    station = models.ForeignKey("StationSite", verbose_name=_("station"))
-    network = models.ForeignKey('Network', verbose_name=_("code reseau"))
+    station = models.ForeignKey("StationSite", verbose_name=_("Station"))
+    network = models.ForeignKey('Network', verbose_name=_("Network"))
     channel_code = models.ForeignKey(
         'ChannelCode',
-        verbose_name=_("code du canal"))
+        verbose_name=_("Channel code"))
     location_code = models.CharField(
         null=True,
         blank=True,
         max_length=2,
-        verbose_name=_("code localisation"))
+        verbose_name=_("Location code"))
     latitude = models.DecimalField(
-        verbose_name=_("latitude (°)"),
+        verbose_name=_("Latitude (°)"),
         max_digits=8,
         decimal_places=6)
     longitude = models.DecimalField(
-        verbose_name=_("longitude (°)"),
+        verbose_name=_("Longitude (°)"),
         max_digits=9,
         decimal_places=6)
     elevation = models.DecimalField(
-        verbose_name=_("elevation (m)"),
+        verbose_name=_("Elevation (m)"),
         max_digits=5,
         decimal_places=1)
     depth = models.DecimalField(
-        verbose_name=_("profondeur (m)"),
+        verbose_name=_("Depth (m)"),
         max_digits=4,
         decimal_places=1)
     azimuth = models.DecimalField(
-        verbose_name=_("azimut"),
+        verbose_name=_("Azimut"),
         max_digits=4,
         decimal_places=1)
     dip = models.DecimalField(
-        verbose_name=_("angle d'inclinaison"),
+        verbose_name=_("Dip"),
         max_digits=3,
         decimal_places=1)
-    sample_rate = models.FloatField(verbose_name=_("frequence (Hz)"))
+    sample_rate = models.FloatField(verbose_name=_("Sample rate (Hz)"))
 
     start_date = models.DateTimeField(
-        verbose_name=_("date debut (aaaa-mm-jj)"))
+        verbose_name=_("Starting date (yyyy-mm-dd)"))
     end_date = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name=_("date fin (aaaa-mm-jj)"))
+        verbose_name=_("Ending date (yyyy-mm-dd)"))
 
     restricted_status = models.IntegerField(
         choices=STATUS,
         null=True,
         blank=True,
-        verbose_name=_("etat restrictif"))
+        verbose_name=_("Restrictive state"))
     alternate_code = models.CharField(
         max_length=5,
         null=True,
         blank=True,
-        verbose_name=_("code alternatif"))
+        verbose_name=_("Alternate code"))
     historical_code = models.CharField(
         max_length=5,
         null=True,
         blank=True,
-        verbose_name=_("code historique"))
+        verbose_name=_("Historical code"))
     description = models.TextField(
         null=True,
         blank=True,
-        verbose_name=_("description"))
+        verbose_name=_("Description"))
     storage_format = models.CharField(
         max_length=50,
         null=True,
         blank=True,
-        verbose_name=_("format de donnees"))
+        verbose_name=_("Storage format"))
     clock_drift = models.FloatField(
         null=True,
         blank=True,
-        verbose_name=_("derive horloge (seconds/sample)"))
+        verbose_name=_("Clock drift (seconds/sample)"))
     calibration_units = models.ForeignKey(
         "CalibrationUnit",
         null=True,
         blank=True,
-        verbose_name=_("unite de mesure"))
+        verbose_name=_("Calibration unit"))
     data_type = models.ManyToManyField(
         "DataType",
         blank=True,
-        verbose_name=_("donnees produites"))
+        verbose_name=_("Produced data"))
     latitude_unit = models.CharField(
         max_length=15,
         null=True,
@@ -1695,8 +1683,7 @@ class Channel(models.Model):
             "channel_code",
             "location_code",
             "start_date")
-        verbose_name = _("Canal d'acquisition")
-        verbose_name_plural = _("Z1. Canaux d'acquisition")
+        verbose_name = _("Channel")
 
     def __str__(self):
         return u'%s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s : %s' % (
@@ -1725,6 +1712,7 @@ class Chain(models.Model):
     OTHER_3 = 7
     OTHER_4 = 7
     OTHER_5 = 9
+    # WARNING: DO NOT CHANGE these values as they are used in stationXML
     ORDER_CHOICES = (
         (SENSOR, 'Sensor'),
         (PREAMPLIFIER, 'PreAmplifier'),
@@ -1737,18 +1725,17 @@ class Chain(models.Model):
         (OTHER_5, 'Other_5'),
     )
 
-    channel = models.ForeignKey('Channel', verbose_name=_("canal"))
+    channel = models.ForeignKey('Channel', verbose_name=_("Channel"))
     order = models.IntegerField(
         choices=ORDER_CHOICES,
         null=False,
         blank=False,
         verbose_name=_("Type"))
-    equip = models.ForeignKey('Equipment', verbose_name=_("equipement"))
+    equip = models.ForeignKey('Equipment', verbose_name=_("Equipement"))
 
     class Meta:
         unique_together = ("channel", "order")
-        verbose_name = _("Composante de la chaine d'acqui")
-        verbose_name_plural = _("Z2. Composantes des chaines d'acqui")
+        verbose_name = _("Acquisition chain")
 
     def __str__(self):
         return u'%s : %s' % (self.order, self.equip)
@@ -1774,15 +1761,16 @@ Les caractères spéciaux pour nous francophones comme é, à, ê, ï, ù sont a
 priori permis mais pourraient être mal interprétés par certains programmes.
     """
     # Hack to inline in channel
-    channel = models.ForeignKey('Channel', verbose_name=_("canal"))
-    chain = models.ForeignKey('Chain', verbose_name=_("chaine d'acquisition"))
+    channel = models.ForeignKey('Channel', verbose_name=_("Channel"))
+    chain = models.ForeignKey('Chain', verbose_name=_("Acquisition chain"))
     parameter = models.ForeignKey(
         'ParameterEquip',
-        verbose_name=_("parametre"))
-    value = models.ForeignKey('ParameterValue', verbose_name=_("value"))
+        verbose_name=_("Parameter"))
+    value = models.ForeignKey('ParameterValue', verbose_name=_("Value"))
 
     class Meta:
         unique_together = ("channel", "chain", "parameter")
+        verbose_name = _("Configuration")
 
     def __str__(self):
         return u'%s : %s : %s' % (self.chain, self.parameter, self.value)
@@ -1790,9 +1778,12 @@ priori permis mais pourraient être mal interprétés par certains programmes.
 
 @python_2_unicode_compatible
 class Project(models.Model):
-    project_name = models.CharField(max_length=50)
+    project_name = models.CharField(max_length=50, verbose_name=_("Name"))
     manager = models.ForeignKey(User)
-    station = models.ManyToManyField('StationSite', blank=True)
+    station = models.ManyToManyField(
+        'StationSite',
+        blank=True,
+        verbose_name=_("Site"))
 
     # Validation to check that the name of the project ALL don't change
     # It's needed in comparison to the admin.py module to filter station,
@@ -1803,7 +1794,10 @@ class Project(models.Model):
             project = get_object_or_404(Project, pk=self.id)
             if project.project_name == 'ALL' and self.project_name != 'ALL':
                 raise ValidationError(
-                    "We can't change the name for the project ALL")
+                    _("We can't change the name for the project ALL"))
+
+    class Meta:
+        verbose_name = _("Project")
 
     def __str__(self):
         return u'%s' % (self.project_name)
@@ -1815,8 +1809,7 @@ class ProjectUser(models.Model):
     project = models.ManyToManyField('Project')
 
     class Meta:
-        verbose_name = _("Registered project")
-        verbose_name_plural = _("Registered projects")
+        verbose_name = _("Project's user")
 
     def __str__(self):
         return u'%s' % (self.user)
@@ -1845,4 +1838,4 @@ class LoggedActions(models.Model):
     class Meta:
         managed = False
         db_table = 'logged_actions'
-        verbose_name_plural = _("Logged actions")
+        verbose_name = _("Logged action")
