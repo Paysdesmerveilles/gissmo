@@ -1,4 +1,32 @@
-Current version (1.4-trunk)
+Current version (1.5-trunk):
+  - New field on Equipment's Model: "Manufacturer?" that informs user if
+  Manufacturer was forgotten. By default Manufacturer is "Unknown"
+  - Set API to v1 version to prevent future changes on it in few Gissmo versions
+  - Equipments display Services and IPAddresses only if Equipments'Model have a
+  field named "Could contains network configuration?" set to True
+  - Equipment's Model have now a new field: "Could contains network configuration?"
+  - API is available only for a given whitelist IPs
+  - API is read only
+  - Scripts showing how to use the API are available in 
+scripts/webservice_examples directory:
+  scripts/webservice_examples/00_my_first_use.py
+    - 00_my_first_use.py: a simple script that display sites
+    - 02_station_services.py: displays services for each equipment of each site
+  - API permits filtering, searching and ordering these objects
+  - New RESTful API available on /api with some objects:
+    - Actor: /api/actors
+    - CalibrationUnit: /api/calibration_units
+    - Chain: /api/chains
+    - Channel: /api/channels
+    - ChannelDatatype: /api/channel_datatypes
+    - ChannelParameter: /api/channel_parameters
+    - Equipment: /api/equipments
+    - IPAddress: /api/ipaddresses
+    - Network: /api/networks
+    - Service: /api/services
+    - Site: /api/sites
+
+Version 1.4:
   - New theme: django-flat-theme
   - Delete comments on Network, Channel and StationSite. It will be back in a later stage
   - Improve StationSite display. It takes 142 sec first to be displayed. Now approximatively 5 seconds.

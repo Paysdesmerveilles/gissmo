@@ -8,12 +8,12 @@ DEFAULT_ADMIN_PASSWORD = 'admin'
 
 class HomePageTest(TestCase):
 
-    def test_root_url_returns_404(self):
+    def test_root_url_returns_302(self):
         response = self.client.get('/')
         self.assertEqual(
             response.status_code,
-            404,
-            "Root page shouldn't be found.")
+            302,
+            "Root page should be redirected!")
 
 
 class AdminPageTest(TestCase):
@@ -76,16 +76,9 @@ class AdminPageTest(TestCase):
             '/gissmo/xhr_parameter_value',
             '/gissmo/site_maps',
             '/gissmo/itineraire_maps',
-            # TODO: add DATA so that dataless/ works
-            # '/gissmo/dataless/',
             # TODO: LINK TO TEST, get_file/ missing
             # '/gissmo/station_xml/',
-            # TODO: ValueError: invalid literal for int() with base 10: ''
-            # '/gissmo/network_xml/',
-            # TODO: ValueError: invalid literal for int() with base 10: ''
-            # '/gissmo/station_dataless/',
             # TODO: LINK TO TEST, [A-Z0-9]{2,4} to get site_shortcut
-            # '/gissmo/chaining/',
         ]
         # login first to the application
         self.client.login(

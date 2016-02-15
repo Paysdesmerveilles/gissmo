@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 from selenium import webdriver
 # from selenium.webdriver.common.desired_capabilities import \
-#        DesiredCapabilities
+#     DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
@@ -24,6 +24,7 @@ class FunctionalTest(LiveServerTestCase):
     """
     A set of tests that only load some webpages from Gissmo.
     """
+    serialized_rollback = True
 
     @classmethod
     def setUpClass(cls):
@@ -44,13 +45,19 @@ class FunctionalTest(LiveServerTestCase):
 
     def setUp(self):
         """
-        Launch Firefox as Web Testing Platform.
+        Launch a browser as Web Testing Platform.
         """
         super(FunctionalTest, self).setUp()
-        self.superuser = User.objects.create_superuser(
-            self.DEFAULT_ADMIN_LOGIN,
-            'admin@mysite.com',
-            self.DEFAULT_ADMIN_PASSWORD)
+        users = User.objects.filter(username=self.DEFAULT_ADMIN_LOGIN)
+        if not users:
+            self.superuser = User.objects.create_superuser(
+                self.DEFAULT_ADMIN_LOGIN,
+                'admin@mysite.com',
+                self.DEFAULT_ADMIN_PASSWORD)
+        else:
+            self.superuser = users[0]
+
+        # #### FIREFOX #####
         # Set Firefox profile to DL CSV files
         fp = webdriver.FirefoxProfile()
 
@@ -58,7 +65,9 @@ class FunctionalTest(LiveServerTestCase):
         fp.set_preference("browser.download.manager.showWhenStarting", False)
         fp.set_preference("browser.download.dir", self.DOWNLOAD_PATH)
         fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "text/csv")
+        self.browser = webdriver.Firefox(firefox_profile=fp)
 
+        # #### REMOTE SERVER #####
 #        # Create a connection to a Remote Selenium Node
 #        self.browser = webdriver.Remote(
 #            command_executor='http://selenium:4444/wd/hub',
@@ -66,7 +75,14 @@ class FunctionalTest(LiveServerTestCase):
 #            browser_profile=fp,
 #        )
 
-        self.browser = webdriver.Firefox(firefox_profile=fp)
+        # #### PHANTOMJS #####
+#        capabilities = DesiredCapabilities.FIREFOX.copy()
+#        capabilities['platform'] = "ANY"
+#        capabilities['version'] = 10
+#
+#        self.browser = webdriver.PhantomJS(desired_capabilities=capabilities)
+#        self.browser.set_window_size(1024, 768)
+
         self.browser.implicitly_wait(3)
 
         self.url = self.server_url + '/'
@@ -93,15 +109,19 @@ class FunctionalTest(LiveServerTestCase):
         Log in to Gissmo application.
         """
         if not self.logged:
+            from selenium.webdriver.support.wait import WebDriverWait
+            timeout = 2
             url = self.adminurl
             self.browser.get(url)
             inputlogin = self.browser.find_element_by_name('username')
             inputpassword = self.browser.find_element_by_name('password')
             inputlogin.send_keys(self.DEFAULT_ADMIN_LOGIN)
             inputpassword.send_keys(self.DEFAULT_ADMIN_PASSWORD)
-            inputpassword.send_keys(Keys.ENTER)
+            self.browser.find_element_by_xpath(
+                '//input[@value="Log in"]').click()
+            WebDriverWait(self.browser, timeout).until(
+                lambda driver: self.browser.find_element_by_tag_name('body'))
 
-            self.browser.implicitly_wait(3)
             # Stop tests if login failed
             self.assertIn(
                 'Site administration',
@@ -158,7 +178,8 @@ class FunctionalTest(LiveServerTestCase):
         else:
             input_field = self.browser.find_element_by_name(field.name)
             # Delete content first
-            input_field.clear()
+            if field._type != 'file':
+                input_field.clear()
             input_field.send_keys(field.content)
 
     def check_presence_in_list(self, url, fields):
@@ -180,6 +201,36 @@ class FunctionalTest(LiveServerTestCase):
         for field in fields:
             self.assertIn(field.content, [row.text for row in rows])
 
+    def fill_in_form(self, url, fields, click_paths=[]):
+        """
+        Complete a specific form (given by URL) and validate it.
+        """
+        # Useless to do something without data
+        if not fields:
+            self.fail('No data given!')
+            return
+        # Login and get URL
+        self.gissmo_login()
+        self.browser.get(url)
+        self.browser.implicitly_wait(3)
+
+        # Prepare forms if needed
+        for click_path in click_paths:
+            link = self.browser.find_element_by_xpath(click_path)
+            link.click()
+
+        # Complete all fields
+        for field in fields:
+            self.fill_in_field(field)
+
+        # Wait a moment to permit a developer to see if any problem
+        time.sleep(3)
+
+        # Save form
+        input_save = self.browser.find_element_by_name('_save')
+        input_save.send_keys(Keys.ENTER)
+        self.browser.implicitly_wait(3)
+
     def add_item_in_admin(
             self,
             objectlisturl='/',
@@ -192,31 +243,16 @@ class FunctionalTest(LiveServerTestCase):
         'objectlisturl'.
         'fields' is a list of fields (InputField class)
         """
-        # Useless to do something without data
-        if not fields:
-            self.fail('No data given!')
-            return
-        # Login and get URL
-        self.gissmo_login()
         url = self.appurl + objectlisturl + 'add'
-        self.browser.get(url)
-        self.browser.implicitly_wait(3)
 
-        # Complete all fields and keep those that needs to be checked after
+        # Keep fields that needs to be checked after
         to_check_fields = []
         for field in fields:
-            self.fill_in_field(field)
-
             # aggregate fields to check
             if field.check:
                 to_check_fields.append(field)
 
-        # Wait a moment to permit a developer to see if any problem
-        time.sleep(3)
-
-        # Save form
-        input_save = self.browser.find_element_by_name('_save')
-        input_save.send_keys(Keys.ENTER)
+        self.fill_in_form(url, fields)
 
         if check:
             if not to_check_fields:

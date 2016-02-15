@@ -23,21 +23,23 @@ from station import actions as StationAction
 
 from gissmo.models import (
     Actor,
+    Built,
+    Chain,
+    Channel,
+    ChannelCode,
+    DataType,
     EquipModelDoc,
     Equipment,
     EquipModel,
     EquipDoc,
-    StationSite,
-    StationDoc,
-    Chain,
-    Channel,
-    ChannelCode,
-    Built,
-    DataType,
+    ForbiddenEquipmentModel,
+    IPAddress,
     Project,
     ProjectUser,
     ParameterEquip,
-    ParameterValue)
+    ParameterValue,
+    StationSite,
+    StationDoc)
 from gissmo.views import (
     equip_state_todate,
     equip_place_todate_id,
@@ -45,6 +47,7 @@ from gissmo.views import (
     available_station, available_built,
     available_equipment_scioper)
 from gissmo.tools import timezone_aware
+from gissmo.validators import validate_ipaddress
 
 
 class AdminFileWidget(forms.FileInput):
@@ -172,6 +175,16 @@ class EquipDocInlineForm(forms.ModelForm):
             )
 
 
+class IPAddressInlineForm(forms.ModelForm):
+    ip = forms.CharField(validators=[validate_ipaddress])
+
+    class Meta:
+        model = IPAddress
+        fields = [
+            "ip",
+            "netmask"]
+
+
 class InterventionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
@@ -245,6 +258,18 @@ class EquipModelForm(autocomplete_light.ModelForm):
         model = EquipModel
         fields = "__all__"
         autocomplete_fields = ('equip_type')
+
+
+class ForbiddenEquipmentModelForm(autocomplete_light.ModelForm):
+    """
+    Add autocomplete on these fields:
+      - original
+      - recommended
+    """
+    class Meta:
+        model = ForbiddenEquipmentModel
+        fields = ['original', 'recommended']
+        autocomplete_fields = ('original', 'recommended')
 
 
 class StationDocInlineForm(forms.ModelForm):
@@ -1214,7 +1239,7 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
         if index is not None:
             try:
-                channel_station_id = self.instance.station.id
+                channel_station_id = self.instance.station_id
                 channel_date = self.instance.start_date
                 form.fields['equip'] = forms.ModelChoiceField(
                     queryset=available_equipment_scioper(

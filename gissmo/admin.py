@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django import forms
 from django.contrib import (
@@ -12,11 +12,15 @@ from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
+from django.conf.urls import url
+from django.forms.formsets import formset_factory
+from django.shortcuts import redirect
 
 from gissmo.models import *  # NOQA
 from gissmo.forms import *  # NOQA
 from gissmo.views import *  # NOQA
 from gissmo.helpers import format_date
+from gissmo.validators import validate_equip_model
 
 
 class URLFieldWidget(AdminURLFieldWidget):
@@ -140,7 +144,8 @@ class EquipModelAdmin(admin.ModelAdmin):
     list_display = [
         'equip_supertype',
         'equip_type',
-        'equip_model_name']
+        'equip_model_name',
+        'have_a_manufacturer']
     list_display_links = ['equip_model_name']
     list_filter = [EquipModelFilter]
     ordering = [
@@ -154,7 +159,8 @@ class EquipModelAdmin(admin.ModelAdmin):
                   (
                       'equip_type',
                       'equip_model_name',
-                      'manufacturer')]})]
+                      'manufacturer',
+                      'is_network_model')]})]
 
     inlines = [EquipModelDocInline, ParameterEquipInline]
 
@@ -192,12 +198,22 @@ class EquipDocInline(admin.TabularInline):
         models.URLField: {'widget': URLFieldWidget},
     }
 
-"""
-Custom filter for the equipment change list
-"""
+
+class ServiceInline(admin.TabularInline):
+    model = Service
+    extra = 3
+
+
+class IPAddressInline(admin.TabularInline):
+    model = IPAddress
+    form = IPAddressInlineForm
+    extra = 1
 
 
 class EquipFilter(SimpleListFilter):
+    """
+    Custom filter for the equipment change list
+    """
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
     title = _('Supertype, Type or Model')
@@ -338,6 +354,138 @@ class EquipmentAdmin(admin.ModelAdmin):
 
     inlines = [EquipDocInline]
 
+    def changemodel_formset(self, equipment):
+        """
+        Formset factory that will create an Equipment change model form
+        with a list of Equipment's model that are compatible with the choosen
+        model.
+        """
+        class EquipmentChangeModelForm(forms.Form):
+            """
+            Forms that permit to give the new Equipment's Model for
+            a given Equipment.
+            Filtering regarding given equipment type.
+            """
+            equip_model = forms.ModelChoiceField(
+                queryset=EquipModel.objects.filter(
+                    equip_type=equipment.equip_model.equip_type),
+                label=_('New model'),
+                validators=[validate_equip_model])
+
+        return formset_factory(form=EquipmentChangeModelForm, )
+
+    def get_urls(self):
+        """
+        Add new 'changemodel' possibility
+        """
+        urls = super(EquipmentAdmin, self).get_urls()
+        my_urls = [
+            url(
+                r'^(.+)/changemodel/$',
+                self.changemodel_view_step1,
+                name='changemodel_step1'),
+            url(
+                r'^(.+)/changemodel/(.+)$',
+                self.changemodel_view_step2,
+                name='changemodel_step2'),
+        ]
+        return my_urls + urls
+
+    def changemodel_view_step1(self, request, equipment_id):
+        """
+        Display changemodel view that permits to change equipment's model for
+        a given Equipment ID.
+        """
+        # Default values
+        equips = Equipment.objects.filter(id=equipment_id).prefetch_related(
+            'chain_set__chainconfig_set__value__parameter',
+            'chain_set__chainconfig_set__channel__channel_code',
+            'chain_set__chainconfig_set__channel__network',
+            'chain_set__chainconfig_set__channel__station',)
+        equipment = equips[0]
+        title = _("Change equipment's model for: %(model)s (%(serial)s)" % {
+            'model': equipment.equip_model,
+            'serial': equipment.serial_number})
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+            equipment=equipment,
+        )
+        if request.method == 'POST':
+            # Deal with errors by instanciating the formset then fill in with
+            # given request.POST data
+            EquipmentFormSet = self.changemodel_formset(equipment)
+            formset = EquipmentFormSet(request.POST)
+            # If errors, show them
+            if not formset.is_valid():
+                context.update({'form': formset})
+            else:
+                # TODO: manage case where equipment model is emtpy with a
+                # specific view
+                for form in formset.cleaned_data:
+                    model = form.get('equip_model', None)
+                return redirect(reverse('admin:changemodel_step2', args=(equipment_id, model.id)))
+        else:
+            form = self.changemodel_formset(equipment)
+            context.update({'form': form})
+
+        return render(request, "changemodel_step1.html", context)
+
+    def changemodel_view_step2(self, request, equipment_id, model_id):
+        equips = Equipment.objects.filter(id=equipment_id).prefetch_related(
+            'chain_set__chainconfig_set__value__parameter',
+            'chain_set__chainconfig_set__parameter',
+            'chain_set__chainconfig_set__channel__channel_code',
+            'chain_set__chainconfig_set__channel__network',
+            'chain_set__chainconfig_set__channel__station',)
+        equipment = equips[0]
+        model = EquipModel.objects.get(pk=model_id)
+        title = _("Simulation from: %(model)s (%(serial)s), to: %(new_model)s" % {
+            'model': equipment.equip_model,
+            'serial': equipment.serial_number,
+            'new_model': model})
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+        )
+        modifications = changemodel_simulation(equipment, model)
+        elements, message = changemodel_display(modifications, equipment)
+        context.update({
+            'elements': elements,
+            'dynamic_states': [
+                'missing',
+                'new',
+                'conflict',
+            ],
+            'message': message,
+        })
+
+        return render(request, "changemodel_step2.html", context)
+
+    def _get_equipment_inlines_regarding_model(self, equip_model):
+        """
+        Only display IPAddress and Services Inlines if Equipment's Model
+        contains 'Contains network configuration' set to True.
+        """
+        res = self.inlines
+        inlines = [IPAddressInline, ServiceInline]
+        if equip_model.is_network_model is True:
+            [res.append(x) for x in inlines if x not in res]
+        else:
+            [res.remove(x) for x in inlines if x in res]
+        return res
+
+    def get_formsets_with_inlines(self, request, obj=None, **kwargs):
+        """
+        Change inlines regarding model content.
+        """
+        res = super(EquipmentAdmin, self).get_formsets_with_inlines(
+            request, obj, **kwargs)
+        if obj and obj.equip_model:
+            self.inlines = self._get_equipment_inlines_regarding_model(
+                obj.equip_model)
+        return res
+
     def get_queryset(self, request):
         """
         Show only equipment according to the user's project
@@ -392,6 +540,16 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                 instance.save()
             else:
                 formset.save()
+
+
+class ForbiddenEquipmentModelAdmin(admin.ModelAdmin):
+    list_display = [
+        'original',
+        'recommended']
+    ordering = ['original']
+    search_fields = ['original', 'recommended']
+    form = ForbiddenEquipmentModelForm
+
 
 ####
 #
@@ -843,6 +1001,10 @@ class ChannelAdmin(admin.ModelAdmin):
                 ('storage_format', 'clock_drift', 'calibration_units')],
             'classes': ['collapse']})]
 
+    search_fields = [
+        'network__code',
+        'station__station_code',
+        'channel_code__channel_code']
     inlines = [ChainInline, ChannelChainInline]
 
     class Media:
@@ -1146,6 +1308,7 @@ class ChannelCodeAdmin(admin.ModelAdmin):
 
     list_display = ['channel_code', 'presentation_rank', ]
 
+
 """
 Disabling the action "delete_selected" for all the site
 """
@@ -1163,6 +1326,7 @@ admin.site.register(Actor, ActorAdmin)
 
 admin.site.register(EquipModel, EquipModelAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
+admin.site.register(ForbiddenEquipmentModel, ForbiddenEquipmentModelAdmin)
 
 admin.site.register(StationSite, StationSiteAdmin)
 # admin.site.register(StationDoc, StationDocAdmin)
