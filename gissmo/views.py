@@ -22,7 +22,6 @@ from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
-from django.utils.translation import ugettext as _
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
@@ -176,7 +175,7 @@ def xhr_station_state(request):
         select_choice.insert(
             0, ({
                 "optionValue": '',
-                "optionDisplay": _('-- first select an action --')}))
+                "optionDisplay": '-- first select an action --'}))
         is_creer = action == StationAction.CREER
         is_installer = action == StationAction.INSTALLER
         prev_and_corr_actions = [
@@ -228,7 +227,7 @@ def available_equip_state(action):
     """
     # Prepare some values
     select_choice = [(c[0], c[1]) for c in EquipState.EQUIP_STATES]
-    select_choice.insert(0, ('', _('-- first select an action --')))
+    select_choice.insert(0, ('', '-- first select an action --'))
     if not isinstance(action, int):
         action = int(action)
     is_prev_dist = action == EquipAction.MAINT_PREV_DISTANTE
@@ -802,7 +801,7 @@ def xhr_station(request):
         else:
             select_choice = [{
                 "optionValue": "",
-                "optionDisplay": _("-- select a site --")}]
+                "optionDisplay": "-- select a site --"}]
         for station in station_dispo:
             select_choice.append(({
                 "optionValue": station.id,
@@ -1422,7 +1421,7 @@ def changemodel_display(modifications, equipment):
             nochannel_modifications.append(modif)
 
     if not channels:
-        msg = _('No channel found.')
+        msg = 'No channel found.'
         return [], msg
 
     # 'if' statement avoids problem with empty list in result

@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
 
 
 class ChangeModelModification(models.Model):
@@ -25,12 +24,12 @@ class ChangeModelModification(models.Model):
     MISSING = 5
 
     STATE_CHOICES = (
-        (NEUTRAL, _('neutral')),
-        (UNKNOWN, _('unknown')),
-        (NEW, _('new')),
-        (VALID, _('valid')),
-        (CONFLICT, _('conflict')),
-        (MISSING, _('missing')),
+        (NEUTRAL, 'neutral'),
+        (UNKNOWN, 'unknown'),
+        (NEW, 'new'),
+        (VALID, 'valid'),
+        (CONFLICT, 'conflict'),
+        (MISSING, 'missing'),
     )
 
     channel = models.ForeignKey('gissmo.Channel')
@@ -75,7 +74,7 @@ class ChangeModelModification(models.Model):
             return self.new_value.parameter.parametervalue_set.all()
         return []
 
-    _get_values.short_description = _('values')
+    _get_values.short_description = 'Values'
 
     values = property(_get_values)
 

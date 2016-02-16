@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.utils.translation import ugettext_lazy as _
 
 
 """
@@ -42,20 +41,20 @@ RETROUVER = 14
 METTRE_AU_REBUT = 15
 AUTRE = 16
 EQUIP_ACTIONS = (
-    (ACHETER, _('Buy')),
-    (TESTER, _('Test')),
-    (INSTALLER, _('Install')),
-    (DESINSTALLER, _('Uninstall')),
-    (CONSTATER_DEFAUT, _('Observe failure')),
-    (MAINT_PREV_DISTANTE, _('Perform remote preventive maintenance')),
-    (MAINT_CORR_DISTANTE, _('Perform remote corrective maintenance')),
-    (MAINT_PREV_SITE, _('Perform preventive maintenance locally')),
-    (MAINT_CORR_SITE, _('Perform corrective maintenance locally')),
-    (EXPEDIER, _('Send')),
-    (RECEVOIR, _('Receive')),
-    (METTRE_HORS_USAGE, _('Put is as out of use')),
-    (CONSTATER_DISPARITION, _('Observe that equipment is lost')),
-    (RETROUVER, _('Find it after being lost')),
-    (METTRE_AU_REBUT, _('Put it as waste')),
-    (AUTRE, _('Other')),
+    (ACHETER, 'Buy'),
+    (TESTER, 'Test'),
+    (INSTALLER, 'Install'),
+    (DESINSTALLER, 'Uninstall'),
+    (CONSTATER_DEFAUT, 'Observe failure'),
+    (MAINT_PREV_DISTANTE, 'Perform remote preventive maintenance'),
+    (MAINT_CORR_DISTANTE, 'Perform remote corrective maintenance'),
+    (MAINT_PREV_SITE, 'Perform preventive maintenance locally'),
+    (MAINT_CORR_SITE, 'Perform corrective maintenance locally'),
+    (EXPEDIER, 'Send'),
+    (RECEVOIR, 'Receive'),
+    (METTRE_HORS_USAGE, 'Put is as out of use'),
+    (CONSTATER_DISPARITION, 'Observe that equipment is lost'),
+    (RETROUVER, 'Find it after being lost'),
+    (METTRE_AU_REBUT, 'Put it as waste'),
+    (AUTRE, 'Other'),
 )

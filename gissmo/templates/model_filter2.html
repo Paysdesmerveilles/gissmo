@@ -1,5 +1,4 @@
-{% load i18n %}
-<h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
+<h3>By {{ title }}</h3>
 <select onchange="window.location=window.location.pathname+this.options[this.selectedIndex].value" style="width:160px">
 {% for choice in choices %}
     <option{% if choice.selected %} selected="selected"{% endif %}
@@ -7,7 +6,7 @@
 {% endfor %}
 </select>
 
-<h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
+<h3>By {{ title }}</h3>
 <ul>
 {% for choice in choices %}    
     {% if choice.query_string|slice:":9" == '?' %}<li{% if choice.selected %} class="selected"{% endif %}><a href="{{ choice.query_string|iriencode }}"><h2>{{ choice.display }}</h2></a></li>

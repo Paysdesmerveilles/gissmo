@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_static %}
+{% load admin_static %}
 {% load static from staticfiles %}
 
 {% block content %}
@@ -13,6 +13,6 @@
 <form action="" method="post">
   {% csrf_token %}
   {{ form }}<br />
-  <input type="submit" value="{% trans "Submit" %}" />
+  <input type="submit" value="Submit" />
 </form>
 {% endblock %}

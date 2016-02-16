@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.utils.translation import ugettext_lazy as _
 
 
 """
@@ -24,11 +23,11 @@ FERMEE = 5
 AUTRE = 6
 EN_TEST = 7
 STATION_STATES = (
-    (INSTALLATION, _('Installing')),
-    (EN_TEST, _('Testing')),
-    (OPERATION, _('Running')),
-    (DEFAUT, _('Broken')),
-    (PANNE, _('Failure')),
-    (FERMEE, _('Closed')),
-    (AUTRE, _('Other')),
+    (INSTALLATION, 'Installing'),
+    (EN_TEST, 'Testing'),
+    (OPERATION, 'Running'),
+    (DEFAUT, 'Broken'),
+    (PANNE, 'Failure'),
+    (FERMEE, 'Closed'),
+    (AUTRE, 'Other'),
 )

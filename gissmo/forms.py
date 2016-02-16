@@ -10,7 +10,6 @@ from django.db.models import Q
 from django.forms.widgets import CheckboxSelectMultiple
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
-from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
 import autocomplete_light
@@ -71,10 +70,10 @@ class AdminFileWidget(forms.FileInput):
         if value and hasattr(value, "url"):
             output.append(
                 '%s <a target="_blank" href="%s">%s</a> <br />%s ' % (
-                    _('Currently:'),
+                    'Currently:',
                     url,
                     value.name.split('/')[-1],
-                    _('Change:')))
+                    'Change:'))
         output.append(super(AdminFileWidget, self).render(name, value, attrs))
         return mark_safe(u''.join(output))
 
@@ -101,11 +100,11 @@ class ActorForm(forms.ModelForm):
             if User.objects.filter(username=actor.actor_name).exists():
                 if actor.actor_name != name:
                     raise forms.ValidationError(
-                        _('The name for this actor must stay : %s') %
+                        'The name for this actor must stay : %s' %
                         actor.actor_name)
             elif actor.actor_name == 'Inconnu' and name != 'Inconnu':
                 raise forms.ValidationError(
-                    _('The name for this actor must stay : Inconnu'))
+                    'The name for this actor must stay : Inconnu')
 
         # Always return the full collection of cleaned data.
         return cleaned_data
@@ -299,7 +298,7 @@ project only when it'a new station else hide the field and the label.
     """
     project = forms.ModelChoiceField(
         queryset=Project.objects.all(),
-        label=_('Project'),
+        label='Project',
         required=False)
 
     def __init__(self, *args, **kwargs):
@@ -359,8 +358,8 @@ project only when it'a new station else hide the field and the label.
             elevation is None
         if is_right_type and no_coordinates:
             raise forms.ValidationError(
-                _('Latitude, longitude and elevation are mandatory \
-for this kind of site: %s') % dict(StationSite.SITE_CHOICES)[site_type])
+                'Latitude, longitude and elevation are mandatory \
+for this kind of site: %s' % dict(StationSite.SITE_CHOICES)[site_type])
 
         # Always return the full collection of cleaned data.
         return cleaned_data
@@ -419,7 +418,7 @@ class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
 
         if form_number == 0 or form_number == delete_checked:
             raise forms.ValidationError(
-                _('At least 1 protagonist per intervention'))
+                'At least 1 protagonist per intervention')
 
 
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
@@ -447,14 +446,14 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             form.fields['equip'].initial = equip
 
         STATE_CHOICES = []
-        STATE_CHOICES.insert(0, ('', _('-- first select an action --')))
+        STATE_CHOICES.insert(0, ('', '-- first select an action --'))
 
         """
         Initialize form.fields
         """
         form.fields['equip'] = forms.ModelChoiceField(
             queryset=Equipment.objects.none(),
-            empty_label=_("-- first select an action --"),
+            empty_label="-- first select an action --",
             widget=forms.Select(
                 attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
         form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
@@ -462,10 +461,10 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             queryset=StationSite.objects.none(),
             widget=forms.Select(
                 attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}),
-            empty_label=_("-- first select an action --"))
+            empty_label="-- first select an action --")
         form.fields['built'] = forms.ModelChoiceField(
             queryset=Built.objects.none(),
-            empty_label=_("-- first select an action --"),
+            empty_label="-- first select an action --",
             required=False)
 
         """
@@ -518,7 +517,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             if value_is_1(action_id):
                 ACTION_CHOICES = [
                     (c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-                ACTION_CHOICES.insert(0, ('', _('-- select an action --')))
+                ACTION_CHOICES.insert(0, ('', '-- select an action --'))
             else:
                 """
                 The BUY action is not display
@@ -530,10 +529,10 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 """
                 ACTION_CHOICES = [
                     (c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-                ACTION_CHOICES.insert(0, ('', _('-- select an action --')))
+                ACTION_CHOICES.insert(0, ('', '-- select an action --'))
 
             ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-            ACTION_CHOICES.insert(0, ('', _('-- select an action --')))
+            ACTION_CHOICES.insert(0, ('', '-- select an action --'))
 
             """
             Filtering the queryset depending of the value
@@ -590,15 +589,10 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
         else:
             """
-            The BUY action is not permit
-            """
-            # ACTION_CHOICES = [
-            #     (c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS[1:]]
-            """
             The BUY action permitted
             """
             ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-            ACTION_CHOICES.insert(0, ('', _('-- select an action --')))
+            ACTION_CHOICES.insert(0, ('', '-- select an action --'))
 
             """
             Special case if we came from a specific equipment
@@ -607,25 +601,18 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 equip = get_object_or_404(Equipment, id=self.__initial[0])
                 form.fields['equip'] = forms.ModelChoiceField(
                     queryset=Equipment.objects.filter(id=self.__initial[0]),
-                    empty_label=_("-- first select an action --"),
+                    empty_label="-- first select an action --",
                     initial=equip,
                     widget=forms.Select(
                         attrs={
                             'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
-                # form.fields['equip'] = forms.ModelChoiceField(
-                #     queryset=Equipment.objects.filter(id=self.__initial[0]),
-                #     empty_label="-- choisir une action en premier --",
-                #     initial=equip)
             else:
                 form.fields['equip'] = forms.ModelChoiceField(
                     queryset=Equipment.objects.none(),
-                    empty_label=_("-- first select an action --"),
+                    empty_label="-- first select an action --",
                     widget=forms.Select(
                         attrs={
                             'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
-                # form.fields['equip'] = forms.ModelChoiceField(
-                #     queryset=Equipment.objects.none(),
-                #     empty_label="-- choisir une action en premier --")
 
         form.fields['equip_action'].widget = forms.Select(
             choices=ACTION_CHOICES,
@@ -729,7 +716,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
                 if errors != 0:
                     raise forms.ValidationError(
-                        _('%s equipment not present for this station: (%s)') %
+                        '%s equipment not present for this station: (%s)' %
                         (equip, intervention_station))
 
                 """
@@ -762,8 +749,8 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                         intervention_date,
                         int(intervention_id)) != EquipState.AUTRE):
                     raise forms.ValidationError(
-                        _("Disallowed action '%s' for equipment '%s' \
-(state: %s)") % (
+                        "Disallowed action '%s' for equipment '%s' \
+(state: %s)" % (
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1],
                             equip,
                             EquipState.EQUIP_STATES[equip_state_todate(
@@ -781,8 +768,8 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                         intervention_date,
                         int(intervention_id)) != EquipState.DISPONIBLE:
                     raise forms.ValidationError(
-                        _("Equipement '%s' should be available (%s instead) \
-for this action: %s") % (
+                        "Equipement '%s' should be available (%s instead) \
+for this action: %s" % (
                             equip,
                             EquipState.EQUIP_STATES[equip_state_todate(
                                 equip.id,
@@ -800,8 +787,8 @@ for this action: %s") % (
                         intervention_date,
                         int(intervention_id)) != EquipState.EN_TRANSIT:
                     raise forms.ValidationError(
-                        _("Equipement '%s' should be in transit \
-(% instead)") % (
+                        "Equipement '%s' should be in transit \
+(% instead)" % (
                             equip,
                             EquipState.EQUIP_STATES[equip_state_todate(
                                 equip.id,
@@ -818,7 +805,7 @@ for this action: %s") % (
                         intervention_date,
                         int(intervention_id)) != EquipState.DISPARU:
                     raise forms.ValidationError(
-                        _("Equipement '%s' not lost (%s instead)") % (
+                        "Equipement '%s' not lost (%s instead)" % (
                             equip, EquipState.EQUIP_STATES[equip_state_todate(
                                 equip.id,
                                 intervention_date,
@@ -841,8 +828,8 @@ for this action: %s") % (
                 equip_state_ok = latest_equip_state not in unauthorized_states
                 if action_allowed and equip_state_ok:
                     raise forms.ValidationError(
-                        _("Equipement '%s' should be either in failure or \
-broken (%s instead)") % (
+                        "Equipement '%s' should be either in failure or \
+broken (%s instead)" % (
                             equip,
                             EquipState.EQUIP_STATES[equip_state_todate(
                                 equip.id,
@@ -961,7 +948,7 @@ broken (%s instead)") % (
 
                 if errors != 0:
                     raise forms.ValidationError(
-                        _("Invalid final state (%s) for action: %s") % (
+                        "Invalid final state (%s) for action: %s" % (
                             EquipState.EQUIP_STATES[equip_state - 1][1],
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1]))
 
@@ -987,8 +974,8 @@ broken (%s instead)") % (
 
                 if errors != 0:
                     raise forms.ValidationError(
-                        _('Given action (%s) should be made on intervention \
-site (%s) instead of: %s') % (
+                        'Given action (%s) should be made on intervention \
+site (%s) instead of: %s' % (
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1],
                             intervention_station, target_station))
 
@@ -999,8 +986,8 @@ site (%s) instead of: %s') % (
                     target_station.site_type == StationSite.OBSERVATOIRE
                 if is_desinstall and not is_observatoire:
                     raise forms.ValidationError(
-                        _('Given action (%s) should be done. Then stock in an \
- OSU and not in: %s') % (
+                        'Given action (%s) should be done. Then stock in an \
+ OSU and not in: %s' % (
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1],
                             target_station))
 
@@ -1014,8 +1001,8 @@ site (%s) instead of: %s') % (
                     StationSite.AUTRE]
                 if is_expedier and type_site not in unallowed_sites:
                     raise forms.ValidationError(
-                        _("Given action (%s) should be done. Then send it \
-either to an OSU or a customer service or 'Other', it should not be: %s") % (
+                        "Given action (%s) should be done. Then send it \
+either to an OSU or a customer service or 'Other', it should not be: %s" % (
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1],
                             target_station))
 
@@ -1026,8 +1013,8 @@ either to an OSU or a customer service or 'Other', it should not be: %s") % (
                 site_is_neant = target_station.site_type
                 if (is_disparu or is_rebut) and not site_is_neant:
                     raise forms.ValidationError(
-                        _('You should apply this action (%s). Then add an \
-%s place. Not this one: %s') % (
+                        'You should apply this action (%s). Then add an \
+%s place. Not this one: %s' % (
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1],
                             StationSite.NEANT,
                             target_station))
@@ -1039,8 +1026,8 @@ either to an OSU or a customer service or 'Other', it should not be: %s") % (
                     target_station.site_type == StationSite.OBSERVATOIRE
                 if is_acheter and not site_is_observatoire:
                     raise forms.ValidationError(
-                        _("Given action (%s) should be done. Then indicate an \
-OSU. Not this one: %s") % (
+                        "Given action (%s) should be done. Then indicate an \
+OSU. Not this one: %s" % (
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1],
                             target_station))
 
@@ -1054,8 +1041,8 @@ OSU. Not this one: %s") % (
                     StationSite.SITE_TEST]
                 if is_disponible and type_site not in unallowed_sites:
                     raise forms.ValidationError(
-                        _("%s equipement should be only in either one station \
-or an OSU. Not this one: %s") % (
+                        "%s equipement should be only in either one station \
+or an OSU. Not this one: %s" % (
                             EquipState.EQUIP_STATES[equip_state - 1][1],
                             target_station))
 
@@ -1066,15 +1053,15 @@ or an OSU. Not this one: %s") % (
                         target_station.site_type != StationSite.STATION and
                         target_station.site_type != StationSite.SITE_TEST):
                     raise forms.ValidationError(
-                        _('%s equipement should be only in one station. Not \
-this one: %s') % (
+                        '%s equipement should be only in one station. Not \
+this one: %s' % (
                             EquipState.EQUIP_STATES[equip_state - 1][1],
                             target_station))
 
         # Check that there is no more than one action per equip
         if not (len(set(Liste_equip)) == len(Liste_equip)):
             raise forms.ValidationError(
-                _('Only one action per equipment!'))
+                'Only one action per equipment!')
 
 
 class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
@@ -1089,14 +1076,14 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
         if index:
             ACTION_CHOICES = [
                 (c[0], c[1]) for c in StationAction.STATION_ACTIONS]
-            ACTION_CHOICES.insert(0, ('', _('-- select an action --')))
+            ACTION_CHOICES.insert(0, ('', '-- select an action --'))
         else:
             ACTION_CHOICES = [
                 (c[0], c[1]) for c in StationAction.STATION_ACTIONS[1:]]
-            ACTION_CHOICES.insert(0, ('', _('-- select an action --')))
+            ACTION_CHOICES.insert(0, ('', '-- select an action --'))
 
         STATE_CHOICES = [(c[0], c[1]) for c in StationState.STATION_STATES]
-        STATE_CHOICES.insert(0, ('', _('-- first select an action --')))
+        STATE_CHOICES.insert(0, ('', '-- first select an action --'))
 
         url = reverse('xhr_station_state')
 
@@ -1182,7 +1169,7 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
 
                 if errors != 0:
                     raise forms.ValidationError(
-                        _('Invalid state (%s) for given action (%s)') %
+                        'Invalid state (%s) for given action (%s)' %
                         (
                             StationState.STATION_STATES[
                                 station_state - 1][1],
@@ -1218,11 +1205,11 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         Initialize form.fields
         """
         ORDER_CHOICES = [(c[0], c[1]) for c in Chain.ORDER_CHOICES]
-        ORDER_CHOICES.insert(0, ('', _('-- first select a type --')))
+        ORDER_CHOICES.insert(0, ('', '-- first select a type --'))
 
         form.fields['equip'] = forms.ModelChoiceField(
             queryset=Equipment.objects.none(),
-            empty_label=_("-- first select a type --"))
+            empty_label="-- first select a type --")
         form.fields['order'].widget = forms.Select(
             choices=ORDER_CHOICES,
             attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
@@ -1356,11 +1343,11 @@ class ChannelForm(forms.ModelForm):
                     l_fail,
                     v_fail,
                     u_fail]):
-                self.add_error('sample_rate', _("Sample rate unexpected."))
-                self.add_error('accept_anyway', _("Bypass error."))
+                self.add_error('sample_rate', "Sample rate unexpected.")
+                self.add_error('accept_anyway', "Bypass error.")
                 raise forms.ValidationError(
-                    _('Sample rate (%s) not in the range for this channel \
-code (%s)') % (rate, channel_code.channel_code))
+                    'Sample rate (%s) not in the range for this channel \
+code (%s)' % (rate, channel_code.channel_code))
         # Always return the full collection of cleaned data.
         return cleaned_data
 
@@ -1397,7 +1384,7 @@ class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
             widget=forms.Select(
                 attrs={
                     'onfocus': 'get_parameter_value(this,\'' + url1 + '\');'}),
-            empty_label=_("-- first select a parameter --"))
+            empty_label="-- first select a parameter --")
 
 
 class ChannelChainInlineFormset(forms.models.BaseInlineFormSet):

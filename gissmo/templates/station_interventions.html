@@ -1,16 +1,15 @@
-
 <fieldset class="module aligned collapse">
-  <h2>Interventions concernants le site (Dernier état : {{ intervs.0.5 }})</h2>
+  <h2>Site's interventions (Last state: {{ intervs.0.5 }})</h2>
    <table>
      <thead><tr>
-         <th>Date et heure</th>
+         <th>Date and time</th>
          <th>Note</th>
-         <th>Intervenants</th>
+         <th>Protagonists</th>
          <th>Action</th>
-         <th>Etat</th>
+         <th>State</th>
          <th>Note</th>
          <th>Equipement</th>
-         <th>Bati</th>
+         <th>Built</th>
      </tr></thead>
      <tbody>
      {% for interv, actor, stationaction, equipaction, countaction in intervs %}
@@ -96,6 +95,4 @@
      </tbody>
    </table>
 </fieldset>
-
-
 

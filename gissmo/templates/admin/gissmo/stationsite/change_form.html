@@ -1,5 +1,5 @@
 {% extends "admin/change_form.html" %}
-{% load i18n admin_static admin_modify %}
+{% load admin_static admin_modify %}
 {% load admin_urls %}
 {% load example_tags %}
 {% load static from staticfiles %}
@@ -33,13 +33,13 @@
 {% endblock %}
 
 {% block object-tools-items %}
-  <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}intervention/add/?station={{ object_id }}">{% trans "Add intervention" %}</a></li>
-  <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}channel/add/?station={{ object_id }}">{% trans "Add channel" %}</a></li>
-  <li><a href="{% url 'itineraire_maps' %}?Station={{ object_id }}">{% trans "Itinerary" %}</a></li>
-  <li><a href="{% url 'site_maps' %}?Station={{ object_id }}">{% trans "Stations map" %}</a></li>
+  <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}intervention/add/?station={{ object_id }}">Add intervention</a></li>
+  <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}channel/add/?station={{ object_id }}">Add channel</a></li>
+  <li><a href="{% url 'itineraire_maps' %}?Station={{ object_id }}">Itinerary</a></li>
+  <li><a href="{% url 'site_maps' %}?Station={{ object_id }}">Stations map</a></li>
   <li><a href="{% url 'station_xml' %}?Station={{ object_id }}">Station XML</a></li>
-  <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
-{% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+  <li><a href="history/" class="historylink">History</a></li>
+{% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">View on site</a></li>{% endif%}
 {% endblock %}
 
 {% block submit_buttons_bottom %}{% submit_row %}
