@@ -23,11 +23,11 @@ FERMEE = 5
 AUTRE = 6
 EN_TEST = 7
 STATION_STATES = (
-    (INSTALLATION, 'En installation'),
-    (EN_TEST, 'En test'),
-    (OPERATION, 'En opération'),
-    (DEFAUT, 'En défaillance'),
-    (PANNE, 'En panne'),
-    (FERMEE, 'Fermée'),
-    (AUTRE, 'Autre'),
+    (INSTALLATION, 'Installing'),
+    (EN_TEST, 'Testing'),
+    (OPERATION, 'Running'),
+    (DEFAUT, 'Broken'),
+    (PANNE, 'Failure'),
+    (FERMEE, 'Closed'),
+    (AUTRE, 'Other'),
 )

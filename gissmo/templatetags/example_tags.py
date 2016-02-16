@@ -3,32 +3,12 @@ from __future__ import unicode_literals
 
 from django import template
 from django.contrib.contenttypes.models import ContentType
-from django.utils.translation import ugettext_lazy as _
 
 from gissmo.models import *  # NOQA
 
 import operator
 
 register = template.Library()
-
-
-@register.inclusion_tag('station_states.html')
-def display_station_states(station_id):
-    states = []
-    states = IntervStation.objects.filter(
-        intervention__station__id=station_id,
-        station_state__isnull=False).order_by(
-            '-intervention__intervention_date')
-    return {'states': states}
-
-
-@register.inclusion_tag('station_actions.html')
-def display_station_actions(station_id):
-    actions = []
-    actions = IntervStation.objects.filter(
-        intervention__station__id=station_id).order_by(
-            '-intervention__intervention_date')
-    return {'actions': actions}
 
 
 @register.inclusion_tag('station_interventions.html')
@@ -44,7 +24,7 @@ def display_station_interventions(station_id):
     url_redirection = "admin:%s_intervention_change" % (content_type.app_label)
 
     # Station state
-    last_state = _('Unknown')
+    last_state = 'Unknown'
     i = IntervStation.objects.filter(
         intervention__station__id=station_id,
         station_state__isnull=False).order_by(
@@ -78,23 +58,11 @@ def display_station_interventions(station_id):
 
 @register.inclusion_tag('equip_states.html')
 def display_equip_states(equip_id):
-    """
-    """
     states = []
     states = IntervEquip.objects.filter(
         equip__id=equip_id,
         equip_state__isnull=False).order_by('-intervention__intervention_date')
     return {'states': states}
-
-
-@register.inclusion_tag('equip_actions.html')
-def display_equip_actions(equip_id):
-    """
-    """
-    actions = []
-    actions = IntervEquip.objects.filter(equip__id=equip_id).order_by(
-        '-intervention__intervention_date')
-    return {'actions': actions}
 
 
 @register.inclusion_tag('equip_interventions.html')
@@ -111,8 +79,6 @@ def display_equip_interventions(equip_id):
 
 @register.inclusion_tag('equip_locations.html')
 def display_equip_locations(equip_id):
-    """
-    """
     locations = []
     locations = IntervEquip.objects.filter(
         equip__id=equip_id,
@@ -319,22 +285,6 @@ def equip_last_station(equip_id):
         station = StationSite.objects.get(station_code='NEANT')
         liste.append(station.id)
     return {'locations': liste}
-
-#
-# Channel link chech it s use
-#
-#
-
-
-@register.inclusion_tag('channel_link.html')
-def channel_link(intervention_id):
-    intervention = Intervention.objects.get(id=intervention_id)
-    # Obtain the app_label
-    content_type = ContentType.objects.get_for_model(Intervention)
-    url_redirection = "admin:%s_protochannel_add" % (content_type.app_label)
-    return {
-        'station': intervention.station.id,
-        'url_redirection': url_redirection}
 
 
 @register.inclusion_tag('station_channels.html')

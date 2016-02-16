@@ -1,20 +1,20 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_static admin_list %}
+{% load admin_static admin_list %}
 {% load admin_urls %}
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
-        <a href="{% url 'admin:app_list' app_label='gissmo' %}">{% trans 'Gissmo' %}</a> &rsaquo;
-        <a href="{% url 'admin:gissmo_stationsite_changelist' %}">{% trans 'A1. Stations' %}</a> &rsaquo;
+        <a href="{% url 'admin:index' %}">Home</a> &rsaquo;
+        <a href="{% url 'admin:app_list' app_label='gissmo' %}">Gissmo</a> &rsaquo;
+        <a href="{% url 'admin:gissmo_stationsite_changelist' %}">Stations</a> &rsaquo;
         {% if ResStationUnique %}
           <a href="{% url 'admin:gissmo_stationsite_change' ResStationUnique.id %}">{{ResStationUnique.station_code}}</a> &rsaquo;
         {% endif %}
-        Carte des stations
+        Stations map
     </div>
 {% endblock %}
 
-{% block title %}Recherche des informations de la construction RESIF{% endblock %}
+{% block title %}Data search about RESIF builts{% endblock %}
 
 {% block content %}
 

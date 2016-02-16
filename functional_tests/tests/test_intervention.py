@@ -114,7 +114,8 @@ class InterventionTest(FunctionalTest):
         url = self.appurl + 'intervention/add'
         self.browser.get(url)
         # First he adds another intervention equipment
-        link = self.browser.find_element_by_xpath('//a[. = "Add another Interv equip"]')
+        link = self.browser.find_element_by_xpath(
+            '//a[. = "Add another Equipment intervention"]')
         link.click()
         self.browser.implicitly_wait(3)
         station = InputField(
@@ -126,7 +127,7 @@ class InterventionTest(FunctionalTest):
             content='2015-11-01')
         intervention_name = InputField(
             name='intervequip_set-0-equip_action',
-            content='Tester',
+            content='Test',
             _type=Select)
 
         fields = [
@@ -139,7 +140,8 @@ class InterventionTest(FunctionalTest):
             self.fill_in_field(field)
 
         # For right equipment to appear, we use tabulation key
-        testing_input = self.browser.find_element_by_name('intervequip_set-0-equip_action')
+        testing_input = self.browser.find_element_by_name(
+            'intervequip_set-0-equip_action')
         testing_input.send_keys(Keys.TAB)
 
         # Then he choose its equipment and set it to disponible
@@ -150,7 +152,7 @@ class InterventionTest(FunctionalTest):
         self.fill_in_field(equipment)
         state = InputField(
             name='intervequip_set-0-equip_state',
-            content='Disponible',
+            content='Available',
             _type=Select)
         self.fill_in_field(state)
 

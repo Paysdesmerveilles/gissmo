@@ -22,7 +22,6 @@ from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
-from django.utils.translation import ugettext as _
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
@@ -158,15 +157,25 @@ def xhr_station_state(request):
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
 
+        def get_choices(states=[]):
+            res = []
+            for state in states:
+                display = dict(StationState.STATION_STATES)[state]
+                choice = {
+                    'optionValue': state,
+                    'optionDisplay': str(display)}
+                res.append(choice)
+            return res
+
         action = request.GET.get('action', '')
         if not isinstance(action, int):
             action = int(action)
-        select_choice = [({"optionValue": c[0], "optionDisplay": c[1]})
+        select_choice = [({"optionValue": c[0], "optionDisplay": str(c[1])})
                          for c in StationState.STATION_STATES]
         select_choice.insert(
             0, ({
                 "optionValue": '',
-                "optionDisplay": '-- choisir une action en premier --'}))
+                "optionDisplay": '-- first select an action --'}))
         is_creer = action == StationAction.CREER
         is_installer = action == StationAction.INSTALLER
         prev_and_corr_actions = [
@@ -175,60 +184,28 @@ def xhr_station_state(request):
             StationAction.MAINT_PREV_SITE,
             StationAction.MAINT_CORR_SITE]
         if is_creer or is_installer:
-            select_choice = [{
-                "optionValue": StationState.INSTALLATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.INSTALLATION]}]
+            select_choice = get_choices([StationState.INSTALLATION])
         elif action == StationAction.DEBUTER_TEST:
-            select_choice = [{
-                "optionValue": StationState.EN_TEST,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.EN_TEST]}]
-            select_choice.append({
-                "optionValue": StationState.OPERATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.OPERATION]})
+            select_choice = get_choices([
+                StationState.EN_TEST,
+                StationState.OPERATION])
         elif action == StationAction.TERMINER_TEST:
-            select_choice = [{
-                "optionValue": StationState.FERMEE,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.FERMEE]}]
-            select_choice.append({
-                "optionValue": StationState.OPERATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.OPERATION]})
+            select_choice = get_choices([
+                StationState.FERMEE,
+                StationState.OPERATION])
         elif action == StationAction.OPERER:
-            select_choice = [{
-                "optionValue": StationState.OPERATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.OPERATION]}]
+            select_choice = get_choices([StationState.OPERATION])
         elif action == StationAction.CONSTATER_DEFAUT:
-            select_choice = [{
-                "optionValue": StationState.DEFAUT,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.DEFAUT]}]
-            select_choice.append({
-                "optionValue": StationState.PANNE,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.PANNE]})
+            select_choice = get_choices([
+                StationState.DEFAUT,
+                StationState.PANNE])
         elif action in prev_and_corr_actions:
-            select_choice = [{
-                "optionValue": StationState.OPERATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.OPERATION]}]
-            select_choice.append({
-                "optionValue": StationState.DEFAUT,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.DEFAUT]})
-            select_choice.append({
-                "optionValue": StationState.PANNE,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.PANNE]})
+            select_choice = get_choices([
+                StationState.OPERATION,
+                StationState.DEFAUT,
+                StationState.PANNE])
         elif action == StationAction.DEMANTELER:
-            select_choice = [{
-                "optionValue": StationState.FERMEE,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.FERMEE]}]
+            select_choice = get_choices([StationState.FERMEE])
         elif action == StationAction.AUTRE:
             pass
         else:
@@ -250,7 +227,7 @@ def available_equip_state(action):
     """
     # Prepare some values
     select_choice = [(c[0], c[1]) for c in EquipState.EQUIP_STATES]
-    select_choice.insert(0, ('', '-- choisir une action en premier --'))
+    select_choice.insert(0, ('', '-- first select an action --'))
     if not isinstance(action, int):
         action = int(action)
     is_prev_dist = action == EquipAction.MAINT_PREV_DISTANTE
@@ -370,7 +347,7 @@ def xhr_equip_state(request):
     if request.is_ajax() and request.method == 'GET':
         action = request.GET.get('action', '')
 
-        select_choice = [({"optionValue": c[0], "optionDisplay": c[1]})
+        select_choice = [({"optionValue": c[0], "optionDisplay": str(c[1])})
                          for c in available_equip_state(action)]
         data = json.dumps(select_choice)
 
@@ -824,7 +801,7 @@ def xhr_station(request):
         else:
             select_choice = [{
                 "optionValue": "",
-                "optionDisplay": "-- choisir un site --"}]
+                "optionDisplay": "-- select a site --"}]
         for station in station_dispo:
             select_choice.append(({
                 "optionValue": station.id,
@@ -881,7 +858,7 @@ def available_equipment_scioper(station, date):
     equipment_list = []
     if not isinstance(station, int):
         station = int(station)
-    # TODO find a better way to filter
+    # TODO: find a better way to filter
     # Not the best way to filter
     # If the supertype name change we have to change the code too
     a = "01. Scientifique"
@@ -1444,7 +1421,7 @@ def changemodel_display(modifications, equipment):
             nochannel_modifications.append(modif)
 
     if not channels:
-        msg = _('No channel found.')
+        msg = 'No channel found.'
         return [], msg
 
     # 'if' statement avoids problem with empty list in result

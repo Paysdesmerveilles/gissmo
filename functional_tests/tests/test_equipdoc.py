@@ -129,7 +129,7 @@ class EquipDocTest(FunctionalTest):
             self.fill_in_field(field)
 
         # We add a new Equipment Document area to input a new document
-        link = self.browser.find_element_by_xpath("//a[. = \"Add another Document de l'equipement\"]")
+        link = self.browser.find_element_by_xpath("//a[. = \"Add another Document (equip.)\"]")
         link.click()
         self.browser.implicitly_wait(3)
 
