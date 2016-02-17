@@ -1,10 +1,12 @@
 Current version (1.5-trunk):
+  - Change application to be not translatable and only in English
+  - New "Change Model" button to simulate a change of model on a given equipment
   - New field on Equipment's Model: "Manufacturer?" that informs user if
   Manufacturer was forgotten. By default Manufacturer is "Unknown"
   - Set API to v1 version to prevent future changes on it in few Gissmo versions
   - Equipments display Services and IPAddresses only if Equipments'Model have a
   field named "Could contains network configuration?" set to True
-  - Equipment's Model have now a new field: "Could contains network configuration?"
+  - Equipment's Model have now a new field: "Network configurable?"
   - API is available only for a given whitelist IPs
   - API is read only
   - Scripts showing how to use the API are available in 
