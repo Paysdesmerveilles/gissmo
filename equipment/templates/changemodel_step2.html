@@ -1,0 +1,77 @@
+{% extends "admin/base_site.html" %}
+{% load admin_static %}
+
+{% block content %}
+<style>
+tr.neutral  { color: black; }
+tr.valid    { color: darkgreen; }
+tr.conflict { color: red; }
+tr.new      { color: blue; }
+tr.missing  { color: lightcoral; }
+td.center { text-align: center; }
+</style>
+<h3>Impacted channel</h3>
+<p>Here you can see the difference between old equipment's model parameters and new ones.</p>
+{% if elements %}
+    <ul>
+    {% for channel in elements %}
+    <li><a href="{% url 'admin:gissmo_chain_change' channel.2 %}?channel={{ channel.1 }}">{{ channel.0 }}</a>
+        <table>
+          <tr>
+            <th>Parameter</th>
+            <th>Current</th>
+            <th>New</th>
+            <th>State</th>
+            <th>Available new values</th>
+          </tr>
+          {% for modification in channel.3 %}
+          <tr class="{{ modification.get_state_display }}">
+            <td>{{ modification.name }}</td>
+            <td>{{ modification.old_value|default:"" }}</td>
+            <td>{{ modification.new_value|default:"" }}</td>
+            <td class="center">{{ modification.get_state_display }}</td>
+            <td>
+              {% for value in modification.values %}
+                {{ value.value }}<br />
+              {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </li>
+    {% endfor %}
+    </ul>
+{% else %}
+<p>{{ message }}</p>
+{% endif %}
+<p style="color: red;">Don't forget to CHANGE MODEL after changes on each channel!</p>
+
+<h3>Legend</h3>
+<table>
+  <tr>
+    <th>State</th>
+    <th>Signification</th>
+  </tr>
+  <tr class="neutral">
+    <td>neutral</td>
+    <td>We keep the old value. New default one is equal.</td>
+  </tr>
+  <tr class="valid">
+    <td>valid</td>
+    <td>We keep the old value. This one is available in available new values.</td>
+  </tr>
+  <tr class="conflict">
+    <td>conflict</td>
+    <td>New value needed as the old one is not available in new values!</td>
+  </tr>
+  <tr class="new">
+    <td>new</td>
+    <td>We will create a new parameter with a new default value. Execpt if you exclude it.</td>
+  </tr>
+  <tr class="missing">
+    <td>missing</td>
+    <td>We will discard this parameter. Except you include it.</td>
+  </tr>
+</table>
+
+{% endblock %}

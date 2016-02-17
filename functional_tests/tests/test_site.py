@@ -6,7 +6,8 @@ from selenium.webdriver.support.ui import Select
 from gissmo.models import (
     Actor,
     Project,
-    ProjectUser)
+    ProjectUser,
+    StationSite)
 
 
 class StationSiteTest(FunctionalTest):
@@ -32,14 +33,25 @@ class StationSiteTest(FunctionalTest):
         # Link last ProjectUser to ADEME
         self.projectuser.project.add(self.project)
 
+    def get_site_choice_name(self, number):
+        res = ''
+        if not number or number > 7:
+            return res
+        for element in StationSite.SITE_CHOICES:
+            if element[0] == number:
+                res = element[1]
+                break
+        return res
+
     def test_stationsite_creation(self):
         """
         Check a simple Site creation
         """
         # Hey guys, we forget to create the EOST place!
+        observatory = self.get_site_choice_name(StationSite.OBSERVATOIRE)
         site_type = InputField(
             name='site_type',
-            content='Observatoire',
+            content=observatory,
             _type=Select)
         code = InputField(
             name='station_code',

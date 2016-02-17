@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django import forms
 from django.contrib import (
@@ -11,12 +11,15 @@ from django.forms import Textarea
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.utils.functional import curry
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.conf.urls import url
+from django.forms.formsets import formset_factory
+from django.shortcuts import redirect
 
 from gissmo.models import *  # NOQA
 from gissmo.forms import *  # NOQA
 from gissmo.views import *  # NOQA
 from gissmo.helpers import format_date
+from gissmo.validators import validate_equip_model
 
 
 class URLFieldWidget(AdminURLFieldWidget):
@@ -47,12 +50,6 @@ class ActorAdmin(admin.ModelAdmin):
     search_fields = ['actor_name']
 
 
-class BuiltAdmin(admin.ModelAdmin):
-    list_display = ['station', 'built_type', 'built_short_desc']
-    ordering = ['station']
-    search_fields = ['station__station_code']
-
-
 class EquipModelDocInline(admin.TabularInline):
     model = EquipModelDoc
     fields = ('document_type', 'document_title', 'begin_effective',
@@ -65,12 +62,6 @@ class EquipModelDocInline(admin.TabularInline):
     formfield_overrides = {
         models.URLField: {'widget': URLFieldWidget},
     }
-
-"""
-class ParamEquipModelInline(admin.TabularInline):
-    model = ParamEquipModel
-    extra = 0
-"""
 
 
 class ParameterEquipInline(admin.TabularInline):
@@ -85,7 +76,7 @@ Custom filter for the equipment model change list
 class EquipModelFilter(SimpleListFilter):
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
-    title = _('Supertype or Type')
+    title = 'Supertype or Type'
 
     # Parameter for the filter that will be used in the URL query.
     # I use cf as the parameter_name for the custom filter
@@ -113,12 +104,12 @@ class EquipModelFilter(SimpleListFilter):
         """
         for equip_supertype in Equip_Supertype:
             Liste.append(('Stype_' + str(equip_supertype.id),
-                          _(equip_supertype.equip_supertype_name)))
+                          equip_supertype.equip_supertype_name))
             Equip_Type = EquipType.objects.filter(
                 equip_supertype=equip_supertype).order_by('equip_type_name')
             for equip_type in Equip_Type:
                 Liste.append(('Type__' + str(equip_type.id),
-                              _(equip_type.equip_type_name)))
+                              equip_type.equip_type_name))
         return Liste
 
     def queryset(self, request, queryset):
@@ -140,7 +131,8 @@ class EquipModelAdmin(admin.ModelAdmin):
     list_display = [
         'equip_supertype',
         'equip_type',
-        'equip_model_name']
+        'equip_model_name',
+        'have_a_manufacturer']
     list_display_links = ['equip_model_name']
     list_filter = [EquipModelFilter]
     ordering = [
@@ -154,7 +146,8 @@ class EquipModelAdmin(admin.ModelAdmin):
                   (
                       'equip_type',
                       'equip_model_name',
-                      'manufacturer')]})]
+                      'manufacturer',
+                      'is_network_model')]})]
 
     inlines = [EquipModelDocInline, ParameterEquipInline]
 
@@ -192,15 +185,25 @@ class EquipDocInline(admin.TabularInline):
         models.URLField: {'widget': URLFieldWidget},
     }
 
-"""
-Custom filter for the equipment change list
-"""
+
+class ServiceInline(admin.TabularInline):
+    model = Service
+    extra = 3
+
+
+class IPAddressInline(admin.TabularInline):
+    model = IPAddress
+    form = IPAddressInlineForm
+    extra = 1
 
 
 class EquipFilter(SimpleListFilter):
+    """
+    Custom filter for the equipment change list
+    """
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
-    title = _('Supertype, Type or Model')
+    title = 'Supertype, Type or Model'
 
     # Parameter for the filter that will be used in the URL query.
     # I use cf as the parameter_name for the custom filter
@@ -228,17 +231,17 @@ class EquipFilter(SimpleListFilter):
        """
         for equip_supertype in Equip_Supertype:
             liste.append(('Stype_' + str(equip_supertype.id),
-                          _(equip_supertype.equip_supertype_name)))
+                          equip_supertype.equip_supertype_name))
             Equip_Type = EquipType.objects.filter(
                 equip_supertype=equip_supertype).order_by('equip_type_name')
             for equip_type in Equip_Type:
                 liste.append(('Type__' + str(equip_type.id),
-                              _(equip_type.equip_type_name)))
+                              equip_type.equip_type_name))
                 Equip_Model = EquipModel.objects.filter(
                     equip_type=equip_type).order_by('equip_model_name')
                 for equip_model in Equip_Model:
                     liste.append(('Model_' + str(equip_model.id),
-                                  _(equip_model.equip_model_name)))
+                                  equip_model.equip_model_name))
         return liste
 
     def queryset(self, request, queryset):
@@ -262,7 +265,7 @@ class EquipFilter(SimpleListFilter):
 class OwnerFilter(SimpleListFilter):
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
-    title = _('owner')
+    title = 'Owner'
 
     # Parameter for the filter that will be used in the URL query.
     parameter_name = 'owner'
@@ -327,16 +330,149 @@ class EquipmentAdmin(admin.ModelAdmin):
                     'owner',
                     'purchase_date',
                     'stockage_site')]}),
-        ('Information sur les contacts', {
+        ('Contacts', {
             'fields': [
-                ('vendor',
+                (
+                    'vendor',
                     'contact')],
             'classes': ['collapse']}),
-        ('Informations complementaires', {
+        ('Further information', {
             'fields': [('note')],
             'classes': ['collapse']})]
 
     inlines = [EquipDocInline]
+
+    def changemodel_formset(self, equipment):
+        """
+        Formset factory that will create an Equipment change model form
+        with a list of Equipment's model that are compatible with the choosen
+        model.
+        """
+        class EquipmentChangeModelForm(forms.Form):
+            """
+            Forms that permit to give the new Equipment's Model for
+            a given Equipment.
+            Filtering regarding given equipment type.
+            """
+            equip_model = forms.ModelChoiceField(
+                queryset=EquipModel.objects.filter(
+                    equip_type=equipment.equip_model.equip_type),
+                label='New model',
+                validators=[validate_equip_model])
+
+        return formset_factory(form=EquipmentChangeModelForm, )
+
+    def get_urls(self):
+        """
+        Add new 'changemodel' possibility
+        """
+        urls = super(EquipmentAdmin, self).get_urls()
+        my_urls = [
+            url(
+                r'^(.+)/changemodel/$',
+                self.changemodel_view_step1,
+                name='changemodel_step1'),
+            url(
+                r'^(.+)/changemodel/(.+)$',
+                self.changemodel_view_step2,
+                name='changemodel_step2'),
+        ]
+        return my_urls + urls
+
+    def changemodel_view_step1(self, request, equipment_id):
+        """
+        Display changemodel view that permits to change equipment's model for
+        a given Equipment ID.
+        """
+        # Default values
+        equips = Equipment.objects.filter(id=equipment_id).prefetch_related(
+            'chain_set__chainconfig_set__value__parameter',
+            'chain_set__chainconfig_set__channel__channel_code',
+            'chain_set__chainconfig_set__channel__network',
+            'chain_set__chainconfig_set__channel__station',)
+        equipment = equips[0]
+        title = "Change equipment's model for: %(model)s (%(serial)s)" % {
+            'model': equipment.equip_model,
+            'serial': equipment.serial_number}
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+            equipment=equipment,
+        )
+        if request.method == 'POST':
+            # Deal with errors by instanciating the formset then fill in with
+            # given request.POST data
+            EquipmentFormSet = self.changemodel_formset(equipment)
+            formset = EquipmentFormSet(request.POST)
+            # If errors, show them
+            if not formset.is_valid():
+                context.update({'form': formset})
+            else:
+                # TODO: manage case where equipment model is emtpy with a
+                # specific view
+                for form in formset.cleaned_data:
+                    model = form.get('equip_model', None)
+                return redirect(reverse('admin:changemodel_step2', args=(equipment_id, model.id)))
+        else:
+            form = self.changemodel_formset(equipment)
+            context.update({'form': form})
+
+        return render(request, "changemodel_step1.html", context)
+
+    def changemodel_view_step2(self, request, equipment_id, model_id):
+        equips = Equipment.objects.filter(id=equipment_id).prefetch_related(
+            'chain_set__chainconfig_set__value__parameter',
+            'chain_set__chainconfig_set__parameter',
+            'chain_set__chainconfig_set__channel__channel_code',
+            'chain_set__chainconfig_set__channel__network',
+            'chain_set__chainconfig_set__channel__station',)
+        equipment = equips[0]
+        model = EquipModel.objects.get(pk=model_id)
+        title = "Simulation from: %(model)s (%(serial)s), to: %(new_model)s" % {
+            'model': equipment.equip_model,
+            'serial': equipment.serial_number,
+            'new_model': model}
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+        )
+        modifications = changemodel_simulation(equipment, model)
+        elements, message = changemodel_display(modifications, equipment)
+        context.update({
+            'elements': elements,
+            'dynamic_states': [
+                'missing',
+                'new',
+                'conflict',
+            ],
+            'message': message,
+        })
+
+        return render(request, "changemodel_step2.html", context)
+
+    def _get_equipment_inlines_regarding_model(self, equip_model):
+        """
+        Only display IPAddress and Services Inlines if Equipment's Model
+        contains 'Contains network configuration' set to True.
+        """
+        res = self.inlines
+        inlines = [IPAddressInline, ServiceInline]
+        if equip_model.is_network_model is True:
+            [res.append(x) for x in inlines if x not in res]
+        else:
+            [res.remove(x) for x in inlines if x in res]
+        return res
+
+    def get_formsets_with_inlines(self, request, obj=None, **kwargs):
+        """
+        Change inlines regarding model content.
+        """
+        res = super(EquipmentAdmin, self).get_formsets_with_inlines(
+            request, obj, **kwargs)
+        if obj and obj.equip_model:
+            self.inlines = self._get_equipment_inlines_regarding_model(
+                obj.equip_model)
+        return res
 
     def get_queryset(self, request):
         """
@@ -393,6 +529,16 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
             else:
                 formset.save()
 
+
+class ForbiddenEquipmentModelAdmin(admin.ModelAdmin):
+    list_display = [
+        'original',
+        'recommended']
+    ordering = ['original']
+    search_fields = ['original', 'recommended']
+    form = ForbiddenEquipmentModelForm
+
+
 ####
 #
 # StationAdmin's section
@@ -431,7 +577,7 @@ Custom filter for the stationsite change list
 class StationSiteFilter(SimpleListFilter):
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
-    title = _('Operateur')
+    title = 'Operator'
 
     # Parameter for the filter that will be used in the URL query.
     # I use cf as the parameter_name for the custom filter
@@ -457,7 +603,7 @@ class StationSiteFilter(SimpleListFilter):
        Tree presentation of the filter choice.
        """
         for operator in Operator:
-            Liste.append(((str(operator.id)), _(operator.actor_name)))
+            Liste.append(((str(operator.id)), operator.actor_name))
         return Liste
 
     def queryset(self, request, queryset):
@@ -485,7 +631,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     form = StationSiteForm
 
     fieldsets = [
-        ('Information sur le site', {
+        ('General informations', {
             'fields': [
                 ('site_type',
                     'station_code',
@@ -496,19 +642,19 @@ class StationSiteAdmin(admin.ModelAdmin):
                     'project'),
                 ('latitude', 'longitude', 'elevation'),
                 ('geology')]}),
-        ('Information sur les contacts', {
+        ('Contacts', {
             'fields': [('contact')],
             'classes': ['collapse']}),
-        ('Adresse du site', {
+        ('Address', {
             'fields': [
                 ('site_description'),
                 ('address', 'zip_code', 'town'),
                 ('county', 'region', 'country')],
             'classes': ['collapse']}),
-        ('Autre information pertinente', {
+        ('Other relevant informations', {
             'fields': [('note'), ('private_link')],
             'classes': ['collapse']}),
-        ('Informations complementaires', {
+        ('Further informations', {
             'fields': [
                 ('station_description'),
                 ('alternate_code', 'historical_code', 'restricted_status')],
@@ -611,8 +757,6 @@ class IntervStationInline(admin.TabularInline):
     extra = 0
     max_num = 1
     formset = IntervStationInlineFormset
-#    Test of the modified tabular template to hide the Add at the inline
-#    template = 'tabulartest.html'
 
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
@@ -623,11 +767,8 @@ class IntervEquipInline(admin.TabularInline):
     model = IntervEquip
     extra = 0
     formset = IntervEquipInlineFormset
-#    readonly_fields=['equip', 'station', 'built', 'note',]
 
     def get_formset(self, request, obj=None, **kwargs):
-        """ Pourquoi est-ce que station est necessaire """
-        # station = request.GET.get('station', '')  # variable never used?
         equip = request.GET.get('equip', '')
         initial = []
         initial.append(equip)
@@ -673,7 +814,7 @@ class InterventionAdmin(admin.ModelAdmin):
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
+            messages.success(request, 'Element successfully modified')
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -687,7 +828,7 @@ class InterventionAdmin(admin.ModelAdmin):
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
+            messages.success(request, 'Element successfully added')
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -702,7 +843,7 @@ class InterventionAdmin(admin.ModelAdmin):
     def format_date(self, obj):
         return format_date(obj.intervention_date)
 
-    format_date.short_description = 'Date (aaaa-mm-jj hh24:mi)'
+    format_date.short_description = 'Date (yyyy-mm-dd HH24:MM)'
     format_date.admin_order_field = 'intervention_date'
 
 
@@ -751,27 +892,6 @@ class ChainInline(admin.TabularInline):
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
     }
 
-"""
-class ChainConfigInline(admin.TabularInline):
-    model = ChainConfig
-    extra = 0
-#    formset = ChainConfigInlineFormset
-
-    fields = ('parameter', 'value')
-
-    # Hack to pass the channel id to the formset
-#    def get_formset(self, request, obj=None, **kwargs):
-#        channel = request.GET.get('channel', '')
-#        initial = []
-#        initial.append(channel)
-#        formset = super(ChainConfigInline, self).get_formset(
-#            request,
-#            obj,
-#            **kwargs)
-#        formset.__init__ = curry(formset.__init__, initial=initial)
-#        return formset
-"""
-
 
 class ChainConfigInline(admin.TabularInline):
     model = ChainConfig
@@ -787,7 +907,6 @@ class ChannelChainInline(admin.TabularInline):
     max_num = 0
     formset = ChannelChainInlineFormset
 
-#    readonly_fields = ['chain']
     fields = ('chain', 'parameter', 'value')
 
     def formfield_for_dbfield(self, db_field, **kwargs):
@@ -795,7 +914,6 @@ class ChannelChainInline(admin.TabularInline):
         if db_field.name == 'chain':
             kwargs['widget'] = forms.TextInput(
                 attrs={'readonly': 'readonly', 'style': 'width: 1px'})
-#            kwargs['widget'] = forms.HiddenInput()
             kwargs.pop('request', None)  # erreur sinon
             return db_field.formfield(**kwargs)
         return super(ChannelChainInline, self).formfield_for_dbfield(
@@ -833,16 +951,20 @@ class ChannelAdmin(admin.ModelAdmin):
                     'azimuth',
                     'dip'),
                 ('sample_rate', 'accept_anyway', 'start_date', 'end_date')]}),
-        ('Types des donnees produites', {
+        ('Produced data types', {
             'fields': [('data_type')],
             'classes': ['collapse']}),
-        ('Informations complementaires', {
+        ('Further informations', {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status'),
                 ('storage_format', 'clock_drift', 'calibration_units')],
             'classes': ['collapse']})]
 
+    search_fields = [
+        'network__code',
+        'station__station_code',
+        'channel_code__channel_code']
     inlines = [ChainInline, ChannelChainInline]
 
     class Media:
@@ -920,8 +1042,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         is_continue = '_continue' in request.POST
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
+        msg = 'Element successfully modified'
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
+            messages.success(request, msg)
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -929,7 +1052,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                 args=(obj.station.id,)))
         else:
             if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement modifié')
+                messages.success(request, msg)
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(ChannelAdmin, self).response_change(request, obj)
@@ -938,8 +1061,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         is_continue = '_continue' in request.POST
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
+        msg = 'Element successfully added'
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
+            messages.success(request, msg)
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -949,7 +1073,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
             # This makes the response go to the newly created model's change
             # page without using reverse
             if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement ajouté')
+                messages.success(request, msg)
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(ChannelAdmin, self).response_add(
@@ -1001,8 +1125,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         is_continue = '_continue' in request.POST
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
+        msg = 'Element successfully modified'
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement modifié')
+            messages.success(request, msg)
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -1010,7 +1135,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                 args=(obj.channel.id,)))
         else:
             if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement modifié')
+                messages.success(request, msg)
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(ChainAdmin, self).response_change(request, obj)
@@ -1019,8 +1144,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         is_continue = '_continue' in request.POST
         is_saveas = '_saveasnew' in request.POST
         is_add = '_addanother' in request.POST
+        msg = "Element successfully added"
         if not is_continue and not is_saveas and not is_add:
-            messages.success(request, 'Enregistrement ajouté')
+            messages.success(request, msg)
             # Trick to get the app label
             content_type = ContentType.objects.get_for_model(obj.__class__)
             return HttpResponseRedirect(reverse(
@@ -1030,7 +1156,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
             # This makes the response go to the newly created model's change
             # page without using reverse
             if '_saveasnew' in request.POST:
-                messages.success(request, 'Enregistrement ajouté')
+                messages.success(request, msg)
                 return HttpResponseRedirect("../%s" % obj.id)
             else:
                 return super(ChainAdmin, self).response_add(
@@ -1051,7 +1177,7 @@ class NetworkAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ('', {'fields': [('network_code', 'start_date', 'end_date'), ]}),
-        ('Informations complementaires', {
+        ('Further informations', {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status')],
@@ -1072,7 +1198,9 @@ class ProjectAdmin(admin.ModelAdmin):
 
     def delete_model(self, request, obj):
         if obj.project_name == 'ALL':
-            messages.error(request, 'Delete of the project ALL is forbidden')
+            messages.error(
+                request,
+                'Delete of the project ALL is forbidden')
         else:
             obj.delete()
             return super(ProjectAdmin, self).delete_model(request, obj)
@@ -1146,6 +1274,7 @@ class ChannelCodeAdmin(admin.ModelAdmin):
 
     list_display = ['channel_code', 'presentation_rank', ]
 
+
 """
 Disabling the action "delete_selected" for all the site
 """
@@ -1154,44 +1283,22 @@ admin.site.disable_action('delete_selected')
 
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
-# admin.site.register(ProtoConfig)
-
-
 admin.site.register(Actor, ActorAdmin)
-# admin.site.register(Built, BuiltAdmin)
-# admin.site.register(BuiltType)
-
 admin.site.register(EquipModel, EquipModelAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
-
+admin.site.register(ForbiddenEquipmentModel, ForbiddenEquipmentModelAdmin)
 admin.site.register(StationSite, StationSiteAdmin)
-# admin.site.register(StationDoc, StationDocAdmin)
-# admin.site.register(EquipModelDoc, EquipModelDocAdmin)
-# admin.site.register(EquipDoc, EquipDocAdmin)
-
-# admin.site.register(AcquisitionChain,AcquisitionChainAdmin)
-# admin.site.register(ChainComponent)
-# admin.site.register(Channel, ChannelAdmin)
-
 admin.site.register(Network, NetworkAdmin)
 admin.site.register(BuiltType)
 admin.site.register(CalibrationUnit)
 admin.site.register(DataType)
-# admin.site.register(ParamEquipModel)
-# admin.site.register(ParamValueEquipModel, ParamValueEquipModelAdmin)
-# admin.site.register(ParamValue)
 admin.site.register(EquipModelDocType)
 admin.site.register(EquipDocType)
 admin.site.register(StationDocType)
-
 admin.site.register(EquipType)
-
 admin.site.register(Intervention, InterventionAdmin)
-
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectUser, ProjectUserAdmin)
-# admin.site.register(LoggedActions)
 admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)
-# admin.site.register(ChainConfigTest)

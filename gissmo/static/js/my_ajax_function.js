@@ -111,19 +111,19 @@ function get_equip(selectBox, urlparm1){
     else the call to the ajax while not work as expected
     */
     if (! actiontypevalue) {
-       alert('Il est préférable d\'inscrire une action avant d\'accéder aux équipements');
+       alert('It\'s better to registrate an action before accessing equipments');
        return  
        }
     if (! station_id) {
-       alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements');
+       alert('It\'s better to registrate the site on which we perfom an intervention before adding action on equipments.');
        return  
        }
     if (! isValidDate(date_intervention)) {
-       alert('Il est préférable d\'inscrire une date d\'intervention valide avant toutes actions sur les équipements');
+       alert('It\'s better to registrate a valid intervention date before any action on equipments');
        return
        }
     if (! isValidTime(heure_intervention)) {
-       alert('Il est préférable d\'inscrire une heure d\'intervention valide avant toutes actions sur les équipements');
+       alert('It\'s better to registrate a valide intervention time before any action on equipments');
        return
        }
 
@@ -247,15 +247,15 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
        return  
        }
     if (! station_id) {
-       alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements');
+       alert('It\'s better to registrate the site on which we perform an intervention before any action on equipments');
        return
        }
     if (! isValidDate(date_intervention)) {
-       alert('Il est préférable d\'inscrire une date d\'intervention valide avant toutes actions sur les équipements');
+       alert('It\'s better to registrate a valid intervention date before any action on equipments');
        return
        }
     if (! isValidTime(heure_intervention)) {
-       alert('Il est préférable d\'inscrire une heure d\'intervention valide avant toutes actions sur les équipements');
+       alert('It\'s better to registrate a valid intervention time before any action on equipments');
        return
        }
 
@@ -355,13 +355,13 @@ function get_equip_oper(selectBox, urlparm1){
     else the call to the ajax while not work as expected
     */
     if (! station_id) {
-       alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements')  
+       alert('It\'s better to registrate a site on which we perform an intervention before any action on equipments')  
        }
     if (! start_date) {
-       alert('Il est préférable d\'inscrire une date de début pour le canal avant la description de la chaîne d\'acquisition')  
+       alert('It\'s better to registrate a starting date for the channel before adding acquisition chain description')  
        }
     if (! start_heure) {
-       alert('Il est préférable d\'inscrire une heure de début pour le canal avant la description de la chaîne d\'acquisition')  
+       alert('It\'s better to registrate a starting time for the channel before adding acquisition chain description')  
        }
  
     var equipselect = 'select#id_chain_set-'+singleValues+'-equip';
@@ -425,7 +425,7 @@ function get_station_position(selectBox, urlparm1){
     else the call to the ajax while not work as expected
     */
     if (! station_id) {
-       alert('Il est préférable d\'inscrire le site sur lequel on intervient avant toutes actions sur les équipements')  
+       alert('It\'s better to registrate the site on which you perform an intervention bafore any action on equipments')  
        }
  
     var latitude = document.getElementById('id_latitude');
@@ -462,7 +462,7 @@ function get_site_built(selectBox, urlparm1){
     else the call to the ajax while not work as expected
     */
     if (! station_id) {
-       alert('Il est préférable d\'inscrire le site résultant de l\'action avant de sélectionner un bâti')  
+       alert('It\'s better to registrate the site that results from the action before selecting a built')
        }
  
     var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';

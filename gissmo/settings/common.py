@@ -90,9 +90,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'rest_framework',
     'equipment',
     'station',
     'gissmo',
+    'api',
 )
 
 LOGGING = {
@@ -120,3 +122,19 @@ LOGGING = {
 }
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
+REST_FRAMEWORK = {
+    # This permission class allow only listed IP in API_ALLOWED_HOSTS.
+    # 'DEFAULT_PERMISSION_CLASSES': ('gissmo.permissions.WhitelistPermission',),
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
+    'UNICODE_JSON': True,
+}
+
+# List of allowed IP that can make raquests on REST_FRAMEWORK_API
+API_ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '130.79.9.145',  # thefroid.u-strasbg.fr (Olivier DOSSMANN)
+    '130.79.10.231',  # gavrinis.u-strasbg.fr (Maxime BES-DE-BERC)
+]

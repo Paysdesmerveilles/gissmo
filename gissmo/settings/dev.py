@@ -18,11 +18,20 @@ INSTALLED_APPS += (
     'django_extensions',
     'functional_tests',
     'debug_toolbar',
+    'selenium',
 )
 
 MIDDLEWARE_CLASSES += (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
+
+# Add current developer IP (thefroid.u-strasbg.fr) to allowed hosts
+API_ALLOWED_HOSTS += [
+    '*',
+]
+
+# Add Docker IP to display django debug toolbar
+INTERNAL_IPS = ('172.17.0.1',)
 
 if DISPLAY_SQL is True:
     LOGGING['handlers'].update({
@@ -39,3 +48,10 @@ if DISPLAY_SQL is True:
             'level': 'DEBUG',
         },
     })
+
+# Add this to avoid some problems of "already exists" in DB between each test
+# regarding this link:
+# http://stackoverflow.com/questions/29226869/django-transactiontestcase-with-rollback-emulation
+TEST_NON_SERIALIZED_APPS = [
+    'django.contrib.contenttypes',
+    'django.contrib.auth']

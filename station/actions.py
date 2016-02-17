@@ -33,16 +33,16 @@ AUTRE = 10
 DEBUTER_TEST = 11
 TERMINER_TEST = 12
 STATION_ACTIONS = (
-    (CREER, 'Créer code station'),
-    (INSTALLER, 'Installer station'),
-    (DEBUTER_TEST, 'Débuter test'),
-    (TERMINER_TEST, 'Terminer test'),
-    (OPERER, 'Mettre en opération'),
-    (CONSTATER_DEFAUT, 'Constater défaillance'),
-    (MAINT_PREV_DISTANTE, 'Effectuer maintenance préventive à distance'),
-    (MAINT_CORR_DISTANTE, 'Effectuer maintenance corrective à distance'),
-    (MAINT_PREV_SITE, 'Effectuer maintenance préventive sur site'),
-    (MAINT_CORR_SITE, 'Effectuer maintenance corrective sur site'),
-    (DEMANTELER, 'Démanteler'),
-    (AUTRE, 'Autre'),
+    (CREER, 'Create station code'),
+    (INSTALLER, 'Install station'),
+    (DEBUTER_TEST, 'Start test'),
+    (TERMINER_TEST, 'Finish test'),
+    (OPERER, 'Run'),
+    (CONSTATER_DEFAUT, 'Observe failure'),
+    (MAINT_PREV_DISTANTE, 'Perform REMOTE PREVentive maintenance'),
+    (MAINT_CORR_DISTANTE, 'Perform REMOTE CORrective maintenance'),
+    (MAINT_PREV_SITE, 'Perform LOCAL PREVentive maintenance'),
+    (MAINT_CORR_SITE, 'Perform LOCAL CORrective maintenance'),
+    (DEMANTELER, 'Shut down'),
+    (AUTRE, 'Other'),
 )

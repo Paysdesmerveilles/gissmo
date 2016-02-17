@@ -129,7 +129,7 @@ class EquipDocTest(FunctionalTest):
             self.fill_in_field(field)
 
         # We add a new Equipment Document area to input a new document
-        link = self.browser.find_element_by_xpath("//a[. = \"Add another Document de l'equipement\"]")
+        link = self.browser.find_element_by_xpath("//a[. = \"Add another Document (equip.)\"]")
         link.click()
         self.browser.implicitly_wait(3)
 
@@ -145,7 +145,8 @@ class EquipDocTest(FunctionalTest):
         self.assertTrue(os.path.exists(file_path))
         _file = InputField(
             name='equipdoc_set-0-document_equip',
-            content=file_path)
+            content=file_path,
+            _type='file')
         fields = [_type, title, _file]
         for field in fields:
             self.fill_in_field(field)

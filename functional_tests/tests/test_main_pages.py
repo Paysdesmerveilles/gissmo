@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from .base import FunctionalTest
-from selenium.webdriver.common.keys import Keys
 
 
 class CheckMainURLBehaviourTest(FunctionalTest):
@@ -28,8 +27,11 @@ class CheckMainURLBehaviourTest(FunctionalTest):
         inputlogin.send_keys(self.DEFAULT_ADMIN_LOGIN)
         inputpassword.send_keys(self.DEFAULT_ADMIN_PASSWORD)
 
-        # When he hits enter, the page updates, and now administration appears
-        inputpassword.send_keys(Keys.ENTER)
+        # When he click on "Log In" button, the page updates, and now
+        # administration appears.
+        button = self.browser.find_element_by_xpath("//input[@type='submit']")
+        button.click()
+
         self.assertIn(
             'Site administration',
             self.browser.title,

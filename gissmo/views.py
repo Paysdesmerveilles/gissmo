@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import csv
 import os.path
 import mimetypes
 from datetime import datetime
+
 # delete simplejson from django.utils as Django 1.7 deliver it not
 import json
 
-from django.db.models import Q
-from django.template import loader
+from django.db.models import (
+    Q,
+    get_model)
 from django.shortcuts import (
     render,
     get_object_or_404,
@@ -17,7 +18,6 @@ from django.shortcuts import (
     HttpResponse)
 from django.core.exceptions import PermissionDenied
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import get_model
 from django.utils.encoding import smart_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
@@ -25,6 +25,7 @@ from django.db import connection
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
+from equipment.models import ChangeModelModification
 
 from station import states as StationState
 from station import actions as StationAction
@@ -156,15 +157,25 @@ def xhr_station_state(request):
     # Check that it's an ajax request and that the method is GET
     if request.is_ajax() and request.method == 'GET':
 
+        def get_choices(states=[]):
+            res = []
+            for state in states:
+                display = dict(StationState.STATION_STATES)[state]
+                choice = {
+                    'optionValue': state,
+                    'optionDisplay': str(display)}
+                res.append(choice)
+            return res
+
         action = request.GET.get('action', '')
         if not isinstance(action, int):
             action = int(action)
-        select_choice = [({"optionValue": c[0], "optionDisplay": c[1]})
+        select_choice = [({"optionValue": c[0], "optionDisplay": str(c[1])})
                          for c in StationState.STATION_STATES]
         select_choice.insert(
             0, ({
                 "optionValue": '',
-                "optionDisplay": '-- choisir une action en premier --'}))
+                "optionDisplay": '-- first select an action --'}))
         is_creer = action == StationAction.CREER
         is_installer = action == StationAction.INSTALLER
         prev_and_corr_actions = [
@@ -173,60 +184,28 @@ def xhr_station_state(request):
             StationAction.MAINT_PREV_SITE,
             StationAction.MAINT_CORR_SITE]
         if is_creer or is_installer:
-            select_choice = [{
-                "optionValue": StationState.INSTALLATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.INSTALLATION]}]
+            select_choice = get_choices([StationState.INSTALLATION])
         elif action == StationAction.DEBUTER_TEST:
-            select_choice = [{
-                "optionValue": StationState.EN_TEST,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.EN_TEST]}]
-            select_choice.append({
-                "optionValue": StationState.OPERATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.OPERATION]})
+            select_choice = get_choices([
+                StationState.EN_TEST,
+                StationState.OPERATION])
         elif action == StationAction.TERMINER_TEST:
-            select_choice = [{
-                "optionValue": StationState.FERMEE,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.FERMEE]}]
-            select_choice.append({
-                "optionValue": StationState.OPERATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.OPERATION]})
+            select_choice = get_choices([
+                StationState.FERMEE,
+                StationState.OPERATION])
         elif action == StationAction.OPERER:
-            select_choice = [{
-                "optionValue": StationState.OPERATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.OPERATION]}]
+            select_choice = get_choices([StationState.OPERATION])
         elif action == StationAction.CONSTATER_DEFAUT:
-            select_choice = [{
-                "optionValue": StationState.DEFAUT,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.DEFAUT]}]
-            select_choice.append({
-                "optionValue": StationState.PANNE,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.PANNE]})
+            select_choice = get_choices([
+                StationState.DEFAUT,
+                StationState.PANNE])
         elif action in prev_and_corr_actions:
-            select_choice = [{
-                "optionValue": StationState.OPERATION,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.OPERATION]}]
-            select_choice.append({
-                "optionValue": StationState.DEFAUT,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.DEFAUT]})
-            select_choice.append({
-                "optionValue": StationState.PANNE,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.PANNE]})
+            select_choice = get_choices([
+                StationState.OPERATION,
+                StationState.DEFAUT,
+                StationState.PANNE])
         elif action == StationAction.DEMANTELER:
-            select_choice = [{
-                "optionValue": StationState.FERMEE,
-                "optionDisplay": dict(
-                    StationState.STATION_STATES)[StationState.FERMEE]}]
+            select_choice = get_choices([StationState.FERMEE])
         elif action == StationAction.AUTRE:
             pass
         else:
@@ -248,7 +227,7 @@ def available_equip_state(action):
     """
     # Prepare some values
     select_choice = [(c[0], c[1]) for c in EquipState.EQUIP_STATES]
-    select_choice.insert(0, ('', '-- choisir une action en premier --'))
+    select_choice.insert(0, ('', '-- first select an action --'))
     if not isinstance(action, int):
         action = int(action)
     is_prev_dist = action == EquipAction.MAINT_PREV_DISTANTE
@@ -368,7 +347,7 @@ def xhr_equip_state(request):
     if request.is_ajax() and request.method == 'GET':
         action = request.GET.get('action', '')
 
-        select_choice = [({"optionValue": c[0], "optionDisplay": c[1]})
+        select_choice = [({"optionValue": c[0], "optionDisplay": str(c[1])})
                          for c in available_equip_state(action)]
         data = json.dumps(select_choice)
 
@@ -510,7 +489,7 @@ def equip_place_todate_id(equip, date, intervention_id):
 
     if last_equip_place:
         for last in last_equip_place:
-            result = last.station.id
+            result = last.station_id
     return result
 
 
@@ -822,7 +801,7 @@ def xhr_station(request):
         else:
             select_choice = [{
                 "optionValue": "",
-                "optionDisplay": "-- choisir un site --"}]
+                "optionDisplay": "-- select a site --"}]
         for station in station_dispo:
             select_choice.append(({
                 "optionValue": station.id,
@@ -877,7 +856,9 @@ def available_equipment_scioper(station, date):
     xhr_equip_oper function.
     """
     equipment_list = []
-    # TODO find a better way to filter
+    if not isinstance(station, int):
+        station = int(station)
+    # TODO: find a better way to filter
     # Not the best way to filter
     # If the supertype name change we have to change the code too
     a = "01. Scientifique"
@@ -887,7 +868,7 @@ def available_equipment_scioper(station, date):
         Q(equip_model__equip_type__equip_supertype__equip_supertype_name=b))
 
     for equip in equipments:
-        if int(equip_place_todate_id(equip.id, date, None)) == int(station):
+        if int(equip_place_todate_id(equip.id, date, None)) == station:
             equipment_list.append(equip.id)
 
     equip_dispo = Equipment.objects.filter(
@@ -961,117 +942,6 @@ def dictfetchall(cursor):
     ]
 
 
-def dataless(request):
-
-    query = request.GET.get('Station', '')
-    # Create the HttpResponse object with the appropriate CSV header.
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="dataless.csv"'
-
-    # Use 'with connection.cursor()' instead of c = connection.cursor() as
-    # explained in https://docs.djangoproject.com/en/1.8/releases/1.7/
-    # using-database-cursors-as-context-managers
-    with connection.cursor() as cursor:
-        sql = """
-        SELECT
-            CASE WHEN substr(gissmo_channel.channel_code,3,1)='2'
-                THEN 'N'
-            WHEN substr(gissmo_channel.channel_code,3,1)='3'
-                THEN 'E'
-                ELSE substr(gissmo_channel.channel_code,3,1)
-            END AS "Composante",
-            gissmo_channel.channel_code AS "Code du canal",
-            gissmo_stationsite.station_code  AS "Code du site",
-            gissmo_channel.latitude AS "Latitude",
-            gissmo_channel.longitude AS "Longitude",
-            gissmo_channel.elevation AS "Elevation",
-            gissmo_channel.depth AS "Profondeur",
-            gissmo_channel.start_date,
-            gissmo_channel.end_date,
-            gissmo_channel.dip AS "Dip",
-            gissmo_channel.azimuth AS "Azimuth",
-            gissmo_network.network_code AS "Reseau",
-            gissmo_actor.actor_name AS "Observatoire",
-            (SELECT gissmo_equipmodel.equip_model_name ||
-                '-' ||
-                gissmo_equipment.serial_number
-                FROM
-                    public.gissmo_chain,
-                    public.gissmo_equipment,
-                    public.gissmo_equipmodel
-                WHERE gissmo_chain."order" = 1
-                AND gissmo_chain.equip_id = gissmo_equipment.id
-                AND gissmo_equipment.equip_model_id = gissmo_equipmodel.id
-                AND gissmo_chain.channel_id = gissmo_channel.id
-            ) AS "Capteur S/N",
-            (SELECT gissmo_equipmodel.equip_model_name ||
-                '-' ||
-                gissmo_equipment.serial_number
-                FROM
-                    public.gissmo_chain,
-                    public.gissmo_equipment,
-                    public.gissmo_equipmodel
-                WHERE gissmo_chain."order" = 2
-                AND gissmo_chain.equip_id = gissmo_equipment.id
-                AND gissmo_equipment.equip_model_id = gissmo_equipmodel.id
-                AND gissmo_chain.channel_id = gissmo_channel.id
-            ) AS "Numeriseur S/N",
-            gissmo_channel.sample_rate AS "Fréquence"
-        FROM
-            public.gissmo_channel,
-            public.gissmo_stationsite,
-            public.gissmo_network,
-            public.gissmo_actor
-        WHERE gissmo_channel.station_id = gissmo_stationsite.id
-        AND gissmo_channel.network_id = gissmo_network.id
-        AND gissmo_stationsite.operator_id = gissmo_actor.id
-        AND gissmo_stationsite.id = %s
-        ORDER BY
-            gissmo_channel.start_date,
-            gissmo_channel.location_code,
-            "Composante" DESC
-        """
-        cursor.execute(sql, [query])
-        dictrow = dictfetchall(cursor)
-        writer = csv.writer(response)
-        writer.writerow([
-            "Composante",
-            "Code du canal",
-            "Code du site",
-            "Latitude",
-            "Longitude",
-            "Elevation",
-            "Profondeur",
-            "start_date",
-            "end_date",
-            "Dip",
-            "Azimuth",
-            "Reseau",
-            "Observatoire",
-            "Capteur S/N",
-            "Numeriseur S/N",
-            "Fréquence"])
-        for row in dictrow:
-            writer.writerow([
-                row["Composante"],
-                row["Code du canal"],
-                row["Code du site"],
-                row["Latitude"],
-                row["Longitude"],
-                row["Elevation"],
-                row["Profondeur"],
-                row["start_date"],
-                row["end_date"],
-                row["Dip"],
-                row["Azimuth"],
-                row["Reseau"],
-                row["Observatoire"],
-                row["Capteur S/N"],
-                row["Numeriseur S/N"],
-                row["Fréquence"]])
-    return response
-
-
 def station_xml(request):
     query = request.GET.get('Station', '')
 
@@ -1106,10 +976,7 @@ def station_xml(request):
     ChannelNetwork = Channel.objects.filter(
         station_id=query).distinct('network')
 
-    network_list = []
-    if ChannelNetwork:
-        for network in ChannelNetwork:
-            network_list.append(network.network.id)
+    network_list = [n.network.id for n in ChannelNetwork]
 
     ResNetwork = Network.objects.filter(id__in=network_list)
 
@@ -1494,346 +1361,8 @@ def station_xml(request):
         "aujourdhui": aujourdhui,
     }, content_type="application/xhtml+xml")
 
+
 station_xml = staff_member_required(station_xml)
-
-
-def network_xml(request):
-    response = HttpResponse(content_type='application/xhtml+xml')
-    response['Content-Disposition'] = \
-        'attachment; filename="somefilename.xhtml"'
-
-    query = request.GET.get('Network', '')
-
-    result = []
-
-    """Obtain the information about the network """
-    network = Network.objects.get(pk=query)
-
-    if network:
-        """ Obtain the stations for that network """
-        ResStations = Channel.objects.filter(network_id=network.id).distinct(
-            'station').order_by('station.station_code')
-
-        """ Obtain the number of stations for that network """
-        station_count = ResStations.count()
-
-        station_list = []
-        if ResStations:
-            for station in ResStations:
-                """Obtain the information about the station """
-                ResStation = StationSite.objects.get(pk=station.station_id)
-
-                """Obtain the date of creation for this station """
-                create_station = None
-                intervention_creation = IntervStation.objects.filter(
-                    intervention__station=ResStation.id,
-                    station_action=StationAction.CREER).values('intervention')
-                if intervention_creation:
-                    create_station = Intervention.objects.get(
-                        pk=intervention_creation)
-
-                # Obtain the date of closure for this station
-                terminate_station = None
-                intervention_terminate = IntervStation.objects.filter(
-                    intervention__station=ResStation.id,
-                    station_action=StationAction.DEMANTELER).values(
-                        'intervention')
-                if intervention_terminate:
-                    terminate_station = Intervention.objects.get(
-                        pk=intervention_terminate)
-
-                # Obtain the channels for that station
-                ResChannels = Channel.objects.filter(
-                    station_id=ResStation.id,
-                    network_id=network.id).order_by(
-                        '-start_date', 'channel_code')
-
-                station_vault = None
-
-                channel_list = []
-                for channel in ResChannels:
-                    # Obtain the equipment of the chain per channel
-                    sensor = []
-                    sensor_installed = None
-                    sensor_uninstalled = None
-                    preamplifier = []
-                    preamplifier_installed = None
-                    preamplifier_uninstalled = None
-                    datalogger = []
-                    datalogger_installed = None
-                    datalogger_uninstalled = None
-                    ResChain = Chain.objects.filter(channel=channel.id)
-                    for equipchain in ResChain:
-                        e_type = equipchain.equip.equip_model.equip_type
-                        type_name = e_type.equip_type_name
-                        specific_values = [
-                            'Vélocimètre',
-                            'Accéléromètre']
-                        if type_name in specific_values:
-                            sensor = equipchain.equip
-                        else:
-                            if type_name == 'Numériseur':
-                                datalogger = equipchain.equip
-                    # Common queryset parameters
-                    channel_s_date = channel.start_date
-                    equip_operation = IntervEquip.objects.filter(
-                        intervention__intervention_date__lte=channel_s_date,
-                        intervention__station=channel.station.id,
-                        equip_action=EquipAction.INSTALLER,
-                        equip_state=EquipState.OPERATION)
-                    equip_removal = IntervEquip.objects.filter(
-                        intervention__intervention_date__gte=channel_s_date,
-                        intervention__station=channel.station.id,
-                        equip_action=EquipAction.DESINSTALLER)
-                    if sensor != []:
-                        # Sensor in operation during the channel life
-                        sensor_operation = equip_operation.filter(
-                            equip__id=sensor.id).order_by(
-                                '-intervention__intervention_date')[:1]
-                        if sensor_operation:
-                            # Here we have 0 or 1 occurence
-                            sensor_installed = sensor_operation[
-                                0].intervention.intervention_date
-                        # Sensor removal after the start of the channel life
-                        sensor_removal = equip_removal.filter(
-                            equip__id=sensor.id).order_by(
-                                'intervention__intervention_date')[:1]
-                        if sensor_removal:
-                            # Here we have 0 or 1 occurence
-                            sensor_uninstalled = sensor_removal[
-                                0].intervention.intervention_date
-                    if preamplifier != []:
-                        # Preamplifier in operation during the channel life
-                        preamplifier_operation = equip_operation.filter(
-                            equip__id=preamplifier.id).order_by(
-                                '-intervention__intervention_date')[:1]
-                        if preamplifier_operation:
-                            # Here we have 0 or 1 occurence
-                            preamplifier_installed = preamplifier_operation[
-                                0].intervention.intervention_date
-                        # Preamplifier removal after the start of the channel
-                        # life.
-                        preamplifier_removal = equip_removal.filter(
-                            equip__id=preamplifier.id).order_by(
-                                'intervention__intervention_date')[:1]
-                        if preamplifier_removal:
-                            # Here we have 0 or 1 occurence
-                            preamplifier_uninstalled = preamplifier_removal[
-                                0].intervention.intervention_date
-                    if datalogger != []:
-                        # Datalogger in operation during the channel life
-                        datalogger_operation = equip_operation.filter(
-                            equip__id=datalogger.id).order_by(
-                                '-intervention__intervention_date')[:1]
-                        if datalogger_operation:
-                            # Here we have 0 or 1 occurence
-                            datalogger_installed = datalogger_operation[
-                                0].intervention.intervention_date
-                        # Datalogger removal after the start of the channel
-                        # life.
-                        datalogger_removal = equip_removal.filter(
-                            equip__id=datalogger.id).order_by(
-                                'intervention__intervention_date')[:1]
-                        if datalogger_removal:
-                            # Here we have 0 or 1 occurence
-                            datalogger_uninstalled = datalogger_removal[
-                                0].intervention.intervention_date
-
-#                    # Obtain the comment for the channel
-#                    ResCommentChannel = CommentChannel.objects.filter(
-#                        channel_id=channel.id)
-
-                    comment_list = []
-#                    for comment in ResCommentChannel:
-#                        # Obtain the authors for each comment
-#                        ResCommentChannelAuthor = CommentChannelAuthor.\
-#                            objects.filter(comment_channel_id=comment.id)
-#                        comment_list.append([comment, ResCommentChannelAuthor])
-
-                    channel_list.append([
-                        channel,
-                        sensor,
-                        sensor_installed,
-                        sensor_uninstalled,
-                        preamplifier,
-                        preamplifier_installed,
-                        preamplifier_uninstalled,
-                        datalogger,
-                        datalogger_installed,
-                        datalogger_uninstalled,
-                        comment_list])
-                station_list.append([
-                    ResStation,
-                    station_vault,
-                    ResChannels.count(),
-                    create_station,
-                    terminate_station,
-                    channel_list])
-
-#        # Obtain the comment for the network
-#        ResCommentNetwork = CommentNetwork.objects.filter(
-#            network_id=network.id)
-
-        comment_list = []
-#        for comment in ResCommentNetwork:
-#            # Obtain the authors for each comment
-#            ResCommentNetworkAuthor = CommentNetworkAuthor.objects.filter(
-#                comment_network_id=comment.id)
-#            comment_list.append([comment, ResCommentNetworkAuthor])
-        result.append([network, comment_list, station_count, station_list])
-    t = loader.get_template('network_xml.xml')
-    response.write(t.render({"ResNetwork": result}))
-    return response
-
-
-def station_dataless(request):
-    query = request.GET.get('Station', '')
-
-    ResStation = StationSite.objects.get(pk=query)
-
-    ResChannel = Channel.objects.filter(station_id=query).extra(select={
-        'component':
-        "SUBSTR(channel_code, LENGTH(channel_code)-1, LENGTH(channel_code))",
-        'channel': "SUBSTR(channel_code, 1, LENGTH(channel_code)-1)"
-    }).order_by('-start_date', 'channel', '-component')
-
-    """ New to accomodate PANDORA interface """
-    sensor_list = []
-    datalogger_list = []
-    liste_channel = []
-    liste_canaux = []
-
-    liste_azimuth = []
-    liste_dip = []
-    liste_component = []
-    channel_prec = []
-    liste_canal_prec = []
-    if ResChannel:
-        for channel in ResChannel:
-            channel_component = [
-                channel.network,
-                channel.station,
-                channel.location_code,
-                channel.channel_code[:2],
-                channel.sample_rate,
-                channel.start_date,
-                channel.end_date]
-
-            ResChain = Chain.objects.filter(
-                channel_id=channel.id).order_by('order')
-            liste_chain = []
-            if ResChain:
-                for chain in ResChain:
-                    ResChainconfig = ChainConfig.objects.filter(
-                        chain_id=chain.id)
-                    liste_config = []
-                    if ResChainconfig:
-                        for chainconfig in ResChainconfig:
-                            liste_config.append(chainconfig)
-                    liste_chain.append([chain.equip, liste_config])
-                    # Built of the sensor and dataloger list
-                    e_type = chain.equip.equip_model.equip_type
-                    type_name = e_type.equip_type_name
-                    allowed_values = [
-                        'Vélocimètre',
-                        'Accéléromètre']
-                    if type_name in allowed_values:
-                        sensor_list.append(chain.equip)
-                    else:
-                        if type_name == 'Numériseur':
-                            datalogger_list.append(chain.equip)
-
-            liste_channel.append([channel, liste_chain])
-
-            liste_canal = [channel_component, liste_chain]
-            if liste_canal_prec != liste_canal:
-                """ First time initialisation """
-                if liste_canal_prec != []:
-                    liste_canaux.append([
-                        channel_prec,
-                        liste_canal_prec[1],
-                        liste_component,
-                        liste_azimuth,
-                        liste_dip])
-                    liste_azimuth = []
-                    liste_dip = []
-                    liste_component = []
-                liste_canal_prec = liste_canal
-                channel_prec = channel
-            liste_azimuth.append(channel.azimuth)
-            liste_dip.append(channel.dip)
-            liste_component.append(channel.channel_code[2:])
-
-        liste_canaux.append([channel_prec, liste_canal_prec[
-                            1], liste_component, liste_azimuth, liste_dip])
-
-    return render(request, "station_dataless.html", {
-        "query": query,
-        "ResStation": ResStation,
-        "SensorList": list(set(sensor_list)),
-        "DataloggerList": list(set(datalogger_list)),
-        "ResChannel": liste_canaux,
-    })
-
-site_maps = staff_member_required(site_maps)
-
-"""
-from pghstore import loads
-
-def test_dbchange(request):
-    asking_date = request.GET.get('Date','')
-
-    asking_datehour = u''.join([asking_date,u' ',"00:00:00"])
-
-    ResChange = LoggedActions.objects.filter(
-        action_tstamp_tx__lt=datetime.strptime(
-            asking_datehour,
-            "%Y-%m-%d %H:%M:%S")).order_by('action_tstamp_tx')
-
-    response = HttpResponse(content_type='text/plain')
-    response['Content-Disposition'] = 'attachment; filename="dbchange.txt"'
-
-    for change in ResChange:
-        # Insert
-        response.write("Table name    : %s \n" % change.table_name)
-        response.write("Date    : %s" % change.action_tstamp_tx)
-        response.write("\n")
-        if change.action == "I":
-            response.write("Table action  : Insert\n")
-            response.write(
-                "Changed value : %-30s : %-30s\n" % ("FIELDS","VALUES"))
-            for key, value in loads(change.row_data).items():
-                response.write(
-                    "                %-30s : %-30s\n" % (key, value))
-            response.write("\n")
-        else:
-            # Delete
-            if change.action == "D":
-                response.write("Table action  : Delete\n")
-                response.write(
-                    "Changed value : %-30s : %-30s\n" % ("FIELDS","VALUES"))
-                for key, value in loads(change.row_data).items():
-                    response.write(
-                        "                %-30s : %-30s\n" % (key, value))
-                response.write("\n")
-            else:
-                # Update
-                if change.action == "U":
-                    response.write("Table action  : Update\n")
-                    response.write(
-                        "Changed value : %-30s : %-30s\n" % (
-                            "FIELDS",
-                            "VALUES"))
-                    for key, value in loads(change.changed_fields).items():
-                        response.write(
-                            "                %-30s : %-30s\n" % (key, value))
-                    response.write("\n")
-                # Other action
-                else:
-                    response.write("Other\n")
-        response.write("\n")
-    return response
-"""
 
 
 def xhr_parameter_value(request):
@@ -1858,29 +1387,123 @@ def xhr_parameter_value(request):
         return HttpResponse(status=400)
 
 
-#
-#
-#  Ne pas oublier de mettre en place
-#
-#        Audit_trigger_91plus
-#
-#
-# Pour donner acces a la table d'audit logged_actions dans le schema audit
-# il faut modifier le role du user de
-# l'aplplication Django (bdmateriel - Gissmo)
-#
-#        ALTER ROLE martin SET SEARCH_PATH to "$user",public,audit;
-#
-# Il faut ajouter le module pghstore pour convertir un champ hstore
-# dans un dictionnaire python
-#
-# This small module implements a formatter and a loader for hstore
-#
-#         pip install pghstore
-#
-
 def site_shortcut(request, code):
     site = StationSite.objects.get(station_code=code)
     url = reverse('admin:gissmo_stationsite_change', args=(site.id,))
 
     return HttpResponseRedirect(url)
+
+
+def changemodel_display(modifications, equipment):
+    """
+    Set modification per channel.
+    """
+    channels = []
+    channel_ids = []
+    channel_chain_links = []
+    msg = ''
+
+    channel_modifications = {}
+    nochannel_modifications = []
+
+    for modif in modifications:
+        channel = modif.channel
+        if channel is not None and channel not in channels:
+            channels.append(channel)
+            channel_ids.append(channel.id)
+            for chain in channel.chain_set.filter(equip=equipment):
+                channel_chain_links.append(chain.id)
+        if channel and channel not in channel_modifications:
+            channel_modifications[channel] = []
+        if modif.channel:
+            channel_modifications[channel].append(modif)
+        else:
+            nochannel_modifications.append(modif)
+
+    if not channels:
+        msg = 'No channel found.'
+        return [], msg
+
+    # 'if' statement avoids problem with empty list in result
+    if nochannel_modifications:
+        for channel in channel_modifications:
+            channel_modifications[channel] += nochannel_modifications
+
+    return zip(
+        channels,
+        channel_ids,
+        channel_chain_links,
+        channel_modifications.values()), msg
+
+
+def changemodel_compare_params(configs, new_params):
+    """
+    Make a synthesis about old configuration parameters and new one (regarding
+    default value)
+    """
+    result = []
+
+    def get_default_value(name, parameter_ids):
+        return ParameterValue.objects.filter(
+            parameter__parameter_name=name,
+            parameter_id__in=parameter_ids,
+            default_value=True).first() or None
+
+    new_param_ids = [p.id for p in new_params]
+
+    # Browse current configuration
+    checked_new_params = []
+    channels = []
+    for config in configs:
+        name = config.parameter.parameter_name
+        channel = config.channel
+        if channel not in channels:
+            channels.append(channel)
+        p = get_default_value(name, new_param_ids)
+        m = ChangeModelModification.objects.create(
+            channel=config.channel,
+            name=name,
+            old_value=config.value)
+        if p:
+            m.new_value = p
+        m.state = m.get_state()
+        m.save()
+        checked_new_params.append(p)
+        result.append(m)
+
+    # Create modification lines (linked to no channel): new params not
+    # present in current ones.
+    for channel in channels:
+        for param in new_params:
+            if param not in checked_new_params:
+                name = param.parameter_name
+                m = ChangeModelModification.objects.create(
+                    channel=channel,
+                    name=name,
+                    new_value=get_default_value(name, [param.id]))
+                m.state = m.get_state()
+                m.save()
+                result.append(m)
+    return result
+
+
+def changemodel_simulation(equipment, model):
+    """
+    Take current configuration from given equipment and compare it to given
+    model.
+    Then return a list of modification objects.
+    """
+    configs = []
+    for chain in equipment.chain_set.all():
+        for config in chain.chainconfig_set.all():
+            configs.append(config)
+
+    new_params = ParameterEquip.objects.filter(
+        equip_model=model.id).prefetch_related(
+            'parametervalue_set')
+
+    modifications = changemodel_compare_params(
+        configs,
+        new_params)
+
+    return modifications

@@ -1,4 +1,4 @@
-Django==1.8
+Django==1.8.8
 ecdsa==0.13
 Fabric==1.10.2
 paramiko==1.15.2
@@ -8,7 +8,7 @@ pytz==2015.4
 six==1.9.0
 uWSGI==2.0.11.1
 wheel==0.24.0
-django-autocomplete-light>=2.0.0pre
+django-autocomplete-light==2.3.1
 django-flat-theme
 # For development purposes
 django-extensions==1.5.6
@@ -16,6 +16,11 @@ flake8==2.4.1
 mccabe==0.3.1
 pep8==1.5.7
 pyflakes==0.8.1
+httpie
 django-debug-toolbar
+# REST API dependancies
+djangorestframework==3.3.1
+markdown==2.6.4
+django-filter==0.11.0
 # functionnal tests dependancies
 selenium

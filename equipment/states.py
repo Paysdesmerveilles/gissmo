@@ -29,14 +29,14 @@ DISPARU = 8
 AU_REBUT = 9
 AUTRE = 10
 EQUIP_STATES = (
-    (OPERATION, 'En opération'),
-    (A_TESTER, 'A tester'),
-    (DISPONIBLE, 'Disponible'),
-    (DEFAUT, 'En défaillance'),
-    (PANNE, 'En panne'),
-    (EN_TRANSIT, 'En transit'),
-    (HORS_USAGE, 'Hors d\'usage'),
-    (DISPARU, 'Disparu'),
-    (AU_REBUT, 'Au rebut'),
-    (AUTRE, 'Autre'),
+    (OPERATION, 'Operation in progress'),
+    (A_TESTER, 'To be tested'),
+    (DISPONIBLE, 'Available'),
+    (DEFAUT, 'Failure'),
+    (PANNE, 'Breakdown'),
+    (EN_TRANSIT, 'Transit in progress'),
+    (HORS_USAGE, 'Out of use'),
+    (DISPARU, 'Lost'),
+    (AU_REBUT, 'Waste'),
+    (AUTRE, 'Other'),
 )

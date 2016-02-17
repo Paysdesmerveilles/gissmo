@@ -43,13 +43,25 @@ class EquipmentTest(FunctionalTest):
         self.supertype_1 = EquipSupertype.objects.create(
             equip_supertype_name='01. Scientific',
             presentation_rank='1')
-        self.eq_type = EquipType.objects.create(
+        self.supertype_2 = EquipSupertype.objects.create(
+            equip_supertype_name='03. Telecommunication',
+            presentation_rank='2')
+        self.eq_type_1 = EquipType.objects.create(
             equip_supertype=self.supertype_1,
             equip_type_name='Velocimeter',
-            presentation_rank=0)
-        self.equipment_model = EquipModel.objects.create(
-            equip_type=self.eq_type,
+            presentation_rank='0')
+        self.eq_type_2 = EquipType.objects.create(
+            equip_supertype=self.supertype_2,
+            equip_type_name='Router',
+            presentation_rank='1')
+        self.equipment_model_1 = EquipModel.objects.create(
+            equip_type=self.eq_type_1,
             equip_model_name='CMG-40T')
+        self.equipment_model_2 = EquipModel.objects.create(
+            equip_type=self.eq_type_2,
+            equip_model_name='NB1600',
+            manufacturer='netmodule',
+            is_network_model=True)
         self.project = Project.objects.create(
             project_name='ADEME',
             manager=self.superuser)
@@ -100,7 +112,7 @@ class EquipmentTest(FunctionalTest):
         # @EOST we receive a new equipment CMG-40T: T4Q31
         purchase_date = datetime.strptime('2015-10-01', '%Y-%m-%d')
         self.equipment_1 = Equipment.objects.create(
-            equip_model=self.equipment_model,
+            equip_model=self.equipment_model_1,
             serial_number='T4Q31',
             owner=self.mandatory_actor,
             stockage_site=self.station_1,
@@ -142,3 +154,44 @@ class EquipmentTest(FunctionalTest):
         # equipement for test. We define channels as finished.
 
         # We test the equipment and so we put it in another place.
+
+    def test_equipment_network_config(self):
+        # @EOST, after an installation of a given equipment (NB1600 model),
+        # we need to fill in IP Addresses and services
+        purchase_date = datetime.strptime('2016-01-18', '%Y-%m-%d')
+        self.equipment_1 = Equipment.objects.create(
+            equip_model=self.equipment_model_2,
+            serial_number='00112B00153',
+            owner=self.mandatory_actor,
+            purchase_date=make_aware(purchase_date),
+            stockage_site=self.station_1,
+            actor=self.superuser_actor.actor_name)
+
+        # After some times, we need to use this equipment.
+        # We configure it and add 2 IP Addresses and 1 service
+        ip = InputField(
+            name='ipaddress_set-0-ip',
+            content='192.168.0.100')
+        netmask = InputField(
+            name='ipaddress_set-0-netmask',
+            content='255.255.255.0')
+        ip2 = InputField(
+            name='ipaddress_set-1-ip',
+            content='station.dyndns.tld')
+        netmask2 = InputField(
+            name='ipaddress_set-1-netmask',
+            content='0.0.0.0')
+        protocol = InputField(
+            name='service_set-0-protocol',
+            content='Seed link protocol',
+            _type=Select)
+        port = InputField(
+            name='service_set-0-port',
+            content='18000')
+
+        click_paths = ['//a[. = "Add another Ip address"]']
+
+        fields = [ip, netmask, protocol, port, ip2, netmask2]
+
+        url = '%sequipment/%s' % (self.appurl, self.equipment_1.id)
+        self.fill_in_form(url, fields, click_paths)
