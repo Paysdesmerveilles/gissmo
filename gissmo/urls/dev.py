@@ -8,7 +8,7 @@ from django.conf.urls import (
     patterns,
     include)
 
-admin.site.site_header = 'Gissmo 1.5-rc1'
+admin.site.site_header = 'Gissmo 1.5-trunk'
 
 if dev.DEBUG:
     import debug_toolbar
