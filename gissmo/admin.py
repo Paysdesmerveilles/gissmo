@@ -506,7 +506,6 @@ class EquipmentAdmin(admin.ModelAdmin):
         """
         obj.stockage_site = form.cleaned_data['stockage_site']
         obj.actor = request.user.username
-        obj.save()
         super(EquipmentAdmin, self).save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):
