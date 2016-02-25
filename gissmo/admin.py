@@ -7,8 +7,9 @@ from django.contrib import (
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import (
     AdminURLFieldWidget,
-    AdminTimeWidget
-)
+    AdminSplitDateTime,
+    AdminDateWidget,
+    AdminTimeWidget)
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Textarea
 from django.shortcuts import (
@@ -736,7 +737,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         class StationSiteClosechannelsForm(forms.Form):
             date = forms.DateTimeField(
                 label="Common date",
-                widget=AdminTimeWidget,
+                widget=AdminSplitDateTime,
                 required=False)
             all_channels = forms.BooleanField(
                 label="Set common date to all channels",
@@ -759,6 +760,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                     self.fields[
                         '%s' % channel.id] = forms.DateTimeField(
                             label=name,
+                            widget=AdminSplitDateTime,
                             required=False)
 
         return formset_factory(form=StationSiteClosechannelsForm, )
@@ -772,11 +774,14 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
             'channel_set__network').first()
         title = "Close opened channels for %(station)s station" % {
             'station': station.station_code}
+        # media add javascript links into result (if included in template)
+        date_widget_media = AdminDateWidget().media
+        time_widget_media = AdminTimeWidget().media
         context = dict(
             self.admin_site.each_context(request),
             title=title,
             station=station,
-            media=self.media,
+            media=self.media + time_widget_media + date_widget_media,
         )
         if request.method == 'POST':
             StationFormSet = self.closechannels_formset(station)
