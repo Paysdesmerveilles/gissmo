@@ -5,15 +5,20 @@ from django.contrib import (
     admin,
     messages)
 from django.contrib.admin import SimpleListFilter
-from django.contrib.admin.widgets import AdminURLFieldWidget
+from django.contrib.admin.widgets import (
+    AdminURLFieldWidget,
+    AdminTimeWidget
+)
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Textarea
-from django.shortcuts import get_object_or_404, HttpResponseRedirect
+from django.shortcuts import (
+    get_object_or_404,
+    HttpResponseRedirect,
+    redirect)
 from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.conf.urls import url
 from django.forms.formsets import formset_factory
-from django.shortcuts import redirect
 
 from gissmo.models import *  # NOQA
 from gissmo.forms import *  # NOQA
@@ -713,6 +718,80 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
     formfield_overrides = {
         models.URLField: {'widget': URLFieldWidget},
     }
+
+    def get_urls(self):
+        """
+        Add new 'closechannels' possibility
+        """
+        urls = super(StationSiteAdmin, self).get_urls()
+        my_urls = [
+            url(
+                r'^(.+)/closechannels/$',
+                self.closechannels_view,
+                name='closechannels'),
+        ]
+        return my_urls + urls
+
+    def closechannels_formset(self, station):
+        class StationSiteClosechannelsForm(forms.Form):
+            date = forms.DateTimeField(
+                label="Common date",
+                widget=AdminTimeWidget,
+                required=False)
+            all_channels = forms.BooleanField(
+                label="Set common date to all channels",
+                required=False)
+
+            def __init__(self, *args, **kwargs):
+                super(
+                    StationSiteClosechannelsForm,
+                    self).__init__(*args, **kwargs)
+                for channel in station.channel_set.filter(
+                    end_date=None).prefetch_related(
+                        'network',
+                        'channel_code'):
+                    name = "%s : %s : %s : %s (freq. %s) Date" % (
+                        station.station_code,
+                        channel.network.network_code,
+                        channel.location_code,
+                        channel.channel_code.channel_code,
+                        channel.sample_rate)
+                    self.fields[
+                        '%s' % channel.id] = forms.DateTimeField(
+                            label=name,
+                            required=False)
+
+        return formset_factory(form=StationSiteClosechannelsForm, )
+
+    def closechannels_view(self, request, station_id):
+        """
+        Work with channels linked to a station to close them.
+        """
+        station = StationSite.objects.filter(id=station_id).prefetch_related(
+            'channel_set__channel_code',
+            'channel_set__network').first()
+        title = "Close opened channels for %(station)s station" % {
+            'station': station.station_code}
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+            station=station,
+            media=self.media,
+        )
+        if request.method == 'POST':
+            StationFormSet = self.closechannels_formset(station)
+            formset = StationFormSet(request.POST)
+            context.update({'form': formset})
+            if formset.is_valid():
+                for form in formset.cleaned_data:
+                    return closechannels_process(
+                        request, form, station_id, context)
+        else:
+            form = self.closechannels_formset(station)
+            context.update({'form': form})
+
+        return render(request, "closechannels_view.html", context)
+
 
 ####
 #
