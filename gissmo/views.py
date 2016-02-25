@@ -1554,6 +1554,7 @@ def closechannels_process(request, form, station_id, context):
         result = closechannels(channel_ids, date)
         if not result:
             messages.error(request, "No channel closed!")
+            return redirect(url)
         messages.success(request, success_message % ",".join(channel_ids))
         return redirect(url)
     else:
