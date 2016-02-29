@@ -872,7 +872,7 @@ def available_equipment_scioper(station, date):
         Q(equip_model__equip_type__equip_supertype__equip_supertype_name=b))
 
     for equip in equipments:
-        if int(equip_place_todate_id(equip.id, date, None)) == station:
+        if int(equip_place_todate_id(equip.id, date, None)) == station.id:
             equipment_list.append(equip.id)
 
     equip_dispo = Equipment.objects.filter(
