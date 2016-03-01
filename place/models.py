@@ -293,7 +293,7 @@ def create_available_state(sender, instance, created, **kwargs):
         instance.save()
 
 
-class BuiltType(models.Models):
+class BuiltType(models.Model):
     name = models.CharField(max_length=40)
 
     class Meta:
