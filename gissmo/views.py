@@ -13,15 +13,19 @@ from django.db.models import (
     get_model)
 from django.shortcuts import (
     render,
+    redirect,
     get_object_or_404,
     HttpResponseRedirect,
     HttpResponse)
 from django.core.exceptions import PermissionDenied
-from django.contrib.admin.views.decorators import staff_member_required
-from django.utils.encoding import smart_text
-from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.decorators import login_required
 from django.db import connection
+from django.utils.encoding import smart_text
+
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
@@ -868,7 +872,7 @@ def available_equipment_scioper(station, date):
         Q(equip_model__equip_type__equip_supertype__equip_supertype_name=b))
 
     for equip in equipments:
-        if int(equip_place_todate_id(equip.id, date, None)) == station:
+        if int(equip_place_todate_id(equip.id, date, None)) == station.id:
             equipment_list.append(equip.id)
 
     equip_dispo = Equipment.objects.filter(
@@ -1507,3 +1511,65 @@ def changemodel_simulation(equipment, model):
         new_params)
 
     return modifications
+
+
+def closechannels(ids, date):
+    """
+    Channels are considered as closed when "end_date" field is filled in.
+    This method add given date to each given channel ID.
+    """
+    res = []
+    if not isinstance(ids, list):
+        ids = list(ids)
+    for channel_id in ids:
+        if not date:
+            continue
+        if not isinstance(channel_id, int):
+            channel_id = int(channel_id)
+        channel = Channel.objects.get(pk=channel_id)
+        channel.end_date = date
+        channel.save()
+        res.append(str(channel_id))
+    return res
+
+
+@login_required(login_url='/gissmo/login/')
+def closechannels_process(request, form, station_id, context):
+    """
+    Process form and either return on stationsite change form or raise
+    an error.
+    """
+    date = form.get('date', None)
+    all_channels = form.get('all_channels', None)
+    url = reverse('admin:gissmo_stationsite_change', args=(station_id,))
+    specifics = ['date', 'all_channels']
+    success_message = "Channel(s) successfully closed: %s."
+    # specific behaviour
+    date_settled = date is not None
+    all_channels_settled = all_channels is not None and all_channels is True
+    if all_channels_settled and not date_settled:
+        messages.error(request, 'Common date is mandatory!')
+    elif all_channels_settled and date_settled:
+        channel_ids = [k for k in form.keys() if k not in specifics]
+        result = closechannels(channel_ids, date)
+        if not result:
+            messages.error(request, "No channel closed!")
+            return redirect(url)
+        messages.success(request, success_message % ",".join(channel_ids))
+        return redirect(url)
+    else:
+        channel_ids = []
+        for key in form:
+            if key not in specifics:
+                name = int(key)
+                closing_date = form[key]
+                result = closechannels([name], closing_date)
+                if result:
+                    channel_ids.append(key)
+        if channel_ids:
+            messages.success(
+                request,
+                success_message % ",".join(channel_ids))
+        return redirect(url)
+
+    return render(request, "closechannels_view.html", context)

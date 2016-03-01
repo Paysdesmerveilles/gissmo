@@ -638,7 +638,8 @@ class StationSite(models.Model):
             station_state=StationState.INSTALLATION,
             note='Automated creation')
         if not self.actor:
-            raise ValidationError('No logged user')
+            raise ValidationError(
+                'No actor given. On web admin you need to be logged.')
         actor = get_object_or_404(Actor, actor_name=self.actor)
         IntervActor.objects.create(
             intervention=intervention,
