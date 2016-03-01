@@ -735,7 +735,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
 
     def closechannels_formset(self, station):
         class StationSiteClosechannelsForm(forms.Form):
-            date = forms.DateTimeField(
+            date = forms.SplitDateTimeField(
                 label="Common date",
                 widget=AdminSplitDateTime,
                 required=False)
@@ -758,7 +758,7 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                         channel.channel_code.channel_code,
                         channel.sample_rate)
                     self.fields[
-                        '%s' % channel.id] = forms.DateTimeField(
+                        '%s' % channel.id] = forms.SplitDateTimeField(
                             label=name,
                             widget=AdminSplitDateTime,
                             required=False)
