@@ -1,6 +1,11 @@
 from __future__ import unicode_literals
 from django.test import TestCase
+from django.contrib import admin
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.http import HttpRequest
+from django.utils.timezone import make_aware
 
 from gissmo.models import (
     Actor,
@@ -9,6 +14,10 @@ from gissmo.models import (
     Network,
     Project,
     StationSite)
+from gissmo.admin import StationSiteAdmin
+from gissmo.views import closechannels_process
+
+from datetime import datetime
 
 DEFAULT_ADMIN_LOGIN = 'admin'
 DEFAULT_ADMIN_PASSWORD = 'admin'
@@ -53,6 +62,7 @@ class CloseChannelsTest(TestCase):
             channel_code='HHE')
         cls.network = Network.objects.create(
             network_code='FR')
+        channels_date = datetime.strptime('2016-02-04', '%Y-%m-%d')
         cls.channel_N = Channel.objects.create(
             station=cls.station,
             network=cls.network,
@@ -64,7 +74,7 @@ class CloseChannelsTest(TestCase):
             azimuth='0.0',
             dip='0.0',
             sample_rate=20.0,
-            start_date='2016-02-04')
+            start_date=make_aware(channels_date))
         cls.channel_Z = Channel.objects.create(
             station=cls.station,
             network=cls.network,
@@ -76,7 +86,7 @@ class CloseChannelsTest(TestCase):
             azimuth='0.0',
             dip='0.0',
             sample_rate=0.0,
-            start_date='2016-02-04')
+            start_date=make_aware(channels_date))
         cls.channel_E = Channel.objects.create(
             station=cls.station,
             network=cls.network,
@@ -88,7 +98,9 @@ class CloseChannelsTest(TestCase):
             azimuth='0.0',
             dip='90.0',
             sample_rate=10.0,
-            start_date='2016-02-04')
+            start_date=make_aware(channels_date))
+        cls.url = \
+            '/gissmo/gissmo/stationsite/%s/closechannels/' % cls.station.id
 
     def login(self):
         self.client.login(
@@ -96,17 +108,73 @@ class CloseChannelsTest(TestCase):
             password=DEFAULT_ADMIN_PASSWORD)
 
     def test_closechannels_page_loading(self):
-        self.fail("TODO")
-
-    def test_common_date_alone_raise_an_error(self):
         self.login()
-        self.fail("TODO")
-
-    def test_checkbox_alone_raise_an_error(self):
-        self.fail("TODO")
+        response = self.client.get(self.url)
+        self.assertEqual(
+            response.status_code,
+            200,
+            "Page loading status: %s" % response.status_code)
+        templates = []
+        template = 'closechannels_view.html'
+        for t in response.templates:
+            templates.append(t.name)
+        self.assertIn(template, templates, "%s missing template." % template)
 
     def test_single_closing_channel(self):
-        self.fail("TODO")
+        channel_datekey = 'form-0-%s_0' % self.channel_N.id
+        channel_timekey = 'form-0-%s_1' % self.channel_N.id
+        channel_date = datetime.strptime('2016-02-27', '%Y-%m-%d')
+        channel_time = '15:00:00'
+
+        a = StationSiteAdmin(StationSite, admin.site)
+        FormSet = a.closechannels_formset(self.station)
+        # set request
+        # - user: needed by closechannels_process
+        # - session: useful for closechannels_process to display messages
+        request = HttpRequest()
+        request.method = 'POST'
+        request.POST[channel_datekey] = make_aware(channel_date)
+        request.POST[channel_timekey] = channel_time
+        request.POST['form-TOTAL_FORMS'] = 1
+        request.POST['form-INITIAL_FORMS'] = 0
+        request.POST['form-MAX_NUM_FORMS'] = ''
+        user = authenticate(
+            username=DEFAULT_ADMIN_LOGIN,
+            password=DEFAULT_ADMIN_PASSWORD)
+        request.user = user
+        setattr(request, 'session', 'session')
+        messages = FallbackStorage(request)
+        setattr(request, '_messages', messages)
+
+        formset = FormSet(request.POST)
+
+        self.assertEqual(
+            formset.is_valid(),
+            True,
+            "Form is not valid: %s" % formset.errors)
+
+        for f in formset.cleaned_data:
+            closechannels_process(request, f, self.station.id, {})
+
+        tested_channel_N = Channel.objects.get(pk=self.channel_N.id)
+        tested_date = make_aware(
+            datetime.strptime("2016-02-27 15:00:00", '%Y-%m-%d %H:%M:%S'))
+        tested_channel_Z = Channel.objects.get(pk=self.channel_Z.id)
+        tested_channel_E = Channel.objects.get(pk=self.channel_E.id)
+        self.assertEqual(
+            tested_channel_N.end_date,
+            tested_date,
+            "Channel N: end_date should be set.")
+        date = tested_channel_Z.end_date
+        self.assertEqual(
+            date,
+            None,
+            "Channel Z: no date expected! Current: %s" % date)
+        date = tested_channel_E.end_date
+        self.assertEqual(
+            date,
+            None,
+            "Channel E: no date expected! Current: %s" % date)
 
     def test_closing_all_channels(self):
         self.fail("TODO")
