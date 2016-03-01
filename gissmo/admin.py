@@ -310,7 +310,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         'last_station',
         'owner']
     list_display_links = ['serial_number']
-    list_filter = [EquipFilter]
+    list_filter = [EquipFilter, 'last_state', 'last_station']
     ordering = [
         'equip_model__equip_type__equip_supertype',
         'equip_model__equip_type',
