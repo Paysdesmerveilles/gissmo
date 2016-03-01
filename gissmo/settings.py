@@ -29,6 +29,11 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+# Equipment is independant
+# Place is independant
+# Channel needs Equipment and Place
+# Network needs Place
+# Intervention needs Place and Equipment
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -38,7 +43,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'user',
+    'equipment',
     'place',
+    'network',
+    'channel',
     'intervention',
     'debug_toolbar',
 )

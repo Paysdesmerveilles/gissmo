@@ -6,10 +6,11 @@ from intervention.models import (
     ActionEquipment,
     ActionSite,
     Intervention,
-    InterventionPlayer,
-    Player)
+    InterventionPlayer)
 
 from intervention.forms import InterventionForm
+
+from user.models import Player
 
 
 class PlayerInline(admin.StackedInline):

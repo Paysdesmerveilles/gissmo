@@ -6,23 +6,16 @@ from polymorphic.models import PolymorphicModel
 from place import transitions as ptransition
 
 
-class Player(models.Model):
-    user = models.OneToOneField('auth.User')
-
-    def __str__(self):
-        return self.user.username
-
-
 class Intervention(models.Model):
     date = models.DateTimeField(db_index=True)
     note = models.TextField(null=True, blank=True)
-    players = models.ManyToManyField(Player, through='InterventionPlayer')
+    players = models.ManyToManyField('user.Player', through='InterventionPlayer')
     site = models.ForeignKey('place.Site')
 
 
 class InterventionPlayer(models.Model):
     intervention = models.ForeignKey('Intervention', on_delete=models.CASCADE)
-    player = models.ForeignKey('Player', on_delete=models.CASCADE)
+    player = models.ForeignKey('user.Player', on_delete=models.CASCADE)
 
 
 class ActionSite(models.Model):

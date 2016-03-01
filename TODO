@@ -1,0 +1,23 @@
+# Tâches à faire, entre autre choses
+
+## Module équipement
+
+  * Ajouter les états d'équipement
+    * table State comme pour Site
+    * ajout d'un champ "état" (state) pour le dernier état en cours (ForeignKey)
+  * Lien vers dernière place connue ? Si oui => Equipment nécessite Place comme dépendance
+  * Fonction is_supertype sur Type
+  * Fonction _supertype pour Model
+
+## Autres modules
+
+  * Faire module Place
+  * Faire module Network
+  * Faire module Channel
+
+## Trigger
+
+À ajouter dans le module intervention, dernier module de la liste
+
+  * Créer le trigger universel pour les objets de GISSMO
+  * Appliquer le trigger à l'ensemble des tables de GISSMO
