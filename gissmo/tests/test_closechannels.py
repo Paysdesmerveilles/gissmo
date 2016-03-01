@@ -107,6 +107,27 @@ class CloseChannelsTest(TestCase):
             username=DEFAULT_ADMIN_LOGIN,
             password=DEFAULT_ADMIN_PASSWORD)
 
+    def django_post_request(self):
+        request = HttpRequest()
+        request.method = 'POST'
+        request.POST['form-TOTAL_FORMS'] = 1
+        request.POST['form-INITIAL_FORMS'] = 0
+        request.POST['form-MAX_NUM_FORMS'] = ''
+        user = authenticate(
+            username=DEFAULT_ADMIN_LOGIN,
+            password=DEFAULT_ADMIN_PASSWORD)
+        request.user = user
+        setattr(request, 'session', 'session')
+        messages = FallbackStorage(request)
+        setattr(request, '_messages', messages)
+        return request
+
+    def get_closechannels_formset(self, request):
+        a = StationSiteAdmin(StationSite, admin.site)
+        FormSet = a.closechannels_formset(self.station)
+        formset = FormSet(request.POST)
+        return formset
+
     def test_closechannels_page_loading(self):
         self.login()
         response = self.client.get(self.url)
@@ -126,32 +147,16 @@ class CloseChannelsTest(TestCase):
         channel_date = datetime.strptime('2016-02-27', '%Y-%m-%d')
         channel_time = '15:00:00'
 
-        a = StationSiteAdmin(StationSite, admin.site)
-        FormSet = a.closechannels_formset(self.station)
-        # set request
-        # - user: needed by closechannels_process
-        # - session: useful for closechannels_process to display messages
-        request = HttpRequest()
-        request.method = 'POST'
+        request = self.django_post_request()
         request.POST[channel_datekey] = make_aware(channel_date)
         request.POST[channel_timekey] = channel_time
-        request.POST['form-TOTAL_FORMS'] = 1
-        request.POST['form-INITIAL_FORMS'] = 0
-        request.POST['form-MAX_NUM_FORMS'] = ''
-        user = authenticate(
-            username=DEFAULT_ADMIN_LOGIN,
-            password=DEFAULT_ADMIN_PASSWORD)
-        request.user = user
-        setattr(request, 'session', 'session')
-        messages = FallbackStorage(request)
-        setattr(request, '_messages', messages)
 
-        formset = FormSet(request.POST)
+        formset = self.get_closechannels_formset(request)
 
         self.assertEqual(
             formset.is_valid(),
             True,
-            "Form is not valid: %s" % formset.errors)
+            "Invalid form: %s" % formset.errors)
 
         for f in formset.cleaned_data:
             closechannels_process(request, f, self.station.id, {})
@@ -177,4 +182,30 @@ class CloseChannelsTest(TestCase):
             "Channel E: no date expected! Current: %s" % date)
 
     def test_closing_all_channels(self):
-        self.fail("TODO")
+        date = datetime.strptime('2016-02-27', '%Y-%m-%d')
+        time = '15:00:00'
+        tested_date = make_aware(
+            datetime.strptime("2016-02-27 15:00:00", '%Y-%m-%d %H:%M:%S'))
+        request = self.django_post_request()
+        request.POST['form-0-date_0'] = make_aware(date)
+        request.POST['form-0-date_1'] = time
+        request.POST['form-0-all_channels'] = True
+
+        formset = self.get_closechannels_formset(request)
+
+        self.assertEqual(
+            formset.is_valid(),
+            True,
+            "Invalid form: %s" % formset.errors)
+
+        for f in formset.cleaned_data:
+            closechannels_process(request, f, self.station.id, {})
+
+        channel_codes = ['N', 'Z', 'E']
+        for code in channel_codes:
+            tested_channel = getattr(self, 'channel_%s' % code, None)
+            channel = Channel.objects.get(pk=tested_channel.id)
+            self.assertEqual(
+                channel.end_date,
+                tested_date,
+                "Channel %s: end_date should be set.")
