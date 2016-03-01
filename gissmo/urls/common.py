@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 
+from gissmo import __version__ as gissmo_version
 from gissmo import views
 
 from api import views as api_views
@@ -14,7 +15,7 @@ from rest_framework import routers
 
 # Admin configuration
 admin.autodiscover()
-admin.site.site_header = 'Gissmo'
+admin.site.site_header = 'Gissmo %s' % gissmo_version
 admin.site.site_title = 'Gissmo'
 
 # REST FRAMEWORK API
