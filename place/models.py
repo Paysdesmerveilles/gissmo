@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
-from polymorphic import PolymorphicModel
+from polymorphic.models import PolymorphicModel
 
 from place import states as pstate
 from place import transitions as ptransition
