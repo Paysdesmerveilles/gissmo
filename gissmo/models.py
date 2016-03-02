@@ -1710,7 +1710,7 @@ class Chain(models.Model):
     OTHER_1 = 5
     OTHER_2 = 6
     OTHER_3 = 7
-    OTHER_4 = 7
+    OTHER_4 = 8
     OTHER_5 = 9
     # WARNING: DO NOT CHANGE these values as they are used in stationXML
     ORDER_CHOICES = (
