@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 
 from polymorphic.models import PolymorphicModel
 
+from measurement import units
+
 from place import states as pstate
 from place import transitions as ptransition
 
@@ -124,14 +126,6 @@ def get_used_code(sender, instance, **kwargs):
 
 
 class CommonPosition(models.Model):
-    # units
-    DEGREES = 0
-    METERS = 1
-    POSITION_UNIT_CHOICES = (
-        (DEGREES, "Degrees"),
-        (METERS, "Meters"),
-    )
-
     # fields
     latitude = models.DecimalField(
         null=True,
@@ -163,24 +157,26 @@ class CommonPosition(models.Model):
         blank=True,
         default="WGS84",
         verbose_name="Longitude datum")
-    latitude_unit = models.IntegerField(
-        choices=POSITION_UNIT_CHOICES,
-        default=DEGREES,
-        null=True,
-        blank=True,
-        verbose_name="Latitude unit")
-    longitude_unit = models.IntegerField(
-        choices=POSITION_UNIT_CHOICES,
-        default=DEGREES,
-        null=True,
-        blank=True,
-        verbose_name="Longitude unit")
-    elevation_unit = models.IntegerField(
-        choices=POSITION_UNIT_CHOICES,
-        default=METERS,
-        null=True,
-        blank=True,
-        verbose_name="Elevation unit")
+    # As we enter all data in degrees or meter (elevation), no need to gives
+    # the unit for each one.
+#    latitude_unit = models.IntegerField(
+#        choices=units.POSITION_UNIT_CHOICES,
+#        default=units.DEGREES,
+#        null=True,
+#        blank=True,
+#        verbose_name="Latitude unit")
+#    longitude_unit = models.IntegerField(
+#        choices=units.POSITION_UNIT_CHOICES,
+#        default=units.DEGREES,
+#        null=True,
+#        blank=True,
+#        verbose_name="Longitude unit")
+#    elevation_unit = models.IntegerField(
+#        choices=units.POSITION_UNIT_CHOICES,
+#        default=units.METERS,
+#        null=True,
+#        blank=True,
+#        verbose_name="Elevation unit")
 
     class Meta:
         abstract = True

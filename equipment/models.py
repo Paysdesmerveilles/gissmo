@@ -28,6 +28,11 @@ class Model(models.Model):
     is_network_model = models.BooleanField(
         verbose_name='Network configurable?',
         default=False)
+    storage_format = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name='Storage format')
     # TODO: get_supertype method for display purposes? Type should be enough
 
     class Meta:
@@ -51,6 +56,15 @@ class Equipment(models.Model):
         null=True,
         blank=True,
         verbose_name='Purchase date')
+    clock_drift = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name="Clock drift")
+    clock_drift_unit = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        default="SECONDS/SAMPLE")
 
     # TODO: add link to current state
     # TODO: add link to current place? => Installation of an equipment

@@ -28,11 +28,11 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-# Application definition
-# Equipment is independant
+## Application definition
+# Measurement is independant
+# Equipment needs Place (for last_place and last_built)
 # Place is independant
 # Channel needs Equipment and Place
-# Network needs Place
 # Intervention needs Place and Equipment
 
 INSTALLED_APPS = (
@@ -44,9 +44,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'user',
-    'equipment',
     'place',
-    'network',
+    'equipment',
     'channel',
     'intervention',
     'debug_toolbar',

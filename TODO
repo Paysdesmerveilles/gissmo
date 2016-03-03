@@ -15,11 +15,10 @@
   * Déplacer STATE de Site vers Station (module network)
   * Contrainte sur les bâtis à vérifier (station/type/name sur Built)
 
-## Autres modules
+## Module 'channel'
 
-  * Faire module Place
-  * Faire module Network
-  * Faire module Channel
+  * 2 stations peuvent avoir le même code : si on installe une station à côté d'une autre et qu'elles partagent un réseau identique
+  * 1 objet Channel ne devrait être lié qu'à une Installation (d'équipement) de type Capteur (order = SENSOR) afin de retrouver la chaîne correcte d'équipement
 
 ## Projets
 
@@ -44,19 +43,38 @@ Question : Django fait ça de base avec User. Donc quel intérêt ?
 
   * [RENAMED] equipment.vendor ne se nomme plus Seller comme en 1.6
   * [ABANDONNED] private_link sur StationSite car non renseigné jusqu'à maintenant dans la base GISSMO
-  * [ABANDONNED] latitude_pluserror (idem) StationSite
-  * [ABANDONNED] latitude_minuserror (idem) StationSite
-  * [ABANDONNED] longitude_pluserror (idem) StationSite
-  * [ABANDONNED] longitude_minuserror (idem) StationSite
-  * [ABANDONNED] elevation_pluserror (idem) StationSite
-  * [ABANDONNED] elevation_minuserror (idem) StationSite
+  * [ABANDONNED] latitude_pluserror (idem) StationSite + Channel
+  * [ABANDONNED] latitude_minuserror (idem) StationSite + Channel
+  * [ABANDONNED] longitude_pluserror (idem) StationSite + Channel
+  * [ABANDONNED] longitude_minuserror (idem) StationSite + Channel
+  * [ABANDONNED] elevation_pluserror (idem) StationSite + Channel
+  * [ABANDONNED] elevation_minuserror (idem) StationSite + Channel
   * [FIXED] by default, longitude and latitude datum is WGS84. In Gissmo 1.5, it's WSG84, which is wrong
+  * [ABANDONNED] Table Chain qui contient order a été déplacée dans Installation
+  * [ABANDONNED] validation_rule sur ChannelCode car non renseigné jusqu'à maintenant et non utilisé pour quoique ce soit
+  * [ABANDONNED] dip_pluserror sur Channel
+  * [ABANDONNED] dip_minuserror sur Channel
+  * [ABANDONNED] depth_pluserror sur Channel
+  * [ABANDONNED] depth_minuserror sur Channel
+  * [ABANDONNED] clock_drift_pluserror sur Channel
+  * [ABANDONNED] clock_drift_minuserror sur Channel
+  * [ABANDONNED] sample_rate_pluserror sur Channel
+  * [ABANDONNED] sample_rate_minuserror sur Channel
+  * [ABANDONNED] azimuth_pluserror sur Channel
+  * [ABANDONNED] azimuth_minuserror sur Channel
+  * [ABANDONNED] all FIELD_unit on Station and Channel as they are always same
 
 ## Migration
 
 WARNING: MIGRATION FATALE => décallage des numéro de type de site. STATION est passé à 0 au lieu de 1. Et ainsi de suite pour les suivants. Ceci afin de faciliter la programmation en faisant SITE_TYPE_CHOICES[STATION] par exemple au lieu de faire des SITE_TYPE_CHOICES[STATION-1] et pour d'autres non.
 
   * Prévoir la migration des _datum en WGS84 (inversion du G et S)
+  * Table Chain se retrouve dans Installation avec le champ "parent" et le champ "order"
+  * Décallage des ID du champ 'order' de Chain
+  * Migration de depth de Channel à Installation
+  * Migration de clock_drift et clock_drift_unit de Channel à Equipment
+  * Migration de storage_format de Channel à Model (d'équipement) => uniquement valable pour les Datalogger
+  * Décallage des ID du champ datatype de Channel (le premier était 1. Il est désormais à 0).
 
 ### Split de StationSite en Station et Site
 
@@ -64,3 +82,32 @@ StationSite devient Station et Site.
 
   * 'station_description' et 'site_description' se placent donc respectivement dedans
   * les enregistrements de type "STATION" (type = 1) vont théoriquement dans Station. Le reste dans Site.
+
+### Ce qu'il faut vérifier
+
+La migration s'évertue à simplifier l'infrastructure de la base afin d'améliorer : 
+
+  * le développement et la maintenance sous Django
+  * les requêtes SQL faites dans la BDD
+  * la compréhension du fonctionnement de GISSMO
+  * la livraison des informations par une API restful
+
+Afin de mesurer le passage de l'ancienne version à la nouvelle, voici les besoins typiques de GISSMO : 
+
+  * Liste des équipments installés actuellement sur une station
+  * Liste des stations en opération
+  * Liste des états pour chaque station
+  * Liste des canaux courants d'une station
+  * Historique des équipements ayants été installés sur une station
+  * Historique des canaux ayants été ouverts sur une station
+  * Liste des interventions effectuées sur un site particulier OU une station
+  * Configuration courante d'un équipement donné
+  * Configuration par défaut d'un modèle d'équipement
+  * Liste des chaînes d'acquisition d'une station donnée
+  * Pour chaque chaîne d'acquisition, sa configuration
+  * Liste des équipements avec leur dernier emplacement connu et leur état
+  * Liste des dernières interventions dans GISSMO
+  * Dernières modifications effectuées dans GISSMO
+  * Liste des réseaux auxquels appartient une station donnée
+  * Inversement : ensemble des stations d'un réseau donné
+  * Dernier emplacement d'un équipement
