@@ -28,6 +28,45 @@ Puis de définir des permissions par groups.
 
 Question : Django fait ça de base avec User. Donc quel intérêt ?
 
+## Documents
+
+Comment ajouter des documents sur certains objets de Django ?
+
+### Solution 1
+
+  * 2 tables : Type et Document
+  * Type :
+    * name
+  * Document : 
+    * owner
+    * start
+    * end
+    * file
+    * title
+    * inscription_date <= qu'est-ce ?
+    * private_link (lien interne genre seafile, etc.)
+  * On fait **à chaque fois** un lien 0,1 (cardinalité) entre Document et un objet divers => implique une dépendance forte de document à divers modules Django.
+
+### Solution 2
+
+Dans Solution 1, on change les liens 0,1 en 0,N vers les différents modèles. Avantage = on peut filtrer les documents suivant le modèle duquel on vient ET les dépendances peuvent aller dans le sens Objets -> Document.
+
+On a qu'à ajouter un ManyToManyField dans les objets qui ont besoin de documents et un Inlines dans Django Admin.
+
+### Solution 3
+
+On fait une table Document avec une colonne "objet" et une colonne "object_id". Cela définit l'objet d'où on vient et l'ID dudit objet dans la table de l'objet.
+
+Avantage : pas de dépendance de Document vers un module
+
+Inconvénient : implémentation exotique dans Django
+
+### Solution 4
+
+Trouver quelque chose comme Audittrails (django) qui ajoutait un "history =" dans l'objet, ce qui ajoutait tout ce qu'il fallait pour qu'il fonctionne.
+
+### Solution
+
 ## Divers
 
   * ajouter les champs "note" (TextField) pour chacun des objets présentés à l'interface GISSMO
@@ -75,6 +114,7 @@ WARNING: MIGRATION FATALE => décallage des numéro de type de site. STATION est
   * Migration de clock_drift et clock_drift_unit de Channel à Equipment
   * Migration de storage_format de Channel à Model (d'équipement) => uniquement valable pour les Datalogger
   * Décallage des ID du champ datatype de Channel (le premier était 1. Il est désormais à 0).
+  * CONFIGURATION: ChainConfig devient Configuration (grossomodo). Donc lié fortement à l'installation d'un équipement quelque part
 
 ### Split de StationSite en Station et Site
 
