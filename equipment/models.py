@@ -1,5 +1,7 @@
 from django.db import models
 
+from equipment import protocols as Protocol
+
 
 class Type(models.Model):
     parent = models.ForeignKey(
@@ -96,3 +98,30 @@ class Configuration(models.Model):
     start = models.DateTimeField(auto_now=True)
     end = models.DateTimeField(null=True, blank=True)
     equipment = models.ForeignKey('equipment.Equipment')
+
+
+class Service(models.Model):
+    protocol = models.IntegerField(
+        choices=Protocol.PROTOCOL_CHOICES)
+    port = models.PositiveIntegerField()
+    description = models.CharField(
+        max_length=256,
+        blank=True,
+        null=True)
+    equipment = models.ForeignKey('equipment.Equipment')
+
+    def __str__(self):
+        return '%s' % Protocol.PROTOCOL_CHOICES[self.protocol][1]
+
+
+class IPAddress(models.Model):
+    ip = models.CharField(
+        max_length=255,
+        verbose_name='IP Address')  # TODO: add validator for IPAddress
+    netmask = models.GenericIPAddressField(
+        protocol='both',
+        verbose_name='Netmask')
+    equipment = models.ForeignKey('Equipment')
+
+    def __str__(self):
+        return '%s' % self.ip
