@@ -76,6 +76,21 @@ class Equipment(models.Model):
         return '%s' % self.name
 
 
+class ForbiddenEquipmentModel(models.Model):
+    # OneToOneField is used not to have multiple line about the same original
+    # equipment.
+    original = models.OneToOneField(
+        'equipment.Model',
+        verbose_name='Forbidden Model')
+    recommended = models.ForeignKey(
+        'equipment.Model',
+        verbose_name='Recommended Model',
+        related_name='recommended_model')
+
+    class Meta:
+        verbose_name = "Forbidden Equipment's model"
+
+
 class Parameter(models.Model):
     name = models.CharField(max_length=255, unique=True)
     model = models.ForeignKey('equipment.Model')
