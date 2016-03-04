@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 # Place is independant
 # Channel needs Equipment and Place
 # Intervention needs Place and Equipment
+# Project needs User and Place
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -45,8 +46,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'user',
     'place',
+    'project',
     'equipment',
-    'channel',
+    'grid',
     'intervention',
     'debug_toolbar',
 )

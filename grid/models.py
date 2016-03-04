@@ -2,7 +2,7 @@ from django.db import models
 
 from place.models import CommonPosition
 
-from channel import codes as channel_code
+from grid import codes as channel_code
 
 from measurement import units
 
@@ -160,8 +160,8 @@ class Channel(CommonXML, CommonPosition):
         (BEAM, 'BEAM'),
     )
     # fields
-    installation = models.ForeignKey('channel.Installation')
-    network = models.ForeignKey('channel.Network')
+    installation = models.ForeignKey('grid.Installation')
+    network = models.ForeignKey('grid.Network')
     code = models.IntegerField(
         choices = channel_code.CODE_CHOICES)
     location_code = models.CharField(

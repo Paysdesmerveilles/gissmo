@@ -1,5 +1,15 @@
 # Tâches à faire, entre autre choses
 
+## Module 'user'
+
+Permet d'étendre les fonctionnalités de l'utilisateur et des groupes à GISSMO.
+
+On a donc la notion de : 
+
+  * user : un identifiant unique pour accéder à l'application GISSMO.
+  * player : n'importe quel intervenant, fournisseur, opérateur, etc. Que ce soit une entité physique, morale ou entreprise
+  * projet : regroupe les personnes (user) en projet liés à l'utilisation de GISSMO (G-EAU-THERMIE, ADEME, etc.)
+
 ## Module 'equipment'
 
   * Ajouter les états d'équipement
@@ -15,7 +25,9 @@
   * Déplacer STATE de Site vers Station (module network)
   * Contrainte sur les bâtis à vérifier (station/type/name sur Built)
 
-## Module 'channel'
+## Module 'grid'
+
+Grid apport la notion de réseau maillé d'installations/stations
 
   * 2 stations peuvent avoir le même code : si on installe une station à côté d'une autre et qu'elles partagent un réseau identique
   * 1 objet Channel ne devrait être lié qu'à une Installation (d'équipement) de type Capteur (order = SENSOR) afin de retrouver la chaîne correcte d'équipement
@@ -27,6 +39,13 @@ Il s'agit d'intégrer la notion de projets afin de permettre de regrouper les ut
 Puis de définir des permissions par groups.
 
 Question : Django fait ça de base avec User. Donc quel intérêt ?
+
+  * GissmoUser est User étendu de Django pour rajouter un lien fort avec Player
+  * Chaque utilisateur GISSMO est aussi un player (sauf le superuser qui n'y figure pas)
+  * On regroupe les utilisateurs par projets pour leur permettre de filtrer les sites
+  * Chaque projet est lié à plusieurs sites
+  * Chaque projet possède UN manager (qui a le droit d'ajouter les sites)
+  * Chaque utilisateur va pouvoir choisir l'ensemble des projets qu'il veut utiliser comme filtrage pour les sites et/ou station de ces projets
 
 ## Documents
 
@@ -151,3 +170,4 @@ Afin de mesurer le passage de l'ancienne version à la nouvelle, voici les besoi
   * Liste des réseaux auxquels appartient une station donnée
   * Inversement : ensemble des stations d'un réseau donné
   * Dernier emplacement d'un équipement
+  * Liste des stations liées à un projet donné

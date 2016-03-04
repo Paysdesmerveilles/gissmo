@@ -10,17 +10,19 @@ from intervention.models import (
 
 from intervention.forms import InterventionForm
 
-from user.models import Player
+from user.models import (
+    GissmoUser,
+    Player)
 
 
-class PlayerInline(admin.StackedInline):
-    model = Player
-    can_delete = False
-    verbose_name_plural = 'players'
-
-
-class UserAdmin(UserAdmin):
-    inlines = (PlayerInline, )
+#class PlayerInline(admin.StackedInline):
+#    model = Player
+#    can_delete = False
+#    verbose_name_plural = 'players'
+#
+#
+#class UserAdmin(UserAdmin):
+#    inlines = (PlayerInline, )
 
 
 class InterventionPlayer(admin.TabularInline):
@@ -49,7 +51,8 @@ class InterventionAdmin(admin.ModelAdmin):
 
 # Players
 admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+admin.site.register(GissmoUser)
+#admin.site.register(User, UserAdmin)
 admin.site.register(Player)
 
 # Intervention
