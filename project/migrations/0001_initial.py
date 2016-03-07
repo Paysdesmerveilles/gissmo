@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50)),
-                ('manager', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='user.Player')),
+                ('manager', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='managed_project', to='user.GissmoUser')),
                 ('sites', models.ManyToManyField(blank=True, to='place.Site')),
                 ('users', models.ManyToManyField(blank=True, to='user.GissmoUser')),
             ],
