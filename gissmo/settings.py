@@ -51,6 +51,7 @@ INSTALLED_APPS = (
     'grid',
     'intervention',
     'debug_toolbar',
+    'django_extensions',
 )
 
 MIDDLEWARE_CLASSES = (

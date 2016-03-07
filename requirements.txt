@@ -6,3 +6,4 @@ mccabe
 pep8
 pyflakes
 django-debug-toolbar
+django-extensions
