@@ -8,7 +8,6 @@ On a donc la notion de :
 
   * user : un identifiant unique pour accéder à l'application GISSMO.
   * player : n'importe quel intervenant, fournisseur, opérateur, etc. Que ce soit une entité physique, morale ou entreprise
-  * projet : regroupe les personnes (user) en projet liés à l'utilisation de GISSMO (G-EAU-THERMIE, ADEME, etc.)
 
 ## Module 'equipment'
 
@@ -33,6 +32,8 @@ Grid apport la notion de réseau maillé d'installations/stations
   * 1 objet Channel ne devrait être lié qu'à une Installation (d'équipement) de type Capteur (order = SENSOR) afin de retrouver la chaîne correcte d'équipement
 
 ## Module 'project'
+
+Regroupe les personnes (user) en projet liés à l'utilisation de GISSMO (G-EAU-THERMIE, ADEME, etc.)
 
   * Gérer le projet 'ALL' comme étant un projet spécial
   * Comment mettre à disposition des utilisateurs un filtrage suivant les projets auxquels il a droit ? (système de choix de projets parmi les projets auxquels il appartient)
