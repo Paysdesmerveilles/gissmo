@@ -22,7 +22,6 @@ class Player(models.Model):
     )
 
     # fields
-#    user = models.ManyToOneField('auth.User')
     name = models.CharField(max_length=50)
     _type = models.IntegerField(
         choices=PLAYER_TYPE_CHOICES,
@@ -39,7 +38,3 @@ class GissmoUser(User):
     This object add a mandatory link between User and Player.
     """
     player = models.ForeignKey('user.Player')
-
-
-class Project(models.Model):
-    users = models.ManyToManyField('auth.User')

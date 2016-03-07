@@ -32,20 +32,23 @@ Grid apport la notion de réseau maillé d'installations/stations
   * 2 stations peuvent avoir le même code : si on installe une station à côté d'une autre et qu'elles partagent un réseau identique
   * 1 objet Channel ne devrait être lié qu'à une Installation (d'équipement) de type Capteur (order = SENSOR) afin de retrouver la chaîne correcte d'équipement
 
+## Module 'project'
+
+  * Gérer le projet 'ALL' comme étant un projet spécial
+  * Comment mettre à disposition des utilisateurs un filtrage suivant les projets auxquels il a droit ? (système de choix de projets parmi les projets auxquels il appartient)
+
 ## Projets
 
 Il s'agit d'intégrer la notion de projets afin de permettre de regrouper les utilisateurs par projets (groupes).
 
 Puis de définir des permissions par groups.
 
-Question : Django fait ça de base avec User. Donc quel intérêt ?
-
   * GissmoUser est User étendu de Django pour rajouter un lien fort avec Player
   * Chaque utilisateur GISSMO est aussi un player (sauf le superuser qui n'y figure pas)
   * On regroupe les utilisateurs par projets pour leur permettre de filtrer les sites
   * Chaque projet est lié à plusieurs sites
   * Chaque projet possède UN manager (qui a le droit d'ajouter les sites)
-  * Chaque utilisateur va pouvoir choisir l'ensemble des projets qu'il veut utiliser comme filtrage pour les sites et/ou station de ces projets
+  * Chaque utilisateur va pouvoir choisir l'ensemble des projets qu'il veut utiliser comme filtrage pour les sites et/ou station de ces projets => trouver une méthode pour faire cela
 
 ## Documents
 
