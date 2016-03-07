@@ -104,6 +104,7 @@ class Parameter(models.Model):
 class Value(models.Model):
     name = models.CharField(max_length=255)
     is_default = models.BooleanField(default=False)
+    parameter = models.ForeignKey('equipment.Parameter')
 
     def __str__(self):
         return '%s' % self.name

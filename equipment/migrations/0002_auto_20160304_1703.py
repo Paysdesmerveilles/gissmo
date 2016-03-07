@@ -26,4 +26,9 @@ class Migration(migrations.Migration):
             name='equipment',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='equipment.Equipment'),
         ),
+        migrations.AddField(
+            model_name='value',
+            name='parameter',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='equipment.Parameter'),
+        ),
     ]
