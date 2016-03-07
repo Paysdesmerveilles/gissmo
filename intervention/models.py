@@ -6,3 +6,4 @@ class Intervention(models.Model):
     note = models.TextField(null=True, blank=True)
     site = models.ForeignKey('place.Site')
     players = models.ManyToManyField('user.Player')
+    confirmed = models.BooleanField(default=None)

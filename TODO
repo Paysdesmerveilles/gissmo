@@ -38,7 +38,14 @@ Regroupe les personnes (user) en projet liés à l'utilisation de GISSMO (G-EAU-
   * Gérer le projet 'ALL' comme étant un projet spécial
   * Comment mettre à disposition des utilisateurs un filtrage suivant les projets auxquels il a droit ? (système de choix de projets parmi les projets auxquels il appartient)
 
-## Projets
+## Module 'intervention'
+
+Les interventions sont générées via un trigger sur les tables contenues dans le module grid puisqu'on intervient dans ce cadre de réseau d'équipements sur des stations définies.
+
+  * penser à vérifier que les positions GPS soient aussi incluses dans l'historique
+  * le champ "confirmed" est un booléen qui définit si l'intervention a été validée par un utilisateur ou non (pour vérifier la présence de tout le monde sur l'intervention).
+
+## Notion de projets
 
 Il s'agit d'intégrer la notion de projets afin de permettre de regrouper les utilisateurs par projets (groupes).
 
@@ -51,7 +58,7 @@ Puis de définir des permissions par groups.
   * Chaque projet possède UN manager (qui a le droit d'ajouter les sites)
   * Chaque utilisateur va pouvoir choisir l'ensemble des projets qu'il veut utiliser comme filtrage pour les sites et/ou station de ces projets => trouver une méthode pour faire cela
 
-## Documents
+## Notion de documents
 
 Comment ajouter des documents sur certains objets de Django ?
 
