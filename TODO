@@ -45,6 +45,19 @@ Les interventions sont générées via un trigger sur les tables contenues dans 
   * penser à vérifier que les positions GPS soient aussi incluses dans l'historique
   * le champ "confirmed" est un booléen qui définit si l'intervention a été validée par un utilisateur ou non (pour vérifier la présence de tout le monde sur l'intervention).
 
+## Module 'document'
+
+  * ajouter le dossier /upload dans le fichier Docker
+  * les types de documents permettent à l'administrateur de définir un axe de tri supplémentaire pour la recherche de documents
+  * En utilisant django-db-file-storage on pourrait avoir une classe "Document" et une classe "Picture" pour les images
+  * Quelques objets ayant besoin de fichiers/documents et quels types de documents : 
+    * Modèle d'équipement : manuel d'utilisateur, datasheet
+    * Équipement : feuille d'étalonnage, certificat, photos
+    * Intervention : photos de l'intervention
+    * Station : configuration (fichier de configuration, XML constructeur)
+    * Site : factures, contrats, convention, etc.
+    * Built : image du bâti
+
 ## Notion de projets
 
 Il s'agit d'intégrer la notion de projets afin de permettre de regrouper les utilisateurs par projets (groupes).

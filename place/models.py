@@ -273,6 +273,9 @@ class Site(CommonPosition):
         null=True,
         blank=True)
 
+    # files
+    documents = models.ManyToManyField('document.Document', blank=True)
+
     def __str__(self):
         return self.name
 
@@ -304,6 +307,7 @@ class Built(CommonPosition):
         default="Unknown")
     _type = models.ForeignKey("place.BuiltType", verbose_name="Type")
     site = models.ForeignKey("place.Site")
+    documents = models.ManyToManyField('document.Document', blank=True)
 
     def __str__(self):
         return '%s' % self.name

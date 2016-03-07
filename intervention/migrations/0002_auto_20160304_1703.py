@@ -18,28 +18,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='interventionplayer',
-            name='player',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='user.Player'),
-        ),
-        migrations.AddField(
             model_name='intervention',
             name='players',
-            field=models.ManyToManyField(through='intervention.InterventionPlayer', to='user.Player'),
+            field=models.ManyToManyField(to='user.Player'),
         ),
         migrations.AddField(
             model_name='intervention',
             name='site',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='place.Site'),
-        ),
-        migrations.AddField(
-            model_name='actionsite',
-            name='intervention',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='intervention.Intervention'),
-        ),
-        migrations.AddField(
-            model_name='actionequipment',
-            name='intervention',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='intervention.Intervention'),
         ),
     ]

@@ -56,6 +56,9 @@ class Station(CommonXML):
     # folks
     operator = models.ForeignKey('user.Player')
 
+    # files
+    documents = models.ManyToManyField('document.Document', blank=True)
+
     def __str__(self):
         return '%s' % self.code
 

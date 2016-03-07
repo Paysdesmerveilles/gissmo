@@ -31,9 +31,10 @@ ALLOWED_HOSTS = []
 ## Application definition
 # Measurement is independant
 # Equipment needs Place (for last_place and last_built)
-# Place is independant
-# Channel needs Equipment and Place
-# Intervention needs Place and Equipment
+# Document is independant
+# Place needs Document (for documents)
+# Channel needs Equipment, Place and Document
+# Intervention needs Place and Grid (for linked site and history)
 # Project needs User and Place
 
 INSTALLED_APPS = (
@@ -45,6 +46,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'user',
+    'document',
     'place',
     'project',
     'equipment',
@@ -115,3 +117,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+UPLOAD_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')

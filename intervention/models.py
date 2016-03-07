@@ -7,3 +7,4 @@ class Intervention(models.Model):
     site = models.ForeignKey('place.Site')
     players = models.ManyToManyField('user.Player')
     confirmed = models.BooleanField(default=None)
+    documents = models.ManyToManyField('document.Document', blank=True)
