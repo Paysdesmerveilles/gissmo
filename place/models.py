@@ -4,7 +4,6 @@ from django.db.models.signals import (
     post_save,
     pre_save)
 from django.dispatch import receiver
-from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
 from polymorphic.models import PolymorphicModel
