@@ -174,6 +174,26 @@ class EquipDocInlineForm(forms.ModelForm):
             )
 
 
+class IntervDocInlineForm(forms.ModelForm):
+    class Meta:
+        model = EquipDoc
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super(IntervDocInlineForm, self).__init__(*args, **kwargs)
+
+        if 'instance' in kwargs:
+            instance_document = kwargs['instance']
+            self.fields['_file'].widget = AdminFileWidget(
+                attrs={
+                    'app_label': instance_document._meta.app_label,
+                    'model_name': instance_document._meta.object_name.lower(),
+                    'field_name': '_file',
+                    'id': instance_document.id
+                }
+            )
+
+
 class IPAddressInlineForm(forms.ModelForm):
     ip = forms.CharField(validators=[validate_ipaddress])
 

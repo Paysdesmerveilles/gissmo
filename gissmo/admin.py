@@ -865,6 +865,13 @@ class IntervEquipInline(admin.TabularInline):
     }
 
 
+class IntervDocInline(admin.TabularInline):
+    model = IntervDoc
+    extra = 1
+    fields = ('_file', 'description')
+    form = IntervDocInlineForm
+
+
 class InterventionAdmin(admin.ModelAdmin):
     list_display = ['station', 'format_date']
     list_filter = ['station', ]
@@ -872,7 +879,11 @@ class InterventionAdmin(admin.ModelAdmin):
     search_fields = ['station__station_code', 'intervention_date', ]
     form = InterventionForm
 
-    inlines = [IntervActorInline, IntervStationInline, IntervEquipInline]
+    inlines = [
+        IntervActorInline,
+        IntervStationInline,
+        IntervEquipInline,
+        IntervDocInline]
 
     class Media:
         js = ["js/my_ajax_function.js"]
