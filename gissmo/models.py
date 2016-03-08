@@ -1449,6 +1449,24 @@ class EquipDoc(models.Model):
 
 
 @python_2_unicode_compatible
+class IntervDoc(models.Model):
+    intervention = models.ForeignKey('gissmo.Intervention')
+    _file = models.FileField(
+        storage=fs,
+        verbose_name="File",
+        upload_to="intervention/%Y/%m/%d/",
+        blank=True)
+    description = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "Document (interv.)"
+        verbose_name_plural = "Documents (interv.)"
+
+    def __str__(self):
+        return '%s' % self.description
+
+
+@python_2_unicode_compatible
 class CalibrationUnit(models.Model):
     name = models.CharField(max_length=50, verbose_name="Name")
     description = models.TextField(
