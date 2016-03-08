@@ -73,10 +73,13 @@ docker run -it --rm --link gissmo_db:db gissmo python manage.py createsuperuser
 Now you can start Gissmo like this:
 
 ```bash
-docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo:1.5
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v /srv/upload:/opt/gissmo/upload gissmo:1.5
 ```
 
-**WARNING**: For Gissmo to work we **need that the link alias is db**. So always name it **db**.
+**WARNING**:
+
+  * For Gissmo to work we **need that the link alias is db**. So always name it **db**
+  * /opt/gissmo/upload contains all Gissmo uploaded files. Change /srv/upload by your local directory for them
 
 Gissmo is now available, in production mode, at http://127.0.0.1:8000/.
 
@@ -90,7 +93,7 @@ It gives 3 possibilities:
 
 These words are keywords to launch Docker container in multiple ways. So if you need to launch the test mode, do this:
 ```bash
-docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo:1.5 test
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v /srv/upload:/opt/gissmo/upload gissmo:1.5 test
 ```
 
 **By default the production mode is launched**. Which makes an error because you need a SECRET\_KEY variable for it to be used.
@@ -115,7 +118,7 @@ You **need to give a SECRET\_KEY** for this mode to work.
 
 For an example:
 ```bash
-docker run -it --rm -P --link gissmo_db:db -e SECRET_KEY="abcdefg" gissmo:1.5 production
+docker run -it --rm -P --link gissmo_db:db -e SECRET_KEY="abcdefg" -v /srv/upload:/opt/gissmo/upload gissmo:1.5 production
 ```
 
 # How to use launch Django into the virtualenv while using Docker postgres container
@@ -144,7 +147,7 @@ Test server works the same way as the development one.
 Just launch the machine like this:
 
 ```bash
-docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db gissmo:1.5 test
+docker run -it --rm -p 8000:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v /srv/upload:/opt/gissmo/upload gissmo:1.5 test
 ```
 
 This will launch Django application in uwsgi with DEBUG=True.
@@ -247,4 +250,4 @@ docker run -it --rm --link gissmo_db:db gissmo:1.5 python manage.py migrate giss
 
 * [Olivier Dossmann](https://github.com/blankoworld)
 * [Fabien Engels](https://github.com/fabienengels)
-* [Martin Dutil](https://github.com/mdutil)
+* [Martin Dutil](https://github.com/mdutil)://github.com/mdutil)

@@ -5,16 +5,10 @@ FROM python:3.4
 
 MAINTAINER Olivier DOSSMANN, olivier+dockerfile@dossmann.net
 
-# Main variables
 ENV PYTHONBUFFERED 1
 ENV GISSMO_DIR /opt/gissmo
 ENV GISSMO_STATIC_DIR $GISSMO_DIR/static
 
-# Add new GISSMO user
-RUN useradd -m gissmo
-RUN echo "gissmo:gissmo" | chpasswd
-
-# GISSMO directory
 RUN mkdir -p $GISSMO_DIR
 RUN mkdir -p $GISSMO_DIR/static # For production purposes
 RUN mkdir -p $GISSMO_DIR/upload # For upload purposes
@@ -32,12 +26,10 @@ RUN python manage.py collectstatic --noinput --clear -v 1
 
 COPY scripts/docker-entrypoint.sh /
 
-RUN chown gissmo $GISSMO_DIR -R
-
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-EXPOSE 8000
+VOLUME $GISSMO_DIR/upload
 
-USER gissmo
+EXPOSE 8000
 
 CMD ["production"]
