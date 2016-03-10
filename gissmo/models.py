@@ -1857,3 +1857,32 @@ class LoggedActions(models.Model):
         managed = False
         db_table = 'logged_actions'
         verbose_name = "Logged action"
+
+
+class Affiliation(models.Model):
+    # affiliation types
+    OBSERVATORY = 0
+    ORGANIZATION = 1
+    BUSINESS = 2
+    CUSTOMER_SERVICE = 3
+    UNKNOWN = 4
+    AFFILIATION_TYPE_CHOICES = (
+        (OBSERVATORY, 'Observatory/Laboratory'),
+        (ORGANIZATION, 'Organization'),
+        (BUSINESS, 'Business'),
+        (CUSTOMER_SERVICE, 'Customer service Company'),
+        (UNKNOWN, 'Unknown'),
+    )
+    # fields
+    name = models.CharField(max_length=255)
+    _type = models.IntegerField(
+        choices=AFFILIATION_TYPE_CHOICES,
+        verbose_name='Type',
+        default=UNKNOWN)
+    users = models.ManyToManyField(
+        'auth.User',
+        blank=True)
+    parent = models.ForeignKey('self', null=True, blank=True)
+
+    def __str__(self):
+        return '%s' % self.name
