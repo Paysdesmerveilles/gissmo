@@ -25,14 +25,12 @@ def migrate_stationsite_operator_to_user_id(apps, schema_editor):
     Affiliation = apps.get_model('gissmo', 'Affiliation')
     correlation = {}
     for s in StationSite.objects.all():
-        search_name = 'Inconnu'
-        if s.operator:
-            search_name = s.operator.actor_name
+        search_name = s.operator and s.operator.actor_name or 'Inconnu'
         affiliation = Affiliation.objects.filter(name=search_name).first()
         correlation[s.id] = affiliation.id
     for s_id in correlation:
         s = StationSite.objects.get(pk=s_id)
-        s.operator_id = affiliation.id
+        s.operator_id = correlation[s_id]
         s.save()
 
 
