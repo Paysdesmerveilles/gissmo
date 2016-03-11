@@ -17,10 +17,24 @@ def get_searched_name(string):
     return result
 
 
+def create_intervaffiliation(apps, intervention, affiliation, note):
+    """
+    Only create IntervAffiliation if no (Intervention and Affiliation) exists
+    """
+    IntervAffiliation = apps.get_model('gissmo', 'IntervAffiliation')
+    exists = IntervAffiliation.objects.filter(
+        intervention=intervention,
+        affiliation=affiliation)
+    if not exists:
+        IntervAffiliation.objects.create(
+            intervention=intervention,
+            affiliation=affiliation,
+            note=note)
+
+
 def check_and_create_intervuser(apps, name, intervention, note):
     IntervUser = apps.get_model('gissmo', 'IntervUser')
     User = apps.get_model('auth', 'User')
-    IntervAffiliation = apps.get_model('gissmo', 'IntervAffiliation')
     searched_name = get_searched_name(name)
     # Specific case
     if name == 'Hervé Wodling':
@@ -32,15 +46,11 @@ def check_and_create_intervuser(apps, name, intervention, note):
         note=note)
     # Search linked affiliation and create IntervAffiliation
     for affiliation in u.affiliation_set.all():
-        IntervAffiliation.objects.create(
-            intervention=intervention,
-            affiliation=affiliation,
-            note=note)
+        create_intervaffiliation(apps, intervention, affiliation, note)
 
 
 def migrate_intervactor_to_user_and_affiliation(apps, schema_editor):
     IntervActor = apps.get_model('gissmo', 'IntervActor')
-    IntervAffiliation = apps.get_model('gissmo', 'IntervAffiliation')
     Affiliation = apps.get_model('gissmo', 'Affiliation')
 
     actor_non_physical = [
@@ -60,10 +70,7 @@ def migrate_intervactor_to_user_and_affiliation(apps, schema_editor):
             a = Affiliation.objects.filter(name=name).first()
             if not a:
                 continue
-            IntervAffiliation.objects.create(
-                intervention=intervention,
-                affiliation=a,
-                note=note)
+            create_intervaffiliation(apps, intervention, a, note)
         # User case
         else:
             check_and_create_intervuser(apps, name, intervention, note)
