@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.utils.timezone import localtime
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
@@ -1737,6 +1737,15 @@ priori permis mais pourraient être mal interprétés par certains programmes.
 
     def __str__(self):
         return u'%s : %s : %s' % (self.chain, self.parameter, self.value)
+
+
+class GissmoGroup(Group):
+    group = models.OneToOneField('auth.Group')
+    manager = models.ForeignKey('auth.User', null=True)
+    sites = models.ManyToManyField(
+        'StationSite',
+        blank=True,
+        verbose_name='Site')
 
 
 @python_2_unicode_compatible
