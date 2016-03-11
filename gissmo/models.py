@@ -1013,6 +1013,12 @@ class Intervention(models.Model):
     intervention_date = models.DateTimeField(
         verbose_name="Date (yyyy-mm-dd)")
     note = models.TextField(null=True, blank=True, verbose_name="Note")
+    # Before users and affiliations, Intervention was linked to "IntervActor"
+    # which grouped all kind of users/affiliations.
+    users = models.ManyToManyField('auth.User', through='gissmo.IntervUser')
+    affiliations = models.ManyToManyField(
+        'gissmo.Affiliation',
+        through='gissmo.IntervAffiliation')
 
     class Meta:
         unique_together = ("station", "intervention_date")
@@ -1052,6 +1058,24 @@ l'intervention
 
     def __str__(self):
         return u'%s : %s' % (self.intervention, self.actor)
+
+
+class IntervUser(models.Model):
+    intervention = models.ForeignKey('gissmo.Intervention')
+    user = models.ForeignKey('auth.User')
+    note = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Protagonist'
+
+
+class IntervAffiliation(models.Model):
+    intervention = models.ForeignKey('gissmo.Intervention')
+    affiliation = models.ForeignKey('gissmo.Affiliation')
+    note = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Operator'
 
 
 @python_2_unicode_compatible
