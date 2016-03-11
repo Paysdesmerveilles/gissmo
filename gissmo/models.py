@@ -595,9 +595,9 @@ class StationSite(models.Model):
         #     intervention=intervention,
         #     actor=actor)
 
-        # Add station to a project
-        project = get_object_or_404(Project, project_name=self.project)
-        project.station.add(self.id)
+        # Add station to a group
+        group = get_object_or_404(Group, name=self.project)
+        group.sites.add(self.id)
 
         # Return expected station state
         return StationState.INSTALLATION
@@ -1747,44 +1747,19 @@ class GissmoGroup(Group):
         blank=True,
         verbose_name='Site')
 
-
-@python_2_unicode_compatible
-class Project(models.Model):
-    project_name = models.CharField(max_length=50, verbose_name="Name")
-    manager = models.ForeignKey(User)
-    station = models.ManyToManyField(
-        'StationSite',
-        blank=True,
-        verbose_name="Site")
-
-    # Validation to check that the name of the project ALL don't change
+    # Validation to check that the name of the group ALL don't change
     # It's needed in comparison to the admin.py module to filter station,
     # equipment, intervention
     # in the queryset
     def clean(self):
         if self.id:
-            project = get_object_or_404(Project, pk=self.id)
-            if project.project_name == 'ALL' and self.project_name != 'ALL':
+            group = get_object_or_404(GissmoGroup, pk=self.id)
+            if group.name == 'ALL' and self.name != 'ALL':
                 raise ValidationError(
-                    "We can't change the name for the project ALL")
+                    "We can't change the name for the group ALL")
 
     class Meta:
-        verbose_name = "Project"
-
-    def __str__(self):
-        return u'%s' % (self.project_name)
-
-
-@python_2_unicode_compatible
-class ProjectUser(models.Model):
-    user = models.ForeignKey(User)
-    project = models.ManyToManyField('Project')
-
-    class Meta:
-        verbose_name = "Project's user"
-
-    def __str__(self):
-        return u'%s' % (self.user)
+        verbose_name = 'Gissmo specific'
 
 
 class LoggedActions(models.Model):

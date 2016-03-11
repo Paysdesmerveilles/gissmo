@@ -12,6 +12,8 @@ from django.contrib.admin.widgets import (
     AdminTimeWidget,
     AdminURLFieldWidget,
 )
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Textarea
 from django.shortcuts import (
@@ -476,27 +478,19 @@ class EquipmentAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """
-        Show only equipment according to the user's project
+        Show only equipment according to the user's group
         """
         qs = super(EquipmentAdmin, self).get_queryset(
             request).prefetch_related(
             'last_station')
-        check_forall = ProjectUser.objects.filter(
-            user=request.user).values_list(
-                'project__project_name',
-                flat=True)
-        # The name of the project must stay ALL
-        if request.user.is_superuser or u'ALL' in check_forall:
+        group_ids = [g.id for g in request.user.groups.all()]
+        # The name of the group must stay ALL
+        if request.user.is_superuser or u'ALL' in group_ids:
             return qs
-        project_list = ProjectUser.objects.filter(
-            user=request.user).values_list('project', flat=True)
-        station_list = Project.objects.filter(
-            id__in=project_list).values_list('station', flat=True)
-        intervequip_list = IntervEquip.objects.filter(
-            station_id__in=station_list).values_list(
-                'equip',
-                flat=True).distinct()
-        return qs.filter(id__in=intervequip_list)
+        allowed_station = [s.id for s in request.user.groups.all().sites.all()]
+        return qs.filter(
+            last_station_id__in=allowed_station).prefetch_related(
+                'last_station')
 
     def save_model(self, request, obj, form, change):
         """
@@ -666,19 +660,15 @@ class StationSiteAdmin(admin.ModelAdmin):
         form.current_user = request.user
         return form
 
-    # Redefine queryset to show only site according to the user's project
+    # Redefine queryset to show only site according to the user's group
     def get_queryset(self, request):
         qs = super(StationSiteAdmin, self).get_queryset(request)
-        check_forall = ProjectUser.objects.filter(
-            user=request.user).values_list('project__project_name', flat=True)
-        # The name of the project must stay ALL
-        if request.user.is_superuser or u'ALL' in check_forall:
+        group_ids = [g.id for g in request.user.groups.all()]
+        # The name of the group must stay ALL
+        if request.user.is_superuser or u'ALL' in group_ids:
             return qs
-        project_list = ProjectUser.objects.filter(
-            user=request.user).values_list('project', flat=True)
-        station_list = Project.objects.filter(
-            id__in=project_list).values_list('station', flat=True)
-        return qs.filter(id__in=station_list)
+        allowed_station = [s.id for s in request.user.groups.all().sites.all()]
+        return qs.filter(id__in=allowed_station)
 
     def save_model(self, request, obj, form, change):
         """
@@ -857,18 +847,14 @@ class InterventionAdmin(admin.ModelAdmin):
         js = ["js/my_ajax_function.js"]
 
     # Redefine queryset to show only intervention according to the user's
-    # project
+    # group
     def get_queryset(self, request):
         qs = super(InterventionAdmin, self).get_queryset(request)
-        check_forall = ProjectUser.objects.filter(
-            user=request.user).values_list('project__project_name', flat=True)
-        # The name of the project must stay ALL
-        if request.user.is_superuser or u'ALL' in check_forall:
+        group_ids = [g.id for g in request.user.groups.all()]
+        # The name of the group must stay ALL
+        if request.user.is_superuser or u'ALL' in group_ids:
             return qs
-        project_list = ProjectUser.objects.filter(
-            user=request.user).values_list('project', flat=True)
-        station_list = Project.objects.filter(
-            id__in=project_list).values_list('station', flat=True)
+        station_list = [s.id for s in request.user.groups.all().sites.all()]
         return qs.filter(station_id__in=station_list)
 
     def response_change(self, request, obj):
@@ -1246,64 +1232,49 @@ class NetworkAdmin(admin.ModelAdmin):
             'classes': ['collapse']})]
 
 
-class ProjectAdmin(admin.ModelAdmin):
-    model = Project
-    filter_horizontal = ['station']
-    fields = ('project_name', 'manager', 'station')
+class GissmoGroupInline(admin.StackedInline):
+    model = GissmoGroup
+    can_delete = False
+    fields = ('manager', 'sites',)
+    filter_horizontal = ('sites',)
 
-    # Redefine queryset to show only project according to the user's project
+
+class GroupAdmin(BaseGroupAdmin):
+    inlines = (GissmoGroupInline,)
+
+    # Redefine queryset to show only group according to the user's project
     def get_queryset(self, request):
-        qs = super(ProjectAdmin, self).get_queryset(request)
+        qs = super(GroupAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         return qs.filter(manager_id=request.user.id)
 
     def delete_model(self, request, obj):
-        if obj.project_name == 'ALL':
+        if obj.name == 'ALL':
             messages.error(
                 request,
-                'Delete of the project ALL is forbidden')
+                'Delete of the group ALL is forbidden')
         else:
             obj.delete()
-            return super(ProjectAdmin, self).delete_model(request, obj)
+            return super(GroupAdmin, self).delete_model(request, obj)
 
     def get_model_perms(self, request):
         """
         Return empty perms dict thus hiding the model from admin index.
         """
-        gmp = super(ProjectAdmin, self).get_model_perms(request)
+        gmp = super(GroupAdmin, self).get_model_perms(request)
         if request.user.is_superuser:
             return gmp
         else:
-            is_manager = Project.objects.filter(manager_id=request.user.id)
+            is_manager = Group.objects.filter(manager_id=request.user.id)
             if not is_manager:
                 return {}
             return gmp
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser:
-            return ('project_name', 'manager')
+            return ('name', 'manager')
         return self.readonly_fields
-
-
-class ProjectUserAdmin(admin.ModelAdmin):
-    model = ProjectUser
-    form = ProjectUserForm
-
-    formfield_overrides = {
-        models.ManyToManyField: {
-            'widget': CheckboxSelectMultiple,
-            'queryset': Project.objects.all().order_by('project_name')},
-    }
-
-    # Redefine queryset to show only intervention according to the user's
-    # project
-    def get_queryset(self, request):
-        qs = super(ProjectUserAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        else:
-            return qs.filter(user_id=request.user.id)
 
 
 class ParameterValueInline(admin.TabularInline):
@@ -1358,8 +1329,8 @@ admin.site.register(EquipDocType)
 admin.site.register(StationDocType)
 admin.site.register(EquipType)
 admin.site.register(Intervention, InterventionAdmin)
-admin.site.register(Project, ProjectAdmin)
-admin.site.register(ProjectUser, ProjectUserAdmin)
+admin.site.unregister(Group)
+admin.site.register(Group, GroupAdmin)
 admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)

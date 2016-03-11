@@ -5,7 +5,7 @@ import time
 
 from django import forms
 from django.contrib.admin import widgets
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
 from django.db.models import Q
 from django.forms.widgets import CheckboxSelectMultiple
 from django.shortcuts import get_object_or_404
@@ -35,8 +35,6 @@ from gissmo.models import (
     IPAddress,
     ParameterEquip,
     ParameterValue,
-    Project,
-    ProjectUser,
     StationDoc,
     StationSite,
 )
@@ -287,7 +285,7 @@ class StationSiteForm(forms.ModelForm):
 project only when it'a new station else hide the field and the label.
     """
     project = forms.ModelChoiceField(
-        queryset=Project.objects.all(),
+        queryset=Group.objects.all(),
         label='Project',
         required=False)
 
@@ -302,10 +300,9 @@ project only when it'a new station else hide the field and the label.
         else:
             self.fields['creation_date'].required = True
             self.fields['project'].required = True
-            projects = ProjectUser.objects.filter(user=self.current_user)
-            project_list = projects.values_list('project')
+            project_list = [g.id for g in self.current_user.groups.all()]
             self.fields['project'].queryset = \
-                Project.objects.filter(id__in=project_list)
+                Group.objects.filter(id__in=project_list)
             if len(project_list) == 1:
                 self.fields['project'].empty_label = None
 
@@ -1284,18 +1281,6 @@ class ChannelForm(forms.ModelForm):
 code (%s)' % (rate, channel_code.channel_code))
         # Always return the full collection of cleaned data.
         return cleaned_data
-
-
-class ProjectUserForm(forms.ModelForm):
-
-    def __init__(self, *args, **kwargs):
-        super(ProjectUserForm, self).__init__(*args, **kwargs)
-
-        if self.instance.id:
-            self.fields['user'] = forms.ModelChoiceField(
-                queryset=User.objects.filter(
-                    pk=self.instance.user.id),
-                empty_label=None)
 
 
 class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
