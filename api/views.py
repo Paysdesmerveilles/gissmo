@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 
 from rest_framework import (
     filters,
-    viewsets)
-
+    viewsets,
+)
 
 from gissmo.models import (
-    Actor,
+    Affiliation,
     CalibrationUnit,
     Chain,
     ChainConfig,
@@ -21,46 +21,46 @@ from gissmo.models import (
 )
 
 from api.serializers import (
-    ActorSerializer,
+    AffiliationSerializer,
     CalibrationUnitSerializer,
     ChainSerializer,
-    ChannelSerializer,
     ChannelDatatypeSerializer,
     ChannelParameterSerializer,
+    ChannelSerializer,
     EquipmentSerializer,
     IPAddressSerializer,
     NetworkSerializer,
     ServiceSerializer,
-    SiteSerializer)
+    SiteSerializer,
+)
 
 from api.filters import (
-    ActorFilter,
+    AffiliationFilter,
     CalibrationUnitFilter,
     ChainFilter,
-    ChannelFilter,
     ChannelDatatypeFilter,
+    ChannelFilter,
     ChannelParameterFilter,
     EquipmentFilter,
     IPAddressFilter,
     NetworkFilter,
     ServiceFilter,
-    SiteFilter)
+    SiteFilter,
+)
 
 
-class ActorViewSet(viewsets.ReadOnlyModelViewSet):
+class AffiliationViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    All kind of actors used for:
+    Organization, Observatories, etc. that are:
 
-      * buying equipment
-      * equipment creator
-      * site owner
-      * users
+      * station operator
+      * equipment owner
     """
-    serializer_class = ActorSerializer
-    queryset = Actor.objects.all()
+    serializer_class = AffiliationSerializer
+    queryset = Affiliation.objects.all()
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,)
-    filter_class = ActorFilter
-    search_fields = ['actor_name']
+    filter_class = AffiliationFilter
+    search_fields = ['name']
 
 
 class SiteViewSet(viewsets.ReadOnlyModelViewSet):

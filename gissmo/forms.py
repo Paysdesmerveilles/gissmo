@@ -21,30 +21,32 @@ from station import states as StationState
 from station import actions as StationAction
 
 from gissmo.models import (
-    Actor,
+    Affiliation,
     Built,
     Chain,
     Channel,
     ChannelCode,
     DataType,
+    EquipDoc,
+    EquipModel,
     EquipModelDoc,
     Equipment,
-    EquipModel,
-    EquipDoc,
     ForbiddenEquipmentModel,
     IPAddress,
-    Project,
-    ProjectUser,
     ParameterEquip,
     ParameterValue,
+    Project,
+    ProjectUser,
+    StationDoc,
     StationSite,
-    StationDoc)
+)
 from gissmo.views import (
-    equip_state_todate,
-    equip_place_todate_id,
     available_equip_state,
+    available_equipment_scioper,
     available_station, available_built,
-    available_equipment_scioper)
+    equip_place_todate_id,
+    equip_state_todate,
+)
 from gissmo.tools import timezone_aware
 from gissmo.validators import validate_ipaddress
 
@@ -76,38 +78,6 @@ class AdminFileWidget(forms.FileInput):
                     'Change:'))
         output.append(super(AdminFileWidget, self).render(name, value, attrs))
         return mark_safe(u''.join(output))
-
-
-class ActorForm(forms.ModelForm):
-
-    class Meta:
-        model = Actor
-        fields = "__all__"
-
-    def clean(self):
-        cleaned_data = super(ActorForm, self).clean()
-        name = cleaned_data.get("actor_name")
-
-        # Check that an authenticated user via Auth.user will not change is
-        # actor_name in the Actor table
-        # The name is use for the default actor in intervention
-        #
-        # Check that the actor_name Inconnu will not change too
-        # The name is use for the default operator in site creation
-
-        if self.instance.id:
-            actor = get_object_or_404(Actor, id=self.instance.id)
-            if User.objects.filter(username=actor.actor_name).exists():
-                if actor.actor_name != name:
-                    raise forms.ValidationError(
-                        'The name for this actor must stay : %s' %
-                        actor.actor_name)
-            elif actor.actor_name == 'Inconnu' and name != 'Inconnu':
-                raise forms.ValidationError(
-                    'The name for this actor must stay : Inconnu')
-
-        # Always return the full collection of cleaned data.
-        return cleaned_data
 
 
 class EquipModelDocInlineForm(forms.ModelForm):
@@ -251,14 +221,14 @@ class EquipmentForm(autocomplete_light.ModelForm):
 
         # initialization
         try:
-            owner_default_value = Actor.objects.get(actor_name='DT INSU')
-        except (KeyError, Actor.DoesNotExist):
+            owner_default_value = Affiliation.objects.get(name='DT INSU')
+        except (KeyError, Affiliation.DoesNotExist):
             owner_default_value = None
 
-        self.fields['owner'].queryset = Actor.objects.filter(
-            Q(actor_type=Actor.OBSERVATOIRE) |
-            Q(actor_type=Actor.ORGANISME) |
-            Q(actor_type=Actor.INCONNU))
+        self.fields['owner'].queryset = Affiliation.objects.filter(
+            Q(_type=Affiliation.OBSERVATORY) |
+            Q(_type=Affiliation.ORGANIZATION) |
+            Q(_type=Affiliation.UNKNOWN))
         self.fields['owner'].initial = owner_default_value
         self.fields['stockage_site'].queryset = \
             StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE)
@@ -342,15 +312,15 @@ project only when it'a new station else hide the field and the label.
         # intialization
         operator_default_value = None
         try:
-            operator_default_value = Actor.objects.get(actor_name='Inconnu')
-        except (KeyError, Actor.DoesNotExist):
+            operator_default_value = Affiliation.objects.get(name='Inconnu')
+        except (KeyError, Affiliation.DoesNotExist):
             pass
 
-        self.fields['operator'].queryset = Actor.objects.filter(
-            Q(actor_type=Actor.OBSERVATOIRE) |
-            Q(actor_type=Actor.ORGANISME) |
-            Q(actor_type=Actor.ENTREPRISE_SAV) |
-            Q(actor_type=Actor.INCONNU))
+        self.fields['operator'].queryset = Affiliation.objects.filter(
+            Q(_type=Affiliation.OBSERVATORY) |
+            Q(_type=Affiliation.ORGANIZATION) |
+            Q(_type=Affiliation.CUSTOMER_SERVICE) |
+            Q(_type=Affiliation.UNKNOWN))
         self.fields['operator'].initial = operator_default_value
 
     class Meta:
@@ -383,62 +353,6 @@ for this kind of site: %s' % dict(StationSite.SITE_CHOICES)[site_type])
 
         # Always return the full collection of cleaned data.
         return cleaned_data
-
-
-class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
-
-    def __init__(self, *args, **kwargs):
-        """
-        Grabs the curried initial values and stores them into a 'private'
-        variable. Note: the use of self.__initial is important, using
-        self.initial or self._initial will be erased by a parent class
-        """
-        self.__initial = kwargs.pop('initial', [])
-        super(IntervActorInlineFormset, self).__init__(*args, **kwargs)
-
-    def add_fields(self, form, index):
-        super(IntervActorInlineFormset, self).add_fields(form, index)
-
-        if self.__initial:
-            actor = get_object_or_404(Actor, actor_name=self.__initial[0])
-            form.fields['actor'].initial = actor
-
-        # Queryset to order by OSU and engineer to group them in
-        # the drop down box.
-        # Hack with the extra to sort by agency and after by actor_name
-        # to bypass the agency actor_name.
-        # TODO make custom widget for display a tree structure
-        # by agency, contact.
-        sql_request = """
-        CASE WHEN id=actor_parent_id
-        THEN actor_parent_id || '0' || actor_name
-        ELSE actor_parent_id || '1' || actor_name
-        END"""
-        form.fields['actor'].queryset = Actor.objects.extra(
-            select={"sortfield": sql_request}).order_by('sortfield')
-
-    def clean(self):
-        if any(self.errors):
-            # Don't bother validating the formset unless each form is valid
-            # on its own.
-            return
-
-        # get forms that actually have valid data
-        super(IntervActorInlineFormset, self).clean()
-        delete_checked = 0
-        form_number = 0
-        for form in self.forms:
-            # Acquire data for each field
-            if self.cleaned_data != {}:
-                if 'DELETE' in self.cleaned_data:
-                    delete_checked += 1
-                # TODO vue de validation
-                # Validation of station_action and final state
-                form_number += 1
-
-        if form_number == 0 or form_number == delete_checked:
-            raise forms.ValidationError(
-                'At least 1 protagonist per intervention')
 
 
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):

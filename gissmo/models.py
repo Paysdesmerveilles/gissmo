@@ -18,93 +18,42 @@ from station import states as StationState
 from station import actions as StationAction
 
 from gissmo.validators import (
+    validate_equip_model,
     validate_ipaddress,
-    validate_equip_model)
+)
 from gissmo.helpers import format_date
 from gissmo.tools import make_date_aware
 
 fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 
 
-@python_2_unicode_compatible
-class Actor(models.Model):
-    """
-    **Description :** Personne ou entité morale qui est soit opérateur
-d'une station ou propriétaire d'un équipement ou impliquée lors
-d'une intervention.
-
-    **Attributes :**
-
-    actor_type : integer
-        Type d'acteur comme décrit ci-dessous
-
-        **Choices :**
-
-            1 : Observatoire/Laboratoire : OSU
-
-            2 : Instrumentaliste : Personne qui effectue une action sur
-            une station
-
-            3 : Organisme : Réseau
-
-            4 : Entreprise : Unite economique de production de biens ou de
-            services a but commercial
-
-            5 : Entreprise SAV : Unite economique de production de biens ou de
-            services a but commercial qui est opérateur d'un site de type SAV
-
-            6 : Inconnu : Inconnu
-
-            7 : Autre : Autre
-
-    actor_name : char(50)
-        Nom d'usage donné à l'acteur
-
-    actor_note : text
-        Champ libre afin d'ajouter des informations supplémentaires
-    """
-
-    OBSERVATOIRE = 1
-    INSTRUMENTALISTE = 2
-    ORGANISME = 3
-    ENTREPRISE = 4
-    ENTREPRISE_SAV = 5
-    INCONNU = 6
-    AUTRE = 7
-    ACTOR_TYPE_CHOICES = (
-        (OBSERVATOIRE, 'Observatory/Laboratory'),
-        (INSTRUMENTALISTE, 'Engineer/Technician'),
-        (ORGANISME, 'Network'),
-        (ENTREPRISE, 'Business'),
-        (ENTREPRISE_SAV, 'Customer service Company'),
-        (INCONNU, 'Unknown'),
-        (AUTRE, 'Other'),
-    )
-    actor_type = models.IntegerField(
-        choices=ACTOR_TYPE_CHOICES,
-        default=AUTRE,
-        verbose_name="Type")
-    actor_name = models.CharField(
-        max_length=50,
-        unique=True,
-        verbose_name="Name")
-    actor_note = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name="Note")
-    actor_parent = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        verbose_name="Membership group")
-
-    class Meta:
-        ordering = ['actor_name']
-        verbose_name = "Player"
-
-    def __str__(self):
-        return self.actor_name
-
+# WARNING: OLD PREVIOUS MODEL ACTOR HAVE THESE VALUES AS TYPE
+#  - 1 : Observatoire/Laboratoire : OSU
+#  - 2 : Instrumentaliste : Personne qui effectue une action sur une station
+#  - 3 : Organisme : Réseau
+#  - 4 : Entreprise : Unite economique de production de biens ou de services
+# a but commercial
+#  - 5 : Entreprise SAV : Unite economique de production de biens ou de
+# services a but commercial qui est opérateur d'un site de type SAV
+#  - 6 : Inconnu : Inconnu
+#  - 7 : Autre : Autre
+#
+# OBSERVATOIRE = 1
+# INSTRUMENTALISTE = 2
+# ORGANISME = 3
+# ENTREPRISE = 4
+# ENTREPRISE_SAV = 5
+# INCONNU = 6
+# AUTRE = 7
+# ACTOR_TYPE_CHOICES = (
+#    (OBSERVATOIRE, 'Observatory/Laboratory'),
+#    (INSTRUMENTALISTE, 'Engineer/Technician'),
+#    (ORGANISME, 'Network'),
+#    (ENTREPRISE, 'Business'),
+#    (ENTREPRISE_SAV, 'Customer service Company'),
+#    (INCONNU, 'Unknown'),
+#    (AUTRE, 'Other'),
+# )
 
 @python_2_unicode_compatible
 class BuiltType(models.Model):
@@ -640,10 +589,11 @@ class StationSite(models.Model):
         if not self.actor:
             raise ValidationError(
                 'No actor given. On web admin you need to be logged.')
-        actor = get_object_or_404(Actor, actor_name=self.actor)
-        IntervActor.objects.create(
-            intervention=intervention,
-            actor=actor)
+        # TODO: Fix for Affiliation this 2 lines
+        # actor = get_object_or_404(Actor, actor_name=self.actor)
+        # IntervActor.objects.create(
+        #     intervention=intervention,
+        #     actor=actor)
 
         # Add station to a project
         project = get_object_or_404(Project, project_name=self.project)
@@ -840,10 +790,11 @@ l'équipment
                 raise ValidationError(
                     'No logged user',
                 )
-            actor = get_object_or_404(Actor, actor_name=self.actor)
-            IntervActor.objects.create(
-                intervention=intervention,
-                actor=actor)
+            # TODO: FIX these 2 lines for Affiliation
+            # actor = get_object_or_404(Actor, actor_name=self.actor)
+            # IntervActor.objects.create(
+            #     intervention=intervention,
+            #     actor=actor)
 
     def __init__(self, *args, **kwargs):
         """
@@ -1028,36 +979,6 @@ class Intervention(models.Model):
         return u'%s : %s' % (
             self.station.station_code,
             format_date(self.intervention_date))
-
-
-@python_2_unicode_compatible
-class IntervActor(models.Model):
-    """
-    **Description :** Acteurs ayant effectués ou présents lors de
-l'intervention
-
-    **Attributes :**
-
-    intervention : integer (fk)
-        Intervention à laquelle les intervenants ont participé
-
-    actor : integer (fk)
-        Intervenant ayant effectué l'intervention ou présent lors de celle-ci
-
-    note : text
-        Champ libre afin d'ajouter des informations supplémentaires
-    """
-    intervention = models.ForeignKey(
-        "Intervention",
-        verbose_name="Intervention")
-    actor = models.ForeignKey("Actor", verbose_name="Protagonist")
-    note = models.TextField(null=True, blank=True, verbose_name="Note")
-
-    class Meta:
-        verbose_name = "Protagonist"
-
-    def __str__(self):
-        return u'%s : %s' % (self.intervention, self.actor)
 
 
 class IntervUser(models.Model):

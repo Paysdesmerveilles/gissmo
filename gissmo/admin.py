@@ -3,19 +3,22 @@ from __future__ import unicode_literals
 from django import forms
 from django.contrib import (
     admin,
-    messages)
+    messages,
+)
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import (
-    AdminURLFieldWidget,
-    AdminSplitDateTime,
     AdminDateWidget,
-    AdminTimeWidget)
+    AdminSplitDateTime,
+    AdminTimeWidget,
+    AdminURLFieldWidget,
+)
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Textarea
 from django.shortcuts import (
-    get_object_or_404,
     HttpResponseRedirect,
-    redirect)
+    get_object_or_404,
+    redirect,
+)
 from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.conf.urls import url
@@ -45,15 +48,6 @@ class LabeledHiddenInput(forms.HiddenInput):
         h_input = super(LabeledHiddenInput, self).render(
             name, value, attrs=None)
         return mark_safe("%s %s" % (status, h_input))
-
-
-class ActorAdmin(admin.ModelAdmin):
-    form = ActorForm
-    list_display = ['actor_parent', 'actor_name', 'actor_type']
-    list_display_links = ['actor_name']
-    list_filter = ['actor_type']
-    ordering = ['actor_parent', 'actor_name']
-    search_fields = ['actor_name']
 
 
 class EquipModelDocInline(admin.TabularInline):
@@ -284,12 +278,12 @@ class OwnerFilter(SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-        lookup_list = Actor.objects.filter(
-            Q(actor_type=Actor.OBSERVATOIRE) |
-            Q(actor_type=Actor.ORGANISME) |
-            Q(actor_type=Actor.INCONNU)).values_list(
+        lookup_list = Affiliation.objects.filter(
+            Q(_type=Affiliation.OBSERVATORY) |
+            Q(_type=Affiliation.ORGANIZATION) |
+            Q(_type=Affiliation.UNKNOWN)).values_list(
                 'id',
-                'actor_name').distinct()
+                'name').distinct()
         return lookup_list
 
     def queryset(self, request, queryset):
@@ -601,14 +595,14 @@ class StationSiteFilter(SimpleListFilter):
             'operator', flat=True)
         liste_val_distinct_triee = list(sorted(set(Operator_station)))
 
-        Operator = Actor.objects.filter(
-            id__in=liste_val_distinct_triee).order_by('actor_name')
+        Operator = Affiliation.objects.filter(
+            id__in=liste_val_distinct_triee).order_by('name')
 
         """
        Tree presentation of the filter choice.
        """
         for operator in Operator:
-            Liste.append(((str(operator.id)), operator.actor_name))
+            Liste.append(((str(operator.id)), operator.name))
         return Liste
 
     def queryset(self, request, queryset):
@@ -632,7 +626,7 @@ class StationSiteAdmin(admin.ModelAdmin):
         'longitude')
     list_filter = [StationSiteFilter, 'site_type']
     ordering = ['station_code']
-    search_fields = ['station_code', 'site_name', 'operator__actor_name']
+    search_fields = ['station_code', 'site_name', 'operator__name']
     form = StationSiteForm
 
     fieldsets = [
@@ -810,31 +804,6 @@ class EquipTypeAdmin(admin.ModelAdmin):
     list_filter = ['equip_supertype']
 
 
-class IntervActorInline(admin.TabularInline):
-    model = IntervActor
-    extra = 0
-    formset = IntervActorInlineFormset
-
-    def get_formset(self, request, obj=None, **kwargs):
-        initial = []
-        if obj is not None:
-            kwargs['extra'] = 0
-        else:
-            kwargs['extra'] = 1
-            """
-            Pre-populating formset using GET params
-            """
-            initial.append(request.user.username)
-        formset = super(IntervActorInline, self).get_formset(
-            request, obj, **kwargs)
-        formset.__init__ = curry(formset.__init__, initial=initial)
-        return formset
-
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1})},
-    }
-
-
 class IntervStationInline(admin.TabularInline):
     model = IntervStation
     extra = 0
@@ -880,7 +849,6 @@ class InterventionAdmin(admin.ModelAdmin):
     form = InterventionForm
 
     inlines = [
-        IntervActorInline,
         IntervStationInline,
         IntervEquipInline,
         IntervDocInline]
@@ -1377,7 +1345,6 @@ admin.site.disable_action('delete_selected')
 
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
-admin.site.register(Actor, ActorAdmin)
 admin.site.register(EquipModel, EquipModelAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
 admin.site.register(ForbiddenEquipmentModel, ForbiddenEquipmentModelAdmin)

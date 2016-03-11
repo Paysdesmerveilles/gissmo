@@ -37,12 +37,13 @@ def display_station_interventions(station_id):
     interventions = Intervention.objects.filter(
         station_id=station_id).order_by(
         '-intervention_date').prefetch_related(
-        'intervactor_set__actor',
+        'intervaffiliation_set__affiliation',
         'intervequip_set__equip__equip_model',
         'intervequip_set__built',
         'intervstation_set')
     for intervention in interventions:
-        actors = [a.actor for a in intervention.intervactor_set.all()]
+        affiliations = [
+            a.affiliation for a in intervention.intervaffiliation_set.all()]
         stations = [ivs for ivs in intervention.intervstation_set.all()]
         equips = [ie for ie in intervention.intervequip_set.all()]
 
@@ -51,7 +52,7 @@ def display_station_interventions(station_id):
         else:
             line_number = len(stations) + len(equips)
 
-        liste.append([intervention, actors, stations,
+        liste.append([intervention, affiliations, stations,
                       equips, line_number, last_state])
     return {'intervs': liste, 'url_redirection': url_redirection}
 
