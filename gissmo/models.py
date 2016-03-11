@@ -473,7 +473,7 @@ class StationSite(models.Model):
         verbose_name="Elevation (m)",
         max_digits=5,
         decimal_places=1)
-    operator = models.ForeignKey("Actor", verbose_name="Operator")
+    operator = models.ForeignKey('gissmo.Affiliation', verbose_name="Operator")
     address = models.CharField(
         max_length=100,
         null=True,
@@ -714,7 +714,7 @@ l'équipment
     serial_number = models.CharField(
         max_length=50,
         verbose_name="Serial number")
-    owner = models.ForeignKey("Actor", verbose_name="Owner")
+    owner = models.ForeignKey('gissmo.Affiliation', verbose_name="Owner")
     vendor = models.CharField(
         max_length=50,
         null=True,

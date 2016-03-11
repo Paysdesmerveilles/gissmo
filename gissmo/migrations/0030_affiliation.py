@@ -3,12 +3,10 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.conf import settings
-from django.contrib.auth.models import Group, User
-
-from gissmo.models import Actor, Affiliation
 
 
-def create_user(string):
+def create_user(apps, string):
+    User = apps.get_model('auth', 'User')
     username = string[:30]
     first_name = string[:30]
     last_name = ''
@@ -36,8 +34,10 @@ def create_user(string):
     return u
 
 
-def check_and_create_affiliation(ids, types):
+def check_and_create_affiliation(apps, ids, types):
     result = {}
+    Actor = apps.get_model('gissmo', 'Actor')
+    Affiliation = apps.get_model('gissmo', 'Affiliation')
     for actor in Actor.objects.filter(actor_type__in=ids):
         type_id = actor.actor_type
         name = actor.actor_name
@@ -57,8 +57,10 @@ def check_and_create_affiliation(ids, types):
     return result
 
 
-def create_or_update_users(ids, affiliations):
+def create_or_update_users(apps, ids, affiliations):
     result = []
+    Actor = apps.get_model('gissmo', 'Actor')
+    User = apps.get_model('auth', 'User')
     for actor in Actor.objects.all().exclude(
             actor_type__in=ids):
         name = actor.actor_name
@@ -83,7 +85,7 @@ def create_or_update_users(ids, affiliations):
             u.save()
 
         if not u:
-            u = create_user(name)
+            u = create_user(apps, name)
         # link User to its affiliation
         if not parent or parent not in affiliations.keys():
             if not u.groups.all():
@@ -97,11 +99,13 @@ def migrate_groups_to_affiliation(apps, schema_editor):
     Current groups are observatories (except Resif one).
     We so migrate groups to Affiliation, except Resif one.
     """
+    Affiliation = apps.get_model('gissmo', 'Affiliation')
+    Group = apps.get_model('auth', 'Group')
     for group in Group.objects.all():
         if group.name != 'Resif':
             Affiliation.objects.create(
                 name=group.name,
-                _type=Affiliation.OBSERVATORY)
+                _type=0)  # Correspond to OBSERVATORY
 
 
 def migrate_actors_to_affiliation_and_users(apps, schema_editor):
@@ -115,26 +119,30 @@ def migrate_actors_to_affiliation_and_users(apps, schema_editor):
       - Actors with more than one word becomes "firstword.secondword" (User)
     """
     actor_non_physical = [
-        Actor.OBSERVATOIRE,
-        Actor.ORGANISME,
-        Actor.ENTREPRISE,
-        Actor.ENTREPRISE_SAV,
-        Actor.INCONNU]
+        1,  # OBSERVATOIRE
+        3,  # ORGANISME
+        4,  # ENTREPRISE
+        5,  # ENTREPRISE SAV
+        6]  # INCONNU
     actor_type_equivalent = {
-        Actor.OBSERVATOIRE: Affiliation.OBSERVATORY,
-        Actor.ORGANISME: Affiliation.ORGANIZATION,
-        Actor.ENTREPRISE: Affiliation.BUSINESS,
-        Actor.ENTREPRISE_SAV: Affiliation.CUSTOMER_SERVICE,
-        Actor.INCONNU: Affiliation.UNKNOWN}
+        1: 0,  # OBSERVATORY
+        3: 1,  # ORGANIZATION
+        4: 2,  # BUSINESS
+        5: 3,  # CUSTOMER SERVICE
+        6: 4}  # UNKNOWN
 
     # first create affiliation (to be sure they exists for user
     # affiliation links)
     affiliations = check_and_create_affiliation(
+        apps,
         actor_non_physical,
         actor_type_equivalent)
 
     # Then we check all other one to link User to Affiliations
-    unaffiliated = create_or_update_users(actor_non_physical, affiliations)
+    unaffiliated = create_or_update_users(
+        apps,
+        actor_non_physical,
+        affiliations)
 
     if unaffiliated:
         actors = ' '.join(unaffiliated)
