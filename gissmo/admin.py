@@ -1320,6 +1320,15 @@ class ChannelCodeAdmin(admin.ModelAdmin):
     list_display = ['channel_code', 'presentation_rank', ]
 
 
+class AffiliationAdmin(admin.ModelAdmin):
+    model = Affiliation
+    ordering = ['name']
+    search_fields = ['name']
+    list_filter = ['_type']
+    list_display = ['name', '_type', 'parent']
+    filter_horizontal = ('users', )
+
+
 """
 Disabling the action "delete_selected" for all the site
 """
@@ -1346,3 +1355,4 @@ admin.site.register(Group, GroupAdmin)
 admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)
+admin.site.register(Affiliation, AffiliationAdmin)
