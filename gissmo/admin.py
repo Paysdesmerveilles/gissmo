@@ -483,13 +483,17 @@ class EquipmentAdmin(admin.ModelAdmin):
         qs = super(EquipmentAdmin, self).get_queryset(
             request).prefetch_related(
             'last_station')
-        group_ids = [g.id for g in request.user.groups.all()]
+        groups = request.user.groups.all()
+        group_names = [g.name for g in groups]
         # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_ids:
+        if request.user.is_superuser or u'ALL' in group_names:
             return qs
-        allowed_station = [s.id for s in request.user.groups.all().sites.all()]
+
+        allowed_sites = []
+        for g in groups:
+            allowed_sites += g.gissmogroup.get_sites_ids()
         return qs.filter(
-            last_station_id__in=allowed_station).prefetch_related(
+            last_station_id__in=allowed_sites).prefetch_related(
                 'last_station')
 
     def save_model(self, request, obj, form, change):
@@ -663,12 +667,16 @@ class StationSiteAdmin(admin.ModelAdmin):
     # Redefine queryset to show only site according to the user's group
     def get_queryset(self, request):
         qs = super(StationSiteAdmin, self).get_queryset(request)
-        group_ids = [g.id for g in request.user.groups.all()]
+        groups = request.user.groups.all()
+        group_names = [g.name for g in groups]
         # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_ids:
+        if request.user.is_superuser or u'ALL' in group_names:
             return qs
-        allowed_station = [s.id for s in request.user.groups.all().sites.all()]
-        return qs.filter(id__in=allowed_station)
+
+        allowed_sites = []
+        for g in groups:
+            allowed_sites += g.gissmogroup.get_sites_ids()
+        return qs.filter(id__in=allowed_sites)
 
     def save_model(self, request, obj, form, change):
         """
@@ -850,12 +858,16 @@ class InterventionAdmin(admin.ModelAdmin):
     # group
     def get_queryset(self, request):
         qs = super(InterventionAdmin, self).get_queryset(request)
-        group_ids = [g.id for g in request.user.groups.all()]
+        groups = request.user.groups.all()
+        group_names = [g.name for g in groups]
         # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_ids:
+        if request.user.is_superuser or u'ALL' in group_names:
             return qs
-        station_list = [s.id for s in request.user.groups.all().sites.all()]
-        return qs.filter(station_id__in=station_list)
+
+        allowed_sites = []
+        for g in groups:
+            allowed_sites += g.gissmogroup.get_sites_ids()
+        return qs.filter(station_id__in=allowed_sites)
 
     def response_change(self, request, obj):
         is_continue = '_continue' in request.POST

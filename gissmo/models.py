@@ -1758,6 +1758,9 @@ class GissmoGroup(Group):
                 raise ValidationError(
                     "We can't change the name for the group ALL")
 
+    def get_sites_ids(self):
+        return [s.id for s in self.sites.all()]
+
     class Meta:
         verbose_name = 'Gissmo specific'
 
