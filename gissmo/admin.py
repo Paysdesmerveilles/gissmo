@@ -839,6 +839,18 @@ class IntervDocInline(admin.TabularInline):
     form = IntervDocInlineForm
 
 
+class IntervUserInline(admin.TabularInline):
+    model = IntervUser
+    extra = 0
+    fields = ('user', 'note')
+
+
+class IntervAffiliationInline(admin.TabularInline):
+    model = IntervAffiliation
+    extra = 0
+    fields = ('affiliation', 'note')
+
+
 class InterventionAdmin(admin.ModelAdmin):
     list_display = ['station', 'format_date']
     list_filter = ['station', ]
@@ -847,6 +859,8 @@ class InterventionAdmin(admin.ModelAdmin):
     form = InterventionForm
 
     inlines = [
+        IntervUserInline,
+        IntervAffiliationInline,
         IntervStationInline,
         IntervEquipInline,
         IntervDocInline]
