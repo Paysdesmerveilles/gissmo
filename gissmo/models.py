@@ -589,14 +589,17 @@ class StationSite(models.Model):
         if not self.actor:
             raise ValidationError(
                 'No actor given. On web admin you need to be logged.')
-        # TODO: Fix for Affiliation this 2 lines
-        # actor = get_object_or_404(Actor, actor_name=self.actor)
-        # IntervActor.objects.create(
-        #     intervention=intervention,
-        #     actor=actor)
+        user = get_object_or_404(User, username=self.actor)
+        IntervUser.objects.create(
+            intervention=intervention,
+            user=user)
+        for a in user.affiliation_set.all():
+            IntervAffiliation.objects.get_or_create(
+                intervention=intervention,
+                affiliation=a)
 
         # Add station to a group
-        group = get_object_or_404(Group, name=self.project)
+        group = get_object_or_404(GissmoGroup, name=self.project)
         group.sites.add(self.id)
 
         # Return expected station state
@@ -790,11 +793,15 @@ l'équipment
                 raise ValidationError(
                     'No logged user',
                 )
-            # TODO: FIX these 2 lines for Affiliation
-            # actor = get_object_or_404(Actor, actor_name=self.actor)
-            # IntervActor.objects.create(
-            #     intervention=intervention,
-            #     actor=actor)
+            # add user and its Affiliations
+            user = get_object_or_404(User, username=self.actor)
+            IntervUser.objects.create(
+                intervention=intervention,
+                user=user)
+            for a in user.affiliation_set.all():
+                IntervAffiliation.objects.get_or_create(
+                    intervention=intervention,
+                    affiliation=a)
 
     def __init__(self, *args, **kwargs):
         """
