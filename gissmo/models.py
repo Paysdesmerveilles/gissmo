@@ -996,6 +996,18 @@ class IntervUser(models.Model):
     class Meta:
         verbose_name = 'Protagonist'
 
+    def save(self, *args, **kwargs):
+        """
+        Add linked affiliation to the same intervention (if not already
+        present)
+        """
+        res = super(IntervUser, self).save(*args, **kwargs)
+        for a in self.user.affiliation_set.all():
+            IntervAffiliation.objects.get_or_create(
+                intervention=self.intervention,
+                affiliation=a)
+        return res
+
 
 class IntervAffiliation(models.Model):
     intervention = models.ForeignKey('gissmo.Intervention')
