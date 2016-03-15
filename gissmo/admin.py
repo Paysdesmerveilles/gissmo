@@ -478,7 +478,7 @@ class EquipmentAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """
-        Show only equipment according to the user's group
+        Show only equipment according to the user's group (project)
         """
         qs = super(EquipmentAdmin, self).get_queryset(
             request).prefetch_related(
@@ -491,7 +491,7 @@ class EquipmentAdmin(admin.ModelAdmin):
 
         allowed_sites = []
         for g in groups:
-            allowed_sites += g.gissmogroup.get_sites_ids()
+            allowed_sites += g.project.get_sites_ids()
         return qs.filter(
             last_station_id__in=allowed_sites).prefetch_related(
                 'last_station')
@@ -675,7 +675,7 @@ class StationSiteAdmin(admin.ModelAdmin):
 
         allowed_sites = []
         for g in groups:
-            allowed_sites += g.gissmogroup.get_sites_ids()
+            allowed_sites += g.project.get_sites_ids()
         return qs.filter(id__in=allowed_sites)
 
     def save_model(self, request, obj, form, change):
@@ -880,7 +880,7 @@ class InterventionAdmin(admin.ModelAdmin):
 
         allowed_sites = []
         for g in groups:
-            allowed_sites += g.gissmogroup.get_sites_ids()
+            allowed_sites += g.project.get_sites_ids()
         return qs.filter(station_id__in=allowed_sites)
 
     def response_change(self, request, obj):
@@ -1258,19 +1258,12 @@ class NetworkAdmin(admin.ModelAdmin):
             'classes': ['collapse']})]
 
 
-class GissmoGroupInline(admin.StackedInline):
-    model = GissmoGroup
-    can_delete = False
-    fields = ('manager', 'sites',)
-    filter_horizontal = ('sites',)
-
-
-class GroupAdmin(BaseGroupAdmin):
-    inlines = (GissmoGroupInline,)
+class ProjectAdmin(BaseGroupAdmin):
+    filter_horizontal = ('permissions', 'sites')
 
     # Redefine queryset to show only group according to the user's project
     def get_queryset(self, request):
-        qs = super(GroupAdmin, self).get_queryset(request)
+        qs = super(ProjectAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         return qs.filter(manager_id=request.user.id)
@@ -1282,17 +1275,17 @@ class GroupAdmin(BaseGroupAdmin):
                 'Delete of the group ALL is forbidden')
         else:
             obj.delete()
-            return super(GroupAdmin, self).delete_model(request, obj)
+            return super(ProjectAdmin, self).delete_model(request, obj)
 
     def get_model_perms(self, request):
         """
         Return empty perms dict thus hiding the model from admin index.
         """
-        gmp = super(GroupAdmin, self).get_model_perms(request)
+        gmp = super(ProjectAdmin, self).get_model_perms(request)
         if request.user.is_superuser:
             return gmp
         else:
-            is_manager = Group.objects.filter(manager_id=request.user.id)
+            is_manager = Project.objects.filter(manager_id=request.user.id)
             if not is_manager:
                 return {}
             return gmp
@@ -1377,7 +1370,7 @@ admin.site.register(StationDocType)
 admin.site.register(EquipType)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.unregister(Group)
-admin.site.register(Group, GroupAdmin)
+admin.site.register(Project, ProjectAdmin)
 admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)

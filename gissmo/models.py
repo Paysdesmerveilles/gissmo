@@ -598,9 +598,9 @@ class StationSite(models.Model):
                 intervention=intervention,
                 affiliation=a)
 
-        # Add station to a group
-        group = get_object_or_404(GissmoGroup, name=self.project)
-        group.sites.add(self.id)
+        # Add station to a project
+        project = get_object_or_404(Project, name=self.project)
+        project.sites.add(self.id)
 
         # Return expected station state
         return StationState.INSTALLATION
@@ -1758,30 +1758,41 @@ priori permis mais pourraient être mal interprétés par certains programmes.
         return u'%s : %s : %s' % (self.chain, self.parameter, self.value)
 
 
-class GissmoGroup(Group):
-    group = models.OneToOneField('auth.Group')
+class Project(Group):
     manager = models.ForeignKey('auth.User', null=True)
     sites = models.ManyToManyField(
         'StationSite',
         blank=True,
         verbose_name='Site')
 
-    # Validation to check that the name of the group ALL don't change
+    # Validation to check that the name of the project ALL don't change
     # It's needed in comparison to the admin.py module to filter station,
     # equipment, intervention
     # in the queryset
     def clean(self):
         if self.id:
-            group = get_object_or_404(GissmoGroup, pk=self.id)
-            if group.name == 'ALL' and self.name != 'ALL':
+            name = 'ALL'
+            project = get_object_or_404(Project, pk=self.id)
+            if project.name == name and self.name != name:
                 raise ValidationError(
-                    "We can't change the name for the group ALL")
+                    "We can't change the name for '%(name)s'",
+                    params={'name': name})
 
     def get_sites_ids(self):
         return [s.id for s in self.sites.all()]
 
-    class Meta:
-        verbose_name = 'Gissmo specific'
+    def delete(self, *args, **kwargs):
+        name = 'ALL'
+        old = Project.objects.get(pk=self.id)
+        assert old.name != name, ("Delete '%s' is forbidden!" % name)
+        return super(Project, self).delete(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        name = 'ALL'
+        old = Project.objects.get(pk=self.id)
+        assert old.name != name and self.name != name, (
+            "%s could be neither renamed nor replaced." % name)
+        return super(Project, self).save(*args, **kwargs)
 
 
 class LoggedActions(models.Model):

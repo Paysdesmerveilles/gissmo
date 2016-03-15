@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 from django.conf import settings
 
 
@@ -17,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='GissmoGroup',
             fields=[
-                ('group', models.OneToOneField(to='auth.Group', primary_key=True, serialize=False)),
+                ('group_ptr', models.OneToOneField(to='auth.Group', primary_key=True, serialize=False, auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True)),
                 ('manager', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True)),
                 ('sites', models.ManyToManyField(verbose_name='Site', blank=True, to='gissmo.StationSite')),
             ],
