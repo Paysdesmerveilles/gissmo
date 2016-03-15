@@ -1837,3 +1837,36 @@ class Affiliation(models.Model):
 
     def __str__(self):
         return '%s' % self.name
+
+    def delete(self, *args, **kwargs):
+        """
+        Avoid Inconnu Affiliation to be deleted.
+        We use database value as reference. This is to avoid someone to rename
+        Affiliation before launching delete().
+        """
+        old = Affiliation.objects.get(pk=self.id)
+        assert old.name != 'Inconnu', ("Delete 'Inconnu' is forbidden!")
+        return super(Affiliation, self).delete(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        """
+        Avoid Inconnu affiliation to be renamed or another affiliation to be
+        renamed into Inconnu one.
+        """
+        name = 'Inconnu'
+        old = Affiliation.objects.get(pk=self.id)
+        assert old.name != name and self.name != name, (
+            "%s could be neither renamed nor replaced." % name)
+        return super(Affiliation, self).save(*args, **kwargs)
+
+    def clean(self):
+        """
+        Avoid Inconnu affiliation to be renamed on Admin interface.
+        """
+        if self.id:
+            affiliation = Affiliation.objects.get(pk=self.id)
+            name = 'Inconnu'
+            if affiliation.name == name and self.name != name:
+                raise ValidationError(
+                    "%(name)s affiliation should stay as it is!",
+                    params={'name': name})

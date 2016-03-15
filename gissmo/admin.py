@@ -1342,6 +1342,18 @@ class AffiliationAdmin(admin.ModelAdmin):
     list_display = ['name', '_type', 'parent']
     filter_horizontal = ('users', )
 
+    def delete_model(self, request, obj):
+        forbidden_element = 'Inconnu'
+        if obj.name == forbidden_element:
+            storage = messages.get_messages(request)
+            storage.used = True
+            messages.error(
+                request,
+                'Delete %s is forbidden!' % forbidden_element)
+        else:
+            obj.delete()
+            return super(AffiliationAdmin, self).delete_model(request, obj)
+
 
 """
 Disabling the action "delete_selected" for all the site
