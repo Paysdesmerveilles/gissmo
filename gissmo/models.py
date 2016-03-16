@@ -1813,10 +1813,11 @@ class Project(Group):
         return super(Project, self).delete(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        name = 'ALL'
-        old = Project.objects.get(pk=self.id)
-        assert old.name != name and self.name != name, (
-            "%s could be neither renamed nor replaced." % name)
+        if self.id:
+            name = 'ALL'
+            old = Project.objects.get(pk=self.id)
+            assert old.name != name and self.name != name, (
+                "%s could be neither renamed nor replaced." % name)
         return super(Project, self).save(*args, **kwargs)
 
 
@@ -1889,10 +1890,11 @@ class Affiliation(models.Model):
         Avoid Inconnu affiliation to be renamed or another affiliation to be
         renamed into Inconnu one.
         """
-        name = 'Inconnu'
-        old = Affiliation.objects.get(pk=self.id)
-        assert old.name != name and self.name != name, (
-            "%s could be neither renamed nor replaced." % name)
+        if self.id:
+            name = 'Inconnu'
+            old = Affiliation.objects.get(pk=self.id)
+            assert old.name != name and self.name != name, (
+                "%s could be neither renamed nor replaced." % name)
         return super(Affiliation, self).save(*args, **kwargs)
 
     def clean(self):
