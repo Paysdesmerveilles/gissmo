@@ -12,7 +12,7 @@
          <th>Built</th>
      </tr></thead>
      <tbody>
-     {% for interv, actor, stationaction, equipaction, countaction in intervs %}
+     {% for interv, protagonists, stationaction, equipaction, countaction in intervs %}
         <tr>
         <td rowspan={{countaction}} class="start_date">
           <input readonly="readonly" value="{{ interv.intervention_date|date:"Y-m-d H:i:s" }}" type="text" size="20" />
@@ -23,7 +23,7 @@
         </td>
 
         <td rowspan={{countaction}}  class="intervenant">
-          <textarea readonly="readonly" rows="1" cols="20">{% for act in actor %}{{ act }}{% if forloop.last %}.{% else %}, {% endif %}{% endfor %}</textarea>
+          <textarea readonly="readonly" rows="1" cols="20">{{ protagonists }}</textarea>
         </td>
 
         {% for action in stationaction %}{% if forloop.first %}

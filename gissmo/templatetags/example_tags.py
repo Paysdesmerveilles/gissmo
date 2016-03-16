@@ -42,8 +42,18 @@ def display_station_interventions(station_id):
         'intervequip_set__built',
         'intervstation_set')
     for intervention in interventions:
-        affiliations = [
-            a.affiliation for a in intervention.intervaffiliation_set.all()]
+        # Display users and affiliations as "user1, user2 (a1, a2, etc.)"
+        protagonists = ''
+        users = [str(u.user) for u in intervention.intervuser_set.all()]
+        users_text = ', '.join(users)
+        if users_text:
+            protagonists += '%s' % users_text
+        affiliations = intervention.intervaffiliation_set.all()
+        groups = [str(a.affiliation) for a in affiliations]
+        groups_text = ', '.join(groups)
+        if groups_text:
+            protagonists += ' (%s)' % groups_text
+
         stations = [ivs for ivs in intervention.intervstation_set.all()]
         equips = [ie for ie in intervention.intervequip_set.all()]
 
@@ -52,7 +62,7 @@ def display_station_interventions(station_id):
         else:
             line_number = len(stations) + len(equips)
 
-        liste.append([intervention, affiliations, stations,
+        liste.append([intervention, protagonists, stations,
                       equips, line_number, last_state])
     return {'intervs': liste, 'url_redirection': url_redirection}
 
