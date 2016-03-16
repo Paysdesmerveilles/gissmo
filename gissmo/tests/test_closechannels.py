@@ -8,12 +8,13 @@ from django.http import HttpRequest
 from django.utils.timezone import make_aware
 
 from gissmo.models import (
-    Actor,
+    Affiliation,
     Channel,
     ChannelCode,
     Network,
     Project,
-    StationSite)
+    StationSite,
+)
 from gissmo.admin import StationSiteAdmin
 from gissmo.views import closechannels_process
 
@@ -36,22 +37,17 @@ class CloseChannelsTest(TestCase):
             'admin@mysite.com',
             DEFAULT_ADMIN_PASSWORD)
         cls.project = Project.objects.create(
-            project_name='ALL',
+            name='ALL',
             manager=cls.superuser)
-        cls.eost_actor = Actor.objects.create(
-            actor_name='EOST',
-            actor_type=Actor.OBSERVATOIRE)
-        # Station creation need to know which actor create it.
-        # We so create an actor for the given superuser.
-        cls.superuser_actor = Actor.objects.create(
-            actor_name=DEFAULT_ADMIN_LOGIN,
-            actor_type=Actor.AUTRE)
+        cls.eost = Affiliation.objects.create(
+            name='EOST',
+            _type=Affiliation.OBSERVATORY)
         cls.station = StationSite.objects.create(
             site_type=StationSite.SITE_TEST,
             station_code='CHMF',
-            operator=cls.eost_actor,
+            operator=cls.eost,
             project=cls.project,
-            actor=cls.superuser_actor,
+            actor=cls.superuser,
             creation_date='2015-10-04')
         # Create some channel codes to create channels
         cls.HHN_code = ChannelCode.objects.create(
