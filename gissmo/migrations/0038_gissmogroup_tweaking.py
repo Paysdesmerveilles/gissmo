@@ -8,7 +8,8 @@ def migrate_resif_group_to_gissmogroup(apps, schema_editor):
     Group = apps.get_model('auth', 'Group')
     GissmoGroup = apps.get_model('gissmo', 'GissmoGroup')
     resif = Group.objects.filter(name='Resif').first()
-    GissmoGroup.objects.create(name=resif.name, group_ptr=resif)
+    if resif:
+        GissmoGroup.objects.create(name=resif.name, group_ptr=resif)
 
 
 class Migration(migrations.Migration):
