@@ -843,6 +843,7 @@ class IntervUserInline(admin.TabularInline):
     model = IntervUser
     extra = 0
     fields = ('user', 'note')
+    formset = IntervUserInlineFormset
 
 
 class IntervAffiliationInline(admin.TabularInline):

@@ -352,6 +352,19 @@ for this kind of site: %s' % dict(StationSite.SITE_CHOICES)[site_type])
         return cleaned_data
 
 
+class IntervUserInlineFormset(forms.models.BaseInlineFormSet):
+    def clean(self):
+        count = 0
+        super(IntervUserInlineFormset, self).clean()
+        for form in self.forms:
+            if form.cleaned_data:
+                if form.cleaned_data.get('DELETE', False):
+                    continue
+                count += 1
+        if count < 1:
+            raise forms.ValidationError('At least 1 protagonist!')
+
+
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
