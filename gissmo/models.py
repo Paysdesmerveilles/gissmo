@@ -996,6 +996,31 @@ class IntervUser(models.Model):
     class Meta:
         verbose_name = 'Protagonist'
 
+    def delete(self, *args, **kwargs):
+        """
+        Check that, after deletion, we need to also delete related Affiliation
+        """
+        intervention_id = self.intervention_id
+        res = super(IntervUser, self).delete(*args, **kwargs)
+        i = Intervention.objects.get(pk=intervention_id)
+        remaining_affiliations = []
+        for intervuser in i.intervuser_set.all():
+            u = intervuser.user
+            for a in u.affiliation_set.all():
+                remaining_affiliations.append(a.id)
+
+        current_affiliations = []
+        for intervaffiliation in i.intervaffiliation_set.all():
+            current_affiliations.append(intervaffiliation.affiliation_id)
+
+        difference = set(current_affiliations) - set(remaining_affiliations)
+
+        for affiliation_id in difference:
+            IntervAffiliation.objects.filter(
+                intervention=i,
+                affiliation_id=affiliation_id).delete()
+        return res
+
     def save(self, *args, **kwargs):
         """
         Add linked affiliation to the same intervention (if not already
