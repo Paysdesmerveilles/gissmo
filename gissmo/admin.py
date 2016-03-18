@@ -628,7 +628,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     form = StationSiteForm
 
     fieldsets = [
-        ('General informations', {
+        ('Main information', {
             'fields': [
                 ('site_type',
                     'station_code',
@@ -648,14 +648,15 @@ class StationSiteAdmin(admin.ModelAdmin):
                 ('address', 'zip_code', 'town'),
                 ('county', 'region', 'country')],
             'classes': ['collapse']}),
-        ('Other relevant informations', {
-            'fields': [('note'), ('private_link')],
-            'classes': ['collapse']}),
-        ('Further informations', {
+        ('Further information', {
             'fields': [
+                ('note'),
+                ('private_link'),
                 ('station_description'),
-                ('alternate_code', 'historical_code', 'restricted_status')],
-            'classes': ['collapse']}), ]
+                ('alternate_code', 'historical_code', 'restricted_status'),
+            ],
+            'classes': ['collapse']}),
+    ]
 
     inlines = [BuiltInline, StationDocInline, ]
 
@@ -1029,7 +1030,7 @@ class ChannelAdmin(admin.ModelAdmin):
         ('Produced data types', {
             'fields': [('data_type')],
             'classes': ['collapse']}),
-        ('Further informations', {
+        ('Further information', {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status'),
@@ -1252,7 +1253,7 @@ class NetworkAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ('', {'fields': [('network_code', 'start_date', 'end_date'), ]}),
-        ('Further informations', {
+        ('Further information', {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status')],

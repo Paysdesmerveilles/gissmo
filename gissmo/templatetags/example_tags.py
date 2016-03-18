@@ -30,7 +30,7 @@ def display_station_interventions(station_id):
         station_state__isnull=False).order_by(
             '-intervention__intervention_date').first()
     if i:
-        last_state = StationState.STATION_STATES[i.station_state][1]
+        last_state = StationState.STATION_STATES[i.station_state - 1][1]
 
     # Fetch all interventions on the given site (and all related data)
     liste = []

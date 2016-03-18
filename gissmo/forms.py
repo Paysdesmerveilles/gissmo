@@ -362,7 +362,7 @@ class IntervUserInlineFormset(forms.models.BaseInlineFormSet):
                     continue
                 count += 1
         if count < 1:
-            raise forms.ValidationError('At least 1 protagonist!')
+            raise forms.ValidationError('At least 1 operator!')
 
 
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):

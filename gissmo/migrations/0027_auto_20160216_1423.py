@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='actor',
-            options={'ordering': ['actor_name'], 'verbose_name': 'Player'},
+            options={'ordering': ['actor_name'], 'verbose_name': 'Actor'},
         ),
         migrations.AlterModelOptions(
             name='built',
@@ -88,7 +88,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='intervactor',
-            options={'verbose_name': 'Protagonist'},
+            options={'verbose_name': 'Operator'},
         ),
         migrations.AlterModelOptions(
             name='intervention',
@@ -124,7 +124,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='projectuser',
-            options={'verbose_name': "Project's user"},
+            options={'verbose_name': "User's project"},
         ),
         migrations.AlterModelOptions(
             name='stationdoc',
@@ -520,7 +520,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='intervactor',
             name='actor',
-            field=models.ForeignKey(to='gissmo.Actor', verbose_name='Protagonist'),
+            field=models.ForeignKey(to='gissmo.Actor', verbose_name='Operator'),
         ),
         migrations.AlterField(
             model_name='intervactor',
