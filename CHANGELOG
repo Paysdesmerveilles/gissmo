@@ -1,4 +1,8 @@
 Current version (1.6-trunk):
+  - Actor review:
+    - split Actor into User and Organism
+    - migrate Group to Projects
+    - split IntervActor to IntervUser and IntervOrganism
   - Upload directory is now available as volume for Docker containers
   - Intervention attachment is now available (documents on it)
   - New 'close channels' button on a given StationSite to give a closing date
