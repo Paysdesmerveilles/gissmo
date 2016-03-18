@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from gissmo.models import (
-    Actor,
+    Organism,
     CalibrationUnit,
     Chain,
     ChainConfig,
@@ -18,21 +18,13 @@ from gissmo.models import (
 import django_filters
 
 
-class ActorFilter(django_filters.FilterSet):
+class OrganismFilter(django_filters.FilterSet):
     """
-    Enables filtering on Actor.
+    Enables filtering on Organism.
     """
-    name = django_filters.CharFilter(name='actor_name')
-    type = django_filters.ChoiceFilter(
-        name='actor_type',
-        choices=Actor.ACTOR_TYPE_CHOICES)
-
     class Meta:
-        model = Actor
-        fields = [
-            'name',
-            'type',
-        ]
+        model = Organism
+        fields = ['name']
 
 
 class SiteFilter(django_filters.FilterSet):

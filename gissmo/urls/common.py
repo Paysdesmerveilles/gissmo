@@ -20,7 +20,7 @@ admin.site.site_title = 'Gissmo'
 
 # REST FRAMEWORK API
 v1_apirouter = routers.DefaultRouter()
-v1_apirouter.register(r'actors', api_views.ActorViewSet)
+v1_apirouter.register(r'organisms', api_views.OrganismViewSet)
 v1_apirouter.register(r'calibration_units', api_views.CalibrationUnitViewSet)
 v1_apirouter.register(r'chains', api_views.ChainViewSet)
 v1_apirouter.register(r'channel_datatypes', api_views.ChannelDatatypeViewSet)

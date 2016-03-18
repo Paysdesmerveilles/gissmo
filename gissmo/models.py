@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.utils.timezone import localtime
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 
 from equipment import states as EquipState
 from equipment import actions as EquipAction
@@ -18,93 +18,42 @@ from station import states as StationState
 from station import actions as StationAction
 
 from gissmo.validators import (
+    validate_equip_model,
     validate_ipaddress,
-    validate_equip_model)
+)
 from gissmo.helpers import format_date
 from gissmo.tools import make_date_aware
 
 fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 
 
-@python_2_unicode_compatible
-class Actor(models.Model):
-    """
-    **Description :** Personne ou entité morale qui est soit opérateur
-d'une station ou propriétaire d'un équipement ou impliquée lors
-d'une intervention.
-
-    **Attributes :**
-
-    actor_type : integer
-        Type d'acteur comme décrit ci-dessous
-
-        **Choices :**
-
-            1 : Observatoire/Laboratoire : OSU
-
-            2 : Instrumentaliste : Personne qui effectue une action sur
-            une station
-
-            3 : Organisme : Réseau
-
-            4 : Entreprise : Unite economique de production de biens ou de
-            services a but commercial
-
-            5 : Entreprise SAV : Unite economique de production de biens ou de
-            services a but commercial qui est opérateur d'un site de type SAV
-
-            6 : Inconnu : Inconnu
-
-            7 : Autre : Autre
-
-    actor_name : char(50)
-        Nom d'usage donné à l'acteur
-
-    actor_note : text
-        Champ libre afin d'ajouter des informations supplémentaires
-    """
-
-    OBSERVATOIRE = 1
-    INSTRUMENTALISTE = 2
-    ORGANISME = 3
-    ENTREPRISE = 4
-    ENTREPRISE_SAV = 5
-    INCONNU = 6
-    AUTRE = 7
-    ACTOR_TYPE_CHOICES = (
-        (OBSERVATOIRE, 'Observatory/Laboratory'),
-        (INSTRUMENTALISTE, 'Engineer/Technician'),
-        (ORGANISME, 'Network'),
-        (ENTREPRISE, 'Business'),
-        (ENTREPRISE_SAV, 'Customer service Company'),
-        (INCONNU, 'Unknown'),
-        (AUTRE, 'Other'),
-    )
-    actor_type = models.IntegerField(
-        choices=ACTOR_TYPE_CHOICES,
-        default=AUTRE,
-        verbose_name="Type")
-    actor_name = models.CharField(
-        max_length=50,
-        unique=True,
-        verbose_name="Name")
-    actor_note = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name="Note")
-    actor_parent = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        verbose_name="Membership group")
-
-    class Meta:
-        ordering = ['actor_name']
-        verbose_name = "Player"
-
-    def __str__(self):
-        return self.actor_name
-
+# WARNING: OLD PREVIOUS MODEL ACTOR HAVE THESE VALUES AS TYPE
+#  - 1 : Observatoire/Laboratoire : OSU
+#  - 2 : Instrumentaliste : Personne qui effectue une action sur une station
+#  - 3 : Organisme : Réseau
+#  - 4 : Entreprise : Unite economique de production de biens ou de services
+# a but commercial
+#  - 5 : Entreprise SAV : Unite economique de production de biens ou de
+# services a but commercial qui est opérateur d'un site de type SAV
+#  - 6 : Inconnu : Inconnu
+#  - 7 : Autre : Autre
+#
+# OBSERVATOIRE = 1
+# INSTRUMENTALISTE = 2
+# ORGANISME = 3
+# ENTREPRISE = 4
+# ENTREPRISE_SAV = 5
+# INCONNU = 6
+# AUTRE = 7
+# ACTOR_TYPE_CHOICES = (
+#    (OBSERVATOIRE, 'Observatory/Laboratory'),
+#    (INSTRUMENTALISTE, 'Engineer/Technician'),
+#    (ORGANISME, 'Network'),
+#    (ENTREPRISE, 'Business'),
+#    (ENTREPRISE_SAV, 'Customer service Company'),
+#    (INCONNU, 'Unknown'),
+#    (AUTRE, 'Other'),
+# )
 
 @python_2_unicode_compatible
 class BuiltType(models.Model):
@@ -473,7 +422,7 @@ class StationSite(models.Model):
         verbose_name="Elevation (m)",
         max_digits=5,
         decimal_places=1)
-    operator = models.ForeignKey("Actor", verbose_name="Operator")
+    operator = models.ForeignKey('gissmo.Organism', verbose_name="Operator")
     address = models.CharField(
         max_length=100,
         null=True,
@@ -640,14 +589,18 @@ class StationSite(models.Model):
         if not self.actor:
             raise ValidationError(
                 'No actor given. On web admin you need to be logged.')
-        actor = get_object_or_404(Actor, actor_name=self.actor)
-        IntervActor.objects.create(
+        user = get_object_or_404(User, username=self.actor)
+        IntervUser.objects.create(
             intervention=intervention,
-            actor=actor)
+            user=user)
+        for o in user.organism_set.all():
+            IntervOrganism.objects.get_or_create(
+                intervention=intervention,
+                organism=o)
 
         # Add station to a project
-        project = get_object_or_404(Project, project_name=self.project)
-        project.station.add(self.id)
+        project = get_object_or_404(Project, name=self.project)
+        project.sites.add(self.id)
 
         # Return expected station state
         return StationState.INSTALLATION
@@ -714,7 +667,7 @@ l'équipment
     serial_number = models.CharField(
         max_length=50,
         verbose_name="Serial number")
-    owner = models.ForeignKey("Actor", verbose_name="Owner")
+    owner = models.ForeignKey('gissmo.Organism', verbose_name="Owner")
     vendor = models.CharField(
         max_length=50,
         null=True,
@@ -840,10 +793,15 @@ l'équipment
                 raise ValidationError(
                     'No logged user',
                 )
-            actor = get_object_or_404(Actor, actor_name=self.actor)
-            IntervActor.objects.create(
+            # add user and its Organisms
+            user = get_object_or_404(User, username=self.actor)
+            IntervUser.objects.create(
                 intervention=intervention,
-                actor=actor)
+                user=user)
+            for o in user.organism_set.all():
+                IntervOrganism.objects.get_or_create(
+                    intervention=intervention,
+                    organism=o)
 
     def __init__(self, *args, **kwargs):
         """
@@ -1013,6 +971,12 @@ class Intervention(models.Model):
     intervention_date = models.DateTimeField(
         verbose_name="Date (yyyy-mm-dd)")
     note = models.TextField(null=True, blank=True, verbose_name="Note")
+    # Before users and organisms, Intervention was linked to "IntervActor"
+    # which grouped all kind of users/organisms.
+    users = models.ManyToManyField('auth.User', through='gissmo.IntervUser')
+    organisms = models.ManyToManyField(
+        'gissmo.Organism',
+        through='gissmo.IntervOrganism')
 
     class Meta:
         unique_together = ("station", "intervention_date")
@@ -1024,34 +988,59 @@ class Intervention(models.Model):
             format_date(self.intervention_date))
 
 
-@python_2_unicode_compatible
-class IntervActor(models.Model):
-    """
-    **Description :** Acteurs ayant effectués ou présents lors de
-l'intervention
-
-    **Attributes :**
-
-    intervention : integer (fk)
-        Intervention à laquelle les intervenants ont participé
-
-    actor : integer (fk)
-        Intervenant ayant effectué l'intervention ou présent lors de celle-ci
-
-    note : text
-        Champ libre afin d'ajouter des informations supplémentaires
-    """
-    intervention = models.ForeignKey(
-        "Intervention",
-        verbose_name="Intervention")
-    actor = models.ForeignKey("Actor", verbose_name="Protagonist")
-    note = models.TextField(null=True, blank=True, verbose_name="Note")
+class IntervUser(models.Model):
+    intervention = models.ForeignKey('gissmo.Intervention')
+    user = models.ForeignKey('auth.User')
+    note = models.TextField(null=True, blank=True)
 
     class Meta:
-        verbose_name = "Protagonist"
+        verbose_name = 'Protagonist'
 
-    def __str__(self):
-        return u'%s : %s' % (self.intervention, self.actor)
+    def delete(self, *args, **kwargs):
+        """
+        Check that, after deletion, we need to also delete related Organism
+        """
+        intervention_id = self.intervention_id
+        res = super(IntervUser, self).delete(*args, **kwargs)
+        i = Intervention.objects.get(pk=intervention_id)
+        remaining_organisms = []
+        for intervuser in i.intervuser_set.all():
+            u = intervuser.user
+            for o in u.organism_set.all():
+                remaining_organisms.append(o.id)
+
+        current_organisms = []
+        for intervorganism in i.intervorganism_set.all():
+            current_organisms.append(intervorganism.organism_id)
+
+        difference = set(current_organisms) - set(remaining_organisms)
+
+        for organism_id in difference:
+            IntervOrganism.objects.filter(
+                intervention=i,
+                organism_id=organism_id).delete()
+        return res
+
+    def save(self, *args, **kwargs):
+        """
+        Add linked organism to the same intervention (if not already
+        present)
+        """
+        res = super(IntervUser, self).save(*args, **kwargs)
+        for o in self.user.organism_set.all():
+            IntervOrganism.objects.get_or_create(
+                intervention=self.intervention,
+                organism=o)
+        return res
+
+
+class IntervOrganism(models.Model):
+    intervention = models.ForeignKey('gissmo.Intervention')
+    organism = models.ForeignKey('gissmo.Organism')
+    note = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Organism'
 
 
 @python_2_unicode_compatible
@@ -1794,14 +1783,12 @@ priori permis mais pourraient être mal interprétés par certains programmes.
         return u'%s : %s : %s' % (self.chain, self.parameter, self.value)
 
 
-@python_2_unicode_compatible
-class Project(models.Model):
-    project_name = models.CharField(max_length=50, verbose_name="Name")
-    manager = models.ForeignKey(User)
-    station = models.ManyToManyField(
+class Project(Group):
+    manager = models.ForeignKey('auth.User', null=True)
+    sites = models.ManyToManyField(
         'StationSite',
         blank=True,
-        verbose_name="Site")
+        verbose_name='Site')
 
     # Validation to check that the name of the project ALL don't change
     # It's needed in comparison to the admin.py module to filter station,
@@ -1809,28 +1796,29 @@ class Project(models.Model):
     # in the queryset
     def clean(self):
         if self.id:
+            name = 'ALL'
             project = get_object_or_404(Project, pk=self.id)
-            if project.project_name == 'ALL' and self.project_name != 'ALL':
+            if project.name == name and self.name != name:
                 raise ValidationError(
-                    "We can't change the name for the project ALL")
+                    "We can't change the name for '%(name)s'",
+                    params={'name': name})
 
-    class Meta:
-        verbose_name = "Project"
+    def get_sites_ids(self):
+        return [s.id for s in self.sites.all()]
 
-    def __str__(self):
-        return u'%s' % (self.project_name)
+    def delete(self, *args, **kwargs):
+        name = 'ALL'
+        old = Project.objects.get(pk=self.id)
+        assert old.name != name, ("Delete '%s' is forbidden!" % name)
+        return super(Project, self).delete(*args, **kwargs)
 
-
-@python_2_unicode_compatible
-class ProjectUser(models.Model):
-    user = models.ForeignKey(User)
-    project = models.ManyToManyField('Project')
-
-    class Meta:
-        verbose_name = "Project's user"
-
-    def __str__(self):
-        return u'%s' % (self.user)
+    def save(self, *args, **kwargs):
+        if self.id:
+            name = 'ALL'
+            old = Project.objects.get(pk=self.id)
+            assert old.name != name and self.name != name, (
+                "%s could be neither renamed nor replaced." % name)
+        return super(Project, self).save(*args, **kwargs)
 
 
 class LoggedActions(models.Model):
@@ -1857,3 +1845,66 @@ class LoggedActions(models.Model):
         managed = False
         db_table = 'logged_actions'
         verbose_name = "Logged action"
+
+
+class Organism(models.Model):
+    # organism types
+    OBSERVATORY = 0
+    NETWORK = 1
+    BUSINESS = 2
+    CUSTOMER_SERVICE = 3
+    UNKNOWN = 4
+    ORGANISM_TYPE_CHOICES = (
+        (OBSERVATORY, 'Observatory/Laboratory'),
+        (NETWORK, 'Network'),
+        (BUSINESS, 'Business'),
+        (CUSTOMER_SERVICE, 'Customer service Company'),
+        (UNKNOWN, 'Unknown'),
+    )
+    # fields
+    name = models.CharField(max_length=255)
+    _type = models.IntegerField(
+        choices=ORGANISM_TYPE_CHOICES,
+        verbose_name='Type',
+        default=UNKNOWN)
+    users = models.ManyToManyField(
+        'auth.User',
+        blank=True)
+    parent = models.ForeignKey('self', null=True, blank=True)
+
+    def __str__(self):
+        return '%s' % self.name
+
+    def delete(self, *args, **kwargs):
+        """
+        Avoid Inconnu Organism to be deleted.
+        We use database value as reference. This is to avoid someone to rename
+        Organism before launching delete().
+        """
+        old = Organism.objects.get(pk=self.id)
+        assert old.name != 'Inconnu', ("Delete 'Inconnu' is forbidden!")
+        return super(Organism, self).delete(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        """
+        Avoid Inconnu organism to be renamed or another organism to be
+        renamed into Inconnu one.
+        """
+        if self.id:
+            name = 'Inconnu'
+            old = Organism.objects.get(pk=self.id)
+            assert old.name != name and self.name != name, (
+                "%s could be neither renamed nor replaced." % name)
+        return super(Organism, self).save(*args, **kwargs)
+
+    def clean(self):
+        """
+        Avoid Inconnu organism to be renamed on Admin interface.
+        """
+        if self.id:
+            organism = Organism.objects.get(pk=self.id)
+            name = 'Inconnu'
+            if organism.name == name and self.name != name:
+                raise ValidationError(
+                    "%(name)s organism should stay as it is!",
+                    params={'name': name})

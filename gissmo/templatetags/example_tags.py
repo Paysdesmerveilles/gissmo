@@ -37,12 +37,23 @@ def display_station_interventions(station_id):
     interventions = Intervention.objects.filter(
         station_id=station_id).order_by(
         '-intervention_date').prefetch_related(
-        'intervactor_set__actor',
+        'intervorganism_set__organism',
         'intervequip_set__equip__equip_model',
         'intervequip_set__built',
         'intervstation_set')
     for intervention in interventions:
-        actors = [a.actor for a in intervention.intervactor_set.all()]
+        # Display users and organisms as "user1, user2 (a1, a2, etc.)"
+        protagonists = ''
+        users = [str(u.user) for u in intervention.intervuser_set.all()]
+        users_text = ', '.join(users)
+        if users_text:
+            protagonists += '%s' % users_text
+        organisms = intervention.intervorganism_set.all()
+        groups = [str(o.organism) for o in organisms]
+        groups_text = ', '.join(groups)
+        if groups_text:
+            protagonists += ' (%s)' % groups_text
+
         stations = [ivs for ivs in intervention.intervstation_set.all()]
         equips = [ie for ie in intervention.intervequip_set.all()]
 
@@ -51,7 +62,7 @@ def display_station_interventions(station_id):
         else:
             line_number = len(stations) + len(equips)
 
-        liste.append([intervention, actors, stations,
+        liste.append([intervention, protagonists, stations,
                       equips, line_number, last_state])
     return {'intervs': liste, 'url_redirection': url_redirection}
 

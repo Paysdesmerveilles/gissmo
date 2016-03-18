@@ -21,12 +21,12 @@ class APIObject(object):
         self.api_url = api_url
 
 
-class Actor(APIObject):
+class Organism(APIObject):
     def __init__(self, api_url, data_dict):
         fields = [
             'name',
         ]
-        super(Actor, self).__init__(api_url, fields, data_dict)
+        super(Organism, self).__init__(api_url, fields, data_dict)
 
     def __str__(self):
         return '%s' % self.name
@@ -61,7 +61,7 @@ class Station(APIObject):
         if self.operator_link:
             data = get(self.operator_link)
             if data:
-                self.operator = Actor(api_url, data)
+                self.operator = Organism(api_url, data)
         # Fix unit for longitude, latitude, azimuth
         for field in ['latitude', 'longitude']:
             field_unit = '_'.join([field, 'unit'])

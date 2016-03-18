@@ -12,14 +12,14 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
-    Actor,
-    Equipment,
-    EquipType,
-    EquipSupertype,
+    Organism,
     EquipModel,
+    EquipSupertype,
+    EquipType,
+    Equipment,
     Project,
-    ProjectUser,
-    StationSite)
+    StationSite,
+)
 
 
 class InterventionTest(FunctionalTest):
@@ -29,23 +29,25 @@ class InterventionTest(FunctionalTest):
         Some needed datas
         """
         super(InterventionTest, self).setUp()
-        self.unknown_actor, created = Actor.objects.get_or_create(
-            actor_name='Inconnu',
-            actor_type=6)
-        self.superuser_actor = Actor.objects.create(
-            actor_name=self.superuser.username,
-            actor_type=7)
+        self.unknown, created = Organism.objects.get_or_create(
+            name='Inconnu',
+            _type=4)
         self.project = Project.objects.create(
-            project_name='ADEME',
+            name='ADEME',
             manager=self.superuser)
-        self.projectuser = ProjectUser.objects.create(
-            user=self.superuser)
-        self.projectuser.project.add(self.project)
+        self.superuser.groups.add(self.project)
         station_date = datetime.strptime('2015-09-26', '%Y-%m-%d')
         self.station_1 = StationSite.objects.create(
             site_type=StationSite.OBSERVATOIRE,
             station_code='EOST',
-            operator=self.unknown_actor,
+            operator=self.unknown,
+            creation_date=make_aware(station_date),
+            project=self.project,
+            actor=self.superuser)
+        self.station_2 = StationSite.objects.create(
+            site_type=StationSite.OBSERVATOIRE,
+            station_code='CHMF',
+            operator=self.unknown,
             creation_date=make_aware(station_date),
             project=self.project,
             actor=self.superuser)
@@ -60,7 +62,7 @@ class InterventionTest(FunctionalTest):
         # selected that the object is well written.
         station = InputField(
             name='station',
-            content='EOST',
+            content='CHMF',
             _type=Select)
         date = InputField(
             name='intervention_date_0',
@@ -70,6 +72,13 @@ class InterventionTest(FunctionalTest):
 
         self.add_item_in_admin('intervention/', fields, check=False)
         self.browser.implicitly_wait(3)
+
+        # Check that current URL is on station 2
+        url = 'stationsite/%s' % self.station_2.id
+        current = self.browser.current_url
+        expected = self.appurl + url
+        self.assertEqual(current, expected, "Wrong URL (%s). Should be: %s" % (
+            current, expected))
 
         # Check manually presence in list as the Intervention creation doesn't
         # redirect to intervention list
@@ -87,9 +96,9 @@ class InterventionTest(FunctionalTest):
         # an intervention with an equipment.
 
         # Initialisation
-        self.mandatory_actor, created = Actor.objects.get_or_create(
-            actor_name='DT INSU',
-            actor_type=1)
+        self.mandatory, created = Organism.objects.get_or_create(
+            name='DT INSU',
+            _type=0)
         self.supertype_1 = EquipSupertype.objects.create(
             equip_supertype_name='01. Scientific',
             presentation_rank='1')
@@ -104,10 +113,10 @@ class InterventionTest(FunctionalTest):
         self.equipment_1 = Equipment.objects.create(
             equip_model=self.equipment_model,
             serial_number='T4Q31',
-            owner=self.mandatory_actor,
+            owner=self.mandatory,
             stockage_site=self.station_1,
             purchase_date='2015-10-29',
-            actor=self.superuser_actor)
+            actor=self.superuser)
 
         # Maxime login to the application in order to add an intervention
         self.gissmo_login()

@@ -3,19 +3,24 @@ from __future__ import unicode_literals
 from django import forms
 from django.contrib import (
     admin,
-    messages)
+    messages,
+)
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import (
-    AdminURLFieldWidget,
-    AdminSplitDateTime,
     AdminDateWidget,
-    AdminTimeWidget)
+    AdminSplitDateTime,
+    AdminTimeWidget,
+    AdminURLFieldWidget,
+)
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.forms import Textarea
 from django.shortcuts import (
-    get_object_or_404,
     HttpResponseRedirect,
-    redirect)
+    get_object_or_404,
+    redirect,
+)
 from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.conf.urls import url
@@ -45,15 +50,6 @@ class LabeledHiddenInput(forms.HiddenInput):
         h_input = super(LabeledHiddenInput, self).render(
             name, value, attrs=None)
         return mark_safe("%s %s" % (status, h_input))
-
-
-class ActorAdmin(admin.ModelAdmin):
-    form = ActorForm
-    list_display = ['actor_parent', 'actor_name', 'actor_type']
-    list_display_links = ['actor_name']
-    list_filter = ['actor_type']
-    ordering = ['actor_parent', 'actor_name']
-    search_fields = ['actor_name']
 
 
 class EquipModelDocInline(admin.TabularInline):
@@ -284,12 +280,12 @@ class OwnerFilter(SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-        lookup_list = Actor.objects.filter(
-            Q(actor_type=Actor.OBSERVATOIRE) |
-            Q(actor_type=Actor.ORGANISME) |
-            Q(actor_type=Actor.INCONNU)).values_list(
+        lookup_list = Organism.objects.filter(
+            Q(_type=Organism.OBSERVATORY) |
+            Q(_type=Organism.NETWORK) |
+            Q(_type=Organism.UNKNOWN)).values_list(
                 'id',
-                'actor_name').distinct()
+                'name').distinct()
         return lookup_list
 
     def queryset(self, request, queryset):
@@ -482,27 +478,23 @@ class EquipmentAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """
-        Show only equipment according to the user's project
+        Show only equipment according to the user's group (project)
         """
         qs = super(EquipmentAdmin, self).get_queryset(
             request).prefetch_related(
             'last_station')
-        check_forall = ProjectUser.objects.filter(
-            user=request.user).values_list(
-                'project__project_name',
-                flat=True)
-        # The name of the project must stay ALL
-        if request.user.is_superuser or u'ALL' in check_forall:
+        groups = request.user.groups.all()
+        group_names = [g.name for g in groups]
+        # The name of the group must stay ALL
+        if request.user.is_superuser or u'ALL' in group_names:
             return qs
-        project_list = ProjectUser.objects.filter(
-            user=request.user).values_list('project', flat=True)
-        station_list = Project.objects.filter(
-            id__in=project_list).values_list('station', flat=True)
-        intervequip_list = IntervEquip.objects.filter(
-            station_id__in=station_list).values_list(
-                'equip',
-                flat=True).distinct()
-        return qs.filter(id__in=intervequip_list)
+
+        allowed_sites = []
+        for g in groups:
+            allowed_sites += g.project.get_sites_ids()
+        return qs.filter(
+            last_station_id__in=allowed_sites).prefetch_related(
+                'last_station')
 
     def save_model(self, request, obj, form, change):
         """
@@ -601,14 +593,14 @@ class StationSiteFilter(SimpleListFilter):
             'operator', flat=True)
         liste_val_distinct_triee = list(sorted(set(Operator_station)))
 
-        Operator = Actor.objects.filter(
-            id__in=liste_val_distinct_triee).order_by('actor_name')
+        Operator = Organism.objects.filter(
+            id__in=liste_val_distinct_triee).order_by('name')
 
         """
        Tree presentation of the filter choice.
        """
         for operator in Operator:
-            Liste.append(((str(operator.id)), operator.actor_name))
+            Liste.append(((str(operator.id)), operator.name))
         return Liste
 
     def queryset(self, request, queryset):
@@ -632,7 +624,7 @@ class StationSiteAdmin(admin.ModelAdmin):
         'longitude')
     list_filter = [StationSiteFilter, 'site_type']
     ordering = ['station_code']
-    search_fields = ['station_code', 'site_name', 'operator__actor_name']
+    search_fields = ['station_code', 'site_name', 'operator__name']
     form = StationSiteForm
 
     fieldsets = [
@@ -672,19 +664,19 @@ class StationSiteAdmin(admin.ModelAdmin):
         form.current_user = request.user
         return form
 
-    # Redefine queryset to show only site according to the user's project
+    # Redefine queryset to show only site according to the user's group
     def get_queryset(self, request):
         qs = super(StationSiteAdmin, self).get_queryset(request)
-        check_forall = ProjectUser.objects.filter(
-            user=request.user).values_list('project__project_name', flat=True)
-        # The name of the project must stay ALL
-        if request.user.is_superuser or u'ALL' in check_forall:
+        groups = request.user.groups.all()
+        group_names = [g.name for g in groups]
+        # The name of the group must stay ALL
+        if request.user.is_superuser or u'ALL' in group_names:
             return qs
-        project_list = ProjectUser.objects.filter(
-            user=request.user).values_list('project', flat=True)
-        station_list = Project.objects.filter(
-            id__in=project_list).values_list('station', flat=True)
-        return qs.filter(id__in=station_list)
+
+        allowed_sites = []
+        for g in groups:
+            allowed_sites += g.project.get_sites_ids()
+        return qs.filter(id__in=allowed_sites)
 
     def save_model(self, request, obj, form, change):
         """
@@ -810,31 +802,6 @@ class EquipTypeAdmin(admin.ModelAdmin):
     list_filter = ['equip_supertype']
 
 
-class IntervActorInline(admin.TabularInline):
-    model = IntervActor
-    extra = 0
-    formset = IntervActorInlineFormset
-
-    def get_formset(self, request, obj=None, **kwargs):
-        initial = []
-        if obj is not None:
-            kwargs['extra'] = 0
-        else:
-            kwargs['extra'] = 1
-            """
-            Pre-populating formset using GET params
-            """
-            initial.append(request.user.username)
-        formset = super(IntervActorInline, self).get_formset(
-            request, obj, **kwargs)
-        formset.__init__ = curry(formset.__init__, initial=initial)
-        return formset
-
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1})},
-    }
-
-
 class IntervStationInline(admin.TabularInline):
     model = IntervStation
     extra = 0
@@ -872,6 +839,19 @@ class IntervDocInline(admin.TabularInline):
     form = IntervDocInlineForm
 
 
+class IntervUserInline(admin.TabularInline):
+    model = IntervUser
+    extra = 0
+    fields = ('user', 'note')
+    formset = IntervUserInlineFormset
+
+
+class IntervOrganismInline(admin.TabularInline):
+    model = IntervOrganism
+    extra = 0
+    fields = ('organism', 'note')
+
+
 class InterventionAdmin(admin.ModelAdmin):
     list_display = ['station', 'format_date']
     list_filter = ['station', ]
@@ -880,7 +860,8 @@ class InterventionAdmin(admin.ModelAdmin):
     form = InterventionForm
 
     inlines = [
-        IntervActorInline,
+        IntervUserInline,
+        IntervOrganismInline,
         IntervStationInline,
         IntervEquipInline,
         IntervDocInline]
@@ -889,19 +870,19 @@ class InterventionAdmin(admin.ModelAdmin):
         js = ["js/my_ajax_function.js"]
 
     # Redefine queryset to show only intervention according to the user's
-    # project
+    # group
     def get_queryset(self, request):
         qs = super(InterventionAdmin, self).get_queryset(request)
-        check_forall = ProjectUser.objects.filter(
-            user=request.user).values_list('project__project_name', flat=True)
-        # The name of the project must stay ALL
-        if request.user.is_superuser or u'ALL' in check_forall:
+        groups = request.user.groups.all()
+        group_names = [g.name for g in groups]
+        # The name of the group must stay ALL
+        if request.user.is_superuser or u'ALL' in group_names:
             return qs
-        project_list = ProjectUser.objects.filter(
-            user=request.user).values_list('project', flat=True)
-        station_list = Project.objects.filter(
-            id__in=project_list).values_list('station', flat=True)
-        return qs.filter(station_id__in=station_list)
+
+        allowed_sites = []
+        for g in groups:
+            allowed_sites += g.project.get_sites_ids()
+        return qs.filter(station_id__in=allowed_sites)
 
     def response_change(self, request, obj):
         is_continue = '_continue' in request.POST
@@ -1278,12 +1259,10 @@ class NetworkAdmin(admin.ModelAdmin):
             'classes': ['collapse']})]
 
 
-class ProjectAdmin(admin.ModelAdmin):
-    model = Project
-    filter_horizontal = ['station']
-    fields = ('project_name', 'manager', 'station')
+class ProjectAdmin(BaseGroupAdmin):
+    filter_horizontal = ('permissions', 'sites')
 
-    # Redefine queryset to show only project according to the user's project
+    # Redefine queryset to show only group according to the user's project
     def get_queryset(self, request):
         qs = super(ProjectAdmin, self).get_queryset(request)
         if request.user.is_superuser:
@@ -1291,10 +1270,10 @@ class ProjectAdmin(admin.ModelAdmin):
         return qs.filter(manager_id=request.user.id)
 
     def delete_model(self, request, obj):
-        if obj.project_name == 'ALL':
+        if obj.name == 'ALL':
             messages.error(
                 request,
-                'Delete of the project ALL is forbidden')
+                'Delete of the group ALL is forbidden')
         else:
             obj.delete()
             return super(ProjectAdmin, self).delete_model(request, obj)
@@ -1314,28 +1293,8 @@ class ProjectAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser:
-            return ('project_name', 'manager')
+            return ('name', 'manager')
         return self.readonly_fields
-
-
-class ProjectUserAdmin(admin.ModelAdmin):
-    model = ProjectUser
-    form = ProjectUserForm
-
-    formfield_overrides = {
-        models.ManyToManyField: {
-            'widget': CheckboxSelectMultiple,
-            'queryset': Project.objects.all().order_by('project_name')},
-    }
-
-    # Redefine queryset to show only intervention according to the user's
-    # project
-    def get_queryset(self, request):
-        qs = super(ProjectUserAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        else:
-            return qs.filter(user_id=request.user.id)
 
 
 class ParameterValueInline(admin.TabularInline):
@@ -1369,6 +1328,27 @@ class ChannelCodeAdmin(admin.ModelAdmin):
     list_display = ['channel_code', 'presentation_rank', ]
 
 
+class OrganismAdmin(admin.ModelAdmin):
+    model = Organism
+    ordering = ['name']
+    search_fields = ['name']
+    list_filter = ['_type']
+    list_display = ['name', '_type', 'parent']
+    filter_horizontal = ('users', )
+
+    def delete_model(self, request, obj):
+        forbidden_element = 'Inconnu'
+        if obj.name == forbidden_element:
+            storage = messages.get_messages(request)
+            storage.used = True
+            messages.error(
+                request,
+                'Delete %s is forbidden!' % forbidden_element)
+        else:
+            obj.delete()
+            return super(OrganismAdmin, self).delete_model(request, obj)
+
+
 """
 Disabling the action "delete_selected" for all the site
 """
@@ -1377,7 +1357,6 @@ admin.site.disable_action('delete_selected')
 
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Chain, ChainAdmin)
-admin.site.register(Actor, ActorAdmin)
 admin.site.register(EquipModel, EquipModelAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
 admin.site.register(ForbiddenEquipmentModel, ForbiddenEquipmentModelAdmin)
@@ -1391,8 +1370,9 @@ admin.site.register(EquipDocType)
 admin.site.register(StationDocType)
 admin.site.register(EquipType)
 admin.site.register(Intervention, InterventionAdmin)
+admin.site.unregister(Group)
 admin.site.register(Project, ProjectAdmin)
-admin.site.register(ProjectUser, ProjectUserAdmin)
 admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)
+admin.site.register(Organism, OrganismAdmin)

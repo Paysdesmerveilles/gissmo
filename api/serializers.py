@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from gissmo.models import (
-    Actor,
+    Organism,
     CalibrationUnit,
     Chain,
     ChainConfig,
@@ -12,7 +12,8 @@ from gissmo.models import (
     IPAddress,
     Network,
     Service,
-    StationSite)
+    StationSite,
+)
 
 from equipment.protocols import PROTOCOL_CHOICES
 from equipment.states import EQUIP_STATES
@@ -33,12 +34,13 @@ class EnumField(serializers.ChoiceField):
         return res
 
 
-class ActorSerializer(serializers.HyperlinkedModelSerializer):
-    name = serializers.CharField(source='actor_name')
-    type = EnumField(choices=Actor.ACTOR_TYPE_CHOICES, source='actor_type')
+class OrganismSerializer(serializers.HyperlinkedModelSerializer):
+    type = EnumField(
+        choices=Organism.ORGANISM_TYPE_CHOICES,
+        source='_type')
 
     class Meta:
-        model = Actor
+        model = Organism
         fields = (
             'id',
             'name',

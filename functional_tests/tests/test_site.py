@@ -4,34 +4,27 @@ from .input_field import InputField
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
-    Actor,
+    Organism,
     Project,
-    ProjectUser,
-    StationSite)
+    StationSite
+)
 
 
 class StationSiteTest(FunctionalTest):
 
     def setUp(self):
         super(StationSiteTest, self).setUp()
-        # This site view need by default an unknown actor and an actor that
-        # have the same name of username
-        self.mandatory_actor, created = Actor.objects.get_or_create(
-            actor_name='DT INSU',
-            actor_type=1)  # to not explode equipment view (owner field)
-        self.unknown_actor, created = Actor.objects.get_or_create(
-            actor_name='Inconnu',
-            actor_type=6)
-        self.superuser_actor = Actor.objects.create(
-            actor_name=self.superuser.username,
-            actor_type=7)
+        # This site view need by default an unknown organism
+        self.mandatory, created = Organism.objects.get_or_create(
+            name='DT INSU',
+            _type=0)  # to not explode equipment view (owner field)
+        self.unknown, created = Organism.objects.get_or_create(
+            name='Inconnu',
+            _type=4)
         self.project = Project.objects.create(
-            project_name='ADEME',
+            name='ADEME',
             manager=self.superuser)
-        self.projectuser = ProjectUser.objects.create(
-            user=self.superuser)
-        # Link last ProjectUser to ADEME
-        self.projectuser.project.add(self.project)
+        self.superuser.groups.add(self.project)
 
     def get_site_choice_name(self, number):
         res = ''
