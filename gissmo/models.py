@@ -100,7 +100,7 @@ d'une intervention.
 
     class Meta:
         ordering = ['actor_name']
-        verbose_name = "Player"
+        verbose_name = "Actor"
 
     def __str__(self):
         return self.actor_name
@@ -1043,11 +1043,11 @@ l'intervention
     intervention = models.ForeignKey(
         "Intervention",
         verbose_name="Intervention")
-    actor = models.ForeignKey("Actor", verbose_name="Protagonist")
+    actor = models.ForeignKey("Actor", verbose_name="Operator")
     note = models.TextField(null=True, blank=True, verbose_name="Note")
 
     class Meta:
-        verbose_name = "Protagonist"
+        verbose_name = "Operator"
 
     def __str__(self):
         return u'%s : %s' % (self.intervention, self.actor)
@@ -1808,7 +1808,7 @@ class ProjectUser(models.Model):
     project = models.ManyToManyField('Project')
 
     class Meta:
-        verbose_name = "Project's user"
+        verbose_name = "User's project"
 
     def __str__(self):
         return u'%s' % (self.user)

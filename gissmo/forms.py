@@ -418,7 +418,7 @@ class IntervActorInlineFormset(forms.models.BaseInlineFormSet):
 
         if form_number == 0 or form_number == delete_checked:
             raise forms.ValidationError(
-                'At least 1 protagonist per intervention')
+                'At least 1 operator per intervention')
 
 
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):

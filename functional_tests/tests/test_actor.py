@@ -23,7 +23,7 @@ class ActorTest(FunctionalTest):
         """
         Check a simple actor creation
         """
-        # @EOST a new protagonist comes. His name is: John Doe.
+        # @EOST a new actor comes. His name is: John Doe.
         # We enter him in the system and check we are redirect to actor list.
         # Then we check that John DOE appears in the given actor list.
         actor_type = InputField(
