@@ -1850,13 +1850,13 @@ class LoggedActions(models.Model):
 class Organism(models.Model):
     # organism types
     OBSERVATORY = 0
-    ORGANIZATION = 1
+    NETWORK = 1
     BUSINESS = 2
     CUSTOMER_SERVICE = 3
     UNKNOWN = 4
     ORGANISM_TYPE_CHOICES = (
         (OBSERVATORY, 'Observatory/Laboratory'),
-        (ORGANIZATION, 'Organization'),
+        (NETWORK, 'Network'),
         (BUSINESS, 'Business'),
         (CUSTOMER_SERVICE, 'Customer service Company'),
         (UNKNOWN, 'Unknown'),

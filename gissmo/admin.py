@@ -282,7 +282,7 @@ class OwnerFilter(SimpleListFilter):
         """
         lookup_list = Organism.objects.filter(
             Q(_type=Organism.OBSERVATORY) |
-            Q(_type=Organism.ORGANIZATION) |
+            Q(_type=Organism.NETWORK) |
             Q(_type=Organism.UNKNOWN)).values_list(
                 'id',
                 'name').distinct()

@@ -51,10 +51,11 @@ from api.filters import (
 
 class OrganismViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Organization, Observatories, etc. that are:
+    Network, Observatories, Business, etc. that are:
 
       * station operator
       * equipment owner
+      * organism that perform an action during an intervention
     """
     serializer_class = OrganismSerializer
     queryset = Organism.objects.all()

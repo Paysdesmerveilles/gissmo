@@ -126,7 +126,7 @@ def migrate_actors_to_organism_and_users(apps, schema_editor):
         6]  # INCONNU
     actor_type_equivalent = {
         1: 0,  # OBSERVATORY
-        3: 1,  # ORGANIZATION
+        3: 1,  # NETWORK
         4: 2,  # BUSINESS
         5: 3,  # CUSTOMER SERVICE
         6: 4}  # UNKNOWN
@@ -162,7 +162,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
                 ('name', models.CharField(max_length=255)),
-                ('_type', models.IntegerField(default=4, verbose_name='Type', choices=[(0, 'Observatory/Laboratory'), (1, 'Organization'), (2, 'Business'), (3, 'Customer service Company'), (4, 'Unknown')])),
+                ('_type', models.IntegerField(default=4, verbose_name='Type', choices=[(0, 'Observatory/Laboratory'), (1, 'Network'), (2, 'Business'), (3, 'Customer service Company'), (4, 'Unknown')])),
                 ('users', models.ManyToManyField(blank=True, to=settings.AUTH_USER_MODEL)),
                 ('parent', models.ForeignKey(to='gissmo.Organism', blank=True, null=True)),
             ],

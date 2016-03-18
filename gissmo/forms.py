@@ -225,7 +225,7 @@ class EquipmentForm(autocomplete_light.ModelForm):
 
         self.fields['owner'].queryset = Organism.objects.filter(
             Q(_type=Organism.OBSERVATORY) |
-            Q(_type=Organism.ORGANIZATION) |
+            Q(_type=Organism.NETWORK) |
             Q(_type=Organism.UNKNOWN))
         self.fields['owner'].initial = owner_default_value
         self.fields['stockage_site'].queryset = \
@@ -315,7 +315,7 @@ project only when it'a new station else hide the field and the label.
 
         self.fields['operator'].queryset = Organism.objects.filter(
             Q(_type=Organism.OBSERVATORY) |
-            Q(_type=Organism.ORGANIZATION) |
+            Q(_type=Organism.NETWORK) |
             Q(_type=Organism.CUSTOMER_SERVICE) |
             Q(_type=Organism.UNKNOWN))
         self.fields['operator'].initial = operator_default_value
