@@ -1,4 +1,8 @@
 Current version (1.6-trunk):
+  - Upload directory is now available as volume for Docker containers
+  - Intervention attachment is now available (documents on it)
+  - New 'close channels' button on a given StationSite to give a closing date
+  - Equipment List - 2 new filters appears: last state and last station
   - Display current Gissmo version on site header
 
 Version (1.5-rc1):
