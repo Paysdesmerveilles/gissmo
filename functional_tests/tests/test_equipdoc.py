@@ -7,7 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
-    Affiliation,
+    Organism,
     EquipDocType,
     EquipModel,
     EquipSupertype,
@@ -31,16 +31,16 @@ class EquipDocTest(FunctionalTest):
     def setUp(self):
         """
         Initialize some needed data:
-          - Affiliations
+          - Organisms
           - SuperType of Equipment
           - Equipment Type
         """
         super(EquipDocTest, self).setUp()
         # TODO: Delete dependancy from this 2 actors if possible.
-        self.mandatory, created = Affiliation.objects.get_or_create(
+        self.mandatory, created = Organism.objects.get_or_create(
             name='DT INSU',
             _type=0)  # to not explode equipment view (owner field)
-        self.unknown, created = Affiliation.objects.get_or_create(
+        self.unknown, created = Organism.objects.get_or_create(
             name='Inconnu',
             _type=4)
         self.supertype_1 = EquipSupertype.objects.create(

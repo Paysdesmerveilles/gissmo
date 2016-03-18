@@ -7,7 +7,7 @@ from rest_framework import (
 )
 
 from gissmo.models import (
-    Affiliation,
+    Organism,
     CalibrationUnit,
     Chain,
     ChainConfig,
@@ -21,7 +21,7 @@ from gissmo.models import (
 )
 
 from api.serializers import (
-    AffiliationSerializer,
+    OrganismSerializer,
     CalibrationUnitSerializer,
     ChainSerializer,
     ChannelDatatypeSerializer,
@@ -35,7 +35,7 @@ from api.serializers import (
 )
 
 from api.filters import (
-    AffiliationFilter,
+    OrganismFilter,
     CalibrationUnitFilter,
     ChainFilter,
     ChannelDatatypeFilter,
@@ -49,17 +49,17 @@ from api.filters import (
 )
 
 
-class AffiliationViewSet(viewsets.ReadOnlyModelViewSet):
+class OrganismViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Organization, Observatories, etc. that are:
 
       * station operator
       * equipment owner
     """
-    serializer_class = AffiliationSerializer
-    queryset = Affiliation.objects.all()
+    serializer_class = OrganismSerializer
+    queryset = Organism.objects.all()
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,)
-    filter_class = AffiliationFilter
+    filter_class = OrganismFilter
     search_fields = ['name']
 
 

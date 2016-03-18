@@ -6,14 +6,14 @@ from django.db import migrations
 
 def migrate_equipment_owner_to_user_id(apps, schema_editor):
     Equipment = apps.get_model('gissmo', 'Equipment')
-    Affiliation = apps.get_model('gissmo', 'Affiliation')
+    Organism = apps.get_model('gissmo', 'Organism')
     correlation = {}
     for e in Equipment.objects.all():
         search_name = 'Inconnu'
         if e.owner:
             search_name = e.owner.actor_name
-        affiliation = Affiliation.objects.filter(name=search_name).first()
-        correlation[e.id] = affiliation.id
+        organism = Organism.objects.filter(name=search_name).first()
+        correlation[e.id] = organism.id
     for e_id in correlation:
         e = Equipment.objects.get(pk=e_id)
         e.owner_id = correlation[e_id]
@@ -22,12 +22,12 @@ def migrate_equipment_owner_to_user_id(apps, schema_editor):
 
 def migrate_stationsite_operator_to_user_id(apps, schema_editor):
     StationSite = apps.get_model('gissmo', 'StationSite')
-    Affiliation = apps.get_model('gissmo', 'Affiliation')
+    Organism = apps.get_model('gissmo', 'Organism')
     correlation = {}
     for s in StationSite.objects.all():
         search_name = s.operator and s.operator.actor_name or 'Inconnu'
-        affiliation = Affiliation.objects.filter(name=search_name).first()
-        correlation[s.id] = affiliation.id
+        organism = Organism.objects.filter(name=search_name).first()
+        correlation[s.id] = organism.id
     for s_id in correlation:
         s = StationSite.objects.get(pk=s_id)
         s.operator_id = correlation[s_id]
@@ -37,7 +37,7 @@ def migrate_stationsite_operator_to_user_id(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('gissmo', '0030_affiliation'),
+        ('gissmo', '0030_organism'),
     ]
 
     operations = [

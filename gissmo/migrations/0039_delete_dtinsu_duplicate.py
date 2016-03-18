@@ -4,13 +4,13 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 
-def delete_dtinsu_useless_affiliation(apps, schema_editor):
+def delete_dtinsu_useless_organism(apps, schema_editor):
     """
     As DTINSU is not used, and all users go to "DT INSU" instead, we don't
     need DTINSU as Group.
     """
-    Affiliation = apps.get_model('gissmo', 'Affiliation')
-    Affiliation.objects.filter(name='DTINSU').delete()
+    Organism = apps.get_model('gissmo', 'Organism')
+    Organism.objects.filter(name='DTINSU').delete()
 
 
 class Migration(migrations.Migration):
@@ -20,5 +20,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(delete_dtinsu_useless_affiliation),
+        migrations.RunPython(delete_dtinsu_useless_organism),
     ]

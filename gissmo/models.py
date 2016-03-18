@@ -422,7 +422,7 @@ class StationSite(models.Model):
         verbose_name="Elevation (m)",
         max_digits=5,
         decimal_places=1)
-    operator = models.ForeignKey('gissmo.Affiliation', verbose_name="Operator")
+    operator = models.ForeignKey('gissmo.Organism', verbose_name="Operator")
     address = models.CharField(
         max_length=100,
         null=True,
@@ -593,10 +593,10 @@ class StationSite(models.Model):
         IntervUser.objects.create(
             intervention=intervention,
             user=user)
-        for a in user.affiliation_set.all():
-            IntervAffiliation.objects.get_or_create(
+        for o in user.organism_set.all():
+            IntervOrganism.objects.get_or_create(
                 intervention=intervention,
-                affiliation=a)
+                organism=o)
 
         # Add station to a project
         project = get_object_or_404(Project, name=self.project)
@@ -667,7 +667,7 @@ l'équipment
     serial_number = models.CharField(
         max_length=50,
         verbose_name="Serial number")
-    owner = models.ForeignKey('gissmo.Affiliation', verbose_name="Owner")
+    owner = models.ForeignKey('gissmo.Organism', verbose_name="Owner")
     vendor = models.CharField(
         max_length=50,
         null=True,
@@ -793,15 +793,15 @@ l'équipment
                 raise ValidationError(
                     'No logged user',
                 )
-            # add user and its Affiliations
+            # add user and its Organisms
             user = get_object_or_404(User, username=self.actor)
             IntervUser.objects.create(
                 intervention=intervention,
                 user=user)
-            for a in user.affiliation_set.all():
-                IntervAffiliation.objects.get_or_create(
+            for o in user.organism_set.all():
+                IntervOrganism.objects.get_or_create(
                     intervention=intervention,
-                    affiliation=a)
+                    organism=o)
 
     def __init__(self, *args, **kwargs):
         """
@@ -971,12 +971,12 @@ class Intervention(models.Model):
     intervention_date = models.DateTimeField(
         verbose_name="Date (yyyy-mm-dd)")
     note = models.TextField(null=True, blank=True, verbose_name="Note")
-    # Before users and affiliations, Intervention was linked to "IntervActor"
-    # which grouped all kind of users/affiliations.
+    # Before users and organisms, Intervention was linked to "IntervActor"
+    # which grouped all kind of users/organisms.
     users = models.ManyToManyField('auth.User', through='gissmo.IntervUser')
-    affiliations = models.ManyToManyField(
-        'gissmo.Affiliation',
-        through='gissmo.IntervAffiliation')
+    organisms = models.ManyToManyField(
+        'gissmo.Organism',
+        through='gissmo.IntervOrganism')
 
     class Meta:
         unique_together = ("station", "intervention_date")
@@ -998,49 +998,49 @@ class IntervUser(models.Model):
 
     def delete(self, *args, **kwargs):
         """
-        Check that, after deletion, we need to also delete related Affiliation
+        Check that, after deletion, we need to also delete related Organism
         """
         intervention_id = self.intervention_id
         res = super(IntervUser, self).delete(*args, **kwargs)
         i = Intervention.objects.get(pk=intervention_id)
-        remaining_affiliations = []
+        remaining_organisms = []
         for intervuser in i.intervuser_set.all():
             u = intervuser.user
-            for a in u.affiliation_set.all():
-                remaining_affiliations.append(a.id)
+            for o in u.organism_set.all():
+                remaining_organisms.append(o.id)
 
-        current_affiliations = []
-        for intervaffiliation in i.intervaffiliation_set.all():
-            current_affiliations.append(intervaffiliation.affiliation_id)
+        current_organisms = []
+        for intervorganism in i.intervorganism_set.all():
+            current_organisms.append(intervorganism.organism_id)
 
-        difference = set(current_affiliations) - set(remaining_affiliations)
+        difference = set(current_organisms) - set(remaining_organisms)
 
-        for affiliation_id in difference:
-            IntervAffiliation.objects.filter(
+        for organism_id in difference:
+            IntervOrganism.objects.filter(
                 intervention=i,
-                affiliation_id=affiliation_id).delete()
+                organism_id=organism_id).delete()
         return res
 
     def save(self, *args, **kwargs):
         """
-        Add linked affiliation to the same intervention (if not already
+        Add linked organism to the same intervention (if not already
         present)
         """
         res = super(IntervUser, self).save(*args, **kwargs)
-        for a in self.user.affiliation_set.all():
-            IntervAffiliation.objects.get_or_create(
+        for o in self.user.organism_set.all():
+            IntervOrganism.objects.get_or_create(
                 intervention=self.intervention,
-                affiliation=a)
+                organism=o)
         return res
 
 
-class IntervAffiliation(models.Model):
+class IntervOrganism(models.Model):
     intervention = models.ForeignKey('gissmo.Intervention')
-    affiliation = models.ForeignKey('gissmo.Affiliation')
+    organism = models.ForeignKey('gissmo.Organism')
     note = models.TextField(null=True, blank=True)
 
     class Meta:
-        verbose_name = 'Operator'
+        verbose_name = 'Organism'
 
 
 @python_2_unicode_compatible
@@ -1847,14 +1847,14 @@ class LoggedActions(models.Model):
         verbose_name = "Logged action"
 
 
-class Affiliation(models.Model):
-    # affiliation types
+class Organism(models.Model):
+    # organism types
     OBSERVATORY = 0
     ORGANIZATION = 1
     BUSINESS = 2
     CUSTOMER_SERVICE = 3
     UNKNOWN = 4
-    AFFILIATION_TYPE_CHOICES = (
+    ORGANISM_TYPE_CHOICES = (
         (OBSERVATORY, 'Observatory/Laboratory'),
         (ORGANIZATION, 'Organization'),
         (BUSINESS, 'Business'),
@@ -1864,7 +1864,7 @@ class Affiliation(models.Model):
     # fields
     name = models.CharField(max_length=255)
     _type = models.IntegerField(
-        choices=AFFILIATION_TYPE_CHOICES,
+        choices=ORGANISM_TYPE_CHOICES,
         verbose_name='Type',
         default=UNKNOWN)
     users = models.ManyToManyField(
@@ -1877,34 +1877,34 @@ class Affiliation(models.Model):
 
     def delete(self, *args, **kwargs):
         """
-        Avoid Inconnu Affiliation to be deleted.
+        Avoid Inconnu Organism to be deleted.
         We use database value as reference. This is to avoid someone to rename
-        Affiliation before launching delete().
+        Organism before launching delete().
         """
-        old = Affiliation.objects.get(pk=self.id)
+        old = Organism.objects.get(pk=self.id)
         assert old.name != 'Inconnu', ("Delete 'Inconnu' is forbidden!")
-        return super(Affiliation, self).delete(*args, **kwargs)
+        return super(Organism, self).delete(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         """
-        Avoid Inconnu affiliation to be renamed or another affiliation to be
+        Avoid Inconnu organism to be renamed or another organism to be
         renamed into Inconnu one.
         """
         if self.id:
             name = 'Inconnu'
-            old = Affiliation.objects.get(pk=self.id)
+            old = Organism.objects.get(pk=self.id)
             assert old.name != name and self.name != name, (
                 "%s could be neither renamed nor replaced." % name)
-        return super(Affiliation, self).save(*args, **kwargs)
+        return super(Organism, self).save(*args, **kwargs)
 
     def clean(self):
         """
-        Avoid Inconnu affiliation to be renamed on Admin interface.
+        Avoid Inconnu organism to be renamed on Admin interface.
         """
         if self.id:
-            affiliation = Affiliation.objects.get(pk=self.id)
+            organism = Organism.objects.get(pk=self.id)
             name = 'Inconnu'
-            if affiliation.name == name and self.name != name:
+            if organism.name == name and self.name != name:
                 raise ValidationError(
-                    "%(name)s affiliation should stay as it is!",
+                    "%(name)s organism should stay as it is!",
                     params={'name': name})

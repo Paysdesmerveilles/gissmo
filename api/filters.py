@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from gissmo.models import (
-    Affiliation,
+    Organism,
     CalibrationUnit,
     Chain,
     ChainConfig,
@@ -18,12 +18,12 @@ from gissmo.models import (
 import django_filters
 
 
-class AffiliationFilter(django_filters.FilterSet):
+class OrganismFilter(django_filters.FilterSet):
     """
-    Enables filtering on Affiliation.
+    Enables filtering on Organism.
     """
     class Meta:
-        model = Affiliation
+        model = Organism
         fields = ['name']
 
 

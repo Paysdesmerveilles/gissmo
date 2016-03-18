@@ -40,7 +40,7 @@ class CheckMainURLBehaviourTest(FunctionalTest):
         # As Martin don't know how the website works he will browse it
         # So it checks some links
         links_to_check = [
-            'affiliation/',
+            'organism/',
             'builttype/',
             'calibrationunit/',
             'channel/',

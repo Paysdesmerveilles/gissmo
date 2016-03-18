@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from gissmo.models import (
-    Affiliation,
+    Organism,
     CalibrationUnit,
     Chain,
     ChainConfig,
@@ -34,13 +34,13 @@ class EnumField(serializers.ChoiceField):
         return res
 
 
-class AffiliationSerializer(serializers.HyperlinkedModelSerializer):
+class OrganismSerializer(serializers.HyperlinkedModelSerializer):
     type = EnumField(
-        choices=Affiliation.AFFILIATION_TYPE_CHOICES,
+        choices=Organism.ORGANISM_TYPE_CHOICES,
         source='_type')
 
     class Meta:
-        model = Affiliation
+        model = Organism
         fields = (
             'id',
             'name',

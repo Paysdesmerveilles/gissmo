@@ -8,7 +8,7 @@ from django.http import HttpRequest
 from django.utils.timezone import make_aware
 
 from gissmo.models import (
-    Affiliation,
+    Organism,
     Channel,
     ChannelCode,
     Network,
@@ -39,9 +39,9 @@ class CloseChannelsTest(TestCase):
         cls.project = Project.objects.create(
             name='ALL',
             manager=cls.superuser)
-        cls.eost = Affiliation.objects.create(
+        cls.eost = Organism.objects.create(
             name='EOST',
-            _type=Affiliation.OBSERVATORY)
+            _type=Organism.OBSERVATORY)
         cls.station = StationSite.objects.create(
             site_type=StationSite.SITE_TEST,
             station_code='CHMF',

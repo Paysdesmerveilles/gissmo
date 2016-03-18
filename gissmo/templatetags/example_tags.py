@@ -37,19 +37,19 @@ def display_station_interventions(station_id):
     interventions = Intervention.objects.filter(
         station_id=station_id).order_by(
         '-intervention_date').prefetch_related(
-        'intervaffiliation_set__affiliation',
+        'intervorganism_set__organism',
         'intervequip_set__equip__equip_model',
         'intervequip_set__built',
         'intervstation_set')
     for intervention in interventions:
-        # Display users and affiliations as "user1, user2 (a1, a2, etc.)"
+        # Display users and organisms as "user1, user2 (a1, a2, etc.)"
         protagonists = ''
         users = [str(u.user) for u in intervention.intervuser_set.all()]
         users_text = ', '.join(users)
         if users_text:
             protagonists += '%s' % users_text
-        affiliations = intervention.intervaffiliation_set.all()
-        groups = [str(a.affiliation) for a in affiliations]
+        organisms = intervention.intervorganism_set.all()
+        groups = [str(o.organism) for o in organisms]
         groups_text = ', '.join(groups)
         if groups_text:
             protagonists += ' (%s)' % groups_text

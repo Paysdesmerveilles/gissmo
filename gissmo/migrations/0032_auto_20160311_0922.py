@@ -14,15 +14,15 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='IntervAffiliation',
+            name='IntervOrganism',
             fields=[
                 ('id', models.AutoField(primary_key=True, auto_created=True, verbose_name='ID', serialize=False)),
                 ('note', models.TextField(null=True, blank=True)),
-                ('affiliation', models.ForeignKey(to='gissmo.Affiliation')),
+                ('organism', models.ForeignKey(to='gissmo.Organism')),
                 ('intervention', models.ForeignKey(to='gissmo.Intervention')),
             ],
             options={
-                'verbose_name': 'Operator',
+                'verbose_name': 'Organism',
             },
         ),
         migrations.CreateModel(
@@ -39,8 +39,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='intervention',
-            name='affiliations',
-            field=models.ManyToManyField(to='gissmo.Affiliation', through='gissmo.IntervAffiliation'),
+            name='organisms',
+            field=models.ManyToManyField(to='gissmo.Organism', through='gissmo.IntervOrganism'),
         ),
         migrations.AddField(
             model_name='intervention',

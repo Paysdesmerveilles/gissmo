@@ -21,7 +21,7 @@ from station import states as StationState
 from station import actions as StationAction
 
 from gissmo.models import (
-    Affiliation,
+    Organism,
     Built,
     Chain,
     Channel,
@@ -219,14 +219,14 @@ class EquipmentForm(autocomplete_light.ModelForm):
 
         # initialization
         try:
-            owner_default_value = Affiliation.objects.get(name='DT INSU')
-        except (KeyError, Affiliation.DoesNotExist):
+            owner_default_value = Organism.objects.get(name='DT INSU')
+        except (KeyError, Organism.DoesNotExist):
             owner_default_value = None
 
-        self.fields['owner'].queryset = Affiliation.objects.filter(
-            Q(_type=Affiliation.OBSERVATORY) |
-            Q(_type=Affiliation.ORGANIZATION) |
-            Q(_type=Affiliation.UNKNOWN))
+        self.fields['owner'].queryset = Organism.objects.filter(
+            Q(_type=Organism.OBSERVATORY) |
+            Q(_type=Organism.ORGANIZATION) |
+            Q(_type=Organism.UNKNOWN))
         self.fields['owner'].initial = owner_default_value
         self.fields['stockage_site'].queryset = \
             StationSite.objects.filter(site_type=StationSite.OBSERVATOIRE)
@@ -309,15 +309,15 @@ project only when it'a new station else hide the field and the label.
         # intialization
         operator_default_value = None
         try:
-            operator_default_value = Affiliation.objects.get(name='Inconnu')
-        except (KeyError, Affiliation.DoesNotExist):
+            operator_default_value = Organism.objects.get(name='Inconnu')
+        except (KeyError, Organism.DoesNotExist):
             pass
 
-        self.fields['operator'].queryset = Affiliation.objects.filter(
-            Q(_type=Affiliation.OBSERVATORY) |
-            Q(_type=Affiliation.ORGANIZATION) |
-            Q(_type=Affiliation.CUSTOMER_SERVICE) |
-            Q(_type=Affiliation.UNKNOWN))
+        self.fields['operator'].queryset = Organism.objects.filter(
+            Q(_type=Organism.OBSERVATORY) |
+            Q(_type=Organism.ORGANIZATION) |
+            Q(_type=Organism.CUSTOMER_SERVICE) |
+            Q(_type=Organism.UNKNOWN))
         self.fields['operator'].initial = operator_default_value
 
     class Meta:

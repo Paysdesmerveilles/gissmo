@@ -280,10 +280,10 @@ class OwnerFilter(SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-        lookup_list = Affiliation.objects.filter(
-            Q(_type=Affiliation.OBSERVATORY) |
-            Q(_type=Affiliation.ORGANIZATION) |
-            Q(_type=Affiliation.UNKNOWN)).values_list(
+        lookup_list = Organism.objects.filter(
+            Q(_type=Organism.OBSERVATORY) |
+            Q(_type=Organism.ORGANIZATION) |
+            Q(_type=Organism.UNKNOWN)).values_list(
                 'id',
                 'name').distinct()
         return lookup_list
@@ -593,7 +593,7 @@ class StationSiteFilter(SimpleListFilter):
             'operator', flat=True)
         liste_val_distinct_triee = list(sorted(set(Operator_station)))
 
-        Operator = Affiliation.objects.filter(
+        Operator = Organism.objects.filter(
             id__in=liste_val_distinct_triee).order_by('name')
 
         """
@@ -846,10 +846,10 @@ class IntervUserInline(admin.TabularInline):
     formset = IntervUserInlineFormset
 
 
-class IntervAffiliationInline(admin.TabularInline):
-    model = IntervAffiliation
+class IntervOrganismInline(admin.TabularInline):
+    model = IntervOrganism
     extra = 0
-    fields = ('affiliation', 'note')
+    fields = ('organism', 'note')
 
 
 class InterventionAdmin(admin.ModelAdmin):
@@ -861,7 +861,7 @@ class InterventionAdmin(admin.ModelAdmin):
 
     inlines = [
         IntervUserInline,
-        IntervAffiliationInline,
+        IntervOrganismInline,
         IntervStationInline,
         IntervEquipInline,
         IntervDocInline]
@@ -1328,8 +1328,8 @@ class ChannelCodeAdmin(admin.ModelAdmin):
     list_display = ['channel_code', 'presentation_rank', ]
 
 
-class AffiliationAdmin(admin.ModelAdmin):
-    model = Affiliation
+class OrganismAdmin(admin.ModelAdmin):
+    model = Organism
     ordering = ['name']
     search_fields = ['name']
     list_filter = ['_type']
@@ -1346,7 +1346,7 @@ class AffiliationAdmin(admin.ModelAdmin):
                 'Delete %s is forbidden!' % forbidden_element)
         else:
             obj.delete()
-            return super(AffiliationAdmin, self).delete_model(request, obj)
+            return super(OrganismAdmin, self).delete_model(request, obj)
 
 
 """
@@ -1375,4 +1375,4 @@ admin.site.register(Project, ProjectAdmin)
 admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)
-admin.site.register(Affiliation, AffiliationAdmin)
+admin.site.register(Organism, OrganismAdmin)

@@ -34,30 +34,30 @@ def create_user(apps, string):
     return u
 
 
-def check_and_create_affiliation(apps, ids, types):
+def check_and_create_organism(apps, ids, types):
     result = {}
     Actor = apps.get_model('gissmo', 'Actor')
-    Affiliation = apps.get_model('gissmo', 'Affiliation')
+    Organism = apps.get_model('gissmo', 'Organism')
     for actor in Actor.objects.filter(actor_type__in=ids):
         type_id = actor.actor_type
         name = actor.actor_name
-        a = Affiliation.objects.filter(name__iexact=name).first()
+        a = Organism.objects.filter(name__iexact=name).first()
         if not a:
-            a = Affiliation.objects.create(
+            a = Organism.objects.create(
                 name=name,
                 _type=types[type_id])
         result[actor.id] = a
-        # check parent affiliation
+        # check parent organism
         if actor.actor_parent and actor.actor_parent.actor_name != name:
             parent_name = actor.actor_parent.actor_name
-            affiliation = Affiliation.objects.filter(name=parent_name).first()
-            if affiliation:
-                a.parent = affiliation
+            organism = Organism.objects.filter(name=parent_name).first()
+            if organism:
+                a.parent = organism
                 a.save()
     return result
 
 
-def create_or_update_users(apps, ids, affiliations):
+def create_or_update_users(apps, ids, organisms):
     result = []
     Actor = apps.get_model('gissmo', 'Actor')
     User = apps.get_model('auth', 'User')
@@ -86,33 +86,33 @@ def create_or_update_users(apps, ids, affiliations):
 
         if not u:
             u = create_user(apps, name)
-        # link User to its affiliation
-        if not parent or parent not in affiliations.keys():
+        # link User to its organism
+        if not parent or parent not in organisms.keys():
             if not u.groups.all():
                 result.append(actor.actor_name)
             continue
-        affiliations[parent].users.add(u.id)
+        organisms[parent].users.add(u.id)
 
 
-def migrate_groups_to_affiliation(apps, schema_editor):
+def migrate_groups_to_organism(apps, schema_editor):
     """
     Current groups are observatories (except Resif one).
-    We so migrate groups to Affiliation, except Resif one.
+    We so migrate groups to Organism, except Resif one.
     """
-    Affiliation = apps.get_model('gissmo', 'Affiliation')
+    Organism = apps.get_model('gissmo', 'Organism')
     Group = apps.get_model('auth', 'Group')
     for group in Group.objects.all():
         if group.name != 'Resif':
-            Affiliation.objects.create(
+            Organism.objects.create(
                 name=group.name,
                 _type=0)  # Correspond to OBSERVATORY
 
 
-def migrate_actors_to_affiliation_and_users(apps, schema_editor):
+def migrate_actors_to_organism_and_users(apps, schema_editor):
     """
-    Each actor is either a User or an Affiliation. We migrate them to their
+    Each actor is either a User or an Organism. We migrate them to their
     new area.
-    In case of User, we link it to its existing Affiliation.
+    In case of User, we link it to its existing Organism.
     Notes:
       - username, first_name and last_name are limited to 30 chars
       - Actors with "Firstname Lastname" becomes "firstname.lastname" (User)
@@ -131,22 +131,22 @@ def migrate_actors_to_affiliation_and_users(apps, schema_editor):
         5: 3,  # CUSTOMER SERVICE
         6: 4}  # UNKNOWN
 
-    # first create affiliation (to be sure they exists for user
-    # affiliation links)
-    affiliations = check_and_create_affiliation(
+    # first create organism (to be sure they exists for user
+    # organism links)
+    organisms = check_and_create_organism(
         apps,
         actor_non_physical,
         actor_type_equivalent)
 
-    # Then we check all other one to link User to Affiliations
+    # Then we check all other one to link User to Organisms
     unaffiliated = create_or_update_users(
         apps,
         actor_non_physical,
-        affiliations)
+        organisms)
 
     if unaffiliated:
         actors = ' '.join(unaffiliated)
-        print('\nUser without any affiliation: %s' % actors)
+        print('\nUser without any organism: %s' % actors)
 
 
 class Migration(migrations.Migration):
@@ -158,15 +158,15 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Affiliation',
+            name='Organism',
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
                 ('name', models.CharField(max_length=255)),
                 ('_type', models.IntegerField(default=4, verbose_name='Type', choices=[(0, 'Observatory/Laboratory'), (1, 'Organization'), (2, 'Business'), (3, 'Customer service Company'), (4, 'Unknown')])),
                 ('users', models.ManyToManyField(blank=True, to=settings.AUTH_USER_MODEL)),
-                ('parent', models.ForeignKey(to='gissmo.Affiliation', blank=True, null=True)),
+                ('parent', models.ForeignKey(to='gissmo.Organism', blank=True, null=True)),
             ],
         ),
-        migrations.RunPython(migrate_groups_to_affiliation),
-        migrations.RunPython(migrate_actors_to_affiliation_and_users),
+        migrations.RunPython(migrate_groups_to_organism),
+        migrations.RunPython(migrate_actors_to_organism_and_users),
     ]

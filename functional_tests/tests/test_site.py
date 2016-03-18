@@ -4,7 +4,7 @@ from .input_field import InputField
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
-    Affiliation,
+    Organism,
     Project,
     StationSite
 )
@@ -14,11 +14,11 @@ class StationSiteTest(FunctionalTest):
 
     def setUp(self):
         super(StationSiteTest, self).setUp()
-        # This site view need by default an unknown affiliation
-        self.mandatory, created = Affiliation.objects.get_or_create(
+        # This site view need by default an unknown organism
+        self.mandatory, created = Organism.objects.get_or_create(
             name='DT INSU',
             _type=0)  # to not explode equipment view (owner field)
-        self.unknown, created = Affiliation.objects.get_or_create(
+        self.unknown, created = Organism.objects.get_or_create(
             name='Inconnu',
             _type=4)
         self.project = Project.objects.create(

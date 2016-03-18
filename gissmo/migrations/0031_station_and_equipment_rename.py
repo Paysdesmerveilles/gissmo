@@ -14,9 +14,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipment',
             name='owner',
-            field=models.ForeignKey(verbose_name='Owner', to='gissmo.Affiliation')),
+            field=models.ForeignKey(verbose_name='Owner', to='gissmo.Organism')),
         migrations.AlterField(
             model_name='stationsite',
             name='operator',
-            field=models.ForeignKey(verbose_name='Operator', to='gissmo.Affiliation')),
+            field=models.ForeignKey(verbose_name='Operator', to='gissmo.Organism')),
     ]

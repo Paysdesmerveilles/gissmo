@@ -38,7 +38,7 @@ class AdminPageTest(TestCase):
 
     def test_gissmo_shortcuts_dont_return_404_pages(self):
         links = [
-            '/gissmo/gissmo/affiliation/',
+            '/gissmo/gissmo/organism/',
             '/gissmo/gissmo/builttype/',
             '/gissmo/gissmo/calibrationunit/',
             '/gissmo/gissmo/channel/',

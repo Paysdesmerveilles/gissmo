@@ -17,18 +17,18 @@ def get_searched_name(string):
     return result
 
 
-def create_intervaffiliation(apps, intervention, affiliation, note):
+def create_intervorganism(apps, intervention, organism, note):
     """
-    Only create IntervAffiliation if no (Intervention and Affiliation) exists
+    Only create IntervOrganism if no (Intervention and Organism) exists
     """
-    IntervAffiliation = apps.get_model('gissmo', 'IntervAffiliation')
-    exists = IntervAffiliation.objects.filter(
+    IntervOrganism = apps.get_model('gissmo', 'IntervOrganism')
+    exists = IntervOrganism.objects.filter(
         intervention=intervention,
-        affiliation=affiliation)
+        organism=organism)
     if not exists:
-        IntervAffiliation.objects.create(
+        IntervOrganism.objects.create(
             intervention=intervention,
-            affiliation=affiliation,
+            organism=organism,
             note=note)
 
 
@@ -44,14 +44,14 @@ def check_and_create_intervuser(apps, name, intervention, note):
         intervention=intervention,
         user=u,
         note=note)
-    # Search linked affiliation and create IntervAffiliation
-    for affiliation in u.affiliation_set.all():
-        create_intervaffiliation(apps, intervention, affiliation, note)
+    # Search linked organism and create IntervOrganism
+    for organism in u.organism_set.all():
+        create_intervorganism(apps, intervention, organism, note)
 
 
-def migrate_intervactor_to_user_and_affiliation(apps, schema_editor):
+def migrate_intervactor_to_user_and_organism(apps, schema_editor):
     IntervActor = apps.get_model('gissmo', 'IntervActor')
-    Affiliation = apps.get_model('gissmo', 'Affiliation')
+    Organism = apps.get_model('gissmo', 'Organism')
 
     actor_non_physical = [
         1,  # OBSERVATOIRE
@@ -65,12 +65,12 @@ def migrate_intervactor_to_user_and_affiliation(apps, schema_editor):
         _type = i.actor.actor_type
         note = i.note
         intervention = i.intervention
-        # Affiliation case (non physical actors)
+        # Organism case (non physical actors)
         if _type in actor_non_physical:
-            a = Affiliation.objects.filter(name=name).first()
+            a = Organism.objects.filter(name=name).first()
             if not a:
                 continue
-            create_intervaffiliation(apps, intervention, a, note)
+            create_intervorganism(apps, intervention, a, note)
         # User case
         else:
             check_and_create_intervuser(apps, name, intervention, note)
@@ -83,5 +83,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_intervactor_to_user_and_affiliation),
+        migrations.RunPython(migrate_intervactor_to_user_and_organism),
     ]

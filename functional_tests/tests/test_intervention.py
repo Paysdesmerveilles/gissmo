@@ -12,7 +12,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
-    Affiliation,
+    Organism,
     EquipModel,
     EquipSupertype,
     EquipType,
@@ -29,7 +29,7 @@ class InterventionTest(FunctionalTest):
         Some needed datas
         """
         super(InterventionTest, self).setUp()
-        self.unknown, created = Affiliation.objects.get_or_create(
+        self.unknown, created = Organism.objects.get_or_create(
             name='Inconnu',
             _type=4)
         self.project = Project.objects.create(
@@ -96,7 +96,7 @@ class InterventionTest(FunctionalTest):
         # an intervention with an equipment.
 
         # Initialisation
-        self.mandatory, created = Affiliation.objects.get_or_create(
+        self.mandatory, created = Organism.objects.get_or_create(
             name='DT INSU',
             _type=0)
         self.supertype_1 = EquipSupertype.objects.create(
