@@ -10,13 +10,12 @@ from django.utils.timezone import make_aware
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
-    Actor,
+    Affiliation,
     EquipSupertype,
     EquipType,
     Equipment,
     EquipModel,
     Project,
-    ProjectUser,
     StationSite)
 
 
@@ -31,15 +30,12 @@ class EquipmentTest(FunctionalTest):
         """
         super(EquipmentTest, self).setUp()
         # TODO: Delete dependancy from this 2 actors if possible.
-        self.mandatory_actor, created = Actor.objects.get_or_create(
-            actor_name='DT INSU',
-            actor_type=1)  # to not explode equipment view (owner field)
-        self.unknown_actor, created = Actor.objects.get_or_create(
-            actor_name='Inconnu',
-            actor_type=6)
-        self.superuser_actor = Actor.objects.create(
-            actor_name=self.superuser.username,
-            actor_type=7)
+        self.mandatory, created = Affiliation.objects.get_or_create(
+            name='DT INSU',
+            _type=0)  # to not explode equipment view (owner field)
+        self.unknown, created = Affiliation.objects.get_or_create(
+            name='Inconnu',
+            _type=4)
         self.supertype_1 = EquipSupertype.objects.create(
             equip_supertype_name='01. Scientific',
             presentation_rank='1')
@@ -63,21 +59,18 @@ class EquipmentTest(FunctionalTest):
             manufacturer='netmodule',
             is_network_model=True)
         self.project = Project.objects.create(
-            project_name='ADEME',
+            name='ADEME',
             manager=self.superuser)
-        self.projectuser = ProjectUser.objects.create(
-            user=self.superuser)
-        self.projectuser.project.add(self.project.id)
+        self.superuser.groups.add(self.project)
         station_date = datetime.strptime('2015-09-27', '%Y-%m-%d')
         self.station_1 = StationSite.objects.create(
             # TODO: add new ActorType model
             site_type=StationSite.OBSERVATOIRE,
             station_code='EOST',
-            operator=self.unknown_actor,
+            operator=self.unknown,
             creation_date=make_aware(station_date),  # make it aware
             project=self.project,
             actor=self.superuser)
-        self.project.station.add(self.station_1.id)
 
     def test_equipment_creation(self):
         """
@@ -114,10 +107,10 @@ class EquipmentTest(FunctionalTest):
         self.equipment_1 = Equipment.objects.create(
             equip_model=self.equipment_model_1,
             serial_number='T4Q31',
-            owner=self.mandatory_actor,
+            owner=self.mandatory,
             stockage_site=self.station_1,
             purchase_date=make_aware(purchase_date),
-            actor=self.superuser_actor.actor_name)
+            actor=self.superuser)
 
         # We test it in stockage place.
         # It becomes so available.
@@ -162,10 +155,10 @@ class EquipmentTest(FunctionalTest):
         self.equipment_1 = Equipment.objects.create(
             equip_model=self.equipment_model_2,
             serial_number='00112B00153',
-            owner=self.mandatory_actor,
+            owner=self.mandatory,
             purchase_date=make_aware(purchase_date),
             stockage_site=self.station_1,
-            actor=self.superuser_actor.actor_name)
+            actor=self.superuser)
 
         # After some times, we need to use this equipment.
         # We configure it and add 2 IP Addresses and 1 service

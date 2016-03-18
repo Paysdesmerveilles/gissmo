@@ -7,14 +7,14 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
-    Actor,
+    Affiliation,
     EquipDocType,
     EquipModel,
     EquipSupertype,
     EquipType,
     Project,
-    ProjectUser,
-    StationSite)
+    StationSite
+)
 from gissmo.settings.common import UPLOAD_ROOT
 
 from datetime import datetime
@@ -31,21 +31,18 @@ class EquipDocTest(FunctionalTest):
     def setUp(self):
         """
         Initialize some needed data:
-          - Actors
+          - Affiliations
           - SuperType of Equipment
           - Equipment Type
         """
         super(EquipDocTest, self).setUp()
         # TODO: Delete dependancy from this 2 actors if possible.
-        self.mandatory_actor, created = Actor.objects.get_or_create(
-            actor_name='DT INSU',
-            actor_type=1)  # to not explode equipment view (owner field)
-        self.unknown_actor, created = Actor.objects.get_or_create(
-            actor_name='Inconnu',
-            actor_type=6)
-        self.superuser_actor = Actor.objects.create(
-            actor_name=self.superuser.username,
-            actor_type=7)
+        self.mandatory, created = Affiliation.objects.get_or_create(
+            name='DT INSU',
+            _type=0)  # to not explode equipment view (owner field)
+        self.unknown, created = Affiliation.objects.get_or_create(
+            name='Inconnu',
+            _type=4)
         self.supertype_1 = EquipSupertype.objects.create(
             equip_supertype_name='01. Scientific',
             presentation_rank='1')
@@ -57,21 +54,17 @@ class EquipDocTest(FunctionalTest):
             equip_type=self.eq_type,
             equip_model_name='CMG-40T')
         self.project = Project.objects.create(
-            project_name='ADEME',
+            name='ADEME',
             manager=self.superuser)
-        self.projectuser = ProjectUser.objects.create(
-            user=self.superuser)
-        self.projectuser.project.add(self.project.id)
+        self.superuser.groups.add(self.project)
         station_date = datetime.strptime('2015-09-27', '%Y-%m-%d')
         self.station_1 = StationSite.objects.create(
-            # TODO: add new ActorType model
             site_type=StationSite.OBSERVATOIRE,
             station_code='EOST',
-            operator=self.unknown_actor,
+            operator=self.unknown,
             creation_date=make_aware(station_date),  # make it aware
             project=self.project,
             actor=self.superuser)
-        self.project.station.add(self.station_1.id)
         self.equipdoctype_1 = EquipDocType.objects.create(
             equipdoc_type_name='Pictures')
         self.equipdoctype_2 = EquipDocType.objects.create(

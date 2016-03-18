@@ -40,25 +40,25 @@ class CheckMainURLBehaviourTest(FunctionalTest):
         # As Martin don't know how the website works he will browse it
         # So it checks some links
         links_to_check = [
-            'stationsite/',
-            'equipmodel/',
-            'equipment/',
-            'intervention/',
-            'actor/',
-            'network/',
-            'project/',
-            'equipmodeldoctype/',
-            'equipdoctype/',
-            'projectuser/',
-            'stationdoctype/',
+            'affiliation/',
             'builttype/',
-            'equiptype/',
             'calibrationunit/',
+            'channel/',
+            'channelcode/',
             'datatype/',
+            'equipdoctype/',
+            'equipment/',
+            'equipmodel/',
+            'equipmodeldoctype/',
+            'equiptype/',
+            'forbiddenequipmentmodel/',
+            'intervention/',
+            'network/',
             'parameterequip/',
             'parametervalue/',
-            'channel/',
-            'channelcode/'
+            'project/',
+            'stationdoctype/',
+            'stationsite/',
         ]
         for code in links_to_check:
             url = self.appurl + code
