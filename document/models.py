@@ -9,6 +9,9 @@ fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
 class Type(models.Model):
     name = models.CharField(max_length=40)
 
+    def __str__(self):
+        return '%s' % self.name
+
 
 class Document(models.Model):
     _type = models.ForeignKey('document.Type', verbose_name='Type')
@@ -35,3 +38,6 @@ class Document(models.Model):
         storage=fs,
         verbose_name='File',
         upload_to='document/%Y/%m/%d/')
+
+    def __str__(self):
+        return '%s' % self.title
