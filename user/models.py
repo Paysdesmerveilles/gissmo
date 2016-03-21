@@ -17,7 +17,7 @@ class Organism(models.Model):
     )
 
     # fields
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     _type = models.IntegerField(
         choices=ORGANISM_TYPE_CHOICES,
         default=UNKNOWN,
