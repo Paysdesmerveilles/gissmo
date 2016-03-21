@@ -1,8 +1,10 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import (
     post_save,
     pre_save)
 from django.dispatch import receiver
+from django.utils import timezone
 
 from polymorphic.models import PolymorphicModel
 
@@ -26,7 +28,7 @@ class State(PolymorphicModel):
         assert O, "Not implemented"
 
     def check_transition_allowed(self, transition):
-        if transition not in self.allowed_transitions:
+        if transition not in self.allowed_transitions():
             raise ValidationError(
                 '%s is not allowed for the given state (%s).' % (
                 ptransition.TRANSITION_CHOICES[transition],
