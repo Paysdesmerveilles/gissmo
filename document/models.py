@@ -12,7 +12,7 @@ class Type(models.Model):
 
 class Document(models.Model):
     _type = models.ForeignKey('document.Type', verbose_name='Type')
-    owner = models.ForeignKey('user.GissmoUser')
+    owner = models.ForeignKey('auth.User')
     title = models.CharField(max_length=40)
     date = models.DateField(
         null=True,

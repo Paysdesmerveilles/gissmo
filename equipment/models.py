@@ -45,7 +45,7 @@ class Equipment(models.Model):
         max_length=50,
         verbose_name="Serial number")
     model = models.ForeignKey('equipment.Model')
-    owner = models.ForeignKey('user.Player')
+    owner = models.ForeignKey('user.Organism')
     vendor = models.CharField(
         max_length=50,
         null=True,

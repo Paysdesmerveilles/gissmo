@@ -1,40 +1,31 @@
 from django.db import models
-from django.contrib.auth.models import User
 
 
-class Player(models.Model):
-    # player types
-    OBSERVATORY = 1
-    ENGINEER = 2
-    ORGANIZATION = 3
-    COMPANY = 4
-    SERVICE_COMPANY = 5
-    UNKNOWN = 6
-    OTHER = 7
-    PLAYER_TYPE_CHOICES = (
+class Organism(models.Model):
+    # organism types
+    OBSERVATORY = 0
+    NETWORK = 1
+    BUSINESS = 2
+    CUSTOMER_SERVICE = 3
+    UNKNOWN = 4
+    ORGANISM_TYPE_CHOICES = (
         (OBSERVATORY, 'Observatory/Laboratory'),
-        (ENGINEER, 'Engineer/Technician'),
-        (ORGANIZATION, 'Network'),
-        (COMPANY, 'Company'),
-        (SERVICE_COMPANY, 'Customer service Company'),
+        (NETWORK, 'Network'),
+        (BUSINESS, 'Business'),
+        (CUSTOMER_SERVICE, 'Customer service Company'),
         (UNKNOWN, 'Unknown'),
-        (OTHER, 'Other'),
     )
 
     # fields
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=255)
     _type = models.IntegerField(
-        choices=PLAYER_TYPE_CHOICES,
-        default=OTHER,
+        choices=ORGANISM_TYPE_CHOICES,
+        default=UNKNOWN,
         verbose_name="type")
+    users = models.ManyToManyField(
+        'auth.User',
+        blank=True)
+    parent = models.ForeignKey('self', null=True, blank=True)
 
     def __str__(self):
         return self.name
-
-
-class GissmoUser(User):
-    """
-    All users needs to be added in Player list.
-    This object add a mandatory link between User and Player.
-    """
-    player = models.ForeignKey('user.Player')

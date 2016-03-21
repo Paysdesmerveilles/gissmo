@@ -1,8 +1,9 @@
+from django.contrib.auth.models import Group
 from django.db import models
 
 
-class Project(models.Model):
-    name = models.CharField(max_length=50)
-    manager = models.ForeignKey('user.GissmoUser', related_name='managed_project')
+class Project(Group):
+    manager = models.ForeignKey('auth.User',
+        related_name='managed_project',
+        null=True)
     sites = models.ManyToManyField('place.Site', blank=True)
-    users = models.ManyToManyField('user.GissmoUser', blank=True)

@@ -54,7 +54,7 @@ class Station(CommonXML):
     site = models.ForeignKey('place.Site')
 
     # folks
-    operator = models.ForeignKey('user.Player')
+    operator = models.ForeignKey('user.Organism')
 
     # files
     documents = models.ManyToManyField('document.Document', blank=True)
