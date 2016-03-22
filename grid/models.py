@@ -25,14 +25,14 @@ class State(PolymorphicModel):
     site = models.ForeignKey('Station', related_name='linked_station')
 
     def allowed_transitions(self):
-        assert O, "Not implemented"
+        assert 0, "Not implemented"
 
     def check_transition_allowed(self, transition):
         if transition not in self.allowed_transitions():
             raise ValidationError(
                 '%s is not allowed for the given state (%s).' % (
-                ptransition.TRANSITION_CHOICES[transition],
-                self.code))
+                    ptransition.TRANSITION_CHOICES[transition],
+                    self.code))
 
     def process(self, transition):
         assert 0, "Not implemented"
@@ -95,6 +95,7 @@ class StateBroken(State):
         self.check_transition_allowed(transition)
         if transition == ptransition.FIX:
             return self.doFix()
+
 
 @receiver(pre_save, sender=StateBroken)
 def get_broken_code(sender, instance, **kwargs):
@@ -253,11 +254,15 @@ class Installation(CommonPosition):
         verbose_name='Connected to')
     equipment = models.ForeignKey('equipment.Equipment')
     built = models.ForeignKey('place.Built')
-    configuration = models.ForeignKey('equipment.Configuration')
+    configurations = models.ManyToManyField(
+        'equipment.Configuration',
+        blank=True)
     _type = models.IntegerField(
         choices=TYPE_CHOICES,
         verbose_name="Type")
-    start = models.DateTimeField(auto_now=True, verbose_name="Starting date")
+    start = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Starting date')
     end = models.DateTimeField(
         null=True,
         blank=True,
@@ -266,6 +271,15 @@ class Installation(CommonPosition):
         max_digits=4,
         decimal_places=1,
         verbose_name='Depth (m)')
+
+    # TODO: Create a method that fetch the entire chain (parent and child)
+
+    def __str__(self):
+        return '%s (%s) on %s' % (
+            self.TYPE_CHOICES[self._type][1],
+            self.equipment,
+            self.built)
+
 
 class Channel(CommonXML, CommonPosition):
     # datatypes
@@ -297,7 +311,7 @@ class Channel(CommonXML, CommonPosition):
     installation = models.ForeignKey('grid.Installation')
     network = models.ForeignKey('grid.Network')
     code = models.IntegerField(
-        choices = channel_code.CODE_CHOICES)
+        choices=channel_code.CODE_CHOICES)
     location_code = models.CharField(
         null=True,
         blank=True,
