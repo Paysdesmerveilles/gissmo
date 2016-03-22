@@ -170,7 +170,7 @@ class BuiltType(models.Model):
     name = models.CharField(max_length=40)
 
     class Meta:
-        verbose_name = "Built type"
+        verbose_name = "Type"
 
     def __str__(self):
         return '%s' % self.name

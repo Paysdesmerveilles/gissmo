@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
             ],
             options={
-                'verbose_name': "Forbidden Equipment's model",
+                'verbose_name': "Forbidden Model",
             },
         ),
         migrations.CreateModel(
@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
                 ('is_network_model', models.BooleanField(default=False, verbose_name='Network configurable?')),
             ],
             options={
-                'verbose_name': "Equipment's model",
+                'verbose_name': "Model",
             },
         ),
         migrations.CreateModel(
@@ -97,7 +97,7 @@ class Migration(migrations.Migration):
                 ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='equipment.Type', verbose_name='Supertype')),
             ],
             options={
-                'verbose_name': "Equipment's type",
+                'verbose_name': "Type",
             },
         ),
         migrations.CreateModel(

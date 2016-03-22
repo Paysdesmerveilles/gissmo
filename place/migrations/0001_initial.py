@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=40)),
             ],
             options={
-                'verbose_name': 'Built type',
+                'verbose_name': 'Type',
             },
         ),
         migrations.CreateModel(

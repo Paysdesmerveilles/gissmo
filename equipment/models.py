@@ -14,7 +14,7 @@ class Type(models.Model):
     # TODO: is_supertype method. If no parent, you're a supertype.
 
     class Meta:
-        verbose_name = "Equipment's type"
+        verbose_name = "Type"
 
     def __str__(self):
         return '%s' % self.name
@@ -34,7 +34,7 @@ class Model(models.Model):
     # TODO: get_supertype method for display purposes? Type should be enough
 
     class Meta:
-        verbose_name = "Equipment's model"
+        verbose_name = "Model"
 
     def __str__(self):
         return '%s' % self.name
@@ -90,7 +90,7 @@ class ForbiddenEquipmentModel(models.Model):
         related_name='recommended_model')
 
     class Meta:
-        verbose_name = "Forbidden Equipment's model"
+        verbose_name = "Forbidden Model"
 
 
 class Parameter(models.Model):
