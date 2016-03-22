@@ -10,13 +10,13 @@ class CommonPosition(models.Model):
         max_digits=9,
         decimal_places=6,
         verbose_name="Latitude (°)")
-    longitude= models.DecimalField(
+    longitude = models.DecimalField(
         null=True,
         blank=True,
         verbose_name="Longitude (°)",
         max_digits=9,
         decimal_places=6)
-    elevation= models.DecimalField(
+    elevation = models.DecimalField(
         null=True,
         blank=True,
         verbose_name="Elevation (m)",
@@ -89,7 +89,7 @@ class Site(CommonPosition):
         'self',
         null=True,
         blank=True,
-        verbose_name="Referent site")
+        verbose_name="Referent")
     name = models.CharField(max_length=50, unique=True)
     _type = models.IntegerField(
         choices=SITE_TYPE_CHOICES,
@@ -149,10 +149,21 @@ class Site(CommonPosition):
         blank=True)
 
     # files
-    documents = models.ManyToManyField('document.Document', blank=True)
+    documents = models.ManyToManyField(
+        'document.Document',
+        through='SiteDocument',
+        blank=True)
+
+    # TODO: FIXME, Do not permit to register "parent" as itself to avoid
+    # problems using parents
 
     def __str__(self):
         return self.name
+
+
+class SiteDocument(models.Model):
+    site = models.ForeignKey('place.Site')
+    document = models.ForeignKey('document.Document')
 
 
 class BuiltType(models.Model):

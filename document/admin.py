@@ -23,5 +23,6 @@ class DocumentAdmin(admin.ModelAdmin):
     list_filter = ['_type']
     search_fields = ['title', 'owner']
 
+
 admin.site.register(Type, TypeAdmin)
 admin.site.register(Document, DocumentAdmin)
