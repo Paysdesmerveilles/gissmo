@@ -517,7 +517,7 @@ class StationSite(models.Model):
         'self',
         null=True,
         blank=True,
-        verbose_name="Linked site (referent)")
+        verbose_name="Referent")
     geology = models.CharField(
         max_length=50,
         null=True,
