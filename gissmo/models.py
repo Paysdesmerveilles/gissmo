@@ -1033,6 +1033,9 @@ class IntervUser(models.Model):
                 organism=o)
         return res
 
+    def __str__(self):
+        return ''
+
 
 class IntervOrganism(models.Model):
     intervention = models.ForeignKey('gissmo.Intervention')

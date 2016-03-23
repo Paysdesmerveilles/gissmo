@@ -74,7 +74,7 @@ class InterventionTest(FunctionalTest):
         self.browser.implicitly_wait(3)
 
         # Check that current URL is on station 2
-        url = 'stationsite/%s' % self.station_2.id
+        url = 'stationsite/%s/' % self.station_2.id
         current = self.browser.current_url
         expected = self.appurl + url
         self.assertEqual(current, expected, "Wrong URL (%s). Should be: %s" % (
