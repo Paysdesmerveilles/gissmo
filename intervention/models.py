@@ -8,3 +8,6 @@ class Intervention(models.Model):
     operators = models.ManyToManyField('auth.User')
     confirmed = models.BooleanField(default=None)
     documents = models.ManyToManyField('document.Document', blank=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.date, self.site)

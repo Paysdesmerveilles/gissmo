@@ -158,7 +158,7 @@ class Site(CommonPosition):
     # problems using parents
 
     def __str__(self):
-        return self.name
+        return '%s' % self.name
 
 
 class SiteDocument(models.Model):
