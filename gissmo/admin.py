@@ -840,11 +840,15 @@ class IntervDocInline(admin.TabularInline):
     form = IntervDocInlineForm
 
 
-class IntervUserInline(admin.TabularInline):
+class CustomIntervUserInline(admin.TabularInline):
+    form = IntervUserInlineForm
+    formset = IntervUserInlineFormset
+
+
+class IntervUserInline(CustomIntervUserInline):
     model = IntervUser
     extra = 0
     fields = ('user', 'note')
-    formset = IntervUserInlineFormset
 
 
 class IntervOrganismInline(admin.TabularInline):
@@ -921,6 +925,51 @@ class InterventionAdmin(admin.ModelAdmin):
 
     format_date.short_description = 'Date (yyyy-mm-dd HH24:MM)'
     format_date.admin_order_field = 'intervention_date'
+
+    def _create_formsets(self, request, obj, change):
+        """
+        override to provide initial data for inline formset.
+        Especially current user.
+        """
+        formsets = []
+        inline_instances = []
+        prefixes = {}
+        get_formsets_args = [request]
+        if change:
+            get_formsets_args.append(obj)
+        for FormSet, inline in self.get_formsets_with_inlines(*get_formsets_args):
+            prefix = FormSet.get_default_prefix()
+            prefixes[prefix] = prefixes.get(prefix, 0) + 1
+            if prefixes[prefix] != 1 or not prefix:
+                prefix = "%s-%s" % (prefix, prefixes[prefix])
+            formset_params = {
+                'instance': obj,
+                'prefix': prefix,
+                'queryset': inline.get_queryset(request),
+            }
+            if request.method == 'POST':
+                formset_params.update({
+                    'data': request.POST,
+                    'files': request.FILES,
+                    'save_as_new': '_saveasnew' in request.POST
+                })
+
+            if change:
+                formsets.append(FormSet(**formset_params))
+                inline_instances.append(inline)
+            else:
+                if isinstance(inline, IntervUserInline):
+                    inline_initial_data = [
+                        {'user': request.user},
+                    ]
+                    formset_params['initial'] = inline_initial_data
+                    formsets.append(FormSet(**formset_params))
+                    inline_instances.append(inline)
+                else:
+                    formsets.append(FormSet(**formset_params))
+                    inline_instances.append(inline)
+
+        return formsets, inline_instances
 
 
 class ChainInline(admin.TabularInline):

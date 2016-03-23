@@ -353,6 +353,30 @@ for this kind of site: %s' % dict(StationSite.SITE_CHOICES)[site_type])
 
 
 class IntervUserInlineFormset(forms.models.BaseInlineFormSet):
+    """
+    Custom formset that support initial data.
+    """
+
+    def initial_form_count(self):
+        """
+        set 0 to use initial_extra explicitly.
+        """
+        if self.initial_extra:
+            return 0
+        else:
+            return forms.models.BaseInlineFormSet.initial_form_count(self)
+
+    def total_form_count(self):
+        """
+        use the initial_extra len to determine needed forms
+        """
+        if self.initial_extra:
+            count = len(self.initial_extra) if self.initial_extra else 0
+            count += self.extra
+            return count
+        else:
+            return forms.models.BaseInlineFormSet.total_form_count(self)
+
     def clean(self):
         count = 0
         super(IntervUserInlineFormset, self).clean()
@@ -363,6 +387,19 @@ class IntervUserInlineFormset(forms.models.BaseInlineFormSet):
                 count += 1
         if count < 1:
             raise forms.ValidationError('At least 1 operator!')
+
+
+class IntervUserInlineForm(forms.models.ModelForm):
+    """
+    Custom model form that supports initial data when saved.
+    """
+
+    def has_changed(self):
+        """
+        Returns True if we have initial data.
+        """
+        has_changed = forms.models.ModelForm.has_changed(self)
+        return bool(self.initial or has_changed)
 
 
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
