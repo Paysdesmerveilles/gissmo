@@ -799,8 +799,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
 
 
 class EquipTypeAdmin(admin.ModelAdmin):
-    list_display = ['equip_supertype', 'equip_type_name']
+    list_display = ['equip_supertype', 'equip_type_name', 'presentation_rank']
     list_filter = ['equip_supertype']
+    ordering = ['presentation_rank']
 
 
 class IntervStationInline(admin.TabularInline):
@@ -1399,6 +1400,14 @@ class OrganismAdmin(admin.ModelAdmin):
             return super(OrganismAdmin, self).delete_model(request, obj)
 
 
+class EquipSuperTypeAdmin(admin.ModelAdmin):
+    model = EquipSupertype
+    fields = ['equip_supertype_name', 'presentation_rank']
+    list_display = ('equip_supertype_name', 'presentation_rank')
+    search_fields = ['equip_supertype_name']
+    ordering = ['presentation_rank', 'equip_supertype_name']
+
+
 """
 Disabling the action "delete_selected" for all the site
 """
@@ -1418,7 +1427,7 @@ admin.site.register(DataType)
 admin.site.register(EquipModelDocType)
 admin.site.register(EquipDocType)
 admin.site.register(StationDocType)
-admin.site.register(EquipType)
+admin.site.register(EquipType, EquipTypeAdmin)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.unregister(Group)
 admin.site.register(Project, ProjectAdmin)
@@ -1426,3 +1435,4 @@ admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)
 admin.site.register(Organism, OrganismAdmin)
+admin.site.register(EquipSupertype, EquipSuperTypeAdmin)

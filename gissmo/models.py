@@ -135,7 +135,7 @@ class EquipSupertype(models.Model):
 
     class Meta:
         ordering = ['equip_supertype_name']
-        verbose_name = "Equipment Supertype"
+        verbose_name = "Equipment supertype"
 
     def __str__(self):
         return self.equip_supertype_name

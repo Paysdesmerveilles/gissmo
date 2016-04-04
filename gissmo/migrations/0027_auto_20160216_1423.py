@@ -76,7 +76,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='equipsupertype',
-            options={'ordering': ['equip_supertype_name'], 'verbose_name': 'Equipment Supertype'},
+            options={'ordering': ['equip_supertype_name'], 'verbose_name': 'Equipment supertype'},
         ),
         migrations.AlterModelOptions(
             name='equiptype',
