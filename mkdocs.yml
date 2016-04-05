@@ -1,0 +1,8 @@
+site_name: GISSMO Docs
+pages:
+- Home: index.md
+- Installation with Docker: installation_docker.md
+- Installation with Python virtualenv: installation_venv.md
+- Getting started: getting_started.md
+- Developer's guide: development.md
+theme: readthedocs
