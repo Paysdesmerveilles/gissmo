@@ -250,4 +250,4 @@ docker run -it --rm --link gissmo_db:db gissmo:1.5 python manage.py migrate giss
 
 * [Olivier Dossmann](https://github.com/blankoworld)
 * [Fabien Engels](https://github.com/fabienengels)
-* [Martin Dutil](https://github.com/mdutil)://github.com/mdutil)
+* [Martin Dutil](https://github.com/mdutil)
