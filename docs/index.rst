@@ -9,7 +9,7 @@ Welcome to GISSMO's documentation!
 Description
 -----------
 
-GISSMO stands for *Gestion Informatisée pour le Suivi des Sites et du Matériel sismOlogique* (in french) which means that it's an electronic management system for simsologic stuff and places.
+GISSMO stands for *Gestion Informatisée pour le Suivi des Sites et du Matériel sismOlogique* (in french) which means that it's an electronic management system for sismologic stuff and places.
 
 You should be able to:
 
