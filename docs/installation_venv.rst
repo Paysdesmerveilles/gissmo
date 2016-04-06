@@ -136,3 +136,18 @@ Some explanations:
   * uWSGI settings are located here: **uwsgi.ini**
 
 This way Gissmo is available here: http://localhost:8000/.
+
+Create superuser
+================
+
+Gissmo administration needs an administrator called the **superuser**. So create it.
+
+Database should be started.
+
+Then:
+
+.. code-block:: bash
+
+    POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASS="mot2passe2fou" python manage.py createsuperuser
+
+Just answer to what appears on the screen.

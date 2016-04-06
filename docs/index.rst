@@ -28,19 +28,19 @@ Installation
 
 There is 2 ways to install GISSMO:
 
-  * :doc:`using Docker <installation_docker>`
+  * [recommended] :doc:`using Docker <installation_docker>`
   * :doc:`using Python virtual environment <installation_venv>`
 
 If you need more information, please have a look to :doc:`Developer's guide <development>`.
 
-For GISSMO configuration, see :ref:`getting_started`.
+For GISSMO first use, see :ref:`getting_started`.
 
 .. _getting_started:
 
 Getting started
 ---------------
 
-First time you use GISSMO you need to :doc:`create some data <getting_started>`.
+First time you use GISSMO you need to :doc:`create some data and understand Gissmo interface<getting_started>`.
 
 Contents
 --------

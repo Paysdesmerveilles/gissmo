@@ -82,3 +82,18 @@ To do it:
    docker run -it --rm -p 8002:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v ~/upload/:/opt/gissmo/uploads fabienengels/gissmo:1.5
 
 Last command is similar to those given in :ref:`gissmo_container` chapter.
+
+Create superuser
+================
+
+Gissmo administration needs an administrator called the **superuser**. So create it.
+
+Database container should be started.
+
+Then:
+
+.. code-block:: bash
+
+   docker run -it --rm --link gissmo_db:db fabienengels/gissmo:1.5 python manage.py createsuperuser
+
+Just answer to what appears on the screen.
