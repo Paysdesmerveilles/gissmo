@@ -5,6 +5,15 @@ Best way is to :doc:`install Gissmo with Docker<installation_docker>`.
 
 In case you're not comfortable with Docker, the solution is to install Gissmo with a postgreSQL database and Python virtualenv (current documentation).
 
+requirements
+============
+
+You should install these dependencies:
+
+.. code-block:: bash
+
+   sudo apt-get install libpq-dev python3-dev python-virtualenv python3-pip
+
 postgreSQL preparation
 ======================
 
@@ -33,7 +42,6 @@ Install python-virtualenv package, create a new directory and change it as pytho
 
 .. code-block:: bash
 
-   sudo apt-get install python-virtualenv
    mkdir project
    virtualenv -p python3 project
 
