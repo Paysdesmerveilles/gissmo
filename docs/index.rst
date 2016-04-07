@@ -31,9 +31,9 @@ There is 2 ways to install GISSMO:
   * [recommended] :doc:`using Docker <installation_docker>`
   * :doc:`using Python virtual environment <installation_venv>`
 
-If you need more information, please have a look to :doc:`Developer's guide <development>`.
-
 For GISSMO first use, see :ref:`getting_started`.
+
+If you need more information, please have a look to :doc:`Developer's guide <development>`.
 
 .. _getting_started:
 
@@ -67,10 +67,10 @@ License
 
 .. todo::
 
-   WHICH LICENSE SHOULD WE ADD? For now, CeCiLL seems to be the best choice
+   WHICH LICENSE SHOULD WE ADD? For now, CeCiLL seems to be the best choice but needs to add an exception about Distribution paragraph: we should explain that delivering a service with Gissmo as an application imply to add a link to source code.
 
-Community
----------
+Contact
+-------
 
 Join us on IRC: `#gissmo on freenode`_.
 

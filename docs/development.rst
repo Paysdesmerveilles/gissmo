@@ -21,8 +21,8 @@ Check code with flake8
 
 We consider that:
 
-  * you get Gissmo github source code
-  * you create a python virtual environment in which you work
+  * you got Gissmo github source code
+  * you created a python virtual environment
 
 In order Git to check code before each commit, use **scripts/git_hooks/pre-commit** script:
 
@@ -31,28 +31,28 @@ In order Git to check code before each commit, use **scripts/git_hooks/pre-commi
    cp scripts/git_hooks/pre-commit .git/hooks/pre-commit
    chmod +x .git/hooks/pre-commit
 
-Then commit in your python virtual environment. This will check the code and display potential errors.
+Then commit (Python virtual environment should be activated). This will check the code and display potential errors.
 
-Use postgreSQL container with a python virtualenv for code
-========================================================
+Link a virtualenv with a postgreSQL container
+=============================================
 
-If you have a postgreSQL container, but Django to launch in a Python virtualenv, just launch Django like this:
+If you have a postgreSQL container, and Gissmo in a Python virtualenv, use **DB_PORT_5432_TCP_PORT** environment variable with **docker inspect** command to launch Django:
 
 .. code-block:: bash
 
    DB_PORT_5432_TCP_PORT=`docker inspect -f '{{ (index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' gissmo_db` python manage.py runserver
 
-where **gissmo_db** is your database container name.
+where **gissmo_db** is your database container name and **5432/tcp** is your postgreSQL container hosted port.
 
 Run tests
 =========
 
 To run tests:
 
-  * create a postgreSQL container called **gissmo_db**
+  * create a postgreSQL container called **gissmo_db** using Docker
   * enter Gissmo source code with a Python virtualenv in which you install Gissmo python dependencies (using *pip install -r requirements*)
 
-Then launch this command (in Gissmo source code):
+Then launch this command (available in Gissmo source code):
 
 .. code-block:: bash
 
@@ -62,8 +62,8 @@ where **app_name** is the application name you want to test.
 
 For an example we have:
 
-  * functional_tests: to launch some functional tests using Firefox
-  * gissmo: to launch non-graphical tests
+  * **functional_tests**: to launch some functional tests using Firefox
+  * **gissmo**: to launch non-graphical tests
 
 **Tip**: You can also launch a specific test using this syntax:
 
@@ -77,8 +77,8 @@ for an example:
 
    ./scripts/launch-tests.sh functional_tests.tests.ProjectTest.test_project_creation
 
-Create documentation
-====================
+Generate documentation
+======================
 
 Enter into a python virtualenv. Then go to Gissmo source code and do:
 
@@ -95,13 +95,13 @@ One Docker, 3 ways
 
 As Docker container starts using a specific entrypoint, it delivers 3 possibilities:
 
-  * production (default one): start a uWSGI server
-  * test: start a uWSGI server with DEBUG=True to display errors
-  * development: start the Django python webserver
+  * (default) **production**: start a uWSGI server
+  * **test**: start a uWSGI server with DEBUG=True to display errors
+  * **development**: start the Django python webserver
 
-*production* mode need a SECRET_KEY environment variable to work well.
+**production** mode needs a SECRET_KEY environment variable to work well.
 
-To launch the Docker using one of these 3 ways, just do:
+To launch the Docker container using one of these 3 ways, just do:
 
 .. code-block:: bash
 
@@ -113,7 +113,7 @@ where:
   * **db** should not be changed
   * **/srv/upload** is your local upload storage directory
 
-You can also launch command in development version:
+You can also launch commands into the Docker container with the **development** version:
 
 .. code-block:: bash
 
@@ -124,7 +124,7 @@ Have fun with Docker containers!
 Database migration
 ==================
 
-**You have to always make a backup before any change. So backup your database first!**
+**Backup your database first!**
 
 From 1.3 to 1.4
 ---------------
@@ -145,6 +145,8 @@ From 1.4 to 1.5:
 ----------------
 
 Just do:
+
+.. code-block:: bash
 
    docker run -it --rm --link gissmo_db:db gissmo:1.5 python manage.py migrate gissmo
 

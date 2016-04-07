@@ -3,7 +3,7 @@ Getting started
 
 If you achieve Gissmo installation, good job!
 
-As you created the superuser, you access admin interface. It's time to create some data.
+Access to Gissmo admin interface with your fresh superuser. It's time to create some data.
 
 In brief
 ========

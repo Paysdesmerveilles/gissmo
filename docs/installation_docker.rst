@@ -1,21 +1,27 @@
-Installation using Docker
-*************************
+Installation with Docker
+************************
 
-`Docker`_ make it easy to deliver applications in a container. Which have been used with GISSMO to distribute it easily.
+`Docker`_ makes it easy to deliver applications in something called a **container**. Which have been used to distribute GISSMO.
 
-So You need to `install Docker`_ (link for Linux) first.
+`Install Docker`_ first (link for a Linux installation).
 
 .. _Docker: https://www.docker.com/
-.. _install Docker: https://docs.docker.com/linux/step_one/
+.. _Install Docker: https://docs.docker.com/linux/step_one/
 
-How this will work
-==================
+How to proceed
+==============
 
-We will first use a database container (i.e postgreSQL) on a given directory to keep data from GISSMO. If you want more, see `manage data in containers`_ on Docker website.
+Two features are used from Docker to Gissmo:
+
+  * volume for data to be persistent on your system
+  * link between multiple containers to manage a postgreSQL instance
+
+In fact Gissmo container will be linked to a postgreSQL container that have data on your local system.
+For more information about this, check `manage data in containers`_.
 
 .. _manage data in containers: https://docs.docker.com/engine/userguide/containers/dockervolumes/
 
-Then we will create a GISSMO container with a link with the previous one in order to have access to data.
+Let's go installing and configuring!
 
 Database container
 ==================
@@ -29,23 +35,23 @@ First you need to create a volume for database container:
 
 where:
 
-  * **/dbdata** is the directory where all data will be saved
+  * **/dbdata** is the directory where all database data will be saved. Create it.
   * **dbdata** is your volume name
-  * **gissmo_db** is your database container name
+  * **gissmo_db** is your database container name (keep it in mind for next steps)
 
-Your database container is up!
+Database container is up!
 
 .. _gissmo_container:
 
 Gissmo container
 ================
 
-We will apply steps in this order:
+Steps are:
 
-  * apply migration on database to create new schema
+  * do migration to deploy new schema on database
   * create a superuser
-  * launch a Gissmo container using our database one
-  * check it works using a web browser
+  * launch Gissmo with a link to our database
+  * access Gissmo on a web browser
 
 So:
 
@@ -58,23 +64,23 @@ So:
 
 where:
 
-  * **~/upload** is the directory where you will have uploaded files
-  * **8002** is the port from where you will access Gissmo, for an example on http://localhost:8002/
-  * **gissmo_db** is our previous database container name (should be launched)
+  * **~/upload** directory contains uploaded files (from Gissmo)
+  * **8002** is your local Gissmo access port, for an example on http://localhost:8002/
+  * **gissmo_db** have been launched previously and contains database
 
-Note that **:db** is mandatory as Gissmo use it.
+**db** is mandatory. Gissmo use it. Gissmo need it as it is! **The link should always be named db**.
 
-You're ready to use Gissmo: http://localhost:8002/.
+Now you're ready to use Gissmo on http://localhost:8002/.
 
 Relaunch container
 ==================
 
-Next time you want to relaunch your container - for an example after a reboot - you need to:
+Each time you need to relaunch the container - for an example after a reboot - you need to:
 
   * launch database container
   * create gissmo container
 
-To do it:
+Apply this:
 
 .. code-block:: bash
 
@@ -86,9 +92,9 @@ Last command is similar to those given in :ref:`gissmo_container` chapter.
 Create superuser
 ================
 
-Gissmo administration needs an administrator called the **superuser**. So create it.
+Gissmo administration needs an administrator called the **superuser**.
 
-Database container should be started.
+**Note**: Database container should be started.
 
 Then:
 

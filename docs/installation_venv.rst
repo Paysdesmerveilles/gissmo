@@ -1,25 +1,25 @@
-Installation using Python virtualenv
-************************************
+Installation with Python virtualenv
+***********************************
 
-Best way is to :doc:`install Gissmo with Docker<installation_docker>`.
+Recommended way is to :doc:`install Gissmo with Docker<installation_docker>`.
 
-In case you're not comfortable with Docker, the solution is to install Gissmo with a postgreSQL database and Python virtualenv (current documentation).
+In case you're not comfortable with Docker, the solution is to install Gissmo with a local postgreSQL database and Python virtualenv.
 
-requirements
+Requirements
 ============
 
-You should install these dependencies:
+Gissmo needs:
 
 .. code-block:: bash
 
    sudo apt-get install libpq-dev python3-dev python-virtualenv python3-pip
 
+.. _postgresql-preparation:
+
 postgreSQL preparation
 ======================
 
-You have to install postgreSQL, create a user and a database for Gissmo.
-
-Just do:
+Install postgreSQL, create a user and a database for Gissmo:
 
 .. code-block:: bash
 
@@ -33,24 +33,34 @@ where:
   * **gissmo_user** is your postgreSQL username for Gissmo database
   * **gissmodb** is your Gissmo database name
 
-Keep in mind username, password and database name for next steps.
+Keep in mind username, password and database name for incoming steps.
 
 Virtual environment
 ===================
 
-Install python-virtualenv package, create a new directory and change it as python virtualenv area:
+Create a new directory for your Gissmo installation and adapt it as a python virtualenv:
 
 .. code-block:: bash
 
    mkdir project
    virtualenv -p python3 project
 
-This directory will include all needed python libraries and Gissmo directory.
+This directory will contains:
 
-Get Gissmo files
-================
+  * Gissmo (for an example gissmo-1.5 directory)
+  * all needed python libraries
 
-We fetch Gissmo files and extract them:
+**Notes**:
+
+  * Gissmo uses Python 3
+  * `Have a look to Virtual Environments chapter in Hitchhiker's guide`_ for more information about Python virtual environments
+    
+.. _Have a look to Virtual Environments chapter in Hitchhiker's guide: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+
+Get Gissmo
+==========
+
+Download Gissmo archive and extract it:
 
 .. code-block:: bash
 
@@ -59,12 +69,12 @@ We fetch Gissmo files and extract them:
    tar xvf gissmo.tar.gz
    cd gissmo-1.5
 
-You're now ready to start Gissmo configuration.
+You're now ready to configure Gissmo.
 
 Gissmo configuration
 ====================
 
-We consider that you're in Gissmo environement directory (called *project*).
+We consider that you're located in Gissmo installation directory (called previously *project*).
 
 Enter in Python virtual environment and install needed libraries:
 
@@ -74,15 +84,15 @@ Enter in Python virtual environment and install needed libraries:
    cd gissmo-1.5
    pip install -r requirements.txt
 
-You can check that Django is present with this command:
+You can check that Django is present:
 
 .. code-block:: bash
 
    python manage.py
 
-This will display a list of commands.
+Which will display a list of commands.
 
-Then check database access:
+Then check database access (with information you were invited to remember in :ref:`postgresql-preparation`):
 
 .. code-block:: bash
 
@@ -94,7 +104,7 @@ You will see something like that::
 
    gissmodb=> 
 
-Type this to exit the shell (then **Enter**)::
+To exit type this command then **Enter**::
 
    \q
 
@@ -104,10 +114,10 @@ And launch database migration:
 
     POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASS="mot2passe2fou" python manage.py migrate
 
-Prepare static files directory
-==============================
+Static files
+============
 
-Just do this (we consider that you're in Gissmo directory with virtualenv activated):
+In Gissmo installation directory, with virtualenv activated, create static directory and generate static files:
 
 .. code-block:: bash
 
@@ -119,7 +129,7 @@ A list of copied files appears.
 Launch Gissmo
 =============
 
-You need a SECRET_KEY for your Gissmo application. For an example::
+In production mode, Gissmo application needs a SECRET_KEY. For an example, this one::
 
    abcdefghijklmnopqrstuvwxyz
 
@@ -127,7 +137,7 @@ For more, see `Django documentation about SECRET_KEY`_.
 
 .. _Django documentation about SECRET_KEY: https://docs.djangoproject.com/en/1.8/ref/settings/#std:setting-SECRET_KEY
 
-We use `uWSGI`_ to deliver Gissmo on the web:
+We use `uWSGI`_ to deliver Gissmo:
 
 .. _uWSGI: http://uwsgi-docs.readthedocs.org/en/latest/
 
@@ -137,7 +147,7 @@ We use `uWSGI`_ to deliver Gissmo on the web:
 
 Some explanations:
 
-  * using uWSGI and **gissmo.settings.production** set Gissmo in its production mode. So no DEBUG information will appears
+  * using uWSGI and **gissmo.settings.production** sets Gissmo in its production mode. So no DEBUG information will appears
   * we always need to gives SECRET_KEY in production mode
   * you also need database connection settings with POSTGRES_DB, POSTGRES_USER and POSTGRES_PASS
   * we use Python virtualenv uWSGI (with **../bin/uwsgi**)
@@ -148,9 +158,9 @@ This way Gissmo is available here: http://localhost:8000/.
 Create superuser
 ================
 
-Gissmo administration needs an administrator called the **superuser**. So create it.
+Gissmo administration needs an administrator called the **superuser**.
 
-Database should be started.
+**Note**: Database should be started.
 
 Then:
 
