@@ -1,0 +1,197 @@
+# Tâches à faire, entre autre choses
+
+## Module 'user'
+
+Permet d'étendre les fonctionnalités de l'utilisateur et des groupes à GISSMO.
+
+On a donc la notion de : 
+
+  * user : un identifiant unique pour accéder à l'application GISSMO.
+  * player : n'importe quel intervenant, fournisseur, opérateur, etc. Que ce soit une entité physique, morale ou entreprise
+
+## Module 'equipment'
+
+  * Ajouter les états d'équipement
+    * table State comme pour Site
+    * ajout d'un champ "état" (state) pour le dernier état en cours (ForeignKey)
+  * Lien vers dernière place connue ? Si oui => Equipment nécessite Place comme dépendance
+  * Fonction is_supertype sur Type
+  * Fonction _supertype pour Model
+
+## Module 'place'
+
+  * Fonction _address pour Site qui retourne une adresse complète
+  * Déplacer STATE de Site vers Station (module network)
+  * Contrainte sur les bâtis à vérifier (station/type/name sur Built)
+
+## Module 'grid'
+
+Grid apport la notion de réseau maillé d'installations/stations
+
+  * 2 stations peuvent avoir le même code : si on installe une station à côté d'une autre et qu'elles partagent un réseau identique
+  * 1 objet Channel ne devrait être lié qu'à une Installation (d'équipement) de type Capteur (order = SENSOR) afin de retrouver la chaîne correcte d'équipement
+
+## Module 'project'
+
+Regroupe les personnes (user) en projet liés à l'utilisation de GISSMO (G-EAU-THERMIE, ADEME, etc.)
+
+  * Gérer le projet 'ALL' comme étant un projet spécial
+  * Comment mettre à disposition des utilisateurs un filtrage suivant les projets auxquels il a droit ? (système de choix de projets parmi les projets auxquels il appartient)
+
+## Module 'intervention'
+
+Les interventions sont générées via un trigger sur les tables contenues dans le module grid puisqu'on intervient dans ce cadre de réseau d'équipements sur des stations définies.
+
+  * penser à vérifier que les positions GPS soient aussi incluses dans l'historique
+  * le champ "confirmed" est un booléen qui définit si l'intervention a été validée par un utilisateur ou non (pour vérifier la présence de tout le monde sur l'intervention).
+
+## Module 'document'
+
+  * ajouter le dossier /upload dans le fichier Docker
+  * les types de documents permettent à l'administrateur de définir un axe de tri supplémentaire pour la recherche de documents
+  * En utilisant django-db-file-storage on pourrait avoir une classe "Document" et une classe "Picture" pour les images
+  * Quelques objets ayant besoin de fichiers/documents et quels types de documents : 
+    * Modèle d'équipement : manuel d'utilisateur, datasheet
+    * Équipement : feuille d'étalonnage, certificat, photos
+    * Intervention : photos de l'intervention
+    * Station : configuration (fichier de configuration, XML constructeur)
+    * Site : factures, contrats, convention, etc.
+    * Built : image du bâti
+
+## Notion de projets
+
+Il s'agit d'intégrer la notion de projets afin de permettre de regrouper les utilisateurs par projets (groupes).
+
+Puis de définir des permissions par groups.
+
+  * GissmoUser est User étendu de Django pour rajouter un lien fort avec Player
+  * Chaque utilisateur GISSMO est aussi un player (sauf le superuser qui n'y figure pas)
+  * On regroupe les utilisateurs par projets pour leur permettre de filtrer les sites
+  * Chaque projet est lié à plusieurs sites
+  * Chaque projet possède UN manager (qui a le droit d'ajouter les sites)
+  * Chaque utilisateur va pouvoir choisir l'ensemble des projets qu'il veut utiliser comme filtrage pour les sites et/ou station de ces projets => trouver une méthode pour faire cela
+
+## Notion de documents
+
+Comment ajouter des documents sur certains objets de Django ?
+
+### Solution 1
+
+  * 2 tables : Type et Document
+  * Type :
+    * name
+  * Document : 
+    * owner
+    * start
+    * end
+    * file
+    * title
+    * inscription_date <= qu'est-ce ?
+    * private_link (lien interne genre seafile, etc.)
+  * On fait **à chaque fois** un lien 0,1 (cardinalité) entre Document et un objet divers => implique une dépendance forte de document à divers modules Django.
+
+### Solution 2
+
+Dans Solution 1, on change les liens 0,1 en 0,N vers les différents modèles. Avantage = on peut filtrer les documents suivant le modèle duquel on vient ET les dépendances peuvent aller dans le sens Objets -> Document.
+
+On a qu'à ajouter un ManyToManyField dans les objets qui ont besoin de documents et un Inlines dans Django Admin.
+
+### Solution 3
+
+On fait une table Document avec une colonne "objet" et une colonne "object_id". Cela définit l'objet d'où on vient et l'ID dudit objet dans la table de l'objet.
+
+Avantage : pas de dépendance de Document vers un module
+
+Inconvénient : implémentation exotique dans Django
+
+### Solution 4
+
+Trouver quelque chose comme Audittrails (django) qui ajoutait un "history =" dans l'objet, ce qui ajoutait tout ce qu'il fallait pour qu'il fonctionne.
+
+### Solution
+
+## Divers
+
+  * ajouter les champs "note" (TextField) pour chacun des objets présentés à l'interface GISSMO
+
+## Trigger
+
+À ajouter dans le module intervention, dernier module de la liste
+
+  * Créer le trigger universel pour les objets de GISSMO
+  * Appliquer le trigger à l'ensemble des tables de GISSMO
+
+## Choix effectués
+
+  * [RENAMED] equipment.vendor ne se nomme plus Seller comme en 1.6
+  * [ABANDONNED] private_link sur StationSite car non renseigné jusqu'à maintenant dans la base GISSMO
+  * [ABANDONNED] latitude_pluserror (idem) StationSite + Channel
+  * [ABANDONNED] latitude_minuserror (idem) StationSite + Channel
+  * [ABANDONNED] longitude_pluserror (idem) StationSite + Channel
+  * [ABANDONNED] longitude_minuserror (idem) StationSite + Channel
+  * [ABANDONNED] elevation_pluserror (idem) StationSite + Channel
+  * [ABANDONNED] elevation_minuserror (idem) StationSite + Channel
+  * [FIXED] by default, longitude and latitude datum is WGS84. In Gissmo 1.5, it's WSG84, which is wrong
+  * [ABANDONNED] Table Chain qui contient order a été déplacée dans Installation
+  * [ABANDONNED] validation_rule sur ChannelCode car non renseigné jusqu'à maintenant et non utilisé pour quoique ce soit
+  * [ABANDONNED] dip_pluserror sur Channel
+  * [ABANDONNED] dip_minuserror sur Channel
+  * [ABANDONNED] depth_pluserror sur Channel
+  * [ABANDONNED] depth_minuserror sur Channel
+  * [ABANDONNED] clock_drift_pluserror sur Channel
+  * [ABANDONNED] clock_drift_minuserror sur Channel
+  * [ABANDONNED] sample_rate_pluserror sur Channel
+  * [ABANDONNED] sample_rate_minuserror sur Channel
+  * [ABANDONNED] azimuth_pluserror sur Channel
+  * [ABANDONNED] azimuth_minuserror sur Channel
+  * [ABANDONNED] all FIELD_unit on Station and Channel as they are always same
+
+## Migration
+
+WARNING: MIGRATION FATALE => décallage des numéro de type de site. STATION est passé à 0 au lieu de 1. Et ainsi de suite pour les suivants. Ceci afin de faciliter la programmation en faisant SITE_TYPE_CHOICES[STATION] par exemple au lieu de faire des SITE_TYPE_CHOICES[STATION-1] et pour d'autres non.
+
+  * Prévoir la migration des _datum en WGS84 (inversion du G et S)
+  * Table Chain se retrouve dans Installation avec le champ "parent" et le champ "order"
+  * Décallage des ID du champ 'order' de Chain
+  * Migration de depth de Channel à Installation
+  * Migration de clock_drift et clock_drift_unit de Channel à Equipment
+  * Migration de storage_format de Channel à Model (d'équipement) => uniquement valable pour les Datalogger
+  * Décallage des ID du champ datatype de Channel (le premier était 1. Il est désormais à 0).
+  * CONFIGURATION: ChainConfig devient Configuration (grossomodo). Donc lié fortement à l'installation d'un équipement quelque part
+
+### Split de StationSite en Station et Site
+
+StationSite devient Station et Site.
+
+  * 'station_description' et 'site_description' se placent donc respectivement dedans
+  * les enregistrements de type "STATION" (type = 1) vont théoriquement dans Station. Le reste dans Site.
+
+### Ce qu'il faut vérifier
+
+La migration s'évertue à simplifier l'infrastructure de la base afin d'améliorer : 
+
+  * le développement et la maintenance sous Django
+  * les requêtes SQL faites dans la BDD
+  * la compréhension du fonctionnement de GISSMO
+  * la livraison des informations par une API restful
+
+Afin de mesurer le passage de l'ancienne version à la nouvelle, voici les besoins typiques de GISSMO : 
+
+  * Liste des équipments installés actuellement sur une station
+  * Liste des stations en opération
+  * Liste des états pour chaque station
+  * Liste des canaux courants d'une station
+  * Historique des équipements ayants été installés sur une station
+  * Historique des canaux ayants été ouverts sur une station
+  * Liste des interventions effectuées sur un site particulier OU une station
+  * Configuration courante d'un équipement donné
+  * Configuration par défaut d'un modèle d'équipement
+  * Liste des chaînes d'acquisition d'une station donnée
+  * Pour chaque chaîne d'acquisition, sa configuration
+  * Liste des équipements avec leur dernier emplacement connu et leur état
+  * Liste des dernières interventions dans GISSMO
+  * Dernières modifications effectuées dans GISSMO
+  * Liste des réseaux auxquels appartient une station donnée
+  * Inversement : ensemble des stations d'un réseau donné
+  * Dernier emplacement d'un équipement
+  * Liste des stations liées à un projet donné

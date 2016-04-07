@@ -1,0 +1,9 @@
+Django==1.9.2
+django-polymorphic
+# For development purposes
+flake8
+mccabe
+pep8
+pyflakes
+django-debug-toolbar
+django-extensions
