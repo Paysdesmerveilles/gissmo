@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('document', '0001_initial'),
-        ('user', '0001_initial'),
+        ('affiliation', '0001_initial'),
     ]
 
     operations = [
@@ -137,7 +137,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='equipment',
             name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='user.Organism'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Organism'),
         ),
         migrations.AddField(
             model_name='configuration',

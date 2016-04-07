@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from user.models import Organism
+from affiliation.models import Organism
 
 
 class OrganismAdmin(admin.ModelAdmin):

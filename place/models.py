@@ -143,7 +143,7 @@ class Site(CommonPosition):
         verbose_name="Geological formation")
 
     # folks
-    operator = models.ForeignKey('user.Organism')
+    operator = models.ForeignKey('affiliation.Organism')
     contact = models.TextField(
         null=True,
         blank=True)

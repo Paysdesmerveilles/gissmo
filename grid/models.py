@@ -175,7 +175,7 @@ class Station(CommonXML):
     site = models.ForeignKey('place.Site')
 
     # folks
-    operator = models.ForeignKey('user.Organism')
+    operator = models.ForeignKey('affiliation.Organism')
 
     # files
     documents = models.ManyToManyField('document.Document', blank=True)

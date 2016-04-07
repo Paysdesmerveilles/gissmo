@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         ('contenttypes', '0002_remove_content_type_name'),
         ('document', '0001_initial'),
         ('place', '0001_initial'),
-        ('user', '0001_initial'),
+        ('affiliation', '0001_initial'),
         ('equipment', '0001_initial'),
     ]
 
@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
                 ('code', models.CharField(max_length=40)),
                 ('description', models.TextField(blank=True, null=True)),
                 ('documents', models.ManyToManyField(blank=True, to='document.Document')),
-                ('operator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='user.Organism')),
+                ('operator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Organism')),
                 ('site', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='place.Site')),
             ],
             options={
