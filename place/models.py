@@ -22,18 +22,6 @@ class CommonPosition(models.Model):
         verbose_name="Elevation (m)",
         max_digits=5,
         decimal_places=1)
-    latitude_datum = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        default="WGS84",
-        verbose_name="Latitude datum")
-    longitude_datum = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        default="WGS84",
-        verbose_name="Longitude datum")
     # As we enter all data in degrees or meter (elevation), no need to gives
     # the unit for each one.
 #    latitude_unit = models.IntegerField(

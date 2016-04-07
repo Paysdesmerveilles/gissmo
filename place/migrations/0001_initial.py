@@ -23,8 +23,6 @@ class Migration(migrations.Migration):
                 ('latitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True, verbose_name='Latitude (°)')),
                 ('longitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True, verbose_name='Longitude (°)')),
                 ('elevation', models.DecimalField(blank=True, decimal_places=1, max_digits=5, null=True, verbose_name='Elevation (m)')),
-                ('latitude_datum', models.CharField(blank=True, default='WGS84', max_length=15, null=True, verbose_name='Latitude datum')),
-                ('longitude_datum', models.CharField(blank=True, default='WGS84', max_length=15, null=True, verbose_name='Longitude datum')),
                 ('name', models.CharField(default='Unknown', max_length=40)),
             ],
             options={
@@ -48,8 +46,6 @@ class Migration(migrations.Migration):
                 ('latitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True, verbose_name='Latitude (°)')),
                 ('longitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True, verbose_name='Longitude (°)')),
                 ('elevation', models.DecimalField(blank=True, decimal_places=1, max_digits=5, null=True, verbose_name='Elevation (m)')),
-                ('latitude_datum', models.CharField(blank=True, default='WGS84', max_length=15, null=True, verbose_name='Latitude datum')),
-                ('longitude_datum', models.CharField(blank=True, default='WGS84', max_length=15, null=True, verbose_name='Longitude datum')),
                 ('name', models.CharField(max_length=50, unique=True)),
                 ('_type', models.IntegerField(choices=[(0, 'Observatory'), (1, 'Customer service place'), (2, 'Undefined'), (3, 'Other'), (4, 'Testing site'), (5, 'Theoritical site')], default=5, verbose_name='Type')),
                 ('description', models.TextField(blank=True, null=True)),

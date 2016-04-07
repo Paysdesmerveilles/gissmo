@@ -150,7 +150,6 @@ Trouver quelque chose comme Audittrails (django) qui ajoutait un "history =" dan
 
 WARNING: MIGRATION FATALE => décallage des numéro de type de site. STATION est passé à 0 au lieu de 1. Et ainsi de suite pour les suivants. Ceci afin de faciliter la programmation en faisant SITE_TYPE_CHOICES[STATION] par exemple au lieu de faire des SITE_TYPE_CHOICES[STATION-1] et pour d'autres non.
 
-  * Prévoir la migration des _datum en WGS84 (inversion du G et S)
   * Table Chain se retrouve dans Installation avec le champ "parent" et le champ "order"
   * Décallage des ID du champ 'order' de Chain
   * Migration de depth de Channel à Installation
