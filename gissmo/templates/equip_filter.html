@@ -1,9 +1,0 @@
-<h3>By {{ title }}</h3>
-<ul>
-{% for choice in choices %}    
-    {% if choice.query_string|slice:":9" == '?' %}<li{% if choice.selected %} class="selected"{% endif %}><a href="{{ choice.query_string|iriencode }}"><h2>{{ choice.display }}</h2></a></li>
-    {% elif choice.query_string|slice:":9" == '?cf=Stype' %}<li{% if choice.selected %} class="selected"{% endif %}><a href="{{ choice.query_string|iriencode }}"><h2>{{ choice.display }}</h2></a></li>
-    {% elif choice.query_string|slice:":9" == '?cf=Type_' %}<li{% if choice.selected %} class="selected"{% endif %}><a href="{{ choice.query_string|iriencode }}"><h3>{{ choice.display }}</h3></a></li>
-    {% elif choice.query_string|slice:":9" == '?cf=Model' %}<li{% if choice.selected %} class="selected"{% endif %}><a href="{{ choice.query_string|iriencode }}" style="margin-left:20px">{{ choice.display }}</a></li>{% endif %}
-{% endfor %}
-</ul>
