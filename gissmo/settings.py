@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-## Application definition
+# Application definition
 # Measurement is independant
 # Equipment needs Place (for last_place and last_built)
 # Document is independant
@@ -93,8 +93,12 @@ WSGI_APPLICATION = 'gissmo.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv('POSTGRES_DB', 'postgres'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASS', 'postgres'),
+        'HOST': os.getenv('DB_PORT_5432_TCP_ADDR', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT_5432_TCP_PORT', '5432'),
     }
 }
 
