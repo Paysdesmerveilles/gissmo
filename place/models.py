@@ -1,53 +1,7 @@
 from django.db import models
-# from measurement import units
 
 
-class CommonPosition(models.Model):
-    # fields
-    latitude = models.DecimalField(
-        null=True,
-        blank=True,
-        max_digits=9,
-        decimal_places=6,
-        verbose_name="Latitude (°)")
-    longitude = models.DecimalField(
-        null=True,
-        blank=True,
-        verbose_name="Longitude (°)",
-        max_digits=9,
-        decimal_places=6)
-    elevation = models.DecimalField(
-        null=True,
-        blank=True,
-        verbose_name="Elevation (m)",
-        max_digits=5,
-        decimal_places=1)
-    # As we enter all data in degrees or meter (elevation), no need to gives
-    # the unit for each one.
-#    latitude_unit = models.IntegerField(
-#        choices=units.POSITION_UNIT_CHOICES,
-#        default=units.DEGREES,
-#        null=True,
-#        blank=True,
-#        verbose_name="Latitude unit")
-#    longitude_unit = models.IntegerField(
-#        choices=units.POSITION_UNIT_CHOICES,
-#        default=units.DEGREES,
-#        null=True,
-#        blank=True,
-#        verbose_name="Longitude unit")
-#    elevation_unit = models.IntegerField(
-#        choices=units.POSITION_UNIT_CHOICES,
-#        default=units.METERS,
-#        null=True,
-#        blank=True,
-#        verbose_name="Elevation unit")
-
-    class Meta:
-        abstract = True
-
-
-class Site(CommonPosition):
+class Site(models.Model):
     """
     A place on which you achieve some tasks. As:
       * testing some devices
@@ -142,6 +96,26 @@ class Site(CommonPosition):
         through='SiteDocument',
         blank=True)
 
+    # GPS fields
+    latitude = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=9,
+        decimal_places=6,
+        verbose_name="Latitude (°)")
+    longitude = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Longitude (°)",
+        max_digits=9,
+        decimal_places=6)
+    elevation = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Elevation (m)",
+        max_digits=5,
+        decimal_places=1)
+
     # TODO: FIXME, Do not permit to register "parent" as itself to avoid
     # problems using parents
 
@@ -164,13 +138,34 @@ class BuiltType(models.Model):
         return '%s' % self.name
 
 
-class Built(CommonPosition):
+class Built(models.Model):
+    # fields
     name = models.CharField(
         max_length=40,
         default="Unknown")
     _type = models.ForeignKey("place.BuiltType", verbose_name="Type")
     site = models.ForeignKey("place.Site")
     documents = models.ManyToManyField('document.Document', blank=True)
+
+    # GPS fields
+    latitude = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=9,
+        decimal_places=6,
+        verbose_name="Latitude (°)")
+    longitude = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Longitude (°)",
+        max_digits=9,
+        decimal_places=6)
+    elevation = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Elevation (m)",
+        max_digits=5,
+        decimal_places=1)
 
     def __str__(self):
         return '%s' % self.name

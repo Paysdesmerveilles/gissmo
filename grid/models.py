@@ -9,7 +9,6 @@ from django.utils import timezone
 from polymorphic.models import PolymorphicModel
 
 from grid import codes as channel_code
-from place.models import CommonPosition
 from place import states as pstate
 from place import transitions as ptransition
 from measurement import units
@@ -218,7 +217,7 @@ class Network(CommonXML):
         return '%s' % self.code
 
 
-class Installation(CommonPosition):
+class Installation(models.Model):
     """
     An instance of Equipment as part of Channel creation.
     parent field permit to make a tree of Acquisition Chain
@@ -272,6 +271,26 @@ class Installation(CommonPosition):
         decimal_places=1,
         verbose_name='Depth (m)')
 
+    # GPS fields
+    latitude = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=9,
+        decimal_places=6,
+        verbose_name="Latitude (°)")
+    longitude = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Longitude (°)",
+        max_digits=9,
+        decimal_places=6)
+    elevation = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Elevation (m)",
+        max_digits=5,
+        decimal_places=1)
+
     # TODO: Create a method that fetch the entire chain (parent and child)
 
     def __str__(self):
@@ -281,7 +300,7 @@ class Installation(CommonPosition):
             self.built)
 
 
-class Channel(CommonXML, CommonPosition):
+class Channel(CommonXML):
     # datatypes
     TRIGGERED = 0
     CONTINUOUS = 1
@@ -344,3 +363,23 @@ class Channel(CommonXML, CommonPosition):
         choices=DATATYPE_CHOICES,
         null=True,
         blank=True)
+
+    # GPS fields
+    latitude = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=9,
+        decimal_places=6,
+        verbose_name="Latitude (°)")
+    longitude = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Longitude (°)",
+        max_digits=9,
+        decimal_places=6)
+    elevation = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Elevation (m)",
+        max_digits=5,
+        decimal_places=1)
