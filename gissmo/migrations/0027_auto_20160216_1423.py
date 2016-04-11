@@ -310,7 +310,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='channel',
             name='restricted_status',
-            field=models.IntegerField(null=True, choices=[(1, 'Open'), (2, 'Closed'), (3, 'Partial')], blank=True, verbose_name='Restrictive state'),
+            field=models.IntegerField(null=True, choices=[(1, 'Open'), (2, 'Closed'), (3, 'Partial')], blank=True, verbose_name='Restrictive status'),
         ),
         migrations.AlterField(
             model_name='channel',
@@ -405,7 +405,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipment',
             name='last_state',
-            field=models.IntegerField(null=True, choices=[(1, 'Operation in progress'), (2, 'To be tested'), (3, 'Available'), (4, 'Failure'), (5, 'Breakdown'), (6, 'Transit in progress'), (7, 'Out of use'), (8, 'Lost'), (9, 'Waste'), (10, 'Other')], blank=True, verbose_name='Last state'),
+            field=models.IntegerField(null=True, choices=[(1, 'Operation in progress'), (2, 'To be tested'), (3, 'Available'), (4, 'Failure'), (5, 'Breakdown'), (6, 'Transit in progress'), (7, 'Out of use'), (8, 'Lost'), (9, 'Waste'), (10, 'Other')], blank=True, verbose_name='Status'),
         ),
         migrations.AlterField(
             model_name='equipment',
@@ -565,7 +565,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='intervequip',
             name='equip_state',
-            field=models.IntegerField(choices=[(1, 'Operation in progress'), (2, 'To be tested'), (3, 'Available'), (4, 'Failure'), (5, 'Breakdown'), (6, 'Transit in progress'), (7, 'Out of use'), (8, 'Lost'), (9, 'Waste'), (10, 'Other')], verbose_name='State'),
+            field=models.IntegerField(choices=[(1, 'Operation in progress'), (2, 'To be tested'), (3, 'Available'), (4, 'Failure'), (5, 'Breakdown'), (6, 'Transit in progress'), (7, 'Out of use'), (8, 'Lost'), (9, 'Waste'), (10, 'Other')], verbose_name='Status'),
         ),
         migrations.AlterField(
             model_name='intervequip',
@@ -600,7 +600,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='intervstation',
             name='station_state',
-            field=models.IntegerField(null=True, choices=[(1, 'Installing'), (7, 'Testing'), (2, 'Running'), (3, 'Broken'), (4, 'Failure'), (5, 'Closed'), (6, 'Other')], blank=True, verbose_name='State'),
+            field=models.IntegerField(null=True, choices=[(1, 'Installing'), (7, 'Testing'), (2, 'Running'), (3, 'Broken'), (4, 'Failure'), (5, 'Closed'), (6, 'Other')], blank=True, verbose_name='Status'),
         ),
         migrations.AlterField(
             model_name='network',
@@ -770,7 +770,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationsite',
             name='last_state',
-            field=models.IntegerField(null=True, choices=[(1, 'Installing'), (7, 'Testing'), (2, 'Running'), (3, 'Broken'), (4, 'Failure'), (5, 'Closed'), (6, 'Other')], blank=True, verbose_name='Last state'),
+            field=models.IntegerField(null=True, choices=[(1, 'Installing'), (7, 'Testing'), (2, 'Running'), (3, 'Broken'), (4, 'Failure'), (5, 'Closed'), (6, 'Other')], blank=True, verbose_name='Status'),
         ),
         migrations.AlterField(
             model_name='stationsite',
@@ -805,7 +805,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationsite',
             name='restricted_status',
-            field=models.IntegerField(null=True, choices=[(1, 'Open'), (2, 'Closed'), (3, 'Partial')], blank=True, verbose_name='Restrictive state'),
+            field=models.IntegerField(null=True, choices=[(1, 'Open'), (2, 'Closed'), (3, 'Partial')], blank=True, verbose_name='Restrictive status'),
         ),
         migrations.AlterField(
             model_name='stationsite',
@@ -820,7 +820,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationsite',
             name='site_type',
-            field=models.IntegerField(default=1, choices=[(1, 'Seismological station'), (6, 'Testing site'), (7, 'Theoretical site'), (2, 'Observatory'), (3, 'Customer service place'), (4, 'Undefined'), (5, 'Other')], verbose_name='Type'),
+            field=models.IntegerField(default=1, choices=[(1, 'Measuring site'), (6, 'Potential site'), (7, 'Theoretical site'), (2, 'Agency'), (3, 'Customer service place'), (4, 'Undefined'), (5, 'Other')], verbose_name='Type'),
         ),
         migrations.AlterField(
             model_name='stationsite',

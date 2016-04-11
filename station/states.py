@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 
 """
-Allowed states for a given Station
+Allowed statuses for a given Station
 
 States:
 

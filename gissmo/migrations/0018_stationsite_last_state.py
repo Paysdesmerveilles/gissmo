@@ -6,7 +6,7 @@ from django.db import models, migrations
 
 def migrate_last_station_state(apps, schema_editor):
     """
-    All stations ' states are in IntervStation.
+    All stations ' statuses are in IntervStation.
     We now have a specific field in Station to know the last one:
     last_state.
     So we need to copy the last known value from IntervStation to Station.

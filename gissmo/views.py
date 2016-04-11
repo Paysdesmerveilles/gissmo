@@ -155,7 +155,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
 
 def xhr_station_state(request):
     """
-    Request that return the possible states for a station according to the
+    Request that return the possible status for a station according to the
     action done.
     """
     # Check that it's an ajax request and that the method is GET
@@ -224,7 +224,7 @@ def xhr_station_state(request):
 
 def available_equip_state(action):
     """
-    Function that return a list of state according to the action via the
+    Function that return a list of status according to the action via the
     parameter.
     This is use on add_fields section of the IntervEquipInlineFormset and in
     xhr_equip_state function.
@@ -343,7 +343,7 @@ def available_equip_state(action):
 
 def xhr_equip_state(request):
     """
-    Request that return the possible states for a station according to the
+    Request that return the possible statuses for a station according to the
     action done.
     This use onchange event.
     """
@@ -363,7 +363,7 @@ def xhr_equip_state(request):
 
 def equip_state_todate(equip, date, intervention_id):
     """
-    Function to obtain the state of an equipment at a precise moment
+    Function to obtain the equipment status at a precise moment
     """
     result = 0
     if intervention_id:
@@ -400,7 +400,7 @@ def equip_state_todate(equip, date, intervention_id):
 
 def equip_with_state_todate(date, intervention_id):
     """
-    Function to obtain the state of an equipment at a precise moment
+    Function to obtain equipment status at a precise moment
     """
     liste = []
     equipments = Equipment.objects.all()
@@ -518,7 +518,7 @@ def available_equipment_cursor(action, station, date, intervention_id):
     # using-database-cursors-as-context-managers
     with connection.cursor() as cursor:
         """
-        Give the last state and station of an equipment
+        Give the last status and station of an equipment
         If the intervention date or time change via the form of the
         intervention we exclude this intervention to permit the change of those
         fields (date and time).
@@ -570,12 +570,12 @@ def available_equipment_cursor(action, station, date, intervention_id):
                 id__in=list_equip_purchased)
             for equip in nobuy_equipments:
                 equipment_list.append(equip.id)
-        # Install only equip DISPONIBLE or No state
+        # Install only equip DISPONIBLE or No status
         elif action == EquipAction.INSTALLER:
             for row in cursor.fetchall():
                 if row[3] == EquipState.DISPONIBLE:
                     equipment_list.append(row[0])
-        # Receive only equip En transit or No state
+        # Receive only equip En transit or No status
         elif action == EquipAction.RECEVOIR:
             for row in cursor.fetchall():
                 if row[3] == EquipState.EN_TRANSIT:
@@ -586,7 +586,7 @@ def available_equipment_cursor(action, station, date, intervention_id):
                 if row[3] == EquipState.DISPARU:
                     equipment_list.append(row[0])
         # Corrective maintenance only equip installed in the station in the
-        # following state DEFAUT ou PANNE
+        # following status DEFAUT ou PANNE
         elif action in corrective_maintenance_states:
             for row in cursor.fetchall():
                 allowed_states = [
@@ -626,7 +626,7 @@ def available_equipment(action, station, date, intervention_id):
     corrective_maintenance_actions = [
         EquipAction.MAINT_CORR_DISTANTE,
         EquipAction.MAINT_CORR_SITE]
-    # Buy only equip with No state
+    # Buy only equip with No status
     if action == EquipAction.ACHETER:
         # Obtain all intervention with BUY as action
         equip_purchased = IntervEquip.objects.exclude(
@@ -641,7 +641,7 @@ def available_equipment(action, station, date, intervention_id):
             id__in=list_equip_purchased)
         for equip in nobuy_equipments:
             equipment_list.append(equip.id)
-    # Install only equip DISPONIBLE or No state
+    # Install only equip DISPONIBLE or No status
     elif action == EquipAction.INSTALLER:
         for equip in equipments:
             todate_state = equip_state_todate(
@@ -650,7 +650,7 @@ def available_equipment(action, station, date, intervention_id):
                 int(intervention_id))
             if todate_state == EquipState.DISPONIBLE:
                 equipment_list.append(equip.id)
-    # Receive only equip En transit or No state
+    # Receive only equip En transit or No status
     elif action == EquipAction.RECEVOIR:
         for equip in equipments:
             todate_state = equip_state_todate(
@@ -669,7 +669,7 @@ def available_equipment(action, station, date, intervention_id):
             if todate_state == EquipState.DISPARU:
                 equipment_list.append(equip.id)
     # Corrective maintenance only equip installed in the station in the
-    # following state DEFAUT ou PANNE
+    # following status DEFAUT ou PANNE
     elif action in corrective_maintenance_actions:
         allowed_states = [
             EquipState.DEFAUT,

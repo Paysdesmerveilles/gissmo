@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 """
 Allowed states on a given Equipment.
 
-States:
+Statuses:
 
   1 : OPERATION : Operation in progress
   2 : A_TESTER : To be tested

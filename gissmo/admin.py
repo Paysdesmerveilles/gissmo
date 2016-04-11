@@ -500,7 +500,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         """
         Gives stockage_site and purchase_date to Equipment so that it can
         generate interventions such as buying equipment and make Equipment in
-        'to test' state.
+        'to test' status.
         """
         obj.stockage_site = form.cleaned_data['stockage_site']
         obj.actor = request.user.username
@@ -682,7 +682,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         """
         Overide save_model to generate intervention and intervstation object
-        Create station code as action and in construction for the state
+        Create station code as action and in construction for the status
         """
         obj.project = form.cleaned_data['project']
         obj.actor = request.user.username

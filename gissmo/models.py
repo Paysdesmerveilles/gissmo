@@ -476,7 +476,7 @@ class StationSite(models.Model):
         choices=STATUS,
         null=True,
         blank=True,
-        verbose_name="Restrictive state")
+        verbose_name="Restrictive status")
     alternate_code = models.CharField(
         max_length=5,
         null=True,
@@ -534,7 +534,7 @@ class StationSite(models.Model):
         choices=StationState.STATION_STATES,
         null=True,
         blank=True,
-        verbose_name='Last state')
+        verbose_name='Status')
 
     def get_last_state(self):
         res = None
@@ -602,7 +602,7 @@ class StationSite(models.Model):
         project = get_object_or_404(Project, name=self.project)
         project.sites.add(self.id)
 
-        # Return expected station state
+        # Return expected station status
         return StationState.INSTALLATION
 
     def __init__(self, *args, **kwargs):
@@ -682,12 +682,12 @@ l'équipment
         null=True,
         blank=True,
         verbose_name='Purchase date')
-    # Last state makes equipment display faster. Interventions updates it.
+    # Last status makes equipment display faster. Interventions updates it.
     last_state = models.IntegerField(
         choices=EquipState.EQUIP_STATES,
         null=True,
         blank=True,
-        verbose_name='Last state')
+        verbose_name='Status')
     # Last station makes equipment display faster. Interventions updates it.
     last_station = models.ForeignKey(
         StationSite,
@@ -1076,7 +1076,7 @@ la station
         choices=StationState.STATION_STATES,
         null=True,
         blank=True,
-        verbose_name="State")
+        verbose_name="Status")
     note = models.TextField(null=True, blank=True, verbose_name="Note")
 
     class Meta:
@@ -1087,7 +1087,7 @@ la station
 
     def save(self, *args, **kwargs):
         """
-        Update station state in given Intervention.
+        Update station status in given Intervention.
         """
         res = super(IntervStation, self).save(*args, **kwargs)
         s = StationSite.objects.get(pk=self.intervention.station_id)
@@ -1135,7 +1135,7 @@ répertoriées
     equip = models.ForeignKey("Equipment", verbose_name="Equipement")
     equip_state = models.IntegerField(
         choices=EquipState.EQUIP_STATES,
-        verbose_name="State")
+        verbose_name="Status")
     station = models.ForeignKey(
         "StationSite",
         null=True,
@@ -1157,7 +1157,7 @@ répertoriées
     def save(self, *args, **kwargs):
         """
         Update equipment in given Intervention:
-          - state
+          - status
           - station
         """
         res = super(IntervEquip, self).save(*args, **kwargs)
@@ -1581,7 +1581,7 @@ class Channel(models.Model):
         choices=STATUS,
         null=True,
         blank=True,
-        verbose_name="Restrictive state")
+        verbose_name="Restrictive status")
     alternate_code = models.CharField(
         max_length=5,
         null=True,

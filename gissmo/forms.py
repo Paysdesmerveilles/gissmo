@@ -477,7 +477,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             This trick permit us to exclude the intervention from the function
             equip_state_todate and equip_place_todate_id.
             We need this trick because the functions look in the DB for the
-            state and place for a date before the change occur and if the
+            status and place for a date before the change occur and if the
             date of the intervention change this interfere. Thus we have to
             exclude this from the query only if the date change.
             """
@@ -701,7 +701,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                         (equip, intervention_station))
 
                 """
-                The action TESTER is valid only if the state were OPERATION,
+                The action TESTER is valid only if the status were OPERATION,
                 A_TESTER, DISPONIBLE, DEFAUT, PANNE or AUTRE before.
                 """
                 if equip_action == EquipAction.TESTER and (
@@ -740,7 +740,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                                 int(intervention_id)) - 1][1]))
 
                 """
-                The action INSTALLER is valid only if the state was DISPONIBLE
+                The action INSTALLER is valid only if the status was DISPONIBLE
                 before.
                 """
                 if equip_action == EquipAction.INSTALLER and \
@@ -759,7 +759,7 @@ for this action: %s" % (
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1]))
 
                 """
-                The action RECEVOIR is valid only if the state was EN_TRANSIT
+                The action RECEVOIR is valid only if the status was EN_TRANSIT
                 before.
                 """
                 if equip_action == EquipAction.RECEVOIR and \
@@ -777,7 +777,7 @@ for this action: %s" % (
                                 int(intervention_id)) - 1][1]))
 
                 """
-                The action RETROUVER is valid only if the state was DISPARU
+                The action RETROUVER is valid only if the status was DISPARU
                 before.
                 """
                 if equip_action == EquipAction.RETROUVER and \
@@ -793,7 +793,7 @@ for this action: %s" % (
                                 int(intervention_id)) - 1][1]))
                 """
                 The action MAINT_CORR_DISTANTE or MAINT_CORR_SITE is valid only
-                if the state was DEFAUT or PANNE before.
+                if the status was DEFAUT or PANNE before.
                 """
                 authorized_actions = [
                     EquipAction.MAINT_CORR_DISTANTE,
@@ -818,7 +818,7 @@ broken (%s instead)" % (
                                 int(intervention_id)) - 1][1]))
 
                 # TODO vue de validation
-                # Validation of equip_action and target state
+                # Validation of equip_action and target status
                 errors = 0
 
                 unallowed_tester_states = [
@@ -929,7 +929,7 @@ broken (%s instead)" % (
 
                 if errors != 0:
                     raise forms.ValidationError(
-                        "Invalid final state (%s) for action: %s" % (
+                        "Invalid final status (%s) for action: %s" % (
                             EquipState.EQUIP_STATES[equip_state - 1][1],
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1]))
 
@@ -1012,7 +1012,7 @@ OSU. Not this one: %s" % (
                             EquipAction.EQUIP_ACTIONS[equip_action - 1][1],
                             target_station))
 
-                # The state DISPONIBLE is valid only if the target_station is
+                # The status DISPONIBLE is valid only if the target_station is
                 # an OSU.
                 is_disponible = equip_state == EquipState.DISPONIBLE
                 type_site = target_station.site_type
@@ -1027,7 +1027,7 @@ or an OSU. Not this one: %s" % (
                             EquipState.EQUIP_STATES[equip_state - 1][1],
                             target_station))
 
-                # The state OPERATION is valid only if the target_station is
+                # The status OPERATION is valid only if the target_station is
                 # an STATION_SISMOLOGIQUE.
                 is_operation = equip_state == EquipState.OPERATION
                 if is_operation and (
@@ -1093,7 +1093,7 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
                 station_state = form.cleaned_data['station_state']
 
                 # TODO vue de validation
-                # Validation of station_action and final state
+                # Validation of station_action and final status
                 errors = 0
 
                 s_action = station_action
@@ -1150,7 +1150,7 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
 
                 if errors != 0:
                     raise forms.ValidationError(
-                        'Invalid state (%s) for given action (%s)' %
+                        'Invalid status (%s) for given action (%s)' %
                         (
                             StationState.STATION_STATES[
                                 station_state - 1][1],
