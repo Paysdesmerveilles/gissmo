@@ -119,6 +119,19 @@ celui-ci d'un autre bâti
 
 
 @python_2_unicode_compatible
+class GroundType(models.Model):
+    name = models.CharField(max_length=2, unique=True)
+    description = models.CharField(
+        max_length=255)
+
+    class Meta:
+        verbose_name = "EC8 Soil classification"
+
+    def __str__(self):
+        return '%s' % self.name
+
+
+@python_2_unicode_compatible
 class EquipSupertype(models.Model):
     """
     **Description :** Catégorie ou supertype auquel est associé l'équipement
@@ -472,6 +485,11 @@ class StationSite(models.Model):
         null=True,
         blank=True,
         verbose_name="Geological formation")
+    ground_type = models.ForeignKey(
+        'GroundType',
+        null=True,
+        blank=True,
+        verbose_name="EC8 Soil classification")
     restricted_status = models.IntegerField(
         choices=STATUS,
         null=True,

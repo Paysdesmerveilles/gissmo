@@ -638,7 +638,7 @@ class StationSiteAdmin(admin.ModelAdmin):
                     'creation_date',
                     'project'),
                 ('latitude', 'longitude', 'elevation'),
-                ('geology')]}),
+                ('ground_type')]}),
         ('Contacts', {
             'fields': [('contact')],
             'classes': ['collapse']}),
@@ -652,6 +652,7 @@ class StationSiteAdmin(admin.ModelAdmin):
             'fields': [
                 ('note'),
                 ('private_link'),
+                ('geology'),
                 ('station_description'),
                 ('alternate_code', 'historical_code', 'restricted_status'),
             ],
@@ -1399,6 +1400,12 @@ class OrganismAdmin(admin.ModelAdmin):
             return super(OrganismAdmin, self).delete_model(request, obj)
 
 
+class GroundTypeAdmin(admin.ModelAdmin):
+    model = GroundType
+    ordering = ['name']
+    search_fields = ['name', 'description']
+    list_display = ['name', 'description']
+
 """
 Disabling the action "delete_selected" for all the site
 """
@@ -1426,3 +1433,4 @@ admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)
 admin.site.register(Organism, OrganismAdmin)
+admin.site.register(GroundType, GroundTypeAdmin)

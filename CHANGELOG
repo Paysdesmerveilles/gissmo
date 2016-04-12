@@ -1,4 +1,7 @@
-Version (1.5-rc2):
+Version (1.5-rc3):
+  - Add a link from StationSite to Ground Type
+  - Create Ground Type which is an EC8 soil classification
+  - Move "Geology formation" (in StationSite) from "Main information" to "Other information"
   - An intervention needs at least 1 operator
   - Current user is now the default one for Intervention (bug fixed)
   - Actor review:
