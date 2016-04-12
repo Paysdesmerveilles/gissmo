@@ -338,7 +338,7 @@ class EquipmentAdmin(admin.ModelAdmin):
                     'vendor',
                     'contact')],
             'classes': ['collapse']}),
-        ('Further information', {
+        ('Other information', {
             'fields': [('note')],
             'classes': ['collapse']})]
 
@@ -648,7 +648,7 @@ class StationSiteAdmin(admin.ModelAdmin):
                 ('address', 'zip_code', 'town'),
                 ('county', 'region', 'country')],
             'classes': ['collapse']}),
-        ('Further information', {
+        ('Other information', {
             'fields': [
                 ('note'),
                 ('private_link'),
@@ -1076,10 +1076,10 @@ class ChannelAdmin(admin.ModelAdmin):
                     'azimuth',
                     'dip'),
                 ('sample_rate', 'accept_anyway', 'start_date', 'end_date')]}),
-        ('Produced data types', {
+        ('Data types', {
             'fields': [('data_type')],
             'classes': ['collapse']}),
-        ('Further information', {
+        ('Other information', {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status'),
@@ -1302,7 +1302,7 @@ class NetworkAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ('', {'fields': [('network_code', 'start_date', 'end_date'), ]}),
-        ('Further information', {
+        ('Other information', {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status')],

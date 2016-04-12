@@ -196,13 +196,15 @@ class EquipmentForm(autocomplete_light.ModelForm):
     """
     Add of fields to obtain the date of purchase and stockage_site only when
     it'a new equipment else hide the field and the label
-    Only the site of type OBSERVATOIRE can be a stockage site
+    Only the site of type OBSERVATOIRE can be a storage place
     """
     observatories = StationSite.objects.filter(
         site_type=StationSite.OBSERVATOIRE
     )
 
-    stockage_site = forms.ModelChoiceField(queryset=observatories)
+    stockage_site = forms.ModelChoiceField(
+        queryset=observatories,
+        label="Storage place")
 
     def __init__(self, *args, **kwargs):
         super(EquipmentForm, self).__init__(*args, **kwargs)

@@ -29,11 +29,11 @@ DISPARU = 8
 AU_REBUT = 9
 AUTRE = 10
 EQUIP_STATES = (
-    (OPERATION, 'Operation in progress'),
+    (OPERATION, 'Running'),
     (A_TESTER, 'To be tested'),
     (DISPONIBLE, 'Available'),
-    (DEFAUT, 'Failure'),
-    (PANNE, 'Breakdown'),
+    (DEFAUT, 'Ongoing issue'),
+    (PANNE, 'Kaputt'),
     (EN_TRANSIT, 'Transit in progress'),
     (HORS_USAGE, 'Out of use'),
     (DISPARU, 'Lost'),

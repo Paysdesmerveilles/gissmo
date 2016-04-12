@@ -45,7 +45,7 @@ EQUIP_ACTIONS = (
     (TESTER, 'Test'),
     (INSTALLER, 'Install'),
     (DESINSTALLER, 'Uninstall'),
-    (CONSTATER_DEFAUT, 'Observe failure'),
+    (CONSTATER_DEFAUT, 'Report failure'),
     (MAINT_PREV_DISTANTE, 'Perform remote preventive maintenance'),
     (MAINT_CORR_DISTANTE, 'Perform remote corrective maintenance'),
     (MAINT_PREV_SITE, 'Perform preventive maintenance locally'),
