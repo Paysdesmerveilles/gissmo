@@ -731,7 +731,9 @@ def xhr_equipment(request):
         equip_dispo = available_equipment_cursor(
             action, station, date_intervention, intervention_id)
 
-        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
+        select_choice = [{
+            "optionValue": "",
+            "optionDisplay": "-- Select an equipment --"}]
         for equip in equip_dispo:
             select_choice.append(({
                 "optionValue": equip.id,
@@ -805,7 +807,7 @@ def xhr_station(request):
         else:
             select_choice = [{
                 "optionValue": "",
-                "optionDisplay": "-- select a site --"}]
+                "optionDisplay": "-- Select a site --"}]
         for station in station_dispo:
             select_choice.append(({
                 "optionValue": station.id,
@@ -839,7 +841,10 @@ def xhr_built(request):
 
         built_dispo = available_built(station)
 
-        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
+        select_choice = [{
+            "optionValue": "",
+            "optionDisplay": "-- Select a place --",
+        }]
         for built in built_dispo:
             select_choice.append(({
                 "optionValue": built.id,

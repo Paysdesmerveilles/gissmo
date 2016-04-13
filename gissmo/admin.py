@@ -820,15 +820,6 @@ class IntervEquipInline(admin.TabularInline):
     extra = 0
     formset = IntervEquipInlineFormset
 
-    def get_formset(self, request, obj=None, **kwargs):
-        equip = request.GET.get('equip', '')
-        initial = []
-        initial.append(equip)
-        formset = super(IntervEquipInline, self).get_formset(
-            request, obj, **kwargs)
-        formset.__init__ = curry(formset.__init__, initial=initial)
-        return formset
-
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
     }

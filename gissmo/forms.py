@@ -423,31 +423,27 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
         url3 = reverse('xhr_station')
         url4 = reverse('xhr_built')
 
-        # TODO Améliorer cette comparaison
-        if self.__initial and self.__initial != ['']:
-            equip = get_object_or_404(Equipment, id=self.__initial[0])
-            form.fields['equip'].initial = equip
-
         STATE_CHOICES = []
-        STATE_CHOICES.insert(0, ('', '-- first select an action --'))
+        STATE_CHOICES.insert(0, ('', '-- Select a state --'))
 
         """
         Initialize form.fields
         """
         form.fields['equip'] = forms.ModelChoiceField(
-            queryset=Equipment.objects.none(),
-            empty_label="-- first select an action --",
+            queryset=Equipment.objects.all().prefetch_related('equip_model'),
+            empty_label="-- Select an equipment --",
             widget=forms.Select(
                 attrs={'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
+
         form.fields['equip_state'].widget = forms.Select(choices=STATE_CHOICES)
         form.fields['station'] = forms.ModelChoiceField(
-            queryset=StationSite.objects.none(),
+            queryset=StationSite.objects.all(),
             widget=forms.Select(
                 attrs={'onchange': 'get_site_built(this,\'' + url4 + '\');'}),
-            empty_label="-- first select an action --")
+            empty_label="-- Select a site --")
         form.fields['built'] = forms.ModelChoiceField(
-            queryset=Built.objects.none(),
-            empty_label="-- first select an action --",
+            queryset=Built.objects.all(),
+            empty_label="-- Select a place --",
             required=False)
 
         """
@@ -500,7 +496,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             if value_is_1(action_id):
                 ACTION_CHOICES = [
                     (c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-                ACTION_CHOICES.insert(0, ('', '-- select an action --'))
+                ACTION_CHOICES.insert(0, ('', '-- Select an action --'))
             else:
                 """
                 The BUY action is not display
@@ -512,10 +508,10 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 """
                 ACTION_CHOICES = [
                     (c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-                ACTION_CHOICES.insert(0, ('', '-- select an action --'))
+                ACTION_CHOICES.insert(0, ('', '-- Select an action --'))
 
             ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-            ACTION_CHOICES.insert(0, ('', '-- select an action --'))
+            ACTION_CHOICES.insert(0, ('', '-- Select an action --'))
 
             """
             Filtering the queryset depending of the value
@@ -575,7 +571,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             The BUY action permitted
             """
             ACTION_CHOICES = [(c[0], c[1]) for c in EquipAction.EQUIP_ACTIONS]
-            ACTION_CHOICES.insert(0, ('', '-- select an action --'))
+            ACTION_CHOICES.insert(0, ('', '-- Select an action --'))
 
             """
             Special case if we came from a specific equipment
@@ -584,7 +580,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
                 equip = get_object_or_404(Equipment, id=self.__initial[0])
                 form.fields['equip'] = forms.ModelChoiceField(
                     queryset=Equipment.objects.filter(id=self.__initial[0]),
-                    empty_label="-- first select an action --",
+                    empty_label="-- Select an equipment --",
                     initial=equip,
                     widget=forms.Select(
                         attrs={
@@ -592,7 +588,7 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             else:
                 form.fields['equip'] = forms.ModelChoiceField(
                     queryset=Equipment.objects.none(),
-                    empty_label="-- first select an action --",
+                    empty_label="-- Select an equipment --",
                     widget=forms.Select(
                         attrs={
                             'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
@@ -1059,7 +1055,7 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
         if index:
             ACTION_CHOICES = [
                 (c[0], c[1]) for c in StationAction.STATION_ACTIONS]
-            ACTION_CHOICES.insert(0, ('', '-- select an action --'))
+            ACTION_CHOICES.insert(0, ('', '-- Select an action --'))
         else:
             ACTION_CHOICES = [
                 (c[0], c[1]) for c in StationAction.STATION_ACTIONS[1:]]
@@ -1188,11 +1184,11 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         Initialize form.fields
         """
         ORDER_CHOICES = [(c[0], c[1]) for c in Chain.ORDER_CHOICES]
-        ORDER_CHOICES.insert(0, ('', '-- first select a type --'))
+        ORDER_CHOICES.insert(0, ('', '-- Select a type --'))
 
         form.fields['equip'] = forms.ModelChoiceField(
-            queryset=Equipment.objects.none(),
-            empty_label="-- first select a type --")
+            queryset=Equipment.objects.all().prefetch_related('equip_model'),
+            empty_label="-- Select a type --")
         form.fields['order'].widget = forms.Select(
             choices=ORDER_CHOICES,
             attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
@@ -1341,9 +1337,11 @@ class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
         super(ChainConfigInlineFormset, self).add_fields(form, index)
 
         url1 = reverse('xhr_parameter_value')
+        model_id = self.instance.equip.equip_model.id
 
         query = ParameterEquip.objects.filter(
-            equip_model_id=self.instance.equip.equip_model.id)
+            equip_model_id=model_id).prefetch_related(
+                'equip_model')
         form.fields['parameter'] = forms.ModelChoiceField(
             queryset=query,
             widget=forms.Select(
@@ -1355,7 +1353,7 @@ class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
             widget=forms.Select(
                 attrs={
                     'onfocus': 'get_parameter_value(this,\'' + url1 + '\');'}),
-            empty_label="-- first select a parameter --")
+            empty_label="-- Select a parameter --")
 
 
 class ChannelChainInlineFormset(forms.models.BaseInlineFormSet):
@@ -1371,7 +1369,8 @@ class ChannelChainInlineFormset(forms.models.BaseInlineFormSet):
 
             form.fields['parameter'] = forms.ModelChoiceField(
                 queryset=ParameterEquip.objects.filter(
-                    pk=parameter_id),
+                    pk=parameter_id).prefetch_related(
+                        'equip_model'),
                 empty_label=None)
             form.fields['value'] = forms.ModelChoiceField(
                 queryset=ParameterValue.objects.filter(
