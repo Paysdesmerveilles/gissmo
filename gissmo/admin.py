@@ -1399,7 +1399,7 @@ class OrganismAdmin(admin.ModelAdmin):
     filter_horizontal = ('users', )
 
     def delete_model(self, request, obj):
-        forbidden_element = 'Inconnu'
+        forbidden_element = 'Unknown'
         if obj.name == forbidden_element:
             storage = messages.get_messages(request)
             storage.used = True

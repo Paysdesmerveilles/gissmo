@@ -34,7 +34,7 @@ class EquipmentTest(FunctionalTest):
             name='DT INSU',
             _type=0)  # to not explode equipment view (owner field)
         self.unknown, created = Organism.objects.get_or_create(
-            name='Inconnu',
+            name='Unknown',
             _type=4)
         self.supertype_1 = EquipSupertype.objects.create(
             equip_supertype_name='01. Scientific',

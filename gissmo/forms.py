@@ -311,7 +311,7 @@ project only when it'a new station else hide the field and the label.
         # intialization
         operator_default_value = None
         try:
-            operator_default_value = Organism.objects.get(name='Inconnu')
+            operator_default_value = Organism.objects.get(name='Unknown')
         except (KeyError, Organism.DoesNotExist):
             pass
 

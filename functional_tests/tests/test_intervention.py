@@ -30,7 +30,7 @@ class InterventionTest(FunctionalTest):
         """
         super(InterventionTest, self).setUp()
         self.unknown, created = Organism.objects.get_or_create(
-            name='Inconnu',
+            name='Unknown',
             _type=4)
         self.project = Project.objects.create(
             name='ADEME',

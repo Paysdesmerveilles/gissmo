@@ -1900,21 +1900,21 @@ class Organism(models.Model):
 
     def delete(self, *args, **kwargs):
         """
-        Avoid Inconnu Organism to be deleted.
+        Avoid 'Unknown' Organism to be deleted.
         We use database value as reference. This is to avoid someone to rename
         Organism before launching delete().
         """
         old = Organism.objects.get(pk=self.id)
-        assert old.name != 'Inconnu', ("Delete 'Inconnu' is forbidden!")
+        assert old.name != 'Unknown', ("Delete 'Unknown' is forbidden!")
         return super(Organism, self).delete(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         """
-        Avoid Inconnu organism to be renamed or another organism to be
-        renamed into Inconnu one.
+        Avoid 'Unknown' organism to be renamed or another organism to be
+        renamed into 'Unknown' one.
         """
         if self.id:
-            name = 'Inconnu'
+            name = 'Unknown'
             old = Organism.objects.get(pk=self.id)
             assert old.name != name and self.name != name, (
                 "%s could be neither renamed nor replaced." % name)
@@ -1922,11 +1922,11 @@ class Organism(models.Model):
 
     def clean(self):
         """
-        Avoid Inconnu organism to be renamed on Admin interface.
+        Avoid 'Unknown' organism to be renamed on Admin interface.
         """
         if self.id:
             organism = Organism.objects.get(pk=self.id)
-            name = 'Inconnu'
+            name = 'Unknown'
             if organism.name == name and self.name != name:
                 raise ValidationError(
                     "%(name)s organism should stay as it is!",
