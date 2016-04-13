@@ -70,6 +70,7 @@ class ParameterEquipInline(admin.TabularInline):
     model = ParameterEquip
     extra = 0
 
+
 """
 Custom filter for the equipment model change list
 """
@@ -1005,6 +1006,10 @@ class ChainInline(admin.TabularInline):
         formset.__init__ = curry(formset.__init__, initial=initial)
         return formset
 
+    def get_queryset(self, request):
+        qs = super(ChainInline, self).get_queryset(request)
+        return qs.prefetch_related('equip__equip_model')
+
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
     }
@@ -1016,6 +1021,10 @@ class ChainConfigInline(admin.TabularInline):
     formset = ChainConfigInlineFormset
 
     fields = ('parameter', 'value')
+
+    def get_queryset(self, request):
+        qs = super(ChainConfigInline, self).get_queryset(request)
+        return qs.prefetch_related('parameter__equip_model')
 
 
 class ChannelChainInline(admin.TabularInline):
@@ -1036,6 +1045,13 @@ class ChannelChainInline(admin.TabularInline):
         return super(ChannelChainInline, self).formfield_for_dbfield(
             db_field,
             **kwargs)
+
+    def get_queryset(self, request):
+        qs = super(ChannelChainInline, self).get_queryset(request)
+        return qs.prefetch_related(
+            'chain__equip__equip_model',
+            'parameter__equip_model',
+            'value')
 
 
 class ChannelAdmin(admin.ModelAdmin):
@@ -1286,6 +1302,10 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         Return empty perms dict thus hiding the model from admin index.
         """
         return {}
+
+    def get_queryset(self, request):
+        qs = super(ChainAdmin, self).get_queryset(request)
+        return qs.prefetch_related('equip__equip_model')
 
 
 class NetworkAdmin(admin.ModelAdmin):
