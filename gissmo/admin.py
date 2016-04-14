@@ -662,6 +662,9 @@ class StationSiteAdmin(admin.ModelAdmin):
 
     inlines = [BuiltInline, StationDocInline, ]
 
+    class Media:
+        js = ["js/spread_date.js"]
+
     def get_form(self, request, obj=None, **kwargs):
         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
         form.current_user = request.user
@@ -730,14 +733,6 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
 
     def closechannels_formset(self, station):
         class StationSiteClosechannelsForm(forms.Form):
-            date = forms.SplitDateTimeField(
-                label="Common date",
-                widget=AdminSplitDateTime,
-                required=False)
-            all_channels = forms.BooleanField(
-                label="Set common date to all channels",
-                required=False)
-
             def __init__(self, *args, **kwargs):
                 super(
                     StationSiteClosechannelsForm,

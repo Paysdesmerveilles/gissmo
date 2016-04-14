@@ -1544,37 +1544,19 @@ def closechannels_process(request, form, station_id, context):
     Process form and either return on stationsite change form or raise
     an error.
     """
-    date = form.get('date', None)
-    all_channels = form.get('all_channels', None)
     url = reverse('admin:gissmo_stationsite_change', args=(station_id,))
-    specifics = ['date', 'all_channels']
     success_message = "Channel(s) successfully closed: %s."
-    # specific behaviour
-    date_settled = date is not None
-    all_channels_settled = all_channels is not None and all_channels is True
-    if all_channels_settled and not date_settled:
-        messages.error(request, 'Common date is mandatory!')
-    elif all_channels_settled and date_settled:
-        channel_ids = [k for k in form.keys() if k not in specifics]
-        result = closechannels(channel_ids, date)
-        if not result:
-            messages.error(request, "No channel closed!")
-            return redirect(url)
-        messages.success(request, success_message % ",".join(channel_ids))
-        return redirect(url)
-    else:
-        channel_ids = []
-        for key in form:
-            if key not in specifics:
-                name = int(key)
-                closing_date = form[key]
-                result = closechannels([name], closing_date)
-                if result:
-                    channel_ids.append(key)
-        if channel_ids:
-            messages.success(
-                request,
-                success_message % ",".join(channel_ids))
+    channel_ids = []
+    for key in form:
+        name = int(key)
+        closing_date = form[key]
+        result = closechannels([name], closing_date)
+        if result:
+            channel_ids.append(key)
+    if channel_ids:
+        messages.success(
+            request,
+            success_message % ",".join(channel_ids))
         return redirect(url)
 
     return render(request, "closechannels_view.html", context)

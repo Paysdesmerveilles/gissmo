@@ -176,32 +176,3 @@ class CloseChannelsTest(TestCase):
             date,
             None,
             "Channel E: no date expected! Current: %s" % date)
-
-    def test_closing_all_channels(self):
-        date = datetime.strptime('2016-02-27', '%Y-%m-%d')
-        time = '15:00:00'
-        tested_date = make_aware(
-            datetime.strptime("2016-02-27 15:00:00", '%Y-%m-%d %H:%M:%S'))
-        request = self.django_post_request()
-        request.POST['form-0-date_0'] = make_aware(date)
-        request.POST['form-0-date_1'] = time
-        request.POST['form-0-all_channels'] = True
-
-        formset = self.get_closechannels_formset(request)
-
-        self.assertEqual(
-            formset.is_valid(),
-            True,
-            "Invalid form: %s" % formset.errors)
-
-        for f in formset.cleaned_data:
-            closechannels_process(request, f, self.station.id, {})
-
-        channel_codes = ['N', 'Z', 'E']
-        for code in channel_codes:
-            tested_channel = getattr(self, 'channel_%s' % code, None)
-            channel = Channel.objects.get(pk=tested_channel.id)
-            self.assertEqual(
-                channel.end_date,
-                tested_date,
-                "Channel %s: end_date should be set.")
