@@ -857,7 +857,7 @@ def xhr_built(request):
         return HttpResponse(status=400)
 
 
-def available_equipment_scioper(station, date):
+def available_equipment_scioper(station_id, date):
     """
     Function that return a queryset of scientific equipment in place at the
     station for the date specify.
@@ -865,8 +865,8 @@ def available_equipment_scioper(station, date):
     xhr_equip_oper function.
     """
     equipment_list = []
-    if not isinstance(station, int):
-        station = int(station)
+    if not isinstance(station_id, int):
+        station_id = int(station_id)
     # TODO: find a better way to filter
     # Not the best way to filter
     # If the supertype name change we have to change the code too
@@ -877,7 +877,7 @@ def available_equipment_scioper(station, date):
         Q(equip_model__equip_type__equip_supertype__equip_supertype_name=b))
 
     for equip in equipments:
-        if int(equip_place_todate_id(equip.id, date, None)) == station.id:
+        if int(equip_place_todate_id(equip.id, date, None)) == station_id:
             equipment_list.append(equip.id)
 
     equip_dispo = Equipment.objects.filter(
