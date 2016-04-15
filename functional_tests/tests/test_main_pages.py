@@ -52,6 +52,7 @@ class CheckMainURLBehaviourTest(FunctionalTest):
             'equipmodeldoctype/',
             'equiptype/',
             'forbiddenequipmentmodel/',
+            'groundtype/',
             'intervention/',
             'network/',
             'parameterequip/',
