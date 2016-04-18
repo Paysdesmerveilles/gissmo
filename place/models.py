@@ -1,6 +1,18 @@
 from django.db import models
 
 
+class GroundType(models.Model):
+    name = models.CharField(max_length=2, unique=True)
+    description = models.CharField(
+        max_length=255)
+
+    class Meta:
+        verbose_name = "EC8 Soil classification"
+
+    def __str__(self):
+        return '%s' % self.name
+
+
 class Place(models.Model):
     """
     A place on which you achieve some tasks. As:
@@ -84,6 +96,11 @@ class Place(models.Model):
         null=True,
         blank=True,
         verbose_name="Geological formation")
+    ground_type = models.ForeignKey(
+        'GroundType',
+        null=True,
+        blank=True,
+        verbose_name="EC8 Soil classification")
 
     # folks
     operator = models.ForeignKey('affiliation.Organism')

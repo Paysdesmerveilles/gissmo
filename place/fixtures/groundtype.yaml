@@ -1,0 +1,32 @@
+- model: place.groundtype
+  pk: 1
+  fields: {name: A, description: 'Rock or other rock-like geological formation, including
+      at most 5 m of weaker material at the surface.'}
+- model: place.groundtype
+  pk: 2
+  fields: {name: B, description: 'Deposits of very dense sand, gravel, or very stiff
+      clay, at least several tens of meters in thickness, characterized by a gradual
+      increase of mechanical properties with depth.'}
+- model: place.groundtype
+  pk: 3
+  fields: {name: C, description: 'Deep deposits of dense or medium dense sand, gravel
+      or stiff clay with thickness from several tens to many hundreds of meters.'}
+- model: place.groundtype
+  pk: 4
+  fields: {name: D, description: 'Deposits of loose-to-medium cohesionless soil (with
+      or without some soft cohesive layers), or of predominantly soft-to-firm cohesive
+      soil.'}
+- model: place.groundtype
+  pk: 5
+  fields: {name: E, description: 'A soil profile consisting of a surface alluvium
+      layer with vs values of type C or D and thickness varying between about 5 m
+      and 20 m, underlain by stiffer material with vs > 800 m/s.'}
+- model: place.groundtype
+  pk: 6
+  fields: {name: S1, description: 'Deposits consisting, or containing a layer at least
+      10 m thick, of soft clays/silts with a high plasticity index (PI > 40) and high
+      water content'}
+- model: place.groundtype
+  pk: 7
+  fields: {name: S2, description: "Deposits of liquefiable soils, of sensitive clays,\
+      \ or any other soil profile not included in types A \u2013 E or S1"}

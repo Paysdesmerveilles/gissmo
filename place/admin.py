@@ -1,8 +1,16 @@
 from django.contrib import admin
 
 from place.models import (
+    GroundType,
     Place,
     PlaceDocument)
+
+
+class GroundTypeAdmin(admin.ModelAdmin):
+    fields = ['name', 'description']
+    list_display = ('name', 'description')
+    search_fields = ['name', 'description']
+    ordering = ['name']
 
 
 class PlaceDocumentInline(admin.TabularInline):
@@ -20,3 +28,4 @@ class PlaceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Place, PlaceAdmin)
+admin.site.register(GroundType, GroundTypeAdmin)
