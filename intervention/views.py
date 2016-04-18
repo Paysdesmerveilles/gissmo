@@ -1,10 +1,9 @@
 from django.shortcuts import (
     get_object_or_404,
-    HttpResponse,
-    render)
+    HttpResponse)
 from django.http import JsonResponse
 
-from place.models import Site
+from place.models import Place
 from place.transitions import TRANSITION_CHOICES as pchoices
 
 
@@ -18,14 +17,14 @@ def json_transitions(transitions):
 
 def lookup_transitions(request):
     """
-    Get given site state allowed transition
+    Get given station state allowed transition
     """
     if request.is_ajax() and request.method == 'GET':
-        site_number = request.GET.get('site', '')
-        if site_number ==  '' or site_number == '0':
+        station_number = request.GET.get('station', '')
+        if station_number == '' or station_number == '0':
             transitions = json_transitions([p[0] for p in pchoices])
             return JsonResponse({'allowed_transitions': transitions})
-        site = get_object_or_404(Site, pk=site_number)
-        transitions = json_transitions(site.state.allowed_transitions())
+        station = get_object_or_404(Place, pk=station_number)
+        transitions = json_transitions(station.state.allowed_transitions())
         return JsonResponse({'allowed_transitions': transitions})
     return HttpResponse(status=400)

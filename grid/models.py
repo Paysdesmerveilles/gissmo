@@ -21,7 +21,7 @@ class State(PolymorphicModel):
     end = models.DateTimeField(
         blank=True,
         null=True)
-    site = models.ForeignKey('Station', related_name='linked_station')
+    station = models.ForeignKey('Station', related_name='linked_station')
 
     def allowed_transitions(self):
         assert 0, "Not implemented"
@@ -49,16 +49,16 @@ class StateAvailable(State):
 
     def doTest(self, isConclusive=False):
         print('Test in progress…')
-        site = Station.objects.get(pk=self.site_id)
+        station = Station.objects.get(pk=self.station_id)
         if isConclusive:
-            u = StateUsed.objects.create(site=self.site)
-            site.state = u
-            site.save()
+            u = StateUsed.objects.create(station=self.station)
+            station.state = u
+            station.save()
             print('…used')
         else:
-            b = StateBroken.objects.create(site=self.site)
-            site.state = b
-            site.save()
+            b = StateBroken.objects.create(station=self.station)
+            station.state = b
+            station.save()
             print('broken')
         self.end = timezone.now()
         self.save()
@@ -82,10 +82,10 @@ class StateBroken(State):
 
     def doFix(self):
         print('Fixing…')
-        site = Station.objects.get(pk=self.site_id)
-        a = StateAvailable.objects.create(site=self.site)
-        site.state = a
-        site.save()
+        station = Station.objects.get(pk=self.station_id)
+        a = StateAvailable.objects.create(station=self.station)
+        station.state = a
+        station.save()
         print('…available')
         self.end = timezone.now()
         self.save()
@@ -107,10 +107,10 @@ class StateUsed(State):
 
     def observeFailure(self):
         print('Failure detected!')
-        site = Station.objects.get(pk=self.site_id)
-        b = StateBroken.objects.create(site=self.site)
-        site.state = b
-        site.save()
+        station = Station.objects.get(pk=self.station_id)
+        b = StateBroken.objects.create(station=self.station)
+        station.state = b
+        station.save()
         print('…broken')
         self.end = timezone.now()
         self.save()
@@ -161,7 +161,7 @@ class CommonXML(models.Model):
 class Station(CommonXML):
     """
     Station is an object mainly used to generate StationXML file.
-    All relative information about place/area are located in Site object.
+    All relative information about place/area are located in Place object.
     WARNING: 2 stations code could be same. When you install a second station
     on same place that use some same network, then you can use same code.
     """
@@ -171,7 +171,7 @@ class Station(CommonXML):
         null=True,
         blank=True)
     state = models.ForeignKey('State', null=True, related_name='current_state')
-    site = models.ForeignKey('place.Site')
+    place = models.ForeignKey('place.Place')  # TODO: should be only builts
 
     # folks
     operator = models.ForeignKey('affiliation.Organism')
@@ -189,7 +189,7 @@ def create_available_state(sender, instance, created, **kwargs):
     At first creation make a new state 'available' for this Station.
     """
     if created is True:
-        a = StateAvailable.objects.create(site=instance)
+        a = StateAvailable.objects.create(station=instance)
         instance.state = a
         instance.save()
 
@@ -252,7 +252,7 @@ class Installation(models.Model):
         blank=True,
         verbose_name='Connected to')
     equipment = models.ForeignKey('equipment.Equipment')
-    built = models.ForeignKey('place.Built')
+    place = models.ForeignKey('place.Place')
     configurations = models.ManyToManyField(
         'equipment.Configuration',
         blank=True)

@@ -4,8 +4,9 @@ from django.contrib.auth.models import Group
 
 from project.models import Project
 
+
 class ProjectAdmin(BaseGroupAdmin):
-    filter_horizontal = ('permissions', 'sites')
+    filter_horizontal = ('permissions', 'places')
 
     def delete_model(self, request, obj):
         if obj.name == 'ALL':

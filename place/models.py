@@ -1,29 +1,30 @@
 from django.db import models
 
 
-class Site(models.Model):
+class Place(models.Model):
     """
     A place on which you achieve some tasks. As:
       * testing some devices
       * sending broken devices (customer service place)
-      * installing a station (make a link from a station to a site)
-      * have a lot of builts
+      * installing a station
       * searching for a new area to install a station
     """
-    # Site types
-    OBSERVATORY = 0
+    # Place types
+    AGENCY = 0
     CUSTOMER_SERVICE = 1
     UNDEFINED = 2
     OTHER = 3
     TEST = 4
     THEORITICAL = 5
-    SITE_TYPE_CHOICES = (
-        (OBSERVATORY, 'Observatory'),
+    BUILT = 6
+    PLACE_TYPE_CHOICES = (
+        (AGENCY, 'Agency'),
         (CUSTOMER_SERVICE, 'Customer service place'),
         (UNDEFINED, 'Undefined'),
         (OTHER, 'Other'),
-        (TEST, 'Testing site'),
+        (TEST, 'Measuring site'),
         (THEORITICAL, 'Theoritical site'),
+        (BUILT, 'Built'),
     )
 
     # fields
@@ -31,11 +32,11 @@ class Site(models.Model):
         'self',
         null=True,
         blank=True,
-        verbose_name="Referent")
+        verbose_name="Referent place")
     name = models.CharField(max_length=50, unique=True)
     _type = models.IntegerField(
-        choices=SITE_TYPE_CHOICES,
-        default=THEORITICAL,  # This is to make user works more about type :)
+        choices=PLACE_TYPE_CHOICES,
+        default=UNDEFINED,
         verbose_name="Type")
     description = models.TextField(
         null=True,
@@ -93,7 +94,7 @@ class Site(models.Model):
     # files
     documents = models.ManyToManyField(
         'document.Document',
-        through='SiteDocument',
+        through='PlaceDocument',
         blank=True)
 
     # GPS fields
@@ -123,49 +124,6 @@ class Site(models.Model):
         return '%s' % self.name
 
 
-class SiteDocument(models.Model):
-    site = models.ForeignKey('place.Site')
+class PlaceDocument(models.Model):
+    place = models.ForeignKey('place.Place')
     document = models.ForeignKey('document.Document')
-
-
-class BuiltType(models.Model):
-    name = models.CharField(max_length=40)
-
-    class Meta:
-        verbose_name = "Type"
-
-    def __str__(self):
-        return '%s' % self.name
-
-
-class Built(models.Model):
-    # fields
-    name = models.CharField(
-        max_length=40,
-        default="Unknown")
-    _type = models.ForeignKey("place.BuiltType", verbose_name="Type")
-    site = models.ForeignKey("place.Site")
-    documents = models.ManyToManyField('document.Document', blank=True)
-
-    # GPS fields
-    latitude = models.DecimalField(
-        null=True,
-        blank=True,
-        max_digits=9,
-        decimal_places=6,
-        verbose_name="Latitude (°)")
-    longitude = models.DecimalField(
-        null=True,
-        blank=True,
-        verbose_name="Longitude (°)",
-        max_digits=9,
-        decimal_places=6)
-    elevation = models.DecimalField(
-        null=True,
-        blank=True,
-        verbose_name="Elevation (m)",
-        max_digits=5,
-        decimal_places=1)
-
-    def __str__(self):
-        return '%s' % self.name

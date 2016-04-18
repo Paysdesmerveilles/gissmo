@@ -24,7 +24,7 @@ class InstallationForm(forms.ModelForm):
         fields = [
             'parent',
             'equipment',
-            'built',
+            'place',
             '_type',
             'depth',
             'start',
@@ -35,7 +35,7 @@ class InstallationAdmin(admin.ModelAdmin):
     # We add a Form just because of 'start' non-editable field
     # Cf. https://code.djangoproject.com/ticket/26238
     form = InstallationForm
-    list_display = ('equipment', 'built', '_type', 'start', 'end')
+    list_display = ('equipment', 'place', '_type', 'start', 'end')
     list_filter = ['_type']
     search_fields = ['equipment__name', 'start', 'end']
 
