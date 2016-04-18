@@ -1,0 +1,33 @@
+- model: grid.datatype
+  pk: 1
+  fields: {name: TRIGGERED}
+- model: grid.datatype
+  pk: 2
+  fields: {name: CONTINUOUS}
+- model: grid.datatype
+  pk: 3
+  fields: {name: HEALTH}
+- model: grid.datatype
+  pk: 4
+  fields: {name: GEOPHYSICAL}
+- model: grid.datatype
+  pk: 5
+  fields: {name: WEATHER}
+- model: grid.datatype
+  pk: 6
+  fields: {name: FLAG}
+- model: grid.datatype
+  pk: 7
+  fields: {name: SYNTHESIZED}
+- model: grid.datatype
+  pk: 8
+  fields: {name: INPUT}
+- model: grid.datatype
+  pk: 9
+  fields: {name: EXPERIMENTAL}
+- model: grid.datatype
+  pk: 10
+  fields: {name: MAINTENANCE}
+- model: grid.datatype
+  pk: 11
+  fields: {name: BEAM}

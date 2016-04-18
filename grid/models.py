@@ -300,32 +300,21 @@ class Installation(models.Model):
             self.built)
 
 
+class Datatype(models.Model):
+    """
+    As datatypes are specific regarding:
+    https://github.com/FDSN/StationXML/blob/master/fdsn-station.xsd#L284
+    we need to load them as initial fixtures
+    """
+    # fields
+    name = models.CharField(
+        max_length=40)
+
+    def __str__(self):
+        return '%s' % self.name
+
+
 class Channel(CommonXML):
-    # datatypes
-    TRIGGERED = 0
-    CONTINUOUS = 1
-    HEALTH = 2
-    GEOPHYSICAL = 3
-    WEATHER = 4
-    FLAG = 5
-    SYNTHESIZED = 6
-    INPUT = 7
-    EXPERIMENTAL = 8
-    MAINTENANCE = 9
-    BEAM = 10
-    DATATYPE_CHOICES = (
-        (TRIGGERED, 'TRIGGERED'),
-        (CONTINUOUS, 'CONTINUOUS'),
-        (HEALTH, 'HEALTH'),
-        (GEOPHYSICAL, 'GEOPHYSICAL'),
-        (WEATHER, 'WEATHER'),
-        (FLAG, 'FLAG'),
-        (SYNTHESIZED, 'SYNTHESIZED'),
-        (INPUT, 'INPUT'),
-        (EXPERIMENTAL, 'EXPERIMENTAL'),
-        (MAINTENANCE, 'MAINTENANCE'),
-        (BEAM, 'BEAM'),
-    )
     # fields
     installation = models.ForeignKey('grid.Installation')
     network = models.ForeignKey('grid.Network')
@@ -359,9 +348,8 @@ class Channel(CommonXML):
         null=True,
         blank=True,
         verbose_name='Calibration unit')
-    datatype = models.IntegerField(
-        choices=DATATYPE_CHOICES,
-        null=True,
+    datatypes = models.ManyToManyField(
+        'grid.Datatype',
         blank=True)
 
     # GPS fields

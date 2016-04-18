@@ -4,6 +4,7 @@ from django.contrib.admin import widgets
 
 from grid.models import (
     Channel,
+    Datatype,
     Installation,
     Network,
     Station,
@@ -14,6 +15,12 @@ class NetworkAdmin(admin.ModelAdmin):
     fields = ['code', 'name', 'start', 'end', 'description']
     list_display = ['code', 'name', 'start', 'end']
     search_fields = ['code', 'name', 'start', 'end']
+
+
+class DatatypeAdmin(admin.ModelAdmin):
+    fields = ['name']
+    list_display = ['name']
+    search_fields = ['name']
 
 
 class InstallationForm(forms.ModelForm):
@@ -39,7 +46,7 @@ class InstallationAdmin(admin.ModelAdmin):
     list_filter = ['_type']
     search_fields = ['equipment__name', 'start', 'end']
 
-    # TODO: Add configurations as Inline using a throug= table
+    # TODO: Add configurations as Inline using a through= table
     # TODO: Filtering configurations per equipment
 
 
@@ -54,9 +61,11 @@ class ChannelAdmin(admin.ModelAdmin):
         'azimuth',
         'dip',
         'start',
-        'end']
+        'end',
+        'datatypes']
     list_display = ('code', 'network', 'sample_rate', 'start', 'end')
     list_filter = ['network__code', 'code']
+    filter_horizontal = ('datatypes',)
 
 
 class StationAdmin(admin.ModelAdmin):
@@ -67,6 +76,7 @@ class StationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Network, NetworkAdmin)
+admin.site.register(Datatype, DatatypeAdmin)
 admin.site.register(Installation, InstallationAdmin)
 admin.site.register(Channel, ChannelAdmin)
 admin.site.register(Station, StationAdmin)

@@ -155,7 +155,6 @@ WARNING: MIGRATION FATALE => décallage des numéro de type de site. STATION est
   * Migration de depth de Channel à Installation
   * Migration de clock_drift et clock_drift_unit de Channel à Equipment
   * Migration de storage_format de Channel à Model (d'équipement) => uniquement valable pour les Datalogger
-  * Décallage des ID du champ datatype de Channel (le premier était 1. Il est désormais à 0).
   * CONFIGURATION: ChainConfig devient Configuration (grossomodo). Donc lié fortement à l'installation d'un équipement quelque part
 
 ### Split de StationSite en Station et Site
