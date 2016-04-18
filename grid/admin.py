@@ -32,6 +32,7 @@ class InstallationForm(forms.ModelForm):
             'parent',
             'equipment',
             'place',
+            'station',
             '_type',
             'depth',
             'start',
@@ -69,8 +70,8 @@ class ChannelAdmin(admin.ModelAdmin):
 
 
 class StationAdmin(admin.ModelAdmin):
-    fields = ['code']
-    list_display = ('code', 'state')
+    fields = ['code', 'place']
+    list_display = ('code', 'place', 'state')
     list_filter = ('state',)
     search_fields = ['code']
 

@@ -253,6 +253,8 @@ class Installation(models.Model):
         verbose_name='Connected to')
     equipment = models.ForeignKey('equipment.Equipment')
     place = models.ForeignKey('place.Place')
+    # TODO: Filter (js) that check place and available stations on it
+    station = models.ForeignKey('grid.Station')
     configurations = models.ManyToManyField(
         'equipment.Configuration',
         blank=True)
