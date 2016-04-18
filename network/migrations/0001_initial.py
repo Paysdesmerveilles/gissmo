@@ -63,7 +63,7 @@ class Migration(migrations.Migration):
                 ('elevation', models.DecimalField(blank=True, decimal_places=1, max_digits=5, null=True, verbose_name='Elevation (m)')),
                 ('configurations', models.ManyToManyField(blank=True, to='equipment.Configuration')),
                 ('equipment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='equipment.Equipment')),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='grid.Installation', verbose_name='Connected to')),
+                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='network.Installation', verbose_name='Connected to')),
                 ('place', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='place.Place')),
             ],
         ),
@@ -116,66 +116,66 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='StateAvailable',
             fields=[
-                ('state_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='grid.State')),
+                ('state_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='network.State')),
             ],
             options={
                 'abstract': False,
             },
-            bases=('grid.state',),
+            bases=('network.state',),
         ),
         migrations.CreateModel(
             name='StateBroken',
             fields=[
-                ('state_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='grid.State')),
+                ('state_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='network.State')),
             ],
             options={
                 'abstract': False,
             },
-            bases=('grid.state',),
+            bases=('network.state',),
         ),
         migrations.CreateModel(
             name='StateUsed',
             fields=[
-                ('state_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='grid.State')),
+                ('state_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='network.State')),
             ],
             options={
                 'abstract': False,
             },
-            bases=('grid.state',),
+            bases=('network.state',),
         ),
         migrations.AddField(
             model_name='station',
             name='state',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='current_state', to='grid.State'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='current_state', to='network.State'),
         ),
         migrations.AddField(
             model_name='state',
             name='polymorphic_ctype',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_grid.state_set+', to='contenttypes.ContentType'),
+            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_network.state_set+', to='contenttypes.ContentType'),
         ),
         migrations.AddField(
             model_name='state',
             name='station',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='linked_station', to='grid.Station'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='linked_station', to='network.Station'),
         ),
         migrations.AddField(
             model_name='installation',
             name='station',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='grid.Station'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='network.Station'),
         ),
         migrations.AddField(
             model_name='channel',
             name='datatypes',
-            field=models.ManyToManyField(blank=True, to='grid.Datatype'),
+            field=models.ManyToManyField(blank=True, to='network.Datatype'),
         ),
         migrations.AddField(
             model_name='channel',
             name='installation',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='grid.Installation'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='network.Installation'),
         ),
         migrations.AddField(
             model_name='channel',
             name='network',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='grid.Network'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='network.Network'),
         ),
     ]

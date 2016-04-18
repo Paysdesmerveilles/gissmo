@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from polymorphic.models import PolymorphicModel
 
-from grid import codes as channel_code
+from network import codes as channel_code
 from place import states as pstate
 from place import transitions as ptransition
 from measurement import units
@@ -254,7 +254,7 @@ class Installation(models.Model):
     equipment = models.ForeignKey('equipment.Equipment')
     place = models.ForeignKey('place.Place')
     # TODO: Filter (js) that check place and available stations on it
-    station = models.ForeignKey('grid.Station')
+    station = models.ForeignKey('network.Station')
     configurations = models.ManyToManyField(
         'equipment.Configuration',
         blank=True)
@@ -318,8 +318,8 @@ class Datatype(models.Model):
 
 class Channel(CommonXML):
     # fields
-    installation = models.ForeignKey('grid.Installation')
-    network = models.ForeignKey('grid.Network')
+    installation = models.ForeignKey('network.Installation')
+    network = models.ForeignKey('network.Network')
     code = models.IntegerField(
         choices=channel_code.CODE_CHOICES)
     location_code = models.CharField(
@@ -351,7 +351,7 @@ class Channel(CommonXML):
         blank=True,
         verbose_name='Calibration unit')
     datatypes = models.ManyToManyField(
-        'grid.Datatype',
+        'network.Datatype',
         blank=True)
 
     # GPS fields

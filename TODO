@@ -24,7 +24,7 @@ On a donc la notion de :
   * Déplacer STATE de Site vers Station (module network)
   * Contrainte sur les bâtis à vérifier (station/type/name sur Built)
 
-## Module 'grid'
+## Module 'network'
 
 Grid apport la notion de réseau maillé d'installations/stations
 
@@ -40,7 +40,7 @@ Regroupe les personnes (user) en projet liés à l'utilisation de GISSMO (G-EAU-
 
 ## Module 'intervention'
 
-Les interventions sont générées via un trigger sur les tables contenues dans le module grid puisqu'on intervient dans ce cadre de réseau d'équipements sur des stations définies.
+Les interventions sont générées via un trigger sur les tables contenues dans le module network puisqu'on intervient dans ce cadre de réseau d'équipements sur des stations définies.
 
   * penser à vérifier que les positions GPS soient aussi incluses dans l'historique
   * le champ "confirmed" est un booléen qui définit si l'intervention a été validée par un utilisateur ou non (pour vérifier la présence de tout le monde sur l'intervention).

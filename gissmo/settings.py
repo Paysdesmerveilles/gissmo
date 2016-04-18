@@ -50,7 +50,7 @@ INSTALLED_APPS = (
     'place',
     'project',
     'equipment',
-    'grid',
+    'network',
     'intervention',
     'debug_toolbar',
     'django_extensions',
