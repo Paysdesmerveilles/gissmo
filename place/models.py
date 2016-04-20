@@ -57,6 +57,7 @@ class Place(models.Model):
         null=True,
         blank=True,
         verbose_name="Creation date")
+    note = models.TextField(null=True, blank=True)
 
     # address
     address_street = models.CharField(

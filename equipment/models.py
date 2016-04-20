@@ -50,6 +50,7 @@ class Equipment(models.Model):
         max_length=50,
         null=True,
         blank=True)
+    contact = models.ForeignKey('auth.User', blank=True, null=True)
     purchase_date = models.DateField(
         null=True,
         blank=True,
@@ -69,6 +70,7 @@ class Equipment(models.Model):
         blank=True,
         verbose_name='Storage format')
     documents = models.ManyToManyField('document.Document', blank=True)
+    note = models.TextField(null=True, blank=True)
 
     # TODO: add link to current state
     # TODO: add link to current place? => Installation of an equipment
