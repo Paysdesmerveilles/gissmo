@@ -30,6 +30,7 @@ Grid apport la notion de réseau maillé d'installations/stations
 
   * 2 stations peuvent avoir le même code : si on installe une station à côté d'une autre et qu'elles partagent un réseau identique
   * 1 objet Channel ne devrait être lié qu'à une Installation (d'équipement) de type Capteur (order = SENSOR) afin de retrouver la chaîne correcte d'équipement
+  * Filtrer les "place" d'une Station pour ne montrer que les "Built"
 
 ## Module 'project'
 
@@ -113,6 +114,7 @@ Trouver quelque chose comme Audittrails (django) qui ajoutait un "history =" dan
 ## Divers
 
   * ajouter les champs "note" (TextField) pour chacun des objets présentés à l'interface GISSMO
+  * Fonctionnalité à réimplémenter : change d'un modèle d'equipement entraîne des modifications au niveau des canaux. Permettre d'afficher ces différences de configuration entre 2 installations (comparer 2 objets Configuration, selon moi)
 
 ## Trigger
 
