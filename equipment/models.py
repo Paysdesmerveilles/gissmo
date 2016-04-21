@@ -46,6 +46,7 @@ class Equipment(models.Model):
         verbose_name="Serial number")
     model = models.ForeignKey('equipment.Model')
     owner = models.ForeignKey('affiliation.Organism')
+    place = models.ForeignKey('place.Place', related_name='current_place')
     vendor = models.CharField(
         max_length=50,
         null=True,

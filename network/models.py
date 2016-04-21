@@ -21,7 +21,7 @@ class State(PolymorphicModel):
     end = models.DateTimeField(
         blank=True,
         null=True)
-    station = models.ForeignKey('Station', related_name='linked_station')
+    station = models.ForeignKey('network.Station', related_name='linked_station')
 
     def allowed_transitions(self):
         assert 0, "Not implemented"
@@ -170,8 +170,8 @@ class Station(CommonXML):
     description = models.TextField(
         null=True,
         blank=True)
-    state = models.ForeignKey('State', null=True, related_name='current_state')
-    place = models.ForeignKey('place.Place')  # TODO: should be only builts
+    state = models.ForeignKey('network.State', null=True, related_name='current_state')
+    place = models.ForeignKey('place.Place')
 
     # folks
     operator = models.ForeignKey('affiliation.Organism')
