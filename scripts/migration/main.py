@@ -3,6 +3,7 @@
 
 # WARNING: Need to use python manage.py migrate first! To deploy new 2.0 version
 
+import psycopg2
 import os
 
 HOST = os.getenv('POSTGRES_HOST', '127.0.0.1')
@@ -10,8 +11,6 @@ DB = os.getenv('POSTGRES_DB', 'postgres')
 USER = os.getenv('POSTGRES_USER', 'postgres')
 PWD = os.getenv('POSTGRES_PASS', 'postgres')
 PORT = os.getenv('POSTGRES_PORT', '5432')
-
-import psycopg2
 
 
 def main():
@@ -69,6 +68,17 @@ def main():
         # - gissmo_forbiddenequipmentmodel -> equipment_forbiddenequipmentmodel
         # - gissmo_intervdoc -> document_document
         # - gissmo_intervention -> intervention_intervention
+        # - gissmo_intervorganism -> intervention_operator
+        # - gissmo_intervuser -> intervention_protagonist
+        # - gissmo_ipaddress -> equipment_ipaddress
+        # - gissmo_network -> network_network
+        # - gissmo_organism -> affiliation_organism
+        # - gissmo_organism_users -> affiliation_organism_users
+        # - gissmo_project -> project_project
+        # - gissmo_project_sites -> project_project_places
+        # - gissmo_services -> equipment_service
+        # - gissmo_stationdoc -> document_document
+        # - gissmo_stationdoctype -> document_type
 
         # SPECIFIC CASES
         # TODO: add specific cases
@@ -76,6 +86,9 @@ def main():
         # - gissmo_chain -> network_installation (with parents)
         # - gissmo_stationsite -> place_place
         # - gissmo_channel -> network_channel + equipment + place
+        # - gissmo_intervequip -> intervention_equipmenthistory
+        # - gissmo_intervstation -> intervention_stationhistory + place_place
+        # - gissmo_parameterequip + parametervalue -> equipment_parameter + equipment_value
 
         # CLEAN DATABASE
         # TODO: delete all old gissmo_tablename tables
