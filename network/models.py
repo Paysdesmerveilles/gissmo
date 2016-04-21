@@ -9,19 +9,21 @@ from django.utils import timezone
 from polymorphic.models import PolymorphicModel
 
 from network import codes as channel_code
-from place import states as pstate
-from place import transitions as ptransition
+from network import states as nstate
+from network import transitions as ntransition
 from measurement import units
 
 
 class State(PolymorphicModel):
     code = models.IntegerField(
-        choices=pstate.STATE_CHOICES)
+        choices=nstate.STATE_CHOICES)
     start = models.DateTimeField(auto_now=True)
     end = models.DateTimeField(
         blank=True,
         null=True)
-    station = models.ForeignKey('network.Station', related_name='linked_station')
+    station = models.ForeignKey(
+        'network.Station',
+        related_name='linked_station')
 
     def allowed_transitions(self):
         assert 0, "Not implemented"
@@ -30,21 +32,21 @@ class State(PolymorphicModel):
         if transition not in self.allowed_transitions():
             raise ValidationError(
                 '%s is not allowed for the given state (%s).' % (
-                    ptransition.TRANSITION_CHOICES[transition],
+                    ntransition.TRANSITION_CHOICES[transition],
                     self.code))
 
     def process(self, transition):
         assert 0, "Not implemented"
 
     def __str__(self):
-        return pstate.STATE_CHOICES[self.code][1]
+        return nstate.STATE_CHOICES[self.code][1]
 
 
 class StateAvailable(State):
     def allowed_transitions(self):
         return [
-            ptransition.TEST_FAIL,
-            ptransition.TEST_SUCCESS,
+            ntransition.TEST_FAIL,
+            ntransition.TEST_SUCCESS,
         ]
 
     def doTest(self, isConclusive=False):
@@ -65,20 +67,20 @@ class StateAvailable(State):
 
     def process(self, transition):
         self.check_transition_allowed(transition)
-        if transition == ptransition.TEST_FAIL:
+        if transition == ntransition.TEST_FAIL:
             return self.doTest(False)
-        if transition == ptransition.TEST_SUCCESS:
+        if transition == ntransition.TEST_SUCCESS:
             return self.doTest(True)
 
 
 @receiver(pre_save, sender=StateAvailable)
 def get_available_code(sender, instance, **kwargs):
-    instance.code = pstate.AVAILABLE
+    instance.code = nstate.AVAILABLE
 
 
 class StateBroken(State):
     def allowed_transitions(self):
-        return [ptransition.FIX]
+        return [ntransition.FIX]
 
     def doFix(self):
         print('Fixing…')
@@ -92,18 +94,18 @@ class StateBroken(State):
 
     def process(self, transition):
         self.check_transition_allowed(transition)
-        if transition == ptransition.FIX:
+        if transition == ntransition.FIX:
             return self.doFix()
 
 
 @receiver(pre_save, sender=StateBroken)
 def get_broken_code(sender, instance, **kwargs):
-    instance.code = pstate.BROKEN
+    instance.code = nstate.BROKEN
 
 
 class StateUsed(State):
     def allowed_transitions(self):
-        return [ptransition.FAILURE]
+        return [ntransition.FAILURE]
 
     def observeFailure(self):
         print('Failure detected!')
@@ -117,13 +119,13 @@ class StateUsed(State):
 
     def process(self, transition):
         self.check_transition_allowed(transition)
-        if transition == ptransition.FAILURE:
+        if transition == ntransition.FAILURE:
             return self.observeFailure()
 
 
 @receiver(pre_save, sender=StateUsed)
 def get_used_code(sender, instance, **kwargs):
-    instance.code = pstate.USED
+    instance.code = nstate.USED
 
 
 class CommonXML(models.Model):
