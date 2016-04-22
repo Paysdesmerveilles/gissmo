@@ -1,6 +1,58 @@
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
 
 from equipment import protocols as Protocol
+from equipment import states as estate
+
+
+class State(models.Model):
+    code = models.IntegerField(
+        choices=estate.STATE_CHOICES,
+        default=estate.UNKNOWN)
+    start = models.DateTimeField(auto_now=True)
+    end = models.DateTimeField(
+        blank=True,
+        null=True)
+    equipment = models.ForeignKey(
+        'equipment.Equipment',
+        related_name='linked_equipment')
+
+    def allowed_states(self):
+        res = []
+        if self.code in estate.NEXT_STATES:
+            res = estate.NEXT_STATES[self.code]
+        return res
+
+    def check_allowed_states(self, state):
+        if state not in self.allowed_states():
+            raise ValidationError(
+                '%s is not allowed for the given state (%s).' % (
+                    estate.STATE_CHOICES[state][1],
+                    estate.STATE_CHOICES[self.code][1]))
+
+    def process(self, state):
+        self.check_allowed_states(state)
+
+        equipment = Equipment.objects.get(pk=self.equipment_id)
+        now = timezone.now()
+
+        s = State.objects.create(
+            code=state,
+            equipment=self.equipment,
+            start=now)
+        equipment.state = s
+        equipment.save()
+        self.end = now
+        self.save()
+        # TODO:
+        # - create new one with right link of previous one
+        # - add a link to the previous state (to get them linked)
+
+    def __str__(self):
+        return '%s' % estate.STATE_CHOICES[self.code][1]
 
 
 class Type(models.Model):
@@ -72,13 +124,24 @@ class Equipment(models.Model):
         verbose_name='Storage format')
     documents = models.ManyToManyField('document.Document', blank=True)
     note = models.TextField(null=True, blank=True)
-
-    # TODO: add link to current state
-    # TODO: add link to current place? => Installation of an equipment
-    # should be enough. This gives STATE and PLACE.
+    state = models.ForeignKey(
+        'equipment.State',
+        related_name='current_state',
+        null=True)
 
     def __str__(self):
         return '%s' % self.name
+
+
+@receiver(post_save, sender=Equipment)
+def create_state(sender, instance, created, **kwargs):
+    """
+    At first Equipment creation, make a new state with default 'unknown' value
+    """
+    if created is True:
+        s = State.objects.create(equipment=instance)
+        instance.state = s
+        instance.save()
 
 
 class ForbiddenEquipmentModel(models.Model):

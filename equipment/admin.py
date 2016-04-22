@@ -60,8 +60,9 @@ class ConfigurationInline(admin.TabularInline):
 
 class EquipmentAdmin(admin.ModelAdmin):
     fields = ['name', 'model', 'owner']
-    list_display = ('model', 'name', 'owner')
+    list_display = ('model', 'name', 'owner', 'place', 'state')
     search_fields = ['name', 'model', 'owner']
+    list_filter = ['state']
     # TODO: Disallow to use a model that have no parent
 
     inlines = [IPAddressInline, ServiceInline, ConfigurationInline]
