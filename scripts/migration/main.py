@@ -10,11 +10,11 @@ HOST = os.getenv('POSTGRES_HOST', '127.0.0.1')
 DB = os.getenv('POSTGRES_DB', 'postgres')
 USER = os.getenv('POSTGRES_USER', 'postgres')
 PWD = os.getenv('POSTGRES_PASS', 'postgres')
-PORT = os.getenv('POSTGRES_PORT', '5432')
+PORT = os.getenv('DB_PORT_5432_TCP_PORT', '5432')
 
 
 def main():
-    conn_string = "host='%s' dbname='%s' user='%s' password='%s' port='%s'" % (
+    conn_string = "host='%s' dbname='%s' user='%s' password='%s' port=%s" % (
         HOST,
         DB,
         USER,
@@ -54,9 +54,25 @@ def main():
 
         # SIMPLE MIGRATION
         # TODO: add tables that are just rename or with simple migration
-        # - gissmo_equipment -> equipment_equipment
-        # - gissmo_equipsupertype -> equipment_type
+        # - gissmo_equipment -> equipment_equipment + state with intervention
+        # - gissmo_equipsupertype -> equipment_type: SAME ID
+        try:
+            cur = conn.cursor()
+            cur.execute("""INSERT INTO equipment_type (id, name, rank) SELECT NEXTVAL('equipment_type_id_seq'), equip_supertype_name, presentation_rank FROM gissmo_equipsupertype;""")
+            conn.commit()
+            cur.close()
+        except Exception as e:
+            conn.rollback()
+            print("gissmo_equipsupertype -> equipment_type: %s" % e)
         # - gissmo_equiptype -> equipment_type (with parent)
+        try:
+            cur = conn.cursor()
+            cur.execute("""INSERT INTO equipment_type (id, name, rank, parent_id) SELECT NEXTVAL('equipment_type_id_seq'), equip_type_name, presentation_rank, equip_supertype_id FROM gissmo_equiptype;""")
+            conn.commit()
+            cur.close()
+        except Exception as e:
+            conn.rollback()
+            print("gissmo_equiptype -> equipment_type: %s" % e)
         # - gissmo_equipmodel -> equipment_model
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_datatype -> network_datatype
@@ -97,8 +113,8 @@ def main():
         # END
         conn.close()
         print("Connection closed.")
-    except:
-        print("Unable to connect to the database")
+    except Exception as e:
+        print("Unable to connect to the database: %s" % e)
 
 if __name__ == "__main__":
     main()
