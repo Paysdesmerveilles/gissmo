@@ -3,8 +3,10 @@
 
 # WARNING: Need to use python manage.py migrate first! To deploy new 2.0 version
 
-import psycopg2
 import os
+
+from peewee import *  # NOQA
+from playhouse.pool import PooledPostgresqlExtDatabase
 
 HOST = os.getenv('POSTGRES_HOST', '127.0.0.1')
 DB = os.getenv('POSTGRES_DB', 'postgres')
@@ -14,15 +16,19 @@ PORT = os.getenv('DB_PORT_5432_TCP_PORT', '5432')
 
 
 def main():
-    conn_string = "host='%s' dbname='%s' user='%s' password='%s' port=%s" % (
-        HOST,
+    db = PooledPostgresqlExtDatabase(
         DB,
-        USER,
-        PWD,
-        PORT)
+        max_connections=32,
+        stale_timeout=300,
+        user=USER,
+        password=PWD,
+        host=HOST,
+        port=PORT,
+        register_hstore=False)
+
     try:
         # START
-        conn = psycopg2.connect(conn_string)
+        db.connect()
         print("Connected…")
 
         # CLEAN USELESS TABLES
@@ -43,10 +49,7 @@ def main():
             paramequipmodel,
             station_action]
         for sql in useless_tables_sql:
-            cursor = conn.cursor()
-            cursor.execute(sql)
-            conn.commit()
-            cursor.close()
+            db.execute_sql(sql)
 
         # CHECKS
         # TODO: add some checks on database before
@@ -56,23 +59,60 @@ def main():
         # TODO: add tables that are just rename or with simple migration
         # - gissmo_equipment -> equipment_equipment + state with intervention
         # - gissmo_equipsupertype -> equipment_type: SAME ID
-        try:
-            cur = conn.cursor()
-            cur.execute("""INSERT INTO equipment_type (id, name, rank) SELECT NEXTVAL('equipment_type_id_seq'), equip_supertype_name, presentation_rank FROM gissmo_equipsupertype;""")
-            conn.commit()
-            cur.close()
-        except Exception as e:
-            conn.rollback()
-            print("gissmo_equipsupertype -> equipment_type: %s" % e)
-        # - gissmo_equiptype -> equipment_type (with parent)
-        try:
-            cur = conn.cursor()
-            cur.execute("""INSERT INTO equipment_type (id, name, rank, parent_id) SELECT NEXTVAL('equipment_type_id_seq'), equip_type_name, presentation_rank, equip_supertype_id FROM gissmo_equiptype;""")
-            conn.commit()
-            cur.close()
-        except Exception as e:
-            conn.rollback()
-            print("gissmo_equiptype -> equipment_type: %s" % e)
+        class GissmoSuperType(Model):
+            id = IntegerField(db_column='id')
+            name = CharField(db_column='equip_supertype_name')
+            rank = IntegerField(db_column='presentation_rank')
+
+            class Meta:
+                database = db
+                db_table = 'gissmo_equipsupertype'
+
+        class Type(Model):
+            name = CharField()
+            rank = IntegerField()
+            parent = ForeignKeyField('self', db_column='parent_id')
+
+            class Meta:
+                database = db
+                db_table = 'equipment_type'
+
+        link_equipment_supertype = {}
+        for stype in GissmoSuperType.select().order_by(GissmoSuperType.id):
+            s = Type.get_or_create(
+                name=stype.name,
+                rank=stype.rank)
+            if isinstance(s, tuple):
+                s = s[0]
+            link_equipment_supertype[stype.id] = s.id
+
+        # - gissmo_equiptype -> equipment_type (with parent): NEW IDS!!
+        class GissmoType(Model):
+            id = IntegerField(db_column='id')
+            name = CharField(db_column='equip_type_name')
+            rank = IntegerField(db_column='presentation_rank')
+            supertype = ForeignKeyField(
+                GissmoSuperType,
+                db_column='equip_supertype_id')
+
+            class Meta:
+                database = db
+                db_table = 'gissmo_equiptype'
+
+        link_equipment_type = {}
+        for _type in GissmoType.select().order_by(GissmoType.id):
+            print("Type: %s (ID: %s)" % (_type.name, _type.id))
+            t = Type.get_or_create(
+                name=_type.name,
+                rank=_type.rank)
+            if isinstance(t, tuple):
+                t = t[0]
+            new = Type.get(Type.id == t)
+            new.parent = _type.supertype
+            new.save()
+            link_equipment_type[_type.id] = new.id
+
+        print("CORRELATION TYPE: %s" % link_equipment_type)
         # - gissmo_equipmodel -> equipment_model
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_datatype -> network_datatype
@@ -111,7 +151,7 @@ def main():
         # - gissmo_channelcode
 
         # END
-        conn.close()
+        db.close()
         print("Connection closed.")
     except Exception as e:
         print("Unable to connect to the database: %s" % e)
