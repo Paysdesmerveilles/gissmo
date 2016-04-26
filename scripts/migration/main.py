@@ -57,7 +57,6 @@ def main():
 
         # SIMPLE MIGRATION
         # TODO: add tables that are just rename or with simple migration
-        # - gissmo_equipment -> equipment_equipment + state with intervention
         # - gissmo_equipsupertype -> equipment_type: SAME ID
         class GissmoSuperType(Model):
             id = IntegerField(db_column='id')
@@ -101,7 +100,7 @@ def main():
 
         link_equipment_type = {}
         for _type in GissmoType.select().order_by(GissmoType.id):
-            print("Type: %s (ID: %s)" % (_type.name, _type.id))
+            print("Equipment Type: %s (ID: %s)" % (_type.name, _type.id))
             t = Type.get_or_create(
                 name=_type.name,
                 rank=_type.rank)
@@ -113,7 +112,53 @@ def main():
             link_equipment_type[_type.id] = new.id
 
         print("CORRELATION TYPE: %s" % link_equipment_type)
+
         # - gissmo_equipmodel -> equipment_model
+        class GissmoModel(Model):
+            """gissmo_equipmodel relation"""
+            id = IntegerField(db_column='id')
+            _type = ForeignKeyField(
+                GissmoType,
+                db_column='equip_type_id')
+            name = CharField(db_column='equip_model_name')
+            manufacturer = CharField()
+            is_network_model = BooleanField(default=False)
+
+            class Meta:
+                database = db
+                db_table = 'gissmo_equipmodel'
+
+        class EquipmentModel(Model):
+            name = CharField()
+            rank = IntegerField()
+            manufacturer = CharField()
+            is_network_model = BooleanField()
+            _type = ForeignKeyField(
+                Type,
+                db_column='_type_id')
+
+            class Meta:
+                database = db
+                db_table = 'equipment_model'
+
+        link_equipment_model = {}
+        for e in GissmoModel.select().order_by(GissmoModel.id):
+            print('Equipment Model: %s (ID: %s)' % (e.name, e.id))
+            _type_id = link_equipment_type[e._type.id]
+            t = Type.get(Type.id == _type_id)
+            equipment = EquipmentModel.get_or_create(
+                name=e.name,
+                rank=0,
+                manufacturer=e.manufacturer,
+                is_network_model=e.is_network_model,
+                _type=t)
+            if isinstance(equipment, tuple):
+                equipment = equipment[0]
+            link_equipment_model[e.id] = equipment.id
+
+        print("CORRELATION MODEL: %s" % link_equipment_model)
+
+        # - gissmo_equipment -> equipment_equipment + state with intervention
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_datatype -> network_datatype
         # - gissmo_channel_data_type -> network_channel_datatypes
