@@ -32,13 +32,14 @@ def main():
         print("Connected…")
 
         # CLEAN USELESS TABLES
-        auth_message = "DROP TABLE IF EXISTS auth_message;"
-        django_site = "DROP TABLE IF EXISTS django_site;"
-        chainconfig_bck = "DROP TABLE IF EXISTS gissmo_chainconfig_bck;"
-        equip_action = "DROP TABLE IF EXISTS gissmo_equipaction;"
-        equip_state = "DROP TABLE IF EXISTS gissmo_equipstate;"
-        paramequipmodel = "DROP TABLE IF EXISTS gissmo_paramequipmodel;"
-        station_action = "DROP TABLE IF EXISTS gissmo_stationaction;"
+        auth_message = "auth_message;"
+        django_site = "django_site;"
+        chainconfig_bck = "gissmo_chainconfig_bck;"
+        equip_action = "gissmo_equipaction;"
+        equip_state = "gissmo_equipstate;"
+        paramequipmodel = "gissmo_paramequipmodel;"
+        station_action = "gissmo_stationaction;"
+        changemodel = "gissmo_changemodelmodification;"
 
         useless_tables_sql = [
             auth_message,
@@ -47,9 +48,10 @@ def main():
             equip_action,
             equip_state,
             paramequipmodel,
-            station_action]
-        for sql in useless_tables_sql:
-            db.execute_sql(sql)
+            station_action,
+            changemodel]
+        for tablename in useless_tables_sql:
+            db.execute_sql("DROP TABLE IF EXISTS %s;" % (tablename,))
 
         # CHECKS
         # TODO: add some checks on database before
