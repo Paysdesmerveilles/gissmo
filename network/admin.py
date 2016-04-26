@@ -32,7 +32,6 @@ class InstallationForm(forms.ModelForm):
             'parent',
             'equipment',
             'place',
-            'station',
             '_type',
             'depth',
             'start',
@@ -57,6 +56,7 @@ class ChannelAdmin(admin.ModelAdmin):
     fields = [
         'network',
         'installation',
+        'station',
         'code',
         'sample_rate',
         'azimuth',

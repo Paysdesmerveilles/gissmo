@@ -255,8 +255,6 @@ class Installation(models.Model):
         verbose_name='Connected to')
     equipment = models.ForeignKey('equipment.Equipment')
     place = models.ForeignKey('place.Place')
-    # TODO: Filter (js) that check place and available stations on it
-    station = models.ForeignKey('network.Station')
     configurations = models.ManyToManyField(
         'equipment.Configuration',
         blank=True)
@@ -321,6 +319,8 @@ class Datatype(models.Model):
 class Channel(CommonXML):
     # fields
     installation = models.ForeignKey('network.Installation')
+    # TODO: JS Filter on stations regarding Installation (places)
+    station = models.ForeignKey('network.Station')
     network = models.ForeignKey('network.Network')
     code = models.IntegerField(
         choices=channel_code.CODE_CHOICES)
