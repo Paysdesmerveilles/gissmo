@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             name='Place',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50, unique=True)),
+                ('name', models.CharField(max_length=50)),
                 ('_type', models.IntegerField(choices=[(0, 'Unknown'), (1, 'Agency'), (2, 'Theoritical site'), (3, 'Measuring site'), (4, 'Customer service place'), (5, 'Tunnel'), (6, 'Drift'), (7, 'Drain'), (8, 'Cave'), (9, 'Underground'), (10, 'Cabinet'), (11, 'Chamber'), (12, 'Prefabricated'), (13, 'Premises'), (14, 'Fort'), (15, 'Apron'), (16, 'Slab'), (17, 'Outside'), (18, 'Well'), (19, 'Drilling')], default=0, verbose_name='Type')),
                 ('description', models.TextField(blank=True, null=True)),
                 ('creation_date', models.DateField(blank=True, null=True, verbose_name='Creation date')),

@@ -72,7 +72,7 @@ class Place(models.Model):
         null=True,
         blank=True,
         verbose_name="Referent place")
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     _type = models.IntegerField(
         choices=PLACE_TYPE_CHOICES,
         default=UNKNOWN,
