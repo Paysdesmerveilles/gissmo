@@ -3,9 +3,14 @@ import os
 from peewee import (
     BooleanField,
     CharField,
+    DateField,
+    DateTimeField,
+    DecimalField,
+    DoubleField,
     ForeignKeyField,
     IntegerField,
     Model,
+    TextField,
 )
 from playhouse.pool import PooledPostgresqlExtDatabase
 
@@ -121,3 +126,115 @@ class Organism(Model):
     class Meta:
         database = db
         db_table = 'affiliation_organism'
+
+
+class GissmoEquipment(Model):
+    id = IntegerField(db_column='id')
+    model = ForeignKeyField(
+        GissmoModel,
+        db_column='equip_model_id')
+    name = CharField(db_column='serial_number')
+    owner = ForeignKeyField(
+        GissmoOrganism,
+        db_column='owner_id')
+    vendor = CharField()
+    contact = TextField()
+    note = TextField()
+    purchase_date = DateField()
+    state = IntegerField(db_column='last_state')
+    station = IntegerField(db_column='last_station_id')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_equipment'
+
+
+class GissmoGroundType(Model):
+    id = IntegerField(db_column='id')
+    name = CharField()
+    description = CharField()
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_groundtype'
+
+
+class GroundType(Model):
+    name = CharField()
+    description = CharField()
+
+    class Meta:
+        database = db
+        db_table = 'place_groundtype'
+
+
+class Place(Model):
+    name = CharField()
+    description = TextField()
+    creation_date = DateField()
+    note = TextField()
+    address_street = CharField()
+    address_zipcode = CharField()
+    address_city = CharField()
+    address_region = CharField()
+    address_county = CharField()
+    address_country = CharField()
+    geology = CharField()
+    contact = TextField()
+    latitude = DecimalField(max_digits=9, decimal_places=6)
+    longitude = DecimalField(max_digits=9, decimal_places=6)
+    elevation = DecimalField(max_digits=5, decimal_places=1)
+    ground_type = ForeignKeyField(GroundType, db_column='ground_type_id')
+    operator = ForeignKeyField(Organism, db_column='operator_id')
+    parent = ForeignKeyField('self', db_column='parent_id')
+
+    class Meta:
+        database = db
+        db_table = 'place_place'
+
+
+class AuthUser(Model):
+    id = IntegerField(db_column='id')
+
+    class Meta:
+        database = db
+        db_table = 'auth_user'
+
+
+class State(Model):
+    code = IntegerField()
+    start = DateTimeField()
+    end = DateTimeField()
+    # Foreign Key to Equipment is not supported by Peewee:
+    # - Equipment needs state
+    # - State needs Equipment
+    equipment = IntegerField(db_column='equipment_id')
+
+    class Meta:
+        database = db
+        db_table = 'equipment_state'
+
+
+class Equipment(Model):
+    model = ForeignKeyField(
+        EquipmentModel,
+        db_column='model_id')
+    name = CharField()
+    vendor = CharField()
+    purchase_date = DateField()
+    clock_drift = DoubleField()
+    clock_drift_unit = CharField()
+    storage_format = CharField()
+    note = TextField()
+    contact = ForeignKeyField(
+        AuthUser,
+        db_column='contact_id')
+    owner = ForeignKeyField(
+        Organism,
+        db_column='owner_id')
+    place = ForeignKeyField(
+        Place,
+        db_column='place_id')
+    state = ForeignKeyField(
+        State,
+        db_column='state_id')
