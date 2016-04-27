@@ -6,10 +6,12 @@
 from models import (
     db,
     EquipmentModel,
+    GissmoGroundType,
     GissmoModel,
     GissmoOrganism,
     GissmoSuperType,
     GissmoType,
+    GroundType,
     Organism,
     Type,
 )
@@ -106,6 +108,19 @@ def fetch_or_migrate_organism():
     return res
 
 
+def fetch_or_migrate_groundtype():
+    res = {}
+    for ground in GissmoGroundType.select().order_by(GissmoGroundType.id):
+        print("Ground type: %s (ID: %s)" % (ground.name, ground.id))
+        g = GroundType.get_or_create(
+            name=ground.name,
+            description=ground.description)
+        if isinstance(g, tuple):
+            g = g[0]
+        res[ground.id] = g.id
+    return res
+
+
 def main():
     try:
         # START
@@ -121,6 +136,7 @@ def main():
 
         # SIMPLE MIGRATION
         # TODO: add tables that are just rename or with simple migration
+
         # - gissmo_equipsupertype -> equipment_type: SAME ID
         link_equipment_supertype = fetch_or_migrate_supertype()
         print("CORRELATION SUPERTYPE: %s" % link_equipment_supertype)
@@ -136,6 +152,10 @@ def main():
         # - gissmo_organism -> affiliation_organism
         link_organism = fetch_or_migrate_organism()
         print("CORRELATION ORGANISM: %s" % link_organism)
+
+        # - gissmo_groundtype -> place_groundtype
+        link_ground_type = fetch_or_migrate_groundtype()
+        print("CORRELATION GROUND TYPE: %s" % link_ground_type)
 
         # - gissmo_equipment -> equipment_equipment + state with intervention
         # - gissmo_chainconfig -> equipment_configuration
@@ -168,8 +188,8 @@ def main():
         # - gissmo_intervequip -> intervention_equipmenthistory
         # - gissmo_intervstation -> intervention_stationhistory + place_place
         # - gissmo_parameterequip + parametervalue -> equipment_parameter + equipment_value
-        # - last equipment state
-        # - last station state
+        # - last equipment state (last_state on gissmo_equipment)
+        # - last equipment station (last_station_id on gissmo_equipment)
 
         # CLEAN DATABASE
         # TODO: delete all old gissmo_tablename tables
