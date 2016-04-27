@@ -9,10 +9,12 @@ from models import (
     GissmoGroundType,
     GissmoModel,
     GissmoOrganism,
+    GissmoSite,
     GissmoSuperType,
     GissmoType,
     GroundType,
     Organism,
+    Place,
     Type,
 )
 
@@ -121,6 +123,74 @@ def fetch_or_migrate_groundtype():
     return res
 
 
+def fetch_or_migrate_site(ground_types, organisms):
+    # Prepare some values
+    res = {}
+
+    types = {
+        1: 3,  # STATION => MEASURE
+        2: 1,  # OBSERVATOIRE => AGENCY
+        3: 4,  # SAV => CUSTOMER SERVICE
+        4: 0,  # NEANT => UNKNOWN
+        5: 0,  # AUTRE => UNKNOWN
+        6: 3,  # SITE_TEST => MEASURE
+        7: 2,  # SITE_THEORIQUE => THEORITICAL
+    }
+
+    to_link_to_parent = []
+    for site in GissmoSite.select().order_by(GissmoSite.id):
+        print("Site: [%s] %s (ID: %s)" % (site.code, site.name, site.id))
+        new_organism_id = organisms[site.operator.id]
+        if isinstance(new_organism_id, tuple):
+            new_organism_id = new_organism_id[0]
+        o = Organism.get(Organism.id == new_organism_id)
+        name = site.name or site.code
+        # TODO: Only create site if latitude/longitude/elevation is unique
+        # If another exists, make only a station
+        p = Place.get_or_create(
+            name=name,
+            _type=types[site._type],
+            description=site.description,
+            creation_date=site.date,
+            note=site.note,
+            address_street=site.address,
+            address_zipcode=site.zip_code,
+            address_city=site.town,
+            address_region=site.region,
+            address_county=site.county,
+            address_country=site.country,
+            geology=site.geology,
+            contact=site.contact,
+            # TODO: check if this place is the same as another one!
+            latitude=site.latitude,
+            longitude=site.longitude,
+            elevation=site.elevation,
+            operator=o.id or None)
+        if isinstance(p, tuple):
+            p = p[0]
+        # Add ground type
+        if site.ground_type:
+            new_ground_type_id = ground_types[site.ground_type]
+            if new_ground_type_id:
+                g = GroundType.get(GroundType.id == new_ground_type_id)
+                new = Place.get(Place.id == p.id)
+                new.ground_type = g
+                new.save()
+        # Add parent
+        if site.parent:
+            to_link_to_parent.append(site.id)
+        res[site.id] = p.id
+
+    # Create link between child and parents
+    for site_id in to_link_to_parent:
+        site = GissmoSite.get(GissmoSite.id == site_id)
+        new = Place.get(Place.id == res[site_id])
+        parent = Place.get(Place.id == res[site.parent])
+        new.parent = parent
+        new.save()
+    return res
+
+
 def main():
     try:
         # START
@@ -157,6 +227,10 @@ def main():
         link_ground_type = fetch_or_migrate_groundtype()
         print("CORRELATION GROUND TYPE: %s" % link_ground_type)
 
+        # - gissmo_stationsite -> place_place
+        link_place = fetch_or_migrate_site(link_ground_type, link_organism)
+        print("CORRELATION PLACE: %s" % link_place)
+
         # - gissmo_equipment -> equipment_equipment + state with intervention
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_datatype -> network_datatype
@@ -183,7 +257,6 @@ def main():
         # TODO: add specific cases
         # - gissmo_built -> place_place (with parent to station and site)
         # - gissmo_chain -> network_installation (with parents)
-        # - gissmo_stationsite -> place_place
         # - gissmo_channel -> network_channel + equipment + place
         # - gissmo_intervequip -> intervention_equipmenthistory
         # - gissmo_intervstation -> intervention_stationhistory + place_place

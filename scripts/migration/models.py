@@ -168,7 +168,67 @@ class GroundType(Model):
         db_table = 'place_groundtype'
 
 
+class GissmoSite(Model):
+    """gissmo_stationsite relation"""
+    id = IntegerField(db_column='id')
+    _type = IntegerField(db_column='site_type')
+    code = CharField(db_column='station_code')
+    name = CharField(db_column='site_name')
+    latitude = DecimalField(max_digits=8, decimal_places=6)
+    longitude = DecimalField(max_digits=9, decimal_places=6)
+    elevation = DecimalField(max_digits=5, decimal_places=1)
+    operator = ForeignKeyField(Organism, db_column='operator_id')
+    address = CharField()
+    town = CharField()
+    county = CharField()
+    region = CharField()
+    country = CharField()
+    zip_code = CharField()
+    contact = TextField()
+    note = TextField()
+    private_link = CharField()
+    parent = IntegerField(db_column='station_parent_id')
+    geology = CharField()
+    status = IntegerField(db_column='restricted_status')  # XML status
+    alternate_code = CharField()  # XML alternate code
+    historical_code = CharField()  # XML historical code
+    description = TextField(db_column='site_description')
+    # WARNING: We omit all _unit, _pluserror, _minuserror and _datum fields
+    date = DateField(db_column='creation_date')
+    state = IntegerField(db_column='last_state')
+    ground_type = IntegerField(db_column='ground_type_id')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_stationsite'
+
+
+place_choices = (
+    (0, 'Unknown'),
+    (1, 'Agency'),
+    (2, 'Theoritical site'),
+    (3, 'Measuring site'),
+    (4, 'Customer service place'),
+    (5, 'Tunnel'),
+    (6, 'Drift'),
+    (7, 'Drain'),
+    (8, 'Cave'),
+    (9, 'Underground'),
+    (10, 'Cabinet'),
+    (11, 'Chamber'),
+    (12, 'Prefabricated'),
+    (13, 'Premises'),
+    (14, 'Fort'),
+    (15, 'Apron'),
+    (16, 'Slab'),
+    (17, 'Outside'),
+    (18, 'Well'),
+    (19, 'Drilling'),
+)
+
+
 class Place(Model):
+    _type = IntegerField(choices=place_choices)
     name = CharField()
     description = TextField()
     creation_date = DateField()
@@ -213,6 +273,27 @@ class State(Model):
     class Meta:
         database = db
         db_table = 'equipment_state'
+
+
+class Station(Model):
+    code = CharField()
+    description = TextField()
+    # xml_restricted_status is never filled in
+    # same thing for xml_historical_code
+    xml_alternate_code = CharField()
+    operator = ForeignKeyField(
+        Organism,
+        db_column='operator_id')
+    place = ForeignKeyField(
+        Place,
+        db_column='place_id')
+    state = ForeignKeyField(
+        State,
+        db_column='state_id')
+
+    class Meta:
+        database = db
+        db_table = 'network_station'
 
 
 class Equipment(Model):
