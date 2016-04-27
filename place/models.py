@@ -22,21 +22,48 @@ class Place(models.Model):
       * searching for a new area to install a station
     """
     # Place types
-    AGENCY = 0
-    CUSTOMER_SERVICE = 1
-    UNDEFINED = 2
-    OTHER = 3
-    TEST = 4
-    THEORITICAL = 5
-    BUILT = 6
+    UNKNOWN = 0
+    AGENCY = 1
+    THEORITICAL = 2
+    MEASURE = 3
+    CUSTOMER_SERVICE = 4
+    TUNNEL = 5
+    DRIFT = 6
+    DRAIN = 7
+    CAVE = 8
+    UNDERGROUND = 9
+    CABINET = 10
+    CHAMBER = 11
+    PREFABRICATED = 12
+    PREMISES = 13
+    FORT = 14
+    APRON = 15
+    SLAB = 16
+    OUTSIDE = 17
+    WELL = 18
+    DRILLING = 19
+
     PLACE_TYPE_CHOICES = (
+        (UNKNOWN, 'Unknown'),
         (AGENCY, 'Agency'),
-        (CUSTOMER_SERVICE, 'Customer service place'),
-        (UNDEFINED, 'Undefined'),
-        (OTHER, 'Other'),
-        (TEST, 'Measuring site'),
         (THEORITICAL, 'Theoritical site'),
-        (BUILT, 'Built'),
+        (MEASURE, 'Measuring site'),
+        (CUSTOMER_SERVICE, 'Customer service place'),
+        (TUNNEL, 'Tunnel'),
+        (DRIFT, 'Drift'),
+        (DRAIN, 'Drain'),
+        (CAVE, 'Cave'),
+        (UNDERGROUND, 'Underground'),
+        (CABINET, 'Cabinet'),
+        (CHAMBER, 'Chamber'),
+        (PREFABRICATED, 'Prefabricated'),
+        (PREMISES, 'Premises'),
+        (FORT, 'Fort'),
+        (APRON, 'Apron'),
+        (SLAB, 'Slab'),
+        (OUTSIDE, 'Outside'),
+        (WELL, 'Well'),
+        (DRILLING, 'Drilling'),
     )
 
     # fields
@@ -48,7 +75,7 @@ class Place(models.Model):
     name = models.CharField(max_length=50, unique=True)
     _type = models.IntegerField(
         choices=PLACE_TYPE_CHOICES,
-        default=UNDEFINED,
+        default=UNKNOWN,
         verbose_name="Type")
     description = models.TextField(
         null=True,
