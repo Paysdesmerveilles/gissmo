@@ -6,8 +6,10 @@ import pdb
 
 from models import (
     db,
+    Equipment,
     EquipmentModel,
     GissmoGroundType,
+    GissmoEquipment,
     GissmoModel,
     GissmoNetwork,
     GissmoOrganism,
@@ -192,8 +194,6 @@ def fetch_or_migrate_site(ground_types, organisms):
     for site in GissmoSite.select().order_by(GissmoSite.id):
         print("Site: [%s] %s (ID: %s)" % (site.code, site.name, site.id))
         new_organism_id = organisms[site.operator.id]
-        if isinstance(new_organism_id, tuple):
-            new_organism_id = new_organism_id[0]
         o = Organism.get(Organism.id == new_organism_id)
 
         # Search a place with same longitude/latitude/elevation
@@ -262,6 +262,41 @@ def fetch_or_migrate_network():
     return res
 
 
+def fetch_or_migrate_equipment(places, organisms, models):
+    res = {}
+    for equip in GissmoEquipment.select().order_by(GissmoEquipment.id):
+        print("Equipment: %s (ID: %s)" % (equip.name, equip.id))
+        model_id = models[equip.model.id]
+        owner_id = organisms[equip.owner.id]
+        station_id = equip.station
+        # place equipment in "NEANT" if no station_id
+        if not station_id:
+            station_id = Place.get(Place.name == 'NEANT').id
+        place_id = places[station_id]
+        m = EquipmentModel.get(EquipmentModel.id == model_id)
+        o = Organism.get(Organism.id == owner_id)
+        p = Place.get(Place.id == place_id)
+        e = Equipment.get_or_create(
+            name=equip.name,
+            model=m,
+            owner=o,
+            place=p)
+        if isinstance(e, tuple):
+            e = e[0]
+        if equip.vendor or equip.purchase_date or equip.note or equip.contact:
+            new = Equipment.get(Equipment.id == e.id)
+            if equip.vendor:
+                new.vendor = equip.vendor
+            if equip.purchase_date:
+                new.purchase_date = equip.purchase_date
+            if equip.note or equip.contact:
+                new.note = "\n".join([equip.note or '', equip.contact or ''])
+            new.save()
+
+        res[equip.id] = e.id
+    return res
+
+
 def main():
     try:
         # START
@@ -306,7 +341,10 @@ def main():
         link_network = fetch_or_migrate_network()
         print("CORRELATION NETWORK: %s" % link_network)
 
-        # - gissmo_equipment -> equipment_equipment + state with intervention
+        # - gissmo_equipment -> equipment_equipment
+        link_equipment = fetch_or_migrate_equipment(link_place, link_organism, link_equipment_model)
+        print("CORRELATION EQUIPMENT: %s" % link_equipment)
+
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_datatype -> network_datatype
         # - gissmo_channel_data_type -> network_channel_datatypes

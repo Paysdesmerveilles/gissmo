@@ -324,6 +324,9 @@ class Equipment(Model):
         State,
         db_column='state_id')
 
+    def __str__(self):
+        return '%s' % self.name
+
     class Meta:
         database = db
         db_table = 'equipment_equipment'
