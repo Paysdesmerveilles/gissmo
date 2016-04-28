@@ -170,8 +170,8 @@ def create_place(site, organism, ground_types):
             new = Place.get(Place.id == p.id)
             new.ground_type = g
             new.save()
-    # Add parent
-    if site.parent:
+    # Add parent (do not link place to themselves)
+    if site.parent and site.parent != site.id:
         to_link_to_parent.append(site.id)
     # Create station code linked to given place
     s = Station.get_or_create(
