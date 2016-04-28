@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # WARNING: Need to use python manage.py migrate first! To deploy new 2.0 version
+import pdb
 
 from models import (
     db,
@@ -15,6 +16,7 @@ from models import (
     GroundType,
     Organism,
     Place,
+    Station,
     Type,
 )
 
@@ -123,10 +125,7 @@ def fetch_or_migrate_groundtype():
     return res
 
 
-def fetch_or_migrate_site(ground_types, organisms):
-    # Prepare some values
-    res = {}
-
+def create_place(site, organism, ground_types):
     types = {
         1: 3,  # STATION => MEASURE
         2: 1,  # OBSERVATOIRE => AGENCY
@@ -137,6 +136,56 @@ def fetch_or_migrate_site(ground_types, organisms):
         7: 2,  # SITE_THEORIQUE => THEORITICAL
     }
 
+    placename = site.name or site.code
+    p = Place.create(
+        name=placename,
+        _type=types[site._type],
+        latitude=site.latitude,
+        longitude=site.longitude,
+        elevation=site.elevation,
+        operator=organism.id or None,
+        description=site.description,
+        creation_date=site.date,
+        note=site.note,
+        address_street=site.address,
+        address_zipcode=site.zip_code,
+        address_city=site.town,
+        address_region=site.region,
+        address_county=site.county,
+        address_country=site.country,
+        geology=site.geology,
+        contact=site.contact)
+    if isinstance(p, tuple):
+        p = p[0]
+
+    # Add ground type
+    if site.ground_type:
+        new_ground_type_id = ground_types[site.ground_type]
+        if new_ground_type_id:
+            g = GroundType.get(GroundType.id == new_ground_type_id)
+            new = Place.get(Place.id == p.id)
+            new.ground_type = g
+            new.save()
+    # Add parent
+    if site.parent:
+        to_link_to_parent.append(site.id)
+    # Create station code linked to given place
+    s = Station.get_or_create(
+        code=site.code,
+        description=site.station_description,
+        operator=organism.id or None,
+        place=p)
+    if isinstance(s, tuple):
+        s = s[0]
+
+    return p
+
+
+def fetch_or_migrate_site(ground_types, organisms):
+    # Prepare some values
+    res = {}
+
+    global to_link_to_parent
     to_link_to_parent = []
     for site in GissmoSite.select().order_by(GissmoSite.id):
         print("Site: [%s] %s (ID: %s)" % (site.code, site.name, site.id))
@@ -144,44 +193,44 @@ def fetch_or_migrate_site(ground_types, organisms):
         if isinstance(new_organism_id, tuple):
             new_organism_id = new_organism_id[0]
         o = Organism.get(Organism.id == new_organism_id)
-        name = site.name or site.code
-        # TODO: Only create site if latitude/longitude/elevation is unique
-        # If another exists, make only a station
-        p = Place.get_or_create(
-            name=name,
-            _type=types[site._type],
-            description=site.description,
-            creation_date=site.date,
-            note=site.note,
-            address_street=site.address,
-            address_zipcode=site.zip_code,
-            address_city=site.town,
-            address_region=site.region,
-            address_county=site.county,
-            address_country=site.country,
-            geology=site.geology,
-            contact=site.contact,
-            # TODO: check if this place is the same as another one!
-            latitude=site.latitude,
-            longitude=site.longitude,
-            elevation=site.elevation,
-            operator=o.id or None)
-        if isinstance(p, tuple):
-            p = p[0]
-        # Add ground type
-        if site.ground_type:
-            new_ground_type_id = ground_types[site.ground_type]
-            if new_ground_type_id:
-                g = GroundType.get(GroundType.id == new_ground_type_id)
+
+        # Search a place with same longitude/latitude/elevation
+        # If not: create place
+        # If exists, attempt to link it to existing place
+        if not site.longitude and not site.latitude:
+            p = create_place(site, o, ground_types)
+            res[site.id] = p.id
+            continue
+        else:
+            same = Place.select().where(
+                Place.longitude == site.longitude,
+                Place.latitude == site.latitude,
+                Place.elevation == site.elevation or None)
+            if not same:
+                p = create_place(site, o, ground_types)
+                res[site.id] = p.id
+                continue
+            placename = site.name or site.code
+            try:
+                p = Place.get(
+                    Place.name == placename,
+                    Place.longitude == site.longitude,
+                    Place.latitude == site.latitude)
+                if isinstance(p, tuple):
+                    p = p[0]
+            except Place.DoesNotExist as e:
+                print(e)
+                # Means that another site exists with same latitude/longitude
+                # So add parent on it
+                p = create_place(site, o, ground_types)
+                first_same_place = same[0]
                 new = Place.get(Place.id == p.id)
-                new.ground_type = g
+                new.parent = first_same_place
                 new.save()
-        # Add parent
-        if site.parent:
-            to_link_to_parent.append(site.id)
-        res[site.id] = p.id
+            res[site.id] = p.id
 
     # Create link between child and parents
+    print("LINKING place between them…")
     for site_id in to_link_to_parent:
         site = GissmoSite.get(GissmoSite.id == site_id)
         new = Place.get(Place.id == res[site_id])

@@ -123,6 +123,9 @@ class Organism(Model):
         null=True,
         db_column='parent_id')
 
+    def __str__(self):
+        return '%s' % self.name
+
     class Meta:
         database = db
         db_table = 'affiliation_organism'
@@ -193,6 +196,7 @@ class GissmoSite(Model):
     alternate_code = CharField()  # XML alternate code
     historical_code = CharField()  # XML historical code
     description = TextField(db_column='site_description')
+    station_description = TextField()
     # WARNING: We omit all _unit, _pluserror, _minuserror and _datum fields
     date = DateField(db_column='creation_date')
     state = IntegerField(db_column='last_state')
