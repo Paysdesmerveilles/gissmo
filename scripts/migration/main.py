@@ -9,11 +9,13 @@ from models import (
     EquipmentModel,
     GissmoGroundType,
     GissmoModel,
+    GissmoNetwork,
     GissmoOrganism,
     GissmoSite,
     GissmoSuperType,
     GissmoType,
     GroundType,
+    Network,
     Organism,
     Place,
     Station,
@@ -240,6 +242,26 @@ def fetch_or_migrate_site(ground_types, organisms):
     return res
 
 
+def fetch_or_migrate_network():
+    res = {}
+    for network in GissmoNetwork.select().order_by(GissmoNetwork.id):
+        print("Network: [%s] %s (ID: %s)" % (network.code, network.name, network.id))
+        n = Network.get_or_create(code=network.code)
+        if isinstance(n, tuple):
+            n = n[0]
+        new = Network.get(Network.id == n.id)
+        new.name = network.name
+        new.description = network.description
+        new.start = network.start
+        new.end = network.end
+        new.xml_historical_code = network.historical_code
+        new.xml_alternate_code = network.alternate_code
+        new.xml_restricted_status = network.status
+        new.save()
+        res[network.id] = n.id
+    return res
+
+
 def main():
     try:
         # START
@@ -280,6 +302,10 @@ def main():
         link_place = fetch_or_migrate_site(link_ground_type, link_organism)
         print("CORRELATION PLACE: %s" % link_place)
 
+        # - gissmo_network -> network_network
+        link_network = fetch_or_migrate_network()
+        print("CORRELATION NETWORK: %s" % link_network)
+
         # - gissmo_equipment -> equipment_equipment + state with intervention
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_datatype -> network_datatype
@@ -294,7 +320,6 @@ def main():
         # - gissmo_intervorganism -> intervention_operator
         # - gissmo_intervuser -> intervention_protagonist
         # - gissmo_ipaddress -> equipment_ipaddress
-        # - gissmo_network -> network_network
         # - gissmo_organism_users -> affiliation_organism_users
         # - gissmo_project -> project_project
         # - gissmo_project_sites -> project_project_places

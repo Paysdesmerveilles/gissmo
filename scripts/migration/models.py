@@ -323,3 +323,38 @@ class Equipment(Model):
     state = ForeignKeyField(
         State,
         db_column='state_id')
+
+    class Meta:
+        database = db
+        db_table = 'equipment_equipment'
+
+
+class GissmoNetwork(Model):
+    id = IntegerField(db_column='id')
+    code = CharField(db_column='network_code')
+    name = CharField(db_column='network_name')
+    description = TextField()
+    start = DateTimeField(db_column='start_date')
+    end = DateTimeField(db_column='end_date')
+    status = IntegerField(db_column='restricted_status')
+    alternate_code = CharField()  # XML alternate code
+    historical_code = CharField()  # XML historical code
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_network'
+
+
+class Network(Model):
+    code = CharField()
+    name = CharField(null=True)
+    description = TextField()
+    start = DateTimeField()
+    end = DateTimeField()
+    xml_historical_code = CharField()
+    xml_alternate_code = CharField()
+    xml_restricted_status = IntegerField()
+
+    class Meta:
+        database = db
+        db_table = 'network_network'
