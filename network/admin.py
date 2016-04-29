@@ -15,6 +15,7 @@ class NetworkAdmin(admin.ModelAdmin):
     fields = ['code', 'name', 'start', 'end', 'description']
     list_display = ['code', 'name', 'start', 'end']
     search_fields = ['code', 'name', 'start', 'end']
+    ordering = ['code']
 
 
 class DatatypeAdmin(admin.ModelAdmin):
@@ -70,10 +71,11 @@ class ChannelAdmin(admin.ModelAdmin):
 
 
 class StationAdmin(admin.ModelAdmin):
-    fields = ['code', 'place']
+    fields = ['code', 'place', 'operator', 'description']
     list_display = ('code', 'place', 'state')
     list_filter = ('state',)
     search_fields = ['code']
+    ordering = ['code']
 
 
 admin.site.register(Network, NetworkAdmin)

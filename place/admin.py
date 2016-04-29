@@ -23,6 +23,7 @@ class PlaceAdmin(admin.ModelAdmin):
     list_display = ('name', '_type', 'operator', 'parent')
     list_filter = ['_type']
     search_fields = ['name', 'operator__name', 'parent__name']
+    ordering = ['name']
 
     inlines = (PlaceDocumentInline,)
 

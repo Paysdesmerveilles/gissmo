@@ -15,9 +15,10 @@ from equipment.models import (
 
 class TypeAdmin(admin.ModelAdmin):
     fields = ['parent', 'name', 'rank']
-    list_display = ('parent', 'name')
+    list_display = ('name', 'parent')
     list_filter = ['parent']
     search_fields = ['name', 'parent__name']
+    ordering = ['name']
 
 
 class ValueInline(admin.TabularInline):
@@ -38,6 +39,7 @@ class ModelAdmin(admin.ModelAdmin):
     list_display = ('name', '_type')
     list_filter = ['_type']
     search_fields = ['name']
+    ordering = ['name']
 
 
 class ServiceInline(admin.TabularInline):
@@ -61,8 +63,9 @@ class ConfigurationInline(admin.TabularInline):
 class EquipmentAdmin(admin.ModelAdmin):
     fields = ['name', 'model', 'owner']
     list_display = ('model', 'name', 'owner', 'place', 'state')
-    search_fields = ['name', 'model', 'owner']
+    search_fields = ['name', 'model__name', 'owner__name']
     list_filter = ['state']
+    ordering = ['model__name']
     # TODO: Disallow to use a model that have no parent
 
     inlines = [IPAddressInline, ServiceInline, ConfigurationInline]

@@ -8,6 +8,7 @@ class OrganismAdmin(admin.ModelAdmin):
     list_filter = ['_type']
     search_fields = ['name']
     filter_horizontal = ('users',)
+    ordering = ['name']
 
 
 admin.site.register(Organism, OrganismAdmin)
