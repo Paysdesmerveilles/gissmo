@@ -129,7 +129,7 @@ def fetch_or_migrate_groundtype():
     return res
 
 
-def create_place(site, organism, ground_types):
+def get_or_create_place(site, organism, ground_types):
     types = {
         1: 3,  # STATION => MEASURE
         2: 1,  # OBSERVATOIRE => AGENCY
@@ -140,114 +140,113 @@ def create_place(site, organism, ground_types):
         7: 2,  # SITE_THEORIQUE => THEORITICAL
     }
 
+    res = None
     placename = site.name or site.code
-    p = Place.create(
-        name=placename,
-        _type=types[site._type],
-        latitude=site.latitude,
-        longitude=site.longitude,
-        elevation=site.elevation,
-        operator=organism.id or None,
-        description=site.description,
-        creation_date=site.date,
-        note=site.note,
-        address_street=site.address,
-        address_zipcode=site.zip_code,
-        address_city=site.town,
-        address_region=site.region,
-        address_county=site.county,
-        address_country=site.country,
-        geology=site.geology,
-        contact=site.contact)
-    if isinstance(p, tuple):
-        p = p[0]
+    # Check that place doesn't exist with same name
+    try:
+        same_name = Place.get(Place.name == placename)
+    except Place.DoesNotExist:
+        same_name = False
+    try:
+        same_localisation = Place.get(
+            Place.name == placename,
+            Place.longitude == site.longitude,
+            Place.latitude == site.latitude)
+    except Place.DoesNotExist:
+        same_localisation = False
+    if same_name and same_localisation:
+        # place exists! return it
+        if isinstance(same_name, tuple):
+            same_name = same_name[0]
+        res = same_name
+    else:
+        # Create Place
+        p = Place.create(
+            name=placename,
+            _type=types[site._type],
+            latitude=site.latitude,
+            longitude=site.longitude,
+            elevation=site.elevation,
+            operator=organism.id or None,
+            description=site.description,
+            creation_date=site.date,
+            note=site.note,
+            address_street=site.address,
+            address_zipcode=site.zip_code,
+            address_city=site.town,
+            address_region=site.region,
+            address_county=site.county,
+            address_country=site.country,
+            geology=site.geology,
+            contact=site.contact)
+        if isinstance(p, tuple):
+            p = p[0]
 
-    # Add ground type
-    if site.ground_type:
-        new_ground_type_id = ground_types[site.ground_type]
-        if new_ground_type_id:
-            g = GroundType.get(GroundType.id == new_ground_type_id)
-            new = Place.get(Place.id == p.id)
-            new.ground_type = g
-            new.save()
-    # Add parent (do not link place to themselves)
-    if site.parent and site.parent != site.id:
-        to_link_to_parent.append(site.id)
-    # Create station code linked to given place
-    s = Station.get_or_create(
-        code=site.code,
-        description=site.station_description,
-        operator=organism.id or None,
-        place=p)
-    if isinstance(s, tuple):
-        s = s[0]
+        # Add ground type
+        if site.ground_type:
+            new_ground_type_id = ground_types[site.ground_type]
+            if new_ground_type_id:
+                g = GroundType.get(GroundType.id == new_ground_type_id)
+                new = Place.get(Place.id == p.id)
+                new.ground_type = g
+                new.save()
+        res = p
 
-    return p
+    return res
 
 
 def fetch_or_migrate_site(ground_types, organisms):
     # Prepare some values
     res = {}
-
-    global to_link_to_parent
     to_link_to_parent = []
-    for site in GissmoSite.select().order_by(GissmoSite.id):
+
+    # First create Place from GissmoSite that have no parents
+    for site in GissmoSite.select().where(
+        GissmoSite.parent.is_null(True)
+    ).order_by(GissmoSite.id):
         print("Site: [%s] %s (ID: %s)" % (site.code, site.name, site.id))
         new_organism_id = organisms[site.operator.id]
         o = Organism.get(Organism.id == new_organism_id)
 
-        # Search a place with same longitude/latitude/elevation
-        # If not: create place
-        # If exists, attempt to link it to existing place
-        if not site.longitude and not site.latitude:
-            placename = site.name or site.code
-            exist = Place.select().where(Place.name == placename)
-            # Do not create same place if exist (with same
-            # longitude/latitude/elevation)
-            if exist:
-                p = Place.get(
-                    Place.name == placename,
-                    Place.longitude == site.longitude,
-                    Place.latitude == site.latitude,
-                    Place.elevation == site.elevation)
-                if isinstance(p, tuple):
-                    p = p[0]
-                res[site.id] = p.id
-                continue
-            p = create_place(site, o, ground_types)
-            res[site.id] = p.id
-            continue
+        p = get_or_create_place(site, o, ground_types)
+        res[site.id] = p.id
+
+    # Then create Place or Station regarding GissmoSite that have parents
+    for element in GissmoSite.select().where(
+        GissmoSite.parent.is_null(False)
+    ).order_by(GissmoSite.id):
+        print("Site (parent): [%s] %s (ID: %s)" % (element.code, element.name, element.id))
+        # For STATION, SITE_TEST and SITE_THEORIQUE, we create Station instead
+        # of a place
+        if element._type not in (1, 6, 7):
+            p = get_or_create_place(element, o, ground_types)
+            res[element.id] = p.id
+            if element.id != element.parent:
+                to_link_to_parent.append(element.id)
         else:
-            same = Place.select().where(
-                Place.longitude == site.longitude,
-                Place.latitude == site.latitude,
-                Place.elevation == site.elevation or None)
-            if not same:
-                p = create_place(site, o, ground_types)
-                res[site.id] = p.id
-                continue
-            placename = site.name or site.code
-            try:
-                p = Place.get(
-                    Place.name == placename,
-                    Place.longitude == site.longitude,
-                    Place.latitude == site.latitude)
+            parent_id = element.parent
+            if parent_id not in res:
+                parent = GissmoSite.get(GissmoSite.id == parent_id)
+                p = get_or_create_place(parent, o, ground_types)
+                res[parent_id] = p.id
+                if parent.parent and parent.id != parent.parent:
+                    to_link_to_parent.append(parent.id)
+            else:
+                p = Place.get(Place.id == res[parent_id])
                 if isinstance(p, tuple):
                     p = p[0]
-            except Place.DoesNotExist as e:
-                print(e)
-                # Means that another site exists with same latitude/longitude
-                # So add parent on it
-                p = create_place(site, o, ground_types)
-                first_same_place = same[0]
-                new = Place.get(Place.id == p.id)
-                new.parent = first_same_place
-                new.save()
-            res[site.id] = p.id
+            # Create a Station instead of a Place
+            # and link it to the parent (parent_id)
+            Station.get_or_create(
+                code=element.code,
+                description=element.station_description,
+                operator=o.id or None,
+                place=p)
 
     # Create link between child and parents
-    print("LINKING place between them…")
+    print("LINKING place between them: %s…" % to_link_to_parent)
     for site_id in to_link_to_parent:
+        print("Link parent from GissmoSite %s" % site_id)
         site = GissmoSite.get(GissmoSite.id == site_id)
         new = Place.get(Place.id == res[site_id])
         parent = Place.get(Place.id == res[site.parent])
@@ -283,28 +282,36 @@ def fetch_or_migrate_equipment(places, organisms, models):
         model_id = models[equip.model.id]
         owner_id = organisms[equip.owner.id]
         station_id = equip.station
+        neant = Place.get(Place.name == 'NEANT')
         # place equipment in "NEANT" if no station_id
-        if not station_id:
-            station_id = Place.get(Place.name == 'NEANT').id
-        place_id = places[station_id]
+        if station_id and station_id in places:
+            place = Place.get(Place.id == places[station_id])
+            if isinstance(place, tuple):
+                place = place[0]
+        elif station_id:
+            # Search station with same code
+            old_station = GissmoSite.get(GissmoSite.id == station_id)
+            station = Station.get(Station.code == old_station.code)
+            if isinstance(station, tuple):
+                station = station[0]
+            place = station.place
+        else:
+            place = neant
+
         m = EquipmentModel.get(EquipmentModel.id == model_id)
         o = Organism.get(Organism.id == owner_id)
-        p = Place.get(Place.id == place_id)
         e = Equipment.get_or_create(
             name=equip.name,
             model=m,
             owner=o,
-            place=p)
+            place=place)
         if isinstance(e, tuple):
             e = e[0]
         if equip.vendor or equip.purchase_date or equip.note or equip.contact:
             new = Equipment.get(Equipment.id == e.id)
-            if equip.vendor:
-                new.vendor = equip.vendor
-            if equip.purchase_date:
-                new.purchase_date = equip.purchase_date
-            if equip.note or equip.contact:
-                new.note = "\n".join([equip.note or '', equip.contact or ''])
+            new.vendor = equip.vendor
+            new.purchase_date = equip.purchase_date
+            new.note = "\n".join([equip.note or '', equip.contact or ''])
             new.save()
 
         res[equip.id] = e.id
