@@ -200,6 +200,20 @@ def fetch_or_migrate_site(ground_types, organisms):
         # If not: create place
         # If exists, attempt to link it to existing place
         if not site.longitude and not site.latitude:
+            placename = site.name or site.code
+            exist = Place.select().where(Place.name == placename)
+            # Do not create same place if exist (with same
+            # longitude/latitude/elevation)
+            if exist:
+                p = Place.get(
+                    Place.name == placename,
+                    Place.longitude == site.longitude,
+                    Place.latitude == site.latitude,
+                    Place.elevation == site.elevation)
+                if isinstance(p, tuple):
+                    p = p[0]
+                res[site.id] = p.id
+                continue
             p = create_place(site, o, ground_types)
             res[site.id] = p.id
             continue
