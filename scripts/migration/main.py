@@ -108,7 +108,7 @@ def fetch_or_migrate_organism():
             o = o[0]
         # add parent if needed
         if organism.parent:
-            parent = Organism.get(Organism.id == organism.parent.id)
+            parent = Organism.get(Organism.name == organism.parent.name)
             new = Organism.get(Organism.id == o.id)
             new.parent = parent
             new.save()
