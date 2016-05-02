@@ -8,10 +8,11 @@ from django.utils import timezone
 
 from polymorphic.models import PolymorphicModel
 
+from equipment import types as etype
+from measurement import units
 from network import codes as channel_code
 from network import states as nstate
 from network import transitions as ntransition
-from measurement import units
 
 
 class State(PolymorphicModel):
@@ -224,29 +225,6 @@ class Installation(models.Model):
     An instance of Equipment as part of Channel creation.
     parent field permit to make a tree of Acquisition Chain
     """
-    # type of installation
-    SENSOR = 0
-    PREAMPLIFIER = 1
-    DATALOGGER = 2
-    EQUIPMENT = 3
-    OTHER_1 = 4
-    OTHER_2 = 5
-    OTHER_3 = 6
-    OTHER_4 = 7
-    OTHER_5 = 8
-
-    TYPE_CHOICES = (
-        (SENSOR, 'Sensor'),
-        (PREAMPLIFIER, 'Preamplifier'),
-        (DATALOGGER, 'Datalogger'),
-        (EQUIPMENT, 'Equipment'),
-        (OTHER_1, 'Other 1'),
-        (OTHER_2, 'Other 2'),
-        (OTHER_3, 'Other 3'),
-        (OTHER_4, 'Other 4'),
-        (OTHER_5, 'Other 5'),
-    )
-
     # fields
     parent = models.ForeignKey(
         'self',
@@ -259,7 +237,7 @@ class Installation(models.Model):
         'equipment.Configuration',
         blank=True)
     _type = models.IntegerField(
-        choices=TYPE_CHOICES,
+        choices=etype.TYPE_CHOICES,
         verbose_name="Type")
     start = models.DateTimeField(
         auto_now=True,
@@ -297,7 +275,7 @@ class Installation(models.Model):
 
     def __str__(self):
         return '%s (%s) on %s' % (
-            self.TYPE_CHOICES[self._type][1],
+            etype.TYPE_CHOICES[self._type][1],
             self.equipment,
             self.built)
 

@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from equipment import protocols as Protocol
 from equipment import states as estate
+from equipment import types as etype
 
 
 class State(models.Model):
@@ -73,17 +74,22 @@ class Type(models.Model):
 
 
 class Model(models.Model):
+    # fields
     name = models.CharField(max_length=50)
     rank = models.IntegerField()
     manufacturer = models.CharField(
         max_length=50,
         default='Unknown')
     _type = models.ForeignKey('equipment.Type', verbose_name="Type")
+    # Chain_type can be used as a default type for Installation type
+    chain_type = models.IntegerField(
+        choices=etype.TYPE_CHOICES,
+        verbose_name="Acquisition chain type",
+        null=True)
     is_network_model = models.BooleanField(
         verbose_name='Network configurable?',
         default=False)
     documents = models.ManyToManyField('document.Document', blank=True)
-    # TODO: get_supertype method for display purposes? Type should be enough
 
     class Meta:
         verbose_name = "Model"

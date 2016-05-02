@@ -69,6 +69,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=50)),
                 ('rank', models.IntegerField()),
                 ('manufacturer', models.CharField(default='Unknown', max_length=50)),
+                ('chain_type', models.IntegerField(choices=[(0, 'Sensor'), (1, 'Preamplifier'), (2, 'Datalogger'), (3, 'Equipment'), (4, 'Other 1'), (5, 'Other 2'), (6, 'Other 3'), (7, 'Other 4'), (8, 'Other 5')], null=True, verbose_name='Acquisition chain type')),
                 ('is_network_model', models.BooleanField(default=False, verbose_name='Network configurable?')),
             ],
             options={
