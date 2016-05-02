@@ -6,9 +6,11 @@ import pdb
 
 from models import (
     db,
+    Datatype,
     Equipment,
     EquipmentModel,
     GissmoBuilt,
+    GissmoDatatype,
     GissmoGroundType,
     GissmoEquipment,
     GissmoModel,
@@ -371,6 +373,17 @@ def fetch_or_migrate_built():
     return res
 
 
+def fetch_or_migrate_datatype():
+    res = {}
+    for _type in GissmoDatatype.select().order_by(GissmoDatatype.id):
+        d = Datatype.get_or_create(
+            name=_type.name)
+        if isinstance(d, tuple):
+            d = d[0]
+        res[_type.id] = d.id
+    return res
+
+
 def main():
     try:
         # START
@@ -423,8 +436,11 @@ def main():
         link_built = fetch_or_migrate_built()
         print("CORRELATION BUILT: %s" % link_built)
 
-        # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_datatype -> network_datatype
+        link_datatype = fetch_or_migrate_datatype()
+        print("CORRELATION DATATYPE: %s" % link_datatype)
+
+        # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_channel_data_type -> network_channel_datatypes
         # - gissmo_equipdoc -> document_document
         # - gissmo_equipmodeldoc -> document_document

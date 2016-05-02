@@ -386,3 +386,20 @@ class GissmoBuilt(Model):
     class Meta:
         database = db
         db_table = 'gissmo_built'
+
+
+class GissmoDatatype(Model):
+    id = IntegerField(db_column='id')
+    name = CharField(db_column='type_description')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_datatype'
+
+
+class Datatype(Model):
+    name = CharField()
+
+    class Meta:
+        database = db
+        db_table = 'network_datatype'
