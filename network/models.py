@@ -1,132 +1,8 @@
-from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import (
-    post_save,
-    pre_save)
-from django.dispatch import receiver
-from django.utils import timezone
-
-from polymorphic.models import PolymorphicModel
 
 from equipment import types as etype
 from measurement import units
 from network import codes as channel_code
-from network import states as nstate
-from network import transitions as ntransition
-
-
-class State(PolymorphicModel):
-    code = models.IntegerField(
-        choices=nstate.STATE_CHOICES)
-    start = models.DateTimeField(auto_now=True)
-    end = models.DateTimeField(
-        blank=True,
-        null=True)
-    station = models.ForeignKey(
-        'network.Station',
-        related_name='linked_station')
-
-    def allowed_transitions(self):
-        assert 0, "Not implemented"
-
-    def check_transition_allowed(self, transition):
-        if transition not in self.allowed_transitions():
-            raise ValidationError(
-                '%s is not allowed for the given state (%s).' % (
-                    ntransition.TRANSITION_CHOICES[transition],
-                    self.code))
-
-    def process(self, transition):
-        assert 0, "Not implemented"
-
-    def __str__(self):
-        return nstate.STATE_CHOICES[self.code][1]
-
-
-class StateAvailable(State):
-    def allowed_transitions(self):
-        return [
-            ntransition.TEST_FAIL,
-            ntransition.TEST_SUCCESS,
-        ]
-
-    def doTest(self, isConclusive=False):
-        print('Test in progress…')
-        station = Station.objects.get(pk=self.station_id)
-        if isConclusive:
-            u = StateUsed.objects.create(station=self.station)
-            station.state = u
-            station.save()
-            print('…used')
-        else:
-            b = StateBroken.objects.create(station=self.station)
-            station.state = b
-            station.save()
-            print('broken')
-        self.end = timezone.now()
-        self.save()
-
-    def process(self, transition):
-        self.check_transition_allowed(transition)
-        if transition == ntransition.TEST_FAIL:
-            return self.doTest(False)
-        if transition == ntransition.TEST_SUCCESS:
-            return self.doTest(True)
-
-
-@receiver(pre_save, sender=StateAvailable)
-def get_available_code(sender, instance, **kwargs):
-    instance.code = nstate.AVAILABLE
-
-
-class StateBroken(State):
-    def allowed_transitions(self):
-        return [ntransition.FIX]
-
-    def doFix(self):
-        print('Fixing…')
-        station = Station.objects.get(pk=self.station_id)
-        a = StateAvailable.objects.create(station=self.station)
-        station.state = a
-        station.save()
-        print('…available')
-        self.end = timezone.now()
-        self.save()
-
-    def process(self, transition):
-        self.check_transition_allowed(transition)
-        if transition == ntransition.FIX:
-            return self.doFix()
-
-
-@receiver(pre_save, sender=StateBroken)
-def get_broken_code(sender, instance, **kwargs):
-    instance.code = nstate.BROKEN
-
-
-class StateUsed(State):
-    def allowed_transitions(self):
-        return [ntransition.FAILURE]
-
-    def observeFailure(self):
-        print('Failure detected!')
-        station = Station.objects.get(pk=self.station_id)
-        b = StateBroken.objects.create(station=self.station)
-        station.state = b
-        station.save()
-        print('…broken')
-        self.end = timezone.now()
-        self.save()
-
-    def process(self, transition):
-        self.check_transition_allowed(transition)
-        if transition == ntransition.FAILURE:
-            return self.observeFailure()
-
-
-@receiver(pre_save, sender=StateUsed)
-def get_used_code(sender, instance, **kwargs):
-    instance.code = nstate.USED
 
 
 class CommonXML(models.Model):
@@ -173,7 +49,6 @@ class Station(CommonXML):
     description = models.TextField(
         null=True,
         blank=True)
-    state = models.ForeignKey('network.State', null=True, related_name='current_state')
     place = models.ForeignKey('place.Place')
 
     # folks
@@ -184,17 +59,6 @@ class Station(CommonXML):
 
     def __str__(self):
         return '%s' % self.code
-
-
-@receiver(post_save, sender=Station)
-def create_available_state(sender, instance, created, **kwargs):
-    """
-    At first creation make a new state 'available' for this Station.
-    """
-    if created is True:
-        a = StateAvailable.objects.create(station=instance)
-        instance.state = a
-        instance.save()
 
 
 class Network(CommonXML):

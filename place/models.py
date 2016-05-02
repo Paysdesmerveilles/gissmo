@@ -1,4 +1,57 @@
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+
+from place import states as pstate
+
+
+class State(models.Model):
+    code = models.IntegerField(
+        choices=pstate.STATE_CHOICES,
+        default=pstate.AVAILABLE)
+    start = models.DateTimeField(auto_now=True)
+    end = models.DateTimeField(
+        blank=True,
+        null=True)
+    place = models.ForeignKey(
+        'place.Place',
+        related_name='linked_place')
+
+    def allowed_states(self):
+        res = []
+        if self.code in pstate.NEXT_STATES:
+            res = pstate.NEXT_STATES[self.code]
+        return res
+
+    def check_allowed_states(self, state):
+        if state not in self.allowed_states():
+            raise ValidationError(
+                '%s is not allowed for the given state (%s).' % (
+                    pstate.STATE_CHOICES[state][1],
+                    pstate.STATE_CHOICES[self.code][1]))
+
+    def process(self, state):
+        self.check_allowed_states(state)
+
+        place = Place.objects.get(pk=self.place_id)
+        now = timezone.now()
+
+        s = State.objects.create(
+            code=state,
+            place=self.place,
+            start=now)
+        place.state = s
+        place.save()
+        self.end = now
+        self.save()
+        # TODO:
+        # - create new one with right link of previous one
+        # - add a link to the previous state (to get them linked)
+
+    def __str__(self):
+        return '%s' % pstate.STATE_CHOICES[self.code][1]
 
 
 class GroundType(models.Model):
@@ -87,6 +140,10 @@ class Place(models.Model):
         blank=True,
         verbose_name="Creation date")
     note = models.TextField(null=True, blank=True)
+    state = models.ForeignKey(
+        'place.State',
+        related_name='current_state',
+        null=True)
 
     # address
     address_street = models.CharField(
@@ -169,6 +226,17 @@ class Place(models.Model):
 
     def __str__(self):
         return '%s' % self.name
+
+
+@receiver(post_save, sender=Place)
+def create_state(sender, instance, created, **kwargs):
+    """
+    At first Place creation, make a new state with default 'available' value
+    """
+    if created is True:
+        s = State.objects.create(place=instance)
+        instance.state = s
+        instance.save()
 
 
 class PlaceDocument(models.Model):
