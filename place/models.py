@@ -31,17 +31,18 @@ class Place(models.Model):
     DRIFT = 6
     DRAIN = 7
     CAVE = 8
-    UNDERGROUND = 9
-    CABINET = 10
-    CHAMBER = 11
-    PREFABRICATED = 12
-    PREMISES = 13
-    FORT = 14
-    APRON = 15
-    SLAB = 16
-    OUTSIDE = 17
-    WELL = 18
-    DRILLING = 19
+    CELLAR = 9
+    UNDERGROUND = 10
+    CABINET = 11
+    CHAMBER = 12
+    PREFABRICATED = 13
+    PREMISES = 14
+    FORT = 15
+    APRON = 16
+    SLAB = 17
+    OUTSIDE = 18
+    WELL = 19
+    DRILLING = 20
 
     PLACE_TYPE_CHOICES = (
         (UNKNOWN, 'Unknown'),
@@ -53,6 +54,7 @@ class Place(models.Model):
         (DRIFT, 'Drift'),
         (DRAIN, 'Drain'),
         (CAVE, 'Cave'),
+        (CELLAR, 'Cellar'),
         (UNDERGROUND, 'Underground'),
         (CABINET, 'Cabinet'),
         (CHAMBER, 'Chamber'),

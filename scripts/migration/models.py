@@ -361,3 +361,28 @@ class Network(Model):
     class Meta:
         database = db
         db_table = 'network_network'
+
+
+class GissmoBuiltType(Model):
+    id = IntegerField(db_column='id')
+    name = CharField(db_column='built_type_name')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_builttype'
+
+
+class GissmoBuilt(Model):
+    id = IntegerField(db_column='id')
+    station = ForeignKeyField(
+        GissmoSite,
+        db_column='station_id')
+    _type = ForeignKeyField(
+        GissmoBuiltType,
+        db_column='built_type_id')
+    name = CharField(db_column='built_short_desc')
+    note = TextField(db_column='built_note')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_built'

@@ -8,6 +8,7 @@ from models import (
     db,
     Equipment,
     EquipmentModel,
+    GissmoBuilt,
     GissmoGroundType,
     GissmoEquipment,
     GissmoModel,
@@ -318,6 +319,55 @@ def fetch_or_migrate_equipment(places, organisms, models):
     return res
 
 
+def get_builttype(name):
+    res = 0
+    types = {
+        '01. Tunnel': 5,
+        '02. Galerie': 6,
+        '04. Drain': 7,
+        '05. Grotte': 8,
+        '06. Cave': 9,
+        '07. Sous sol': 10,
+        '08. Armoire': 11,
+        '09. Caisson': 12,
+        '10. Préfabriqué': 13,
+        '11. Local': 14,
+        '12. Fort militaire': 15,
+        '13. Radier': 16,
+        '14. Dalle': 17,
+        '15. Exterieur': 18,
+        '03. Puits sismique': 19,
+        'Autre': 0,
+        '16. Forage': 20,
+    }
+    if name in types:
+        return types[name]
+    return res
+
+
+def fetch_or_migrate_built():
+    res = {}
+    for built in GissmoBuilt.select().order_by(GissmoBuilt.id):
+        print("Built: %s (ID: %s)" % (built.name, built.id))
+        builttype = get_builttype(built._type.name)
+        builtname = built.name or 'Unknown'
+        # Builts have same operator as those from the linked StationSite
+        o = built.station.operator
+        p = Place.get_or_create(
+            name=builtname,
+            _type=builttype,
+            operator=o,
+            note=built.note)
+        if isinstance(p, tuple):
+            p = p[0]
+        # Link built to its station
+        new = Place.get(Place.id == p.id)
+        new.parent = built.station
+        new.save()
+        res[built.id] = p.id
+    return res
+
+
 def main():
     try:
         # START
@@ -366,6 +416,10 @@ def main():
         link_equipment = fetch_or_migrate_equipment(link_place, link_organism, link_equipment_model)
         print("CORRELATION EQUIPMENT: %s" % link_equipment)
 
+        # - gissmo_built -> place_place
+        link_built = fetch_or_migrate_built()
+        print("CORRELATION BUILT: %s" % link_built)
+
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_datatype -> network_datatype
         # - gissmo_channel_data_type -> network_channel_datatypes
@@ -388,7 +442,6 @@ def main():
 
         # SPECIFIC CASES
         # TODO: add specific cases
-        # - gissmo_built -> place_place (with parent to station and site)
         # - gissmo_chain -> network_installation (with parents)
         # - gissmo_channel -> network_channel + equipment + place
         # - gissmo_intervequip -> intervention_equipmenthistory
