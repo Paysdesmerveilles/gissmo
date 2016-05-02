@@ -217,6 +217,9 @@ def fetch_or_migrate_site(ground_types, organisms):
         GissmoSite.parent.is_null(False)
     ).order_by(GissmoSite.id):
         print("Site (parent): [%s] %s (ID: %s)" % (element.code, element.name, element.id))
+        new_organism_id = organisms[element.operator.id]
+        o = Organism.get(Organism.id == new_organism_id)
+
         # For STATION, SITE_TEST and SITE_THEORIQUE, we create Station instead
         # of a place
         if element._type not in (1, 6, 7):
@@ -241,7 +244,7 @@ def fetch_or_migrate_site(ground_types, organisms):
             Station.get_or_create(
                 code=element.code,
                 description=element.station_description,
-                operator=o.id or None,
+                operator=o or None,
                 place=p)
 
     # Create link between child and parents
