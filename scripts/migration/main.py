@@ -5,6 +5,7 @@
 import pdb
 
 from models import (
+    AuthUser,
     db,
     Datatype,
     Equipment,
@@ -16,6 +17,7 @@ from models import (
     GissmoModel,
     GissmoNetwork,
     GissmoOrganism,
+    GissmoProject,
     GissmoSite,
     GissmoSuperType,
     GissmoType,
@@ -23,9 +25,13 @@ from models import (
     Network,
     Organism,
     Place,
+    Project,
     Station,
     Type,
 )
+
+
+manager_username = 'maxime.besdeberc'
 
 
 def delete_useless_tables():
@@ -384,6 +390,24 @@ def fetch_or_migrate_datatype():
     return res
 
 
+def fetch_or_migrate_project():
+    """
+    As groups and users are both in same tables, we don't need to do any check
+    """
+    for project in GissmoProject.select():
+        print("Project group id: %s" % project.group.id)
+        m = None
+        if not project.manager:
+            m = AuthUser.get(AuthUser.username == manager_username)
+        else:
+            m = project.manager
+        p = Project.get_or_create(
+            group=project.group,
+            manager=m)
+        if isinstance(p, tuple):
+            p = p[0]
+
+
 def main():
     try:
         # START
@@ -440,6 +464,10 @@ def main():
         link_datatype = fetch_or_migrate_datatype()
         print("CORRELATION DATATYPE: %s" % link_datatype)
 
+        # - gissmo_project -> project_project
+        fetch_or_migrate_project()
+        print("PROJECTS migrated")
+
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_channel_data_type -> network_channel_datatypes
         # - gissmo_equipdoc -> document_document
@@ -453,7 +481,6 @@ def main():
         # - gissmo_intervuser -> intervention_protagonist
         # - gissmo_ipaddress -> equipment_ipaddress
         # - gissmo_organism_users -> affiliation_organism_users
-        # - gissmo_project -> project_project
         # - gissmo_project_sites -> project_project_places
         # - gissmo_services -> equipment_service
         # - gissmo_stationdoc -> document_document

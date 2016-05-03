@@ -3,6 +3,7 @@ import os
 from peewee import (
     BooleanField,
     CharField,
+    CompositeKey,
     DateField,
     DateTimeField,
     DecimalField,
@@ -259,10 +260,19 @@ class Place(Model):
 
 class AuthUser(Model):
     id = IntegerField(db_column='id')
+    username = CharField()
 
     class Meta:
         database = db
         db_table = 'auth_user'
+
+
+class AuthGroup(Model):
+    id = IntegerField(db_column='id')
+
+    class Meta:
+        database = db
+        db_table = 'auth_group'
 
 
 class State(Model):
@@ -403,3 +413,33 @@ class Datatype(Model):
     class Meta:
         database = db
         db_table = 'network_datatype'
+
+
+class GissmoProject(Model):
+    group = ForeignKeyField(
+        AuthGroup,
+        db_column='group_ptr_id')
+    manager = ForeignKeyField(
+        AuthUser,
+        db_column='manager_id',
+        null=True)
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_project'
+        primary_key = False
+
+
+class Project(Model):
+    group = ForeignKeyField(
+        AuthGroup,
+        db_column='group_ptr_id')
+    manager = ForeignKeyField(
+        AuthUser,
+        db_column='manager_id',
+        null=True)
+
+    class Meta:
+        database = db
+        db_table = 'project_project'
+        primary_key = CompositeKey('group')
