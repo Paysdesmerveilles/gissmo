@@ -166,7 +166,7 @@ class ForbiddenEquipmentModel(models.Model):
 
 
 class Parameter(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     model = models.ForeignKey('equipment.Model')
 
     def __str__(self):
