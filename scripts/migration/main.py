@@ -31,6 +31,7 @@ from models import (
     Project,
     Station,
     Type,
+    Value,
 )
 
 
@@ -427,10 +428,17 @@ def fetch_or_migrate_parameter(models):
     return res
 
 
-def fetch_or_migrate_value():
+def fetch_or_migrate_value(params):
     res = {}
     for value in GissmoValue.select().order_by(GissmoValue.id):
-        pass
+        p = Parameter.get(Parameter.id == params[value.parameter.id])
+        v = Value.get_or_create(
+            name=value.name,
+            is_default=value.is_default,
+            parameter=p)
+        if isinstance(v, tuple):
+            v = v[0]
+        res[value.id] = v.id
     return res
 
 
@@ -498,7 +506,9 @@ def main():
         link_parameter = fetch_or_migrate_parameter(link_equipment_model)
         print("CORRELATION PARAMETER: %s" % link_parameter)
 
-        # - gissmo_parameterequip + parametervalue -> equipment_parameter + equipment_value
+        # - gissmo_parametervalue -> equipment_value
+        link_value = fetch_or_migrate_value(link_parameter)
+        print("CORRELATION VALUE: %s" % link_value)
 
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_channel_data_type -> network_channel_datatypes
