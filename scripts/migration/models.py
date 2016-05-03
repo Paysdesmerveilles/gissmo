@@ -440,3 +440,108 @@ class Project(Model):
         database = db
         db_table = 'project_project'
         primary_key = CompositeKey('group')
+
+
+class GissmoChannel(Model):
+    id = IntegerField(db_column='id')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_channel'
+
+
+class GissmoChain(Model):
+    id = IntegerField(db_column='id')
+    channel = ForeignKeyField(
+        GissmoChannel,
+        db_column='channel_id')
+    order = IntegerField()
+    equipment = ForeignKeyField(
+        GissmoEquipment,
+        db_column='equip_id')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_chain'
+
+
+class GissmoParameter(Model):
+    id = IntegerField(db_column='id')
+    name = CharField(db_column='parameter_name')
+    model = ForeignKeyField(
+        GissmoModel,
+        db_column='equip_model_id')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_parameterequip'
+
+
+class GissmoValue(Model):
+    id = IntegerField(db_column='id')
+    parameter = ForeignKeyField(
+        GissmoParameter,
+        db_column='parameter_id')
+    name = CharField(db_column='value')
+    is_default = BooleanField(db_column='default_value')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_parametervalue'
+
+
+class GissmoChainConfig(Model):
+    id = IntegerField(db_column='id')
+    channel = ForeignKeyField(
+        GissmoChannel,
+        db_column='channel_id')
+    chain = ForeignKeyField(
+        GissmoChain,
+        db_column='chain_id')
+    parameter = ForeignKeyField(
+        GissmoParameter,
+        db_column='equip_id')
+    value = ForeignKeyField(
+        GissmoValue,
+        db_column='value_id')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_chainconfig'
+
+
+class Parameter(Model):
+    name = CharField(max_length=255)
+    model = ForeignKeyField(
+        EquipmentModel,
+        db_column='model_id')
+
+    class Meta:
+        database = db
+        db_table = 'equipment_parameter'
+
+
+class Value(Model):
+    name = CharField(max_length=255)
+    is_default = BooleanField()
+    parameter = ForeignKeyField(
+        Parameter,
+        db_column='parameter_id')
+
+    class Meta:
+        database = db
+        db_table = 'equipment_value'
+
+
+class Configuration(Model):
+    parameter = CharField(max_length=255)
+    value = CharField(max_length=255)
+    start = DateTimeField()
+    end = DateTimeField()
+    equipment = ForeignKeyField(
+        Equipment,
+        db_column='equipment_id')
+
+    class Meta:
+        database = db
+        db_table = 'equipment_configuration'

@@ -17,13 +17,16 @@ from models import (
     GissmoModel,
     GissmoNetwork,
     GissmoOrganism,
+    GissmoParameter,
     GissmoProject,
     GissmoSite,
     GissmoSuperType,
     GissmoType,
+    GissmoValue,
     GroundType,
     Network,
     Organism,
+    Parameter,
     Place,
     Project,
     Station,
@@ -392,7 +395,7 @@ def fetch_or_migrate_datatype():
     return res
 
 
-def fetch_or_migrate_project():
+def migrate_project():
     """
     As groups and users are both in same tables, we don't need to do any check
     """
@@ -410,6 +413,27 @@ def fetch_or_migrate_project():
             p = p[0]
 
 
+def fetch_or_migrate_parameter(models):
+    res = {}
+    for parameter in GissmoParameter.select().order_by(GissmoParameter.id):
+        print("Parameter: %s (ID: %s)" % (parameter.name, parameter.id))
+        m = EquipmentModel.get(EquipmentModel.id == models[parameter.model.id])
+        p = Parameter.get_or_create(
+            name=parameter.name,
+            model=m)
+        if isinstance(p, tuple):
+            p = p[0]
+        res[parameter.id] = p.id
+    return res
+
+
+def fetch_or_migrate_value():
+    res = {}
+    for value in GissmoValue.select().order_by(GissmoValue.id):
+        pass
+    return res
+
+
 def main():
     try:
         # START
@@ -423,7 +447,7 @@ def main():
         # TODO: add some checks on database before
         # TODO: builttype: create an association between old types and new ones
 
-        # SIMPLE MIGRATION
+        # MIGRATION
         # TODO: add tables that are just rename or with simple migration
 
         # - gissmo_equipsupertype -> equipment_type: SAME ID
@@ -467,8 +491,14 @@ def main():
         print("CORRELATION DATATYPE: %s" % link_datatype)
 
         # - gissmo_project -> project_project
-        fetch_or_migrate_project()
+        migrate_project()
         print("PROJECTS migrated")
+
+        # - gissmo_parameterequip -> equipment_parameter
+        link_parameter = fetch_or_migrate_parameter(link_equipment_model)
+        print("CORRELATION PARAMETER: %s" % link_parameter)
+
+        # - gissmo_parameterequip + parametervalue -> equipment_parameter + equipment_value
 
         # - gissmo_chainconfig -> equipment_configuration
         # - gissmo_channel_data_type -> network_channel_datatypes
@@ -494,7 +524,6 @@ def main():
         # - gissmo_channel -> network_channel + equipment + place
         # - gissmo_intervequip -> intervention_equipmenthistory
         # - gissmo_intervstation -> intervention_stationhistory + place_place
-        # - gissmo_parameterequip + parametervalue -> equipment_parameter + equipment_value
         # - last equipment state (last_state on gissmo_equipment)
         # - last equipment station (last_station_id on gissmo_equipment)
 
