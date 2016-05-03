@@ -24,10 +24,10 @@ AUTRE = 6
 EN_TEST = 7
 STATION_STATES = (
     (INSTALLATION, 'In installation'),
-    (EN_TEST, 'In test'),
     (OPERATION, 'Running'),
     (DEFAUT, 'Kaputt'),
     (PANNE, 'Ongoing issue'),
     (FERMEE, 'Closed'),
     (AUTRE, 'Other'),
+    (EN_TEST, 'In test'),
 )
