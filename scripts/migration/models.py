@@ -301,9 +301,6 @@ class Station(Model):
     place = ForeignKeyField(
         Place,
         db_column='place_id')
-    state = ForeignKeyField(
-        State,
-        db_column='state_id')
 
     class Meta:
         database = db

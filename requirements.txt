@@ -1,5 +1,4 @@
 Django==1.9.5
-django-polymorphic
 psycopg2==2.6.1
 # For development purposes
 flake8
