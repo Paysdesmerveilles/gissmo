@@ -249,11 +249,13 @@ def fetch_or_migrate_site(ground_types, organisms):
                     p = p[0]
             # Create a Station instead of a Place
             # and link it to the parent (parent_id)
-            Station.get_or_create(
-                code=element.code,
-                description=element.station_description,
-                operator=o or None,
-                place=p)
+            station = Station.select().where(Station.code == element.code)
+            if not station:
+                Station.create(
+                    code=element.code,
+                    description=element.station_description,
+                    operator=o or None,
+                    place=p)
 
     # Create link between child and parents
     print("LINKING place between them: %s…" % to_link_to_parent)
