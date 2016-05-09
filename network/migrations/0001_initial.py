@@ -121,4 +121,9 @@ class Migration(migrations.Migration):
             name='station',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='network.Station'),
         ),
+        migrations.AddField(
+            model_name='channel',
+            name='configurations',
+            field=models.ManyToManyField(blank=True, to='equipment.Configuration'),
+        ),
     ]

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from peewee import (
     BooleanField,
@@ -500,7 +501,7 @@ class GissmoChainConfig(Model):
         db_column='chain_id')
     parameter = ForeignKeyField(
         GissmoParameter,
-        db_column='equip_id')
+        db_column='parameter_id')
     value = ForeignKeyField(
         GissmoValue,
         db_column='value_id')
@@ -536,7 +537,7 @@ class Value(Model):
 class Configuration(Model):
     parameter = CharField(max_length=255)
     value = CharField(max_length=255)
-    start = DateTimeField()
+    start = DateTimeField(default=datetime.now())
     end = DateTimeField()
     equipment = ForeignKeyField(
         Equipment,

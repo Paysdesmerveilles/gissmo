@@ -197,6 +197,9 @@ class Channel(CommonXML):
     datatypes = models.ManyToManyField(
         'network.Datatype',
         blank=True)
+    configurations = models.ManyToManyField(
+        'equipment.Configuration',
+        blank=True)
 
     # GPS fields
     latitude = models.DecimalField(

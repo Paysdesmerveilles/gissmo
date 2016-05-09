@@ -6,11 +6,13 @@ import pdb
 
 from models import (
     AuthUser,
+    Configuration,
     db,
     Datatype,
     Equipment,
     EquipmentModel,
     GissmoBuilt,
+    GissmoChainConfig,
     GissmoDatatype,
     GissmoGroundType,
     GissmoEquipment,
@@ -442,6 +444,24 @@ def fetch_or_migrate_value(params):
     return res
 
 
+def fetch_or_migrate_configuration(equipments):
+    res = {}
+    for config in GissmoChainConfig.select().order_by(GissmoChainConfig.id):
+        print("Configuration: %s/%s (ID: %s)" % (
+            config.parameter.name,
+            config.value.name,
+            config.id))
+        e = Equipment.get(Equipment.id == equipments[config.chain.equipment.id])
+        c = Configuration.get_or_create(
+            parameter=config.parameter.name,
+            value=config.value.name,
+            equipment=e)
+        if isinstance(c, tuple):
+            c = c[0]
+        res[config.id] = c.id
+    return res
+
+
 def main():
     try:
         # START
@@ -511,6 +531,9 @@ def main():
         print("CORRELATION VALUE: %s" % link_value)
 
         # - gissmo_chainconfig -> equipment_configuration
+        link_configuration = fetch_or_migrate_configuration(link_equipment)
+        print("CORRELATION CONFIGURATION: %s" % link_configuration)
+
         # - gissmo_channel_data_type -> network_channel_datatypes
         # - gissmo_equipdoc -> document_document
         # - gissmo_equipmodeldoc -> document_document
