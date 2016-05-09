@@ -34,15 +34,15 @@ DEBUTER_TEST = 11
 TERMINER_TEST = 12
 STATION_ACTIONS = (
     (CREER, 'Create station code'),
-    (INSTALLER, 'Install station'),
+    (INSTALLER, 'Prepare station'),
     (DEBUTER_TEST, 'Start test'),
     (TERMINER_TEST, 'Finish test'),
     (OPERER, 'Operate station'),
-    (CONSTATER_DEFAUT, 'Report failure'),
+    (CONSTATER_DEFAUT, 'Report problem'),
     (MAINT_PREV_DISTANTE, 'Perform REMOTE PREVentive maintenance'),
     (MAINT_CORR_DISTANTE, 'Perform REMOTE CORrective maintenance'),
     (MAINT_PREV_SITE, 'Perform LOCAL PREVentive maintenance'),
     (MAINT_CORR_SITE, 'Perform LOCAL CORrective maintenance'),
-    (DEMANTELER, 'Shut down'),
+    (DEMANTELER, 'Close station'),
     (AUTRE, 'Other'),
 )

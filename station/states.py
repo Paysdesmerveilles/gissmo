@@ -25,7 +25,7 @@ EN_TEST = 7
 STATION_STATES = (
     (INSTALLATION, 'In installation'),
     (OPERATION, 'Running'),
-    (DEFAUT, 'Kaputt'),
+    (DEFAUT, 'Major failure'),
     (PANNE, 'Ongoing issue'),
     (FERMEE, 'Closed'),
     (AUTRE, 'Other'),
