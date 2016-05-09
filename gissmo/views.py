@@ -126,6 +126,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
     of the file or be in the same group of the owner.
     """
     mimetypes.init()
+    default_type = 'application/octet-stream'
 
     # Obtain the model on which we work : StationDoc, EquipDoc or EquipModelDoc
     model = get_model(app_label, model_name)
@@ -141,8 +142,10 @@ def get_file(request, app_label, model_name, field_name, identifier):
         file_name = os.path.basename(path)
         mime_type_guess = mimetypes.guess_type(file_name)
         fsock = open(path, "rb")
-        if mime_type_guess is not None:
+        if mime_type_guess is not None and mime_type_guess[0] is not None:
             response = HttpResponse(fsock, content_type=mime_type_guess[0])
+        elif mime_type_guess[0] is None:
+            response = HttpResponse(fsock, content_type=default_type)
         response['Content-Disposition'] = 'attachment; filename=' + \
             smart_text(file_name)
         return response
