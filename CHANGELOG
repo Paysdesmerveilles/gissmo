@@ -30,7 +30,6 @@ scripts/webservice_examples directory:
     - 02_station_services.py: displays services for each equipment of each site
   - API permits filtering, searching and ordering these objects
   - New RESTful API available on /api with some objects:
-    - Actor: /api/actors
     - CalibrationUnit: /api/calibration_units
     - Chain: /api/chains
     - Channel: /api/channels
@@ -39,6 +38,7 @@ scripts/webservice_examples directory:
     - Equipment: /api/equipments
     - IPAddress: /api/ipaddresses
     - Network: /api/networks
+    - Organism: /api/organisms
     - Service: /api/services
     - Site: /api/sites
 
