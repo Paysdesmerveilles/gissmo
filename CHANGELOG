@@ -1,4 +1,4 @@
-Version (1.5-rc3):
+Version 1.5:
   - Add a new documentation called "how to access Gissmo API v1 with Python"
   - Add a link from StationSite to Ground Type
   - Create Ground Type which is an EC8 soil classification
