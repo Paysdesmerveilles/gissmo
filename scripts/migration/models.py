@@ -293,9 +293,6 @@ class State(Model):
 class Station(Model):
     code = CharField()
     description = TextField()
-    # xml_restricted_status is never filled in
-    # same thing for xml_historical_code
-    xml_alternate_code = CharField()
     operator = ForeignKeyField(
         Organism,
         db_column='operator_id')
@@ -362,9 +359,6 @@ class Network(Model):
     description = TextField()
     start = DateTimeField()
     end = DateTimeField()
-    xml_historical_code = CharField()
-    xml_alternate_code = CharField()
-    xml_restricted_status = IntegerField()
 
     class Meta:
         database = db

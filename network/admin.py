@@ -72,8 +72,7 @@ class ChannelAdmin(admin.ModelAdmin):
 
 class StationAdmin(admin.ModelAdmin):
     fields = ['code', 'place', 'operator', 'description']
-    list_display = ('code', 'place', 'xml_restricted_status')
-    list_filter = ('xml_restricted_status',)
+    list_display = ('code', 'place')
     search_fields = ['code']
     ordering = ['code']
 

@@ -5,39 +5,7 @@ from measurement import units
 from network import codes as channel_code
 
 
-class CommonXML(models.Model):
-    # XML status codes
-    OPEN = 0
-    CLOSE = 1
-    PARTIAL = 2
-    XML_STATUS_CHOICES = (
-        (OPEN, 'Open'),
-        (CLOSE, 'Closed'),
-        (PARTIAL, 'Partial'),
-    )
-
-    # Used for Station_XML export
-    xml_historical_code = models.CharField(
-        max_length=5,
-        null=True,
-        blank=True,
-        verbose_name="StationXML Historical code")
-    xml_alternate_code = models.CharField(
-        max_length=5,
-        null=True,
-        blank=True,
-        verbose_name="StationXML Alternate code")
-    xml_restricted_status = models.IntegerField(
-        choices=XML_STATUS_CHOICES,
-        null=True,
-        blank=True,
-        verbose_name="StationXML Restricted status")
-
-    class Meta:
-        abstract = True
-
-
-class Station(CommonXML):
+class Station(models.Model):
     """
     Station is an object mainly used to generate StationXML file.
     All relative information about place/area are located in Place object.
@@ -61,7 +29,7 @@ class Station(CommonXML):
         return '%s' % self.code
 
 
-class Network(CommonXML):
+class Network(models.Model):
     code = models.CharField(
         max_length=5)
     name = models.CharField(
@@ -158,7 +126,7 @@ class Datatype(models.Model):
         return '%s' % self.name
 
 
-class Channel(CommonXML):
+class Channel(models.Model):
     # fields
     installation = models.ForeignKey('network.Installation')
     # TODO: JS Filter on stations regarding Installation (places)
