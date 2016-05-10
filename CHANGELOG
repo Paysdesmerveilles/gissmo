@@ -1,4 +1,10 @@
-Current version (1.6-trunk):
+Version (1.5-rc3):
+  - Add a new documentation called "how to access Gissmo API v1 with Python"
+  - Add a link from StationSite to Ground Type
+  - Create Ground Type which is an EC8 soil classification
+  - Move "Geology formation" (in StationSite) from "Main information" to "Other information"
+  - An intervention needs at least 1 operator
+  - Current user is now the default one for Intervention (bug fixed)
   - Actor review:
     - split Actor into User and Organism
     - migrate Group to Projects
@@ -6,10 +12,8 @@ Current version (1.6-trunk):
   - Upload directory is now available as volume for Docker containers
   - Intervention attachment is now available (documents on it)
   - New 'close channels' button on a given StationSite to give a closing date
-  - Equipment List - 2 new filters appears: last state and last station
+  - Equipment List - 2 new filters appears: Status and last station
   - Display current Gissmo version on site header
-
-Version (1.5-rc1):
   - Change application to be not translatable and only in English
   - New "Change Model" button to simulate a change of model on a given equipment
   - New field on Equipment's Model: "Manufacturer?" that informs user if
@@ -27,7 +31,6 @@ scripts/webservice_examples directory:
     - 02_station_services.py: displays services for each equipment of each site
   - API permits filtering, searching and ordering these objects
   - New RESTful API available on /api with some objects:
-    - Actor: /api/actors
     - CalibrationUnit: /api/calibration_units
     - Chain: /api/chains
     - Channel: /api/channels
@@ -36,6 +39,7 @@ scripts/webservice_examples directory:
     - Equipment: /api/equipments
     - IPAddress: /api/ipaddresses
     - Network: /api/networks
+    - Organism: /api/organisms
     - Service: /api/services
     - Site: /api/sites
 

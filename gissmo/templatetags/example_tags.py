@@ -23,7 +23,7 @@ def display_station_interventions(station_id):
     content_type = ContentType.objects.get_for_model(Intervention)
     url_redirection = "admin:%s_intervention_change" % (content_type.app_label)
 
-    # Station state
+    # Station status
     last_state = 'Unknown'
     i = IntervStation.objects.filter(
         intervention__station__id=station_id,

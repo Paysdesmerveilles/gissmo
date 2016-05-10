@@ -19,7 +19,7 @@ class StationSiteTest(FunctionalTest):
             name='DT INSU',
             _type=0)  # to not explode equipment view (owner field)
         self.unknown, created = Organism.objects.get_or_create(
-            name='Inconnu',
+            name='Unknown',
             _type=4)
         self.project = Project.objects.create(
             name='ADEME',

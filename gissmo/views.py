@@ -126,6 +126,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
     of the file or be in the same group of the owner.
     """
     mimetypes.init()
+    default_type = 'application/octet-stream'
 
     # Obtain the model on which we work : StationDoc, EquipDoc or EquipModelDoc
     model = get_model(app_label, model_name)
@@ -141,8 +142,10 @@ def get_file(request, app_label, model_name, field_name, identifier):
         file_name = os.path.basename(path)
         mime_type_guess = mimetypes.guess_type(file_name)
         fsock = open(path, "rb")
-        if mime_type_guess is not None:
+        if mime_type_guess is not None and mime_type_guess[0] is not None:
             response = HttpResponse(fsock, content_type=mime_type_guess[0])
+        elif mime_type_guess[0] is None:
+            response = HttpResponse(fsock, content_type=default_type)
         response['Content-Disposition'] = 'attachment; filename=' + \
             smart_text(file_name)
         return response
@@ -155,7 +158,7 @@ def get_file(request, app_label, model_name, field_name, identifier):
 
 def xhr_station_state(request):
     """
-    Request that return the possible states for a station according to the
+    Request that return the possible status for a station according to the
     action done.
     """
     # Check that it's an ajax request and that the method is GET
@@ -224,7 +227,7 @@ def xhr_station_state(request):
 
 def available_equip_state(action):
     """
-    Function that return a list of state according to the action via the
+    Function that return a list of status according to the action via the
     parameter.
     This is use on add_fields section of the IntervEquipInlineFormset and in
     xhr_equip_state function.
@@ -343,7 +346,7 @@ def available_equip_state(action):
 
 def xhr_equip_state(request):
     """
-    Request that return the possible states for a station according to the
+    Request that return the possible statuses for a station according to the
     action done.
     This use onchange event.
     """
@@ -363,7 +366,7 @@ def xhr_equip_state(request):
 
 def equip_state_todate(equip, date, intervention_id):
     """
-    Function to obtain the state of an equipment at a precise moment
+    Function to obtain the equipment status at a precise moment
     """
     result = 0
     if intervention_id:
@@ -400,7 +403,7 @@ def equip_state_todate(equip, date, intervention_id):
 
 def equip_with_state_todate(date, intervention_id):
     """
-    Function to obtain the state of an equipment at a precise moment
+    Function to obtain equipment status at a precise moment
     """
     liste = []
     equipments = Equipment.objects.all()
@@ -518,7 +521,7 @@ def available_equipment_cursor(action, station, date, intervention_id):
     # using-database-cursors-as-context-managers
     with connection.cursor() as cursor:
         """
-        Give the last state and station of an equipment
+        Give the last status and station of an equipment
         If the intervention date or time change via the form of the
         intervention we exclude this intervention to permit the change of those
         fields (date and time).
@@ -570,12 +573,12 @@ def available_equipment_cursor(action, station, date, intervention_id):
                 id__in=list_equip_purchased)
             for equip in nobuy_equipments:
                 equipment_list.append(equip.id)
-        # Install only equip DISPONIBLE or No state
+        # Install only equip DISPONIBLE or No status
         elif action == EquipAction.INSTALLER:
             for row in cursor.fetchall():
                 if row[3] == EquipState.DISPONIBLE:
                     equipment_list.append(row[0])
-        # Receive only equip En transit or No state
+        # Receive only equip En transit or No status
         elif action == EquipAction.RECEVOIR:
             for row in cursor.fetchall():
                 if row[3] == EquipState.EN_TRANSIT:
@@ -586,7 +589,7 @@ def available_equipment_cursor(action, station, date, intervention_id):
                 if row[3] == EquipState.DISPARU:
                     equipment_list.append(row[0])
         # Corrective maintenance only equip installed in the station in the
-        # following state DEFAUT ou PANNE
+        # following status DEFAUT ou PANNE
         elif action in corrective_maintenance_states:
             for row in cursor.fetchall():
                 allowed_states = [
@@ -626,7 +629,7 @@ def available_equipment(action, station, date, intervention_id):
     corrective_maintenance_actions = [
         EquipAction.MAINT_CORR_DISTANTE,
         EquipAction.MAINT_CORR_SITE]
-    # Buy only equip with No state
+    # Buy only equip with No status
     if action == EquipAction.ACHETER:
         # Obtain all intervention with BUY as action
         equip_purchased = IntervEquip.objects.exclude(
@@ -641,7 +644,7 @@ def available_equipment(action, station, date, intervention_id):
             id__in=list_equip_purchased)
         for equip in nobuy_equipments:
             equipment_list.append(equip.id)
-    # Install only equip DISPONIBLE or No state
+    # Install only equip DISPONIBLE or No status
     elif action == EquipAction.INSTALLER:
         for equip in equipments:
             todate_state = equip_state_todate(
@@ -650,7 +653,7 @@ def available_equipment(action, station, date, intervention_id):
                 int(intervention_id))
             if todate_state == EquipState.DISPONIBLE:
                 equipment_list.append(equip.id)
-    # Receive only equip En transit or No state
+    # Receive only equip En transit or No status
     elif action == EquipAction.RECEVOIR:
         for equip in equipments:
             todate_state = equip_state_todate(
@@ -669,7 +672,7 @@ def available_equipment(action, station, date, intervention_id):
             if todate_state == EquipState.DISPARU:
                 equipment_list.append(equip.id)
     # Corrective maintenance only equip installed in the station in the
-    # following state DEFAUT ou PANNE
+    # following status DEFAUT ou PANNE
     elif action in corrective_maintenance_actions:
         allowed_states = [
             EquipState.DEFAUT,
@@ -731,7 +734,9 @@ def xhr_equipment(request):
         equip_dispo = available_equipment_cursor(
             action, station, date_intervention, intervention_id)
 
-        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
+        select_choice = [{
+            "optionValue": "",
+            "optionDisplay": "-- Select an equipment --"}]
         for equip in equip_dispo:
             select_choice.append(({
                 "optionValue": equip.id,
@@ -805,7 +810,7 @@ def xhr_station(request):
         else:
             select_choice = [{
                 "optionValue": "",
-                "optionDisplay": "-- select a site --"}]
+                "optionDisplay": "-- Select a site --"}]
         for station in station_dispo:
             select_choice.append(({
                 "optionValue": station.id,
@@ -839,7 +844,10 @@ def xhr_built(request):
 
         built_dispo = available_built(station)
 
-        select_choice = [{"optionValue": "", "optionDisplay": "------"}]
+        select_choice = [{
+            "optionValue": "",
+            "optionDisplay": "-- Select a place --",
+        }]
         for built in built_dispo:
             select_choice.append(({
                 "optionValue": built.id,
@@ -852,7 +860,7 @@ def xhr_built(request):
         return HttpResponse(status=400)
 
 
-def available_equipment_scioper(station, date):
+def available_equipment_scioper(station_id, date):
     """
     Function that return a queryset of scientific equipment in place at the
     station for the date specify.
@@ -860,8 +868,8 @@ def available_equipment_scioper(station, date):
     xhr_equip_oper function.
     """
     equipment_list = []
-    if not isinstance(station, int):
-        station = int(station)
+    if not isinstance(station_id, int):
+        station_id = int(station_id)
     # TODO: find a better way to filter
     # Not the best way to filter
     # If the supertype name change we have to change the code too
@@ -872,7 +880,7 @@ def available_equipment_scioper(station, date):
         Q(equip_model__equip_type__equip_supertype__equip_supertype_name=b))
 
     for equip in equipments:
-        if int(equip_place_todate_id(equip.id, date, None)) == station.id:
+        if int(equip_place_todate_id(equip.id, date, None)) == station_id:
             equipment_list.append(equip.id)
 
     equip_dispo = Equipment.objects.filter(
@@ -1539,37 +1547,19 @@ def closechannels_process(request, form, station_id, context):
     Process form and either return on stationsite change form or raise
     an error.
     """
-    date = form.get('date', None)
-    all_channels = form.get('all_channels', None)
     url = reverse('admin:gissmo_stationsite_change', args=(station_id,))
-    specifics = ['date', 'all_channels']
     success_message = "Channel(s) successfully closed: %s."
-    # specific behaviour
-    date_settled = date is not None
-    all_channels_settled = all_channels is not None and all_channels is True
-    if all_channels_settled and not date_settled:
-        messages.error(request, 'Common date is mandatory!')
-    elif all_channels_settled and date_settled:
-        channel_ids = [k for k in form.keys() if k not in specifics]
-        result = closechannels(channel_ids, date)
-        if not result:
-            messages.error(request, "No channel closed!")
-            return redirect(url)
-        messages.success(request, success_message % ",".join(channel_ids))
-        return redirect(url)
-    else:
-        channel_ids = []
-        for key in form:
-            if key not in specifics:
-                name = int(key)
-                closing_date = form[key]
-                result = closechannels([name], closing_date)
-                if result:
-                    channel_ids.append(key)
-        if channel_ids:
-            messages.success(
-                request,
-                success_message % ",".join(channel_ids))
+    channel_ids = []
+    for key in form:
+        name = int(key)
+        closing_date = form[key]
+        result = closechannels([name], closing_date)
+        if result:
+            channel_ids.append(key)
+    if channel_ids:
+        messages.success(
+            request,
+            success_message % ",".join(channel_ids))
         return redirect(url)
 
     return render(request, "closechannels_view.html", context)

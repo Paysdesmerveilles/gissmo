@@ -20,11 +20,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='built',
-            options={'verbose_name': 'Built'},
+            options={'verbose_name': 'Place'},
         ),
         migrations.AlterModelOptions(
             name='builttype',
-            options={'ordering': ['built_type_name'], 'verbose_name': 'Built type'},
+            options={'ordering': ['built_type_name'], 'verbose_name': 'Place type'},
         ),
         migrations.AlterModelOptions(
             name='calibrationunit',
@@ -128,11 +128,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='stationdoc',
-            options={'verbose_name': 'Document (station)', 'verbose_name_plural': 'Documents (station)'},
+            options={'verbose_name': 'Document (site)', 'verbose_name_plural': 'Documents (site)'},
         ),
         migrations.AlterModelOptions(
             name='stationdoctype',
-            options={'verbose_name': 'Document type (station)', 'verbose_name_plural': 'Document types (station)'},
+            options={'verbose_name': 'Document type (site)', 'verbose_name_plural': 'Document types (site)'},
         ),
         migrations.AlterModelOptions(
             name='stationsite',
@@ -185,7 +185,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='builttype',
             name='built_type_name',
-            field=models.CharField(max_length=40, verbose_name='Built type'),
+            field=models.CharField(max_length=40, verbose_name='Name'),
         ),
         migrations.AlterField(
             model_name='calibrationunit',
@@ -205,7 +205,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='chain',
             name='equip',
-            field=models.ForeignKey(to='gissmo.Equipment', verbose_name='Equipement'),
+            field=models.ForeignKey(to='gissmo.Equipment', verbose_name='Equipment'),
         ),
         migrations.AlterField(
             model_name='chainconfig',
@@ -235,7 +235,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='channel',
             name='azimuth',
-            field=models.DecimalField(max_digits=4, verbose_name='Azimut', decimal_places=1),
+            field=models.DecimalField(max_digits=4, verbose_name='Azimut (°)', decimal_places=1),
         ),
         migrations.AlterField(
             model_name='channel',
@@ -255,7 +255,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='channel',
             name='data_type',
-            field=models.ManyToManyField(blank=True, verbose_name='Produced data', to='gissmo.DataType'),
+            field=models.ManyToManyField(blank=True, verbose_name='Data types', to='gissmo.DataType'),
         ),
         migrations.AlterField(
             model_name='channel',
@@ -270,7 +270,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='channel',
             name='dip',
-            field=models.DecimalField(max_digits=3, verbose_name='Dip', decimal_places=1),
+            field=models.DecimalField(max_digits=3, verbose_name='Dip (°)', decimal_places=1),
         ),
         migrations.AlterField(
             model_name='channel',
@@ -310,7 +310,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='channel',
             name='restricted_status',
-            field=models.IntegerField(null=True, choices=[(1, 'Open'), (2, 'Closed'), (3, 'Partial')], blank=True, verbose_name='Restrictive state'),
+            field=models.IntegerField(null=True, choices=[(1, 'Open'), (2, 'Closed'), (3, 'Partial')], blank=True, verbose_name='Restrictive status'),
         ),
         migrations.AlterField(
             model_name='channel',
@@ -350,7 +350,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipdoc',
             name='begin_effective',
-            field=models.DateField(null=True, blank=True, verbose_name='Effective starting date (yyyy-mm-dd)'),
+            field=models.DateField(null=True, blank=True, verbose_name='Start date (yyyy-mm-dd)'),
         ),
         migrations.AlterField(
             model_name='equipdoc',
@@ -370,12 +370,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipdoc',
             name='end_effective',
-            field=models.DateField(null=True, blank=True, verbose_name='Effective ending date (yyyy-mm-dd)'),
+            field=models.DateField(null=True, blank=True, verbose_name='End date (yyyy-mm-dd)'),
         ),
         migrations.AlterField(
             model_name='equipdoc',
             name='equip',
-            field=models.ForeignKey(to='gissmo.Equipment', verbose_name='Equipement'),
+            field=models.ForeignKey(to='gissmo.Equipment', verbose_name='Equipment'),
         ),
         migrations.AlterField(
             model_name='equipdoc',
@@ -405,7 +405,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipment',
             name='last_state',
-            field=models.IntegerField(null=True, choices=[(1, 'Operation in progress'), (2, 'To be tested'), (3, 'Available'), (4, 'Failure'), (5, 'Breakdown'), (6, 'Transit in progress'), (7, 'Out of use'), (8, 'Lost'), (9, 'Waste'), (10, 'Other')], blank=True, verbose_name='Last state'),
+            field=models.IntegerField(null=True, choices=[(1, 'Operation in progress'), (2, 'To be tested'), (3, 'Available'), (4, 'Failure'), (5, 'Breakdown'), (6, 'Transit in progress'), (7, 'Out of use'), (8, 'Lost'), (9, 'Waste'), (10, 'Other')], blank=True, verbose_name='Status'),
         ),
         migrations.AlterField(
             model_name='equipment',
@@ -460,7 +460,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipmodeldoc',
             name='begin_effective',
-            field=models.DateField(null=True, blank=True, verbose_name='Effective starting date (yyyy-mm-dd)'),
+            field=models.DateField(null=True, blank=True, verbose_name='Start date (yyyy-mm-dd)'),
         ),
         migrations.AlterField(
             model_name='equipmodeldoc',
@@ -480,7 +480,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='equipmodeldoc',
             name='end_effective',
-            field=models.DateField(null=True, blank=True, verbose_name='Effective ending date (yyyy-mm-dd)'),
+            field=models.DateField(null=True, blank=True, verbose_name='End date (yyyy-mm-dd)'),
         ),
         migrations.AlterField(
             model_name='equipmodeldoc',
@@ -550,12 +550,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='intervequip',
             name='built',
-            field=models.ForeignKey(null=True, blank=True, to='gissmo.Built', verbose_name='Built'),
+            field=models.ForeignKey(null=True, blank=True, to='gissmo.Built', verbose_name='Place'),
         ),
         migrations.AlterField(
             model_name='intervequip',
             name='equip',
-            field=models.ForeignKey(to='gissmo.Equipment', verbose_name='Equipement'),
+            field=models.ForeignKey(to='gissmo.Equipment', verbose_name='Equipment'),
         ),
         migrations.AlterField(
             model_name='intervequip',
@@ -565,7 +565,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='intervequip',
             name='equip_state',
-            field=models.IntegerField(choices=[(1, 'Operation in progress'), (2, 'To be tested'), (3, 'Available'), (4, 'Failure'), (5, 'Breakdown'), (6, 'Transit in progress'), (7, 'Out of use'), (8, 'Lost'), (9, 'Waste'), (10, 'Other')], verbose_name='State'),
+            field=models.IntegerField(choices=[(1, 'Operation in progress'), (2, 'To be tested'), (3, 'Available'), (4, 'Failure'), (5, 'Breakdown'), (6, 'Transit in progress'), (7, 'Out of use'), (8, 'Lost'), (9, 'Waste'), (10, 'Other')], verbose_name='Status'),
         ),
         migrations.AlterField(
             model_name='intervequip',
@@ -600,7 +600,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='intervstation',
             name='station_state',
-            field=models.IntegerField(null=True, choices=[(1, 'Installing'), (7, 'Testing'), (2, 'Running'), (3, 'Broken'), (4, 'Failure'), (5, 'Closed'), (6, 'Other')], blank=True, verbose_name='State'),
+            field=models.IntegerField(null=True, choices=[(1, 'Installing'), (7, 'Testing'), (2, 'Running'), (3, 'Broken'), (4, 'Failure'), (5, 'Closed'), (6, 'Other')], blank=True, verbose_name='Status'),
         ),
         migrations.AlterField(
             model_name='network',
@@ -680,7 +680,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationdoc',
             name='begin_effective',
-            field=models.DateField(null=True, blank=True, verbose_name='Effective starting date (yyyy-mm-dd)'),
+            field=models.DateField(null=True, blank=True, verbose_name='Start date (yyyy-mm-dd)'),
         ),
         migrations.AlterField(
             model_name='stationdoc',
@@ -700,7 +700,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationdoc',
             name='end_effective',
-            field=models.DateField(null=True, blank=True, verbose_name='Effective ending date (yyyy-mm-dd)'),
+            field=models.DateField(null=True, blank=True, verbose_name='End date (yyyy-mm-dd)'),
         ),
         migrations.AlterField(
             model_name='stationdoc',
@@ -770,7 +770,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationsite',
             name='last_state',
-            field=models.IntegerField(null=True, choices=[(1, 'Installing'), (7, 'Testing'), (2, 'Running'), (3, 'Broken'), (4, 'Failure'), (5, 'Closed'), (6, 'Other')], blank=True, verbose_name='Last state'),
+            field=models.IntegerField(null=True, choices=[(1, 'Installing'), (7, 'Testing'), (2, 'Running'), (3, 'Broken'), (4, 'Failure'), (5, 'Closed'), (6, 'Other')], blank=True, verbose_name='Status'),
         ),
         migrations.AlterField(
             model_name='stationsite',
@@ -795,7 +795,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationsite',
             name='private_link',
-            field=models.URLField(null=True, blank=True, verbose_name='Specific tool link'),
+            field=models.URLField(null=True, blank=True, verbose_name='External link'),
         ),
         migrations.AlterField(
             model_name='stationsite',
@@ -805,7 +805,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationsite',
             name='restricted_status',
-            field=models.IntegerField(null=True, choices=[(1, 'Open'), (2, 'Closed'), (3, 'Partial')], blank=True, verbose_name='Restrictive state'),
+            field=models.IntegerField(null=True, choices=[(1, 'Open'), (2, 'Closed'), (3, 'Partial')], blank=True, verbose_name='Restrictive status'),
         ),
         migrations.AlterField(
             model_name='stationsite',
@@ -820,7 +820,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationsite',
             name='site_type',
-            field=models.IntegerField(default=1, choices=[(1, 'Seismological station'), (6, 'Testing site'), (7, 'Theoretical site'), (2, 'Observatory'), (3, 'Customer service place'), (4, 'Undefined'), (5, 'Other')], verbose_name='Type'),
+            field=models.IntegerField(default=1, choices=[(1, 'Measuring site'), (6, 'Potential site'), (7, 'Theoretical site'), (2, 'Agency'), (3, 'Customer service place'), (4, 'Undefined'), (5, 'Other')], verbose_name='Type'),
         ),
         migrations.AlterField(
             model_name='stationsite',

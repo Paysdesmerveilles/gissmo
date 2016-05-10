@@ -84,13 +84,13 @@ function get_equip(selectBox, urlparm1){
        Initiate all other field to nothing
        */
        var equipselect = 'select#id_intervequip_set-'+singleValues+'-equip';
-       $(equipselect).html('<option value= ""> -- choisir une action -- </option>');
+       $(equipselect).html('<option value= ""> -- choose an action -- </option>');
        var equipstateselect = 'select#id_intervequip_set-'+singleValues+'-equip_state';
-       $(equipstateselect).html('<option value= ""> -- choisir une action -- </option>');
+       $(equipstateselect).html('<option value= ""> -- choose an action -- </option>');
        var stationselect = 'select#id_intervequip_set-'+singleValues+'-station';
-       $(stationselect).html('<option value= ""> -- choisir une action -- </option>');
+       $(stationselect).html('<option value= ""> -- choose an action -- </option>');
        var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
-       $(builtselect).html('<option value= ""> -- choisir une action -- </option>');
+       $(builtselect).html('<option value= ""> -- choose an action -- </option>');
        var note = $('textarea#id_intervequip_set-'+singleValues+'-note').val('');
        }
 
@@ -171,7 +171,7 @@ function get_equip(selectBox, urlparm1){
 /*
 Function that list the possible state of an equipment,
 the possible equipment and
-the possible place, station and built, that an equipement can take
+the possible place, station and place, that an equipement can take
 according to the equipment action choice
 when we describe the intervention 
 The trigger is the field equip_action
@@ -208,13 +208,13 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
        Initiate all other field to nothing
        */
        var equipselect = 'select#id_intervequip_set-'+singleValues+'-equip';
-       $(equipselect).html('<option value= ""> -- choisir une action -- </option>');
+       $(equipselect).html('<option value= ""> -- choose an action -- </option>');
        var equipstateselect = 'select#id_intervequip_set-'+singleValues+'-equip_state';
-       $(equipstateselect).html('<option value= ""> -- choisir une action -- </option>');
+       $(equipstateselect).html('<option value= ""> -- choose an action -- </option>');
        var stationselect = 'select#id_intervequip_set-'+singleValues+'-station';
-       $(stationselect).html('<option value= ""> -- choisir une action -- </option>');
+       $(stationselect).html('<option value= ""> -- choose an action -- </option>');
        var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
-       $(builtselect).html('<option value= ""> -- choisir une action -- </option>');
+       $(builtselect).html('<option value= ""> -- choose an action -- </option>');
        var note = $('textarea#id_intervequip_set-'+singleValues+'-note').val('');
        }
 
@@ -223,7 +223,7 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
     */
     /*
     if (actiontypevalue == 1) {
-       alert('Cette action n\'est pas autorisée dans ce contexte')  
+       alert('This action is not allowed in this context')  
        }
     */
 
@@ -308,7 +308,7 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
           $(stationselect).html(options);
 
           /*
-          Obtain the built if we have only one site as destination 
+          Obtain the place if we have only one site as destination 
           else display that they must choose a site first
           */
           var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';
@@ -331,7 +331,7 @@ function get_equip_state(selectBox, urlparm1, urlparm2, urlparm3, urlparm4){
               });
              }
           else
-              {$(builtselect).html('<option value= ""> -- choisir un site -- </option>');}
+              {$(builtselect).html('<option value= ""> -- choose a site -- </option>');}
       }
     });
 }
@@ -446,7 +446,7 @@ function get_station_position(selectBox, urlparm1){
 
 
 /*
-Function that list the built for a site
+Function that list the place for a site
 when we describe the intervention 
 The trigger is the field station
 */
@@ -462,7 +462,7 @@ function get_site_built(selectBox, urlparm1){
     else the call to the ajax while not work as expected
     */
     if (! station_id) {
-       alert('It\'s better to registrate the site that results from the action before selecting a built')
+       alert('It\'s better to registrate the site that results from the action before selecting a place')
        }
  
     var builtselect = 'select#id_intervequip_set-'+singleValues+'-built';

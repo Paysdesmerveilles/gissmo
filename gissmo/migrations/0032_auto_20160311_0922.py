@@ -22,7 +22,8 @@ class Migration(migrations.Migration):
                 ('intervention', models.ForeignKey(to='gissmo.Intervention')),
             ],
             options={
-                'verbose_name': 'Organism',
+                'verbose_name': 'Organism (interv.)',
+                'verbose_name_plural': 'Organisms (interv.)',
             },
         ),
         migrations.CreateModel(
@@ -34,7 +35,8 @@ class Migration(migrations.Migration):
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'verbose_name': 'Protagonist',
+                'verbose_name': 'Protagonist (interv.)',
+                'verbose_name_plural': 'Protagonists (interv.)',
             },
         ),
         migrations.AddField(

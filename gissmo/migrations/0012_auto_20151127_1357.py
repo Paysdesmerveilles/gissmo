@@ -6,7 +6,7 @@ from django.db import models, migrations
 
 def migrate_last_equipment_state(apps, schema_editor):
     """
-    All equipments' states are in IntervEquip.
+    All equipments' statuses are in IntervEquip.
     We now have a specific field in Equipment to know the last one: last_state
     So we need to copy the last known value from IntervEquip to Equipment.
     """

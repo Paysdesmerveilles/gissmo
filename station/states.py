@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 
 """
-Allowed states for a given Station
+Allowed statuses for a given Station
 
 States:
 
@@ -23,11 +23,11 @@ FERMEE = 5
 AUTRE = 6
 EN_TEST = 7
 STATION_STATES = (
-    (INSTALLATION, 'Installing'),
-    (EN_TEST, 'Testing'),
+    (INSTALLATION, 'In installation'),
     (OPERATION, 'Running'),
-    (DEFAUT, 'Broken'),
-    (PANNE, 'Failure'),
+    (DEFAUT, 'Major failure'),
+    (PANNE, 'Ongoing issue'),
     (FERMEE, 'Closed'),
     (AUTRE, 'Other'),
+    (EN_TEST, 'In test'),
 )

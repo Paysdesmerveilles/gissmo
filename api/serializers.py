@@ -176,7 +176,7 @@ class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
         view_name='stationsite-detail',
         read_only=True)
     manufacturer = serializers.CharField(source='equip_model.manufacturer')
-    state = EnumField(choices=EQUIP_STATES, source='last_state')
+    status = EnumField(choices=EQUIP_STATES, source='last_state')
 
     class Meta:
         model = Equipment
@@ -187,7 +187,7 @@ class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
             'serial_number',
             'manufacturer',
             'station',
-            'state',
+            'status',
         ]
 
 

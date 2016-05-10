@@ -68,11 +68,11 @@ class BuiltType(models.Model):
 
     built_type_name = models.CharField(
         max_length=40,
-        verbose_name="Built type")
+        verbose_name="Name")
 
     class Meta:
         ordering = ['built_type_name']
-        verbose_name = "Built type"
+        verbose_name = "Place type"
 
     def __str__(self):
         return self.built_type_name
@@ -112,10 +112,23 @@ celui-ci d'un autre bâti
 
     class Meta:
         unique_together = ("station", "built_type", "built_short_desc")
-        verbose_name = "Built"
+        verbose_name = "Place"
 
     def __str__(self):
         return '%s' % self.built_short_desc
+
+
+@python_2_unicode_compatible
+class GroundType(models.Model):
+    name = models.CharField(max_length=2, unique=True)
+    description = models.CharField(
+        max_length=255)
+
+    class Meta:
+        verbose_name = "EC8 Soil classification"
+
+    def __str__(self):
+        return '%s' % self.name
 
 
 @python_2_unicode_compatible
@@ -373,10 +386,10 @@ class StationSite(models.Model):
     SITE_TEST = 6
     SITE_THEORIQUE = 7
     SITE_CHOICES = (
-        (STATION, 'Seismological station'),
-        (SITE_TEST, 'Testing site'),
+        (STATION, 'Measuring site'),
+        (SITE_TEST, 'Potential site'),
         (SITE_THEORIQUE, 'Theoretical site'),
-        (OBSERVATOIRE, 'Observatory'),
+        (OBSERVATOIRE, 'Agency'),
         (SAV, 'Customer service place'),
         (NEANT, 'Undefined'),
         (AUTRE, 'Other'),
@@ -461,22 +474,28 @@ class StationSite(models.Model):
     private_link = models.URLField(
         null=True,
         blank=True,
-        verbose_name="Specific tool link")
+        verbose_name="External link")
     station_parent = models.ForeignKey(
         'self',
         null=True,
         blank=True,
-        verbose_name="Referent")
+        verbose_name="Referent site")
     geology = models.CharField(
         max_length=50,
         null=True,
         blank=True,
         verbose_name="Geological formation")
+    ground_type = models.ForeignKey(
+        'GroundType',
+        null=True,
+        blank=True,
+        verbose_name="EC8 Soil classification",
+        help_text="See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details")
     restricted_status = models.IntegerField(
         choices=STATUS,
         null=True,
         blank=True,
-        verbose_name="Restrictive state")
+        verbose_name="Restrictive status")
     alternate_code = models.CharField(
         max_length=5,
         null=True,
@@ -534,7 +553,7 @@ class StationSite(models.Model):
         choices=StationState.STATION_STATES,
         null=True,
         blank=True,
-        verbose_name='Last state')
+        verbose_name='Status')
 
     def get_last_state(self):
         res = None
@@ -602,7 +621,7 @@ class StationSite(models.Model):
         project = get_object_or_404(Project, name=self.project)
         project.sites.add(self.id)
 
-        # Return expected station state
+        # Return expected station status
         return StationState.INSTALLATION
 
     def __init__(self, *args, **kwargs):
@@ -682,12 +701,12 @@ l'équipment
         null=True,
         blank=True,
         verbose_name='Purchase date')
-    # Last state makes equipment display faster. Interventions updates it.
+    # Last status makes equipment display faster. Interventions updates it.
     last_state = models.IntegerField(
         choices=EquipState.EQUIP_STATES,
         null=True,
         blank=True,
-        verbose_name='Last state')
+        verbose_name='Status')
     # Last station makes equipment display faster. Interventions updates it.
     last_station = models.ForeignKey(
         StationSite,
@@ -748,7 +767,7 @@ l'équipment
           * purchase_date
         """
         mandatories_fields = [
-            ('stockage_site', 'Stockage site'),
+            ('stockage_site', 'Storage place'),
             ('purchase_date', 'Purchase date')]
         for field in mandatories_fields:
             if not getattr(self, field[0], None):
@@ -994,7 +1013,8 @@ class IntervUser(models.Model):
     note = models.TextField(null=True, blank=True)
 
     class Meta:
-        verbose_name = 'Protagonist'
+        verbose_name = 'Protagonist (interv.)'
+        verbose_name_plural = 'Protagonists (interv.)'
 
     def delete(self, *args, **kwargs):
         """
@@ -1043,7 +1063,8 @@ class IntervOrganism(models.Model):
     note = models.TextField(null=True, blank=True)
 
     class Meta:
-        verbose_name = 'Organism'
+        verbose_name = 'Organism (interv.)'
+        verbose_name_plural = 'Organisms (interv.)'
 
 
 @python_2_unicode_compatible
@@ -1076,7 +1097,7 @@ la station
         choices=StationState.STATION_STATES,
         null=True,
         blank=True,
-        verbose_name="State")
+        verbose_name="Status")
     note = models.TextField(null=True, blank=True, verbose_name="Note")
 
     class Meta:
@@ -1087,7 +1108,7 @@ la station
 
     def save(self, *args, **kwargs):
         """
-        Update station state in given Intervention.
+        Update station status in given Intervention.
         """
         res = super(IntervStation, self).save(*args, **kwargs)
         s = StationSite.objects.get(pk=self.intervention.station_id)
@@ -1132,10 +1153,10 @@ répertoriées
     equip_action = models.IntegerField(
         choices=EquipAction.EQUIP_ACTIONS,
         verbose_name="Action")
-    equip = models.ForeignKey("Equipment", verbose_name="Equipement")
+    equip = models.ForeignKey("Equipment", verbose_name="Equipment")
     equip_state = models.IntegerField(
         choices=EquipState.EQUIP_STATES,
-        verbose_name="State")
+        verbose_name="Status")
     station = models.ForeignKey(
         "StationSite",
         null=True,
@@ -1145,7 +1166,7 @@ répertoriées
         "Built",
         null=True,
         blank=True,
-        verbose_name="Built")
+        verbose_name="Place")
     note = models.TextField(null=True, blank=True, verbose_name="Note")
 
     class Meta:
@@ -1157,7 +1178,7 @@ répertoriées
     def save(self, *args, **kwargs):
         """
         Update equipment in given Intervention:
-          - state
+          - status
           - station
         """
         res = super(IntervEquip, self).save(*args, **kwargs)
@@ -1175,8 +1196,8 @@ class StationDocType(models.Model):
         verbose_name="Type")
 
     class Meta:
-        verbose_name = "Document type (station)"
-        verbose_name_plural = "Document types (station)"
+        verbose_name = "Document type (site)"
+        verbose_name_plural = "Document types (site)"
 
     def __str__(self):
         return u'%s' % (self.stationdoc_type_name)
@@ -1238,16 +1259,16 @@ class StationDoc(models.Model):
     begin_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Effective starting date (yyyy-mm-dd)")
+        verbose_name="Start date (yyyy-mm-dd)")
     end_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Effective ending date (yyyy-mm-dd)")
+        verbose_name="End date (yyyy-mm-dd)")
 
     class Meta:
         unique_together = ("station", "document_title", "inscription_date")
-        verbose_name = "Document (station)"
-        verbose_name_plural = "Documents (station)"
+        verbose_name = "Document (site)"
+        verbose_name_plural = "Documents (site)"
 
     def __str__(self):
         return u'%s %s %s' % (
@@ -1328,11 +1349,11 @@ class EquipModelDoc(models.Model):
     begin_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Effective starting date (yyyy-mm-dd)")
+        verbose_name="Start date (yyyy-mm-dd)")
     end_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Effective ending date (yyyy-mm-dd)")
+        verbose_name="End date (yyyy-mm-dd)")
 
     class Meta:
         unique_together = ("equip_model", "document_title", "inscription_date")
@@ -1394,7 +1415,7 @@ class EquipDoc(models.Model):
     """
     equip = models.ForeignKey(
         Equipment,
-        verbose_name="Equipement"
+        verbose_name="Equipment"
     )
     owner = models.ForeignKey(User)
     document_type = models.ForeignKey(
@@ -1421,11 +1442,11 @@ class EquipDoc(models.Model):
     begin_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Effective starting date (yyyy-mm-dd)")
+        verbose_name="Start date (yyyy-mm-dd)")
     end_effective = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Effective ending date (yyyy-mm-dd)")
+        verbose_name="End date (yyyy-mm-dd)")
 
     class Meta:
         unique_together = ("equip", "document_title", "inscription_date")
@@ -1561,11 +1582,11 @@ class Channel(models.Model):
         max_digits=4,
         decimal_places=1)
     azimuth = models.DecimalField(
-        verbose_name="Azimut",
+        verbose_name="Azimut (°)",
         max_digits=4,
         decimal_places=1)
     dip = models.DecimalField(
-        verbose_name="Dip",
+        verbose_name="Dip (°)",
         max_digits=3,
         decimal_places=1)
     sample_rate = models.FloatField(verbose_name="Sample rate (Hz)")
@@ -1581,7 +1602,7 @@ class Channel(models.Model):
         choices=STATUS,
         null=True,
         blank=True,
-        verbose_name="Restrictive state")
+        verbose_name="Restrictive status")
     alternate_code = models.CharField(
         max_length=5,
         null=True,
@@ -1613,7 +1634,7 @@ class Channel(models.Model):
     data_type = models.ManyToManyField(
         "DataType",
         blank=True,
-        verbose_name="Produced data")
+        verbose_name="Data types")
     latitude_unit = models.CharField(
         max_length=15,
         null=True,
@@ -1741,7 +1762,7 @@ class Chain(models.Model):
         null=False,
         blank=False,
         verbose_name="Type")
-    equip = models.ForeignKey('Equipment', verbose_name="Equipement")
+    equip = models.ForeignKey('Equipment', verbose_name="Equipment")
 
     class Meta:
         unique_together = ("channel", "order")
@@ -1880,21 +1901,21 @@ class Organism(models.Model):
 
     def delete(self, *args, **kwargs):
         """
-        Avoid Inconnu Organism to be deleted.
+        Avoid 'Unknown' Organism to be deleted.
         We use database value as reference. This is to avoid someone to rename
         Organism before launching delete().
         """
         old = Organism.objects.get(pk=self.id)
-        assert old.name != 'Inconnu', ("Delete 'Inconnu' is forbidden!")
+        assert old.name != 'Unknown', ("Delete 'Unknown' is forbidden!")
         return super(Organism, self).delete(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         """
-        Avoid Inconnu organism to be renamed or another organism to be
-        renamed into Inconnu one.
+        Avoid 'Unknown' organism to be renamed or another organism to be
+        renamed into 'Unknown' one.
         """
         if self.id:
-            name = 'Inconnu'
+            name = 'Unknown'
             old = Organism.objects.get(pk=self.id)
             assert old.name != name and self.name != name, (
                 "%s could be neither renamed nor replaced." % name)
@@ -1902,11 +1923,11 @@ class Organism(models.Model):
 
     def clean(self):
         """
-        Avoid Inconnu organism to be renamed on Admin interface.
+        Avoid 'Unknown' organism to be renamed on Admin interface.
         """
         if self.id:
             organism = Organism.objects.get(pk=self.id)
-            name = 'Inconnu'
+            name = 'Unknown'
             if organism.name == name and self.name != name:
                 raise ValidationError(
                     "%(name)s organism should stay as it is!",

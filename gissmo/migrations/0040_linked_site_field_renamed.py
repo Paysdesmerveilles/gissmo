@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stationsite',
             name='station_parent',
-            field=models.ForeignKey(null=True, to='gissmo.StationSite', verbose_name='Referent', blank=True),
+            field=models.ForeignKey(null=True, to='gissmo.StationSite', verbose_name='Referent site', blank=True),
         ),
     ]

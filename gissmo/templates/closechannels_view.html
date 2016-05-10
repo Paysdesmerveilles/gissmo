@@ -10,12 +10,6 @@
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />{% endblock %}
 
 {% block content %}
-<p>We offer you two possibilities:
-<ul>
-  <li>either you enter the Common date and use the checkbox to consider all channels as closed with the Common date</li>
-  <li>or you just add a date on channels you want to close.</li>
-</ul>
-</p>
 <hr />
 {% if form.subject.errors %}
 <ol>
@@ -27,7 +21,22 @@
 <form action="" method="post">
   {% csrf_token %}
   <table>
-    {{ form.as_table }}
+    <tbody>
+    {% for fields in form %}
+      {% for field in fields %}
+        <tr>
+          <th>{{ field.label }}:</th>
+          <td>
+            {{ field }}
+          </td>
+          <td>
+            <a href="#" onclick="spread_date('{{ field.auto_id }}')">Apply to all</a>
+          </td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+    </tbody>
+    {{ form.management_form }}
   </table>
   <input type="submit" value="Submit" />
 </form>

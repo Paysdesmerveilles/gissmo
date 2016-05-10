@@ -70,6 +70,7 @@ class ParameterEquipInline(admin.TabularInline):
     model = ParameterEquip
     extra = 0
 
+
 """
 Custom filter for the equipment model change list
 """
@@ -338,7 +339,7 @@ class EquipmentAdmin(admin.ModelAdmin):
                     'vendor',
                     'contact')],
             'classes': ['collapse']}),
-        ('Further information', {
+        ('Other information', {
             'fields': [('note')],
             'classes': ['collapse']})]
 
@@ -500,7 +501,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         """
         Gives stockage_site and purchase_date to Equipment so that it can
         generate interventions such as buying equipment and make Equipment in
-        'to test' state.
+        'to test' status.
         """
         obj.stockage_site = form.cleaned_data['stockage_site']
         obj.actor = request.user.username
@@ -638,7 +639,7 @@ class StationSiteAdmin(admin.ModelAdmin):
                     'creation_date',
                     'project'),
                 ('latitude', 'longitude', 'elevation'),
-                ('geology')]}),
+                ('ground_type')]}),
         ('Contacts', {
             'fields': [('contact')],
             'classes': ['collapse']}),
@@ -648,10 +649,11 @@ class StationSiteAdmin(admin.ModelAdmin):
                 ('address', 'zip_code', 'town'),
                 ('county', 'region', 'country')],
             'classes': ['collapse']}),
-        ('Further information', {
+        ('Other information', {
             'fields': [
                 ('note'),
                 ('private_link'),
+                ('geology'),
                 ('station_description'),
                 ('alternate_code', 'historical_code', 'restricted_status'),
             ],
@@ -659,6 +661,9 @@ class StationSiteAdmin(admin.ModelAdmin):
     ]
 
     inlines = [BuiltInline, StationDocInline, ]
+
+    class Media:
+        js = ["js/spread_date.js"]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
@@ -682,7 +687,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         """
         Overide save_model to generate intervention and intervstation object
-        Create station code as action and in construction for the state
+        Create station code as action and in construction for the status
         """
         obj.project = form.cleaned_data['project']
         obj.actor = request.user.username
@@ -728,14 +733,6 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
 
     def closechannels_formset(self, station):
         class StationSiteClosechannelsForm(forms.Form):
-            date = forms.SplitDateTimeField(
-                label="Common date",
-                widget=AdminSplitDateTime,
-                required=False)
-            all_channels = forms.BooleanField(
-                label="Set common date to all channels",
-                required=False)
-
             def __init__(self, *args, **kwargs):
                 super(
                     StationSiteClosechannelsForm,
@@ -818,15 +815,6 @@ class IntervEquipInline(admin.TabularInline):
     model = IntervEquip
     extra = 0
     formset = IntervEquipInlineFormset
-
-    def get_formset(self, request, obj=None, **kwargs):
-        equip = request.GET.get('equip', '')
-        initial = []
-        initial.append(equip)
-        formset = super(IntervEquipInline, self).get_formset(
-            request, obj, **kwargs)
-        formset.__init__ = curry(formset.__init__, initial=initial)
-        return formset
 
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
@@ -1013,6 +1001,10 @@ class ChainInline(admin.TabularInline):
         formset.__init__ = curry(formset.__init__, initial=initial)
         return formset
 
+    def get_queryset(self, request):
+        qs = super(ChainInline, self).get_queryset(request)
+        return qs.prefetch_related('equip__equip_model')
+
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1})},
     }
@@ -1024,6 +1016,10 @@ class ChainConfigInline(admin.TabularInline):
     formset = ChainConfigInlineFormset
 
     fields = ('parameter', 'value')
+
+    def get_queryset(self, request):
+        qs = super(ChainConfigInline, self).get_queryset(request)
+        return qs.prefetch_related('parameter__equip_model')
 
 
 class ChannelChainInline(admin.TabularInline):
@@ -1044,6 +1040,13 @@ class ChannelChainInline(admin.TabularInline):
         return super(ChannelChainInline, self).formfield_for_dbfield(
             db_field,
             **kwargs)
+
+    def get_queryset(self, request):
+        qs = super(ChannelChainInline, self).get_queryset(request)
+        return qs.prefetch_related(
+            'chain__equip__equip_model',
+            'parameter__equip_model',
+            'value')
 
 
 class ChannelAdmin(admin.ModelAdmin):
@@ -1076,10 +1079,10 @@ class ChannelAdmin(admin.ModelAdmin):
                     'azimuth',
                     'dip'),
                 ('sample_rate', 'accept_anyway', 'start_date', 'end_date')]}),
-        ('Produced data types', {
+        ('Data types', {
             'fields': [('data_type')],
             'classes': ['collapse']}),
-        ('Further information', {
+        ('Other information', {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status'),
@@ -1295,6 +1298,10 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         """
         return {}
 
+    def get_queryset(self, request):
+        qs = super(ChainAdmin, self).get_queryset(request)
+        return qs.prefetch_related('equip__equip_model')
+
 
 class NetworkAdmin(admin.ModelAdmin):
     model = Network
@@ -1302,7 +1309,7 @@ class NetworkAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ('', {'fields': [('network_code', 'start_date', 'end_date'), ]}),
-        ('Further information', {
+        ('Other information', {
             'fields': [
                 ('description'),
                 ('alternate_code', 'historical_code', 'restricted_status')],
@@ -1387,7 +1394,7 @@ class OrganismAdmin(admin.ModelAdmin):
     filter_horizontal = ('users', )
 
     def delete_model(self, request, obj):
-        forbidden_element = 'Inconnu'
+        forbidden_element = 'Unknown'
         if obj.name == forbidden_element:
             storage = messages.get_messages(request)
             storage.used = True
@@ -1398,6 +1405,12 @@ class OrganismAdmin(admin.ModelAdmin):
             obj.delete()
             return super(OrganismAdmin, self).delete_model(request, obj)
 
+
+class GroundTypeAdmin(admin.ModelAdmin):
+    model = GroundType
+    ordering = ['name']
+    search_fields = ['name', 'description']
+    list_display = ['name', 'description']
 
 """
 Disabling the action "delete_selected" for all the site
@@ -1426,3 +1439,4 @@ admin.site.register(ParameterEquip, ParameterEquipAdmin)
 admin.site.register(ParameterValue, ParameterValueAdmin)
 admin.site.register(ChannelCode, ChannelCodeAdmin)
 admin.site.register(Organism, OrganismAdmin)
+admin.site.register(GroundType, GroundTypeAdmin)

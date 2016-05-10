@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 """
 Allowed states on a given Equipment.
 
-States:
+Statuses:
 
   1 : OPERATION : Operation in progress
   2 : A_TESTER : To be tested
@@ -29,14 +29,14 @@ DISPARU = 8
 AU_REBUT = 9
 AUTRE = 10
 EQUIP_STATES = (
-    (OPERATION, 'Operation in progress'),
+    (OPERATION, 'Running'),
     (A_TESTER, 'To be tested'),
     (DISPONIBLE, 'Available'),
-    (DEFAUT, 'Failure'),
-    (PANNE, 'Breakdown'),
-    (EN_TRANSIT, 'Transit in progress'),
-    (HORS_USAGE, 'Out of use'),
+    (DEFAUT, 'Ongoing issue'),
+    (PANNE, 'Out of order'),
+    (EN_TRANSIT, 'In transit'),
+    (HORS_USAGE, 'Unusable'),
     (DISPARU, 'Lost'),
-    (AU_REBUT, 'Waste'),
+    (AU_REBUT, 'Dismantled'),
     (AUTRE, 'Other'),
 )

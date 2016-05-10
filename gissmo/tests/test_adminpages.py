@@ -50,6 +50,7 @@ class AdminPageTest(TestCase):
             '/gissmo/gissmo/equipmodeldoctype/',
             '/gissmo/gissmo/equiptype/',
             '/gissmo/gissmo/forbiddenequipmentmodel/',
+            '/gissmo/gissmo/groundtype/',
             '/gissmo/gissmo/intervention/',
             '/gissmo/gissmo/network/',
             '/gissmo/gissmo/parameterequip/',

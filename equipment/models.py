@@ -8,7 +8,7 @@ class ChangeModelModification(models.Model):
     """
     This class represents a modification from a specific parameter value
     to a new one.
-    States:
+    Statuses:
       - neutral: both new and old value are equal
       - valid: new value is compatible with old value (regarding new values
       list)
