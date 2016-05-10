@@ -489,7 +489,8 @@ class StationSite(models.Model):
         'GroundType',
         null=True,
         blank=True,
-        verbose_name="EC8 Soil classification")
+        verbose_name="EC8 Soil classification",
+        help_text="See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details")
     restricted_status = models.IntegerField(
         choices=STATUS,
         null=True,

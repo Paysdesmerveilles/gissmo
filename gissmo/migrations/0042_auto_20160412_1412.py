@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='stationsite',
             name='ground_type',
-            field=models.ForeignKey(null=True, verbose_name='EC8 Soil classification', blank=True, to='gissmo.GroundType'),
+            field=models.ForeignKey(help_text='See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details', verbose_name='EC8 Soil classification', to='gissmo.GroundType', blank=True, null=True),
         ),
         migrations.RunPython(add_default_ground_types),
     ]
