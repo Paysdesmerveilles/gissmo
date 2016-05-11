@@ -27,8 +27,12 @@ RUN apk --no-cache --update add \
     chown -R guest:users $GISSMO_DIR $GISSMO_UPLOAD_DIR && \
     chmod -R 550 $GISSMO_DIR && \
     chmod -R 550 $GISSMO_UPLOAD_DIR && \
-    apk del linux-headers build-base postgresql-dev python3-dev && \
-    rm -rf ~/.cache /var/cache/apk/*
+    apk del \
+        build-base \
+        linux-headers \
+        postgresql-dev \
+        python3-dev && \
+    rm -rf /var/cache/apk/*
 
 VOLUME $GISSMO_UPLOAD_DIR
 
