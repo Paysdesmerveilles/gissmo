@@ -1,4 +1,4 @@
-Django==1.8.8
+Django==1.8.13
 ecdsa==0.13
 paramiko==1.15.2
 psycopg2==2.6.1
