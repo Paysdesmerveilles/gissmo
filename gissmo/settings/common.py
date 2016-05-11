@@ -35,6 +35,8 @@ USE_L10N = True
 USE_TZ = True
 
 UPLOAD_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
+if os.getenv('GISSMO_UPLOAD_DIR', None) is not None:
+    UPLOAD_ROOT = os.path.abspath(os.getenv('GISSMO_UPLOAD_DIR'))
 
 MEDIA_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'media')
 MEDIA_URL = '/media/'

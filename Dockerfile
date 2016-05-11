@@ -1,41 +1,45 @@
-# Version 0.2
-# This Dockerfile creates a fresh environment for Gissmo
-
-FROM python:3.4
+FROM alpine:edge
 
 MAINTAINER Olivier DOSSMANN, olivier+dockerfile@dossmann.net
 
-ENV PYTHONBUFFERED 1
 ENV GISSMO_DIR /opt/gissmo
+ENV GISSMO_UPLOAD_DIR /data
 ENV GISSMO_STATIC_DIR $GISSMO_DIR/static
 
-RUN mkdir -p $GISSMO_DIR && \
-  mkdir $GISSMO_DIR/static && \
-  mkdir $GISSMO_DIR/upload
+COPY . $GISSMO_DIR
+
 WORKDIR $GISSMO_DIR
 
-RUN useradd gissmo && \
-  echo 'gissmo:gissmo' | chpasswd
+RUN mkdir -p $GISSMO_DIR/static $GISSMO_UPLOAD_DIR
 
-COPY requirements.txt $GISSMO_DIR/requirements.txt
-RUN pip install -r $GISSMO_DIR/requirements.txt
+RUN apk --no-cache --update add \
+        build-base \
+        linux-headers \
+        libpq \
+        postgresql-dev \
+        py-configobj \
+        python3 \
+        python3-dev && \
+    python3 -m ensurepip && \
+    pip3 install --upgrade pip && \
+    pip install --no-cache-dir --upgrade -r requirements.txt && \
+    python3 manage.py collectstatic --noinput --clear -v 1 && \
+    chown -R guest:users $GISSMO_DIR $GISSMO_UPLOAD_DIR && \
+    chmod -R 550 $GISSMO_DIR && \
+    chmod -R 550 $GISSMO_UPLOAD_DIR && \
+    apk del \
+        build-base \
+        linux-headers \
+        postgresql-dev \
+        python3-dev && \
+    rm -rf /var/cache/apk/*
 
-ADD . $GISSMO_DIR
+VOLUME $GISSMO_UPLOAD_DIR
 
-RUN rm -rf $GISSMO_DIR/uploads/* && \
-  chown gissmo:gissmo $GISSMO_DIR -R && \
-  chmod 755 $GISSMO_DIR -R
-
-RUN python manage.py collectstatic --noinput --clear -v 1
-
-COPY scripts/docker-entrypoint.sh /
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
-VOLUME $GISSMO_DIR/upload
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
 
 EXPOSE 8000
 
 CMD ["production"]
 
-USER gissmo
+USER guest
