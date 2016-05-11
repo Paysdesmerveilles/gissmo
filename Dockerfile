@@ -17,7 +17,9 @@ RUN mkdir -p $GISSMO_DIR/static $GISSMO_UPLOAD_DIR && \
     echo 'DPkg::Post-Invoke {"/bin/rm -f /var/cache/apt/archives/*.deb || true";};' | tee /etc/apt/apt.conf.d/no-cache && \
     apt-get update && apt-get dist-upgrade -y --no-install-recommends && apt-get install -y \
         build-essential \
+        libpq5 \
         libpq-dev \
+        libpython3.5 \
         python3 \
         python3-pip \
         python3-dev && \
@@ -26,7 +28,7 @@ RUN mkdir -p $GISSMO_DIR/static $GISSMO_UPLOAD_DIR && \
     chown -R www-data:www-data $GISSMO_DIR $GISSMO_UPLOAD_DIR && \
     chmod -R 550 $GISSMO_DIR && \
     chmod -R 550 $GISSMO_UPLOAD_DIR && \
-    apt-get purge -y python3-pip build-essential && \
+    apt-get purge -y $(dpkg -l | awk '/-dev/ { print $2 }' | xargs) python3-pip build-essential && \
     apt-get autoremove -y --purge && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /root/.cache
