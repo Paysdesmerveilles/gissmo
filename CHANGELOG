@@ -1,3 +1,6 @@
+Version 1.5.1:
+  - Migrate Dockerfile from python:3.4 image to alpine:edge one. This reduce container size from 744 MB to 144 MB
+
 Version 1.5:
   - Add a new documentation called "how to access Gissmo API v1 with Python"
   - Add a link from StationSite to Ground Type
