@@ -17,7 +17,6 @@ class Station(models.Model):
     description = models.TextField(
         null=True,
         blank=True)
-    place = models.ForeignKey('place.Place')
 
     # GPS fields
     latitude = models.DecimalField(
@@ -45,8 +44,19 @@ class Station(models.Model):
     # files
     documents = models.ManyToManyField('document.Document', blank=True)
 
+    # places
+    places = models.ManyToManyField('place.Place', through='network.Built')
+
     def __str__(self):
         return '%s' % self.code
+
+
+class Built(models.Model):
+    """
+    A station have been built on several places.
+    """
+    place = models.ForeignKey('place.Place')
+    station = models.ForeignKey('network.Station')
 
 
 class Network(models.Model):

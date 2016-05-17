@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.admin import widgets
 
 from network.models import (
+    Built,
     Channel,
     Datatype,
     Installation,
@@ -70,11 +71,18 @@ class ChannelAdmin(admin.ModelAdmin):
     filter_horizontal = ('datatypes',)
 
 
+class BuiltInline(admin.TabularInline):
+    model = Built
+    extra = 2
+
+
 class StationAdmin(admin.ModelAdmin):
-    fields = ['code', 'place', 'operator', 'description']
-    list_display = ('code', 'place')
+    fields = ['code', 'operator', 'description']
+    list_display = ('code',)
     search_fields = ['code']
     ordering = ['code']
+
+    inlines = (BuiltInline,)
 
 
 admin.site.register(Network, NetworkAdmin)
