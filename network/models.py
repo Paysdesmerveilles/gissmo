@@ -19,6 +19,26 @@ class Station(models.Model):
         blank=True)
     place = models.ForeignKey('place.Place')
 
+    # GPS fields
+    latitude = models.DecimalField(
+        null=True,
+        blank=True,
+        max_digits=9,
+        decimal_places=6,
+        verbose_name="Latitude (°)")
+    longitude = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Longitude (°)",
+        max_digits=9,
+        decimal_places=6)
+    elevation = models.DecimalField(
+        null=True,
+        blank=True,
+        verbose_name="Elevation (m)",
+        max_digits=5,
+        decimal_places=1)
+
     # folks
     operator = models.ForeignKey('affiliation.Organism')
 

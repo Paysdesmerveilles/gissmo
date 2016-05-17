@@ -96,6 +96,10 @@ class Migration(migrations.Migration):
                 ('documents', models.ManyToManyField(blank=True, to='document.Document')),
                 ('operator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Organism')),
                 ('place', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='place.Place')),
+
+                ('elevation', models.DecimalField(blank=True, decimal_places=1, max_digits=5, null=True, verbose_name='Elevation (m)')),
+                ('latitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True, verbose_name='Latitude (°)')),
+                ('longitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True, verbose_name='Longitude (°)')),
             ],
             options={
                 'abstract': False,
