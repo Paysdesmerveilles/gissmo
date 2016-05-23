@@ -95,7 +95,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, null=True)),
                 ('state', models.IntegerField(choices=[(0, 'Theoritical'), (1, 'Test'), (2, 'Production')], default=0)),
                 ('documents', models.ManyToManyField(blank=True, to='document.Document')),
-                ('operator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Organism')),
+                ('operator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Agency')),
                 ('elevation', models.DecimalField(blank=True, decimal_places=1, max_digits=5, null=True, verbose_name='Elevation (m)')),
                 ('latitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True, verbose_name='Latitude (°)')),
                 ('longitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True, verbose_name='Longitude (°)')),

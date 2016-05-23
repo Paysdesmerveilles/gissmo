@@ -17,13 +17,14 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Organism',
+            name='Agency',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255, unique=True)),
                 ('_type', models.IntegerField(choices=[(0, 'Observatory/Laboratory'), (1, 'Network'), (2, 'Business'), (3, 'Customer service Company'), (4, 'Unknown')], default=4, verbose_name='type')),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='affiliation.Organism')),
+                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='affiliation.Agency')),
                 ('users', models.ManyToManyField(blank=True, to=settings.AUTH_USER_MODEL)),
             ],
+            options={'verbose_name_plural': 'Agencies'},
         ),
     ]

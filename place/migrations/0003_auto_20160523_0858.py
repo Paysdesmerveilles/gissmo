@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='PlaceOperator',
             fields=[
                 ('id', models.AutoField(serialize=False, verbose_name='ID', auto_created=True, primary_key=True)),
-                ('operator', models.ForeignKey(to='affiliation.Organism')),
+                ('operator', models.ForeignKey(to='affiliation.Agency')),
             ],
         ),
         migrations.RemoveField(
@@ -31,6 +31,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='place',
             name='operators',
-            field=models.ManyToManyField(blank=True, to='affiliation.Organism', through='place.PlaceOperator'),
+            field=models.ManyToManyField(blank=True, to='affiliation.Agency', through='place.PlaceOperator'),
         ),
     ]

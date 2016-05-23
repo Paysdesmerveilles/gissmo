@@ -191,7 +191,7 @@ class Place(models.Model):
 
     # folks
     operators = models.ManyToManyField(
-        'affiliation.Organism',
+        'affiliation.Agency',
         through='PlaceOperator',
         blank=True)
     contact = models.TextField(
@@ -244,7 +244,7 @@ def create_state(sender, instance, created, **kwargs):
 
 class PlaceOperator(models.Model):
     place = models.ForeignKey('place.Place')
-    operator = models.ForeignKey('affiliation.Organism')
+    operator = models.ForeignKey('affiliation.Agency')
 
 
 class PlaceDocument(models.Model):

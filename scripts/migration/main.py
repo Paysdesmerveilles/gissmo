@@ -27,7 +27,7 @@ from models import (
     GissmoValue,
     GroundType,
     Network,
-    Organism,
+    Agency,
     Parameter,
     Place,
     Project,
@@ -110,24 +110,24 @@ def fetch_or_migrate_model(equipment_types):
     return res
 
 
-def fetch_or_migrate_organism():
+def fetch_or_migrate_agency():
     res = {}
-    for organism in GissmoOrganism.select().order_by(GissmoOrganism.id):
-        print("Organism: %s (ID: %s)" % (organism.name, organism.id))
+    for agency in GissmoOrganism.select().order_by(GissmoOrganism.id):
+        print("Agency: %s (ID: %s)" % (agency.name, agency.id))
         # object creation (if needed)
-        o = Organism.get_or_create(
-            name=organism.name,
-            _type=organism._type)
-        if isinstance(o, tuple):
-            o = o[0]
+        a = Agency.get_or_create(
+            name=agency.name,
+            _type=agency._type)
+        if isinstance(a, tuple):
+            a = a[0]
         # add parent if needed
-        if organism.parent:
-            parent = Organism.get(Organism.name == organism.parent.name)
-            new = Organism.get(Organism.id == o.id)
+        if agency.parent:
+            parent = Agency.get(Agency.name == agency.parent.name)
+            new = Agency.get(Agency.id == a.id)
             new.parent = parent
             new.save()
-        # keep link between old organism and new one
-        res[organism.id] = o.id
+        # keep link between old agency and new one
+        res[agency.id] = a.id
     return res
 
 
@@ -144,7 +144,7 @@ def fetch_or_migrate_groundtype():
     return res
 
 
-def get_or_create_place(site, organism, ground_types):
+def get_or_create_place(site, agency, ground_types):
     types = {
         1: 3,  # STATION => MEASURE
         2: 1,  # OBSERVATOIRE => AGENCY
@@ -182,7 +182,7 @@ def get_or_create_place(site, organism, ground_types):
             latitude=site.latitude,
             longitude=site.longitude,
             elevation=site.elevation,
-            operator=organism.id or None,
+            operator=agency.id or None,
             description=site.description,
             creation_date=site.date,
             note=site.note,
@@ -210,7 +210,7 @@ def get_or_create_place(site, organism, ground_types):
     return res
 
 
-def fetch_or_migrate_site(ground_types, organisms):
+def fetch_or_migrate_site(ground_types, agencies):
     # Prepare some values
     res = {}
     to_link_to_parent = []
@@ -220,10 +220,10 @@ def fetch_or_migrate_site(ground_types, organisms):
         GissmoSite.parent.is_null(True)
     ).order_by(GissmoSite.id):
         print("Site: [%s] %s (ID: %s)" % (site.code, site.name, site.id))
-        new_organism_id = organisms[site.operator.id]
-        o = Organism.get(Organism.id == new_organism_id)
+        new_agency_id = agencies[site.operator.id]
+        a = Agency.get(Agency.id == new_agency_id)
 
-        p = get_or_create_place(site, o, ground_types)
+        p = get_or_create_place(site, a, ground_types)
         res[site.id] = p.id
 
     # Then create Place or Station regarding GissmoSite that have parents
@@ -231,13 +231,13 @@ def fetch_or_migrate_site(ground_types, organisms):
         GissmoSite.parent.is_null(False)
     ).order_by(GissmoSite.id):
         print("Site (parent): [%s] %s (ID: %s)" % (element.code, element.name, element.id))
-        new_organism_id = organisms[element.operator.id]
-        o = Organism.get(Organism.id == new_organism_id)
+        new_agency_id = agencies[element.operator.id]
+        a = Agency.get(Agency.id == new_agency_id)
 
         # For STATION, SITE_TEST and SITE_THEORIQUE, we create Station instead
         # of a place
         if element._type not in (1, 6, 7):
-            p = get_or_create_place(element, o, ground_types)
+            p = get_or_create_place(element, a, ground_types)
             res[element.id] = p.id
             if element.id != element.parent:
                 to_link_to_parent.append(element.id)
@@ -245,7 +245,7 @@ def fetch_or_migrate_site(ground_types, organisms):
             parent_id = element.parent
             if parent_id not in res:
                 parent = GissmoSite.get(GissmoSite.id == parent_id)
-                p = get_or_create_place(parent, o, ground_types)
+                p = get_or_create_place(parent, a, ground_types)
                 res[parent_id] = p.id
                 if parent.parent and parent.id != parent.parent:
                     to_link_to_parent.append(parent.id)
@@ -260,7 +260,7 @@ def fetch_or_migrate_site(ground_types, organisms):
                 Station.create(
                     code=element.code,
                     description=element.station_description,
-                    operator=o or None,
+                    operator=a or None,
                     place=p)
 
     # Create link between child and parents
@@ -295,12 +295,12 @@ def fetch_or_migrate_network():
     return res
 
 
-def fetch_or_migrate_equipment(places, organisms, models):
+def fetch_or_migrate_equipment(places, agencies, models):
     res = {}
     for equip in GissmoEquipment.select().order_by(GissmoEquipment.id):
         print("Equipment: %s (ID: %s)" % (equip.name, equip.id))
         model_id = models[equip.model.id]
-        owner_id = organisms[equip.owner.id]
+        owner_id = agencies[equip.owner.id]
         station_id = equip.station
         neant = Place.get(Place.name == 'NEANT')
         # place equipment in "NEANT" if no station_id
@@ -319,7 +319,7 @@ def fetch_or_migrate_equipment(places, organisms, models):
             place = neant
 
         m = EquipmentModel.get(EquipmentModel.id == model_id)
-        o = Organism.get(Organism.id == owner_id)
+        o = Agency.get(Agency.id == owner_id)
         e = Equipment.get_or_create(
             name=equip.name,
             model=m,
@@ -490,16 +490,16 @@ def main():
         link_equipment_model = fetch_or_migrate_model(link_equipment_type)
         print("CORRELATION MODEL: %s" % link_equipment_model)
 
-        # - gissmo_organism -> affiliation_organism
-        link_organism = fetch_or_migrate_organism()
-        print("CORRELATION ORGANISM: %s" % link_organism)
+        # - gissmo_organism -> affiliation_agency
+        link_agency = fetch_or_migrate_agency()
+        print("CORRELATION AGENCY: %s" % link_agency)
 
         # - gissmo_groundtype -> place_groundtype
         link_ground_type = fetch_or_migrate_groundtype()
         print("CORRELATION GROUND TYPE: %s" % link_ground_type)
 
         # - gissmo_stationsite -> place_place
-        link_place = fetch_or_migrate_site(link_ground_type, link_organism)
+        link_place = fetch_or_migrate_site(link_ground_type, link_agency)
         print("CORRELATION PLACE: %s" % link_place)
 
         # - gissmo_network -> network_network
@@ -507,7 +507,7 @@ def main():
         print("CORRELATION NETWORK: %s" % link_network)
 
         # - gissmo_equipment -> equipment_equipment
-        link_equipment = fetch_or_migrate_equipment(link_place, link_organism, link_equipment_model)
+        link_equipment = fetch_or_migrate_equipment(link_place, link_agency, link_equipment_model)
         print("CORRELATION EQUIPMENT: %s" % link_equipment)
 
         # - gissmo_built -> place_place
@@ -545,7 +545,7 @@ def main():
         # - gissmo_intervorganism -> intervention_operator
         # - gissmo_intervuser -> intervention_protagonist
         # - gissmo_ipaddress -> equipment_ipaddress
-        # - gissmo_organism_users -> affiliation_organism_users
+        # - gissmo_organism_users -> affiliation_agency_users
         # - gissmo_project_sites -> project_project_places
         # - gissmo_services -> equipment_service
         # - gissmo_stationdoc -> document_document

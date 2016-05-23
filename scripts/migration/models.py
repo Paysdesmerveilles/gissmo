@@ -117,7 +117,7 @@ class GissmoOrganism(Model):
         db_table = 'gissmo_organism'
 
 
-class Organism(Model):
+class Agency(Model):
     name = CharField()
     _type = IntegerField(choices=organism_choices)
     parent = ForeignKeyField(
@@ -182,7 +182,7 @@ class GissmoSite(Model):
     latitude = DecimalField(max_digits=8, decimal_places=6)
     longitude = DecimalField(max_digits=9, decimal_places=6)
     elevation = DecimalField(max_digits=5, decimal_places=1)
-    operator = ForeignKeyField(Organism, db_column='operator_id')
+    operator = ForeignKeyField(Agency, db_column='operator_id')
     address = CharField()
     town = CharField()
     county = CharField()
@@ -251,7 +251,7 @@ class Place(Model):
     longitude = DecimalField(max_digits=9, decimal_places=6)
     elevation = DecimalField(max_digits=5, decimal_places=1)
     ground_type = ForeignKeyField(GroundType, db_column='ground_type_id')
-    operator = ForeignKeyField(Organism, db_column='operator_id')
+    operator = ForeignKeyField(Agency, db_column='operator_id')
     parent = ForeignKeyField('self', db_column='parent_id')
 
     class Meta:
@@ -294,7 +294,7 @@ class Station(Model):
     code = CharField()
     description = TextField()
     operator = ForeignKeyField(
-        Organism,
+        Agency,
         db_column='operator_id')
     place = ForeignKeyField(
         Place,
@@ -320,7 +320,7 @@ class Equipment(Model):
         AuthUser,
         db_column='contact_id')
     owner = ForeignKeyField(
-        Organism,
+        Agency,
         db_column='owner_id')
     place = ForeignKeyField(
         Place,

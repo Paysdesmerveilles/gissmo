@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from affiliation.models import Organism
+from affiliation.models import Agency
 
 
-class OrganismAdmin(admin.ModelAdmin):
+class AgencyAdmin(admin.ModelAdmin):
     list_display = ['name', '_type', 'parent']
     list_filter = ['_type']
     search_fields = ['name']
@@ -11,4 +11,4 @@ class OrganismAdmin(admin.ModelAdmin):
     ordering = ['name']
 
 
-admin.site.register(Organism, OrganismAdmin)
+admin.site.register(Agency, AgencyAdmin)

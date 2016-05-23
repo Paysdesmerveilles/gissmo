@@ -35,11 +35,11 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('note', models.TextField(blank=True, null=True)),
                 ('intervention', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='intervention.Intervention')),
-                ('organism', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Organism')),
+                ('agency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Agency')),
             ],
             options={
-                'verbose_name': 'Organism (interv.)',
-                'verbose_name_plural': 'Organisms (interv.)',
+                'verbose_name': 'Agency (interv.)',
+                'verbose_name_plural': 'Agencies (interv.)',
             },
         ),
         migrations.CreateModel(
@@ -57,8 +57,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='intervention',
-            name='organisms',
-            field=models.ManyToManyField(through='intervention.Operator', to='affiliation.Organism'),
+            name='agencies',
+            field=models.ManyToManyField(through='intervention.Operator', to='affiliation.Agency'),
         ),
         migrations.AddField(
             model_name='intervention',
