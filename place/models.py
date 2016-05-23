@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
+from place import types as ptype
 from place import states as pstate
 
 
@@ -74,53 +75,6 @@ class Place(models.Model):
       * installing a station
       * searching for a new area to install a station
     """
-    # Place types
-    UNKNOWN = 0
-    AGENCY = 1
-    THEORITICAL = 2
-    MEASURE = 3
-    CUSTOMER_SERVICE = 4
-    TUNNEL = 5
-    DRIFT = 6
-    DRAIN = 7
-    CAVE = 8
-    CELLAR = 9
-    UNDERGROUND = 10
-    CABINET = 11
-    CHAMBER = 12
-    PREFABRICATED = 13
-    PREMISES = 14
-    FORT = 15
-    APRON = 16
-    SLAB = 17
-    OUTSIDE = 18
-    WELL = 19
-    DRILLING = 20
-
-    PLACE_TYPE_CHOICES = (
-        (UNKNOWN, 'Unknown'),
-        (AGENCY, 'Agency'),
-        (THEORITICAL, 'Theoritical site'),
-        (MEASURE, 'Measuring site'),
-        (CUSTOMER_SERVICE, 'Customer service place'),
-        (TUNNEL, 'Tunnel'),
-        (DRIFT, 'Drift'),
-        (DRAIN, 'Drain'),
-        (CAVE, 'Cave'),
-        (CELLAR, 'Cellar'),
-        (UNDERGROUND, 'Underground'),
-        (CABINET, 'Cabinet'),
-        (CHAMBER, 'Chamber'),
-        (PREFABRICATED, 'Prefabricated'),
-        (PREMISES, 'Premises'),
-        (FORT, 'Fort'),
-        (APRON, 'Apron'),
-        (SLAB, 'Slab'),
-        (OUTSIDE, 'Outside'),
-        (WELL, 'Well'),
-        (DRILLING, 'Drilling'),
-    )
-
     # fields
     parent = models.ForeignKey(
         'self',
@@ -129,8 +83,8 @@ class Place(models.Model):
         verbose_name="Referent place")
     name = models.CharField(max_length=50)
     _type = models.IntegerField(
-        choices=PLACE_TYPE_CHOICES,
-        default=UNKNOWN,
+        choices=ptype.TYPE_CHOICES,
+        default=ptype.UNKNOWN,
         verbose_name="Type")
     description = models.TextField(
         null=True,

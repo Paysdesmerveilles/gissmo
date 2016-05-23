@@ -32,8 +32,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50)),
-
-                ('_type', models.IntegerField(choices=[(0, 'Unknown'), (1, 'Agency'), (2, 'Theoritical site'), (3, 'Measuring site'), (4, 'Customer service place'), (5, 'Tunnel'), (6, 'Drift'), (7, 'Drain'), (8, 'Cave'), (9, 'Cellar'), (10, 'Underground'), (11, 'Cabinet'), (12, 'Chamber'), (13, 'Prefabricated'), (14, 'Premises'), (15, 'Fort'), (16, 'Apron'), (17, 'Slab'), (18, 'Outside'), (19, 'Well'), (20, 'Drilling')], default=0, verbose_name='Type')),
+                ('_type', models.IntegerField(default=0, choices=[(0, 'Unknown'), (1, 'Customer service place'), (2, 'Tunnel'), (3, 'Drift'), (4, 'Drain'), (5, 'Cave'), (6, 'Cellar'), (7, 'Underground'), (8, 'Cabinet'), (9, 'Chamber'), (10, 'Prefabricated'), (11, 'Premises'), (12, 'Fort'), (13, 'Apron'), (14, 'Slab'), (15, 'Outside'), (16, 'Well'), (17, 'Drilling'), (18, 'Warehouse')], verbose_name='Type')),
                 ('description', models.TextField(blank=True, null=True)),
                 ('creation_date', models.DateField(blank=True, null=True, verbose_name='Creation date')),
                 ('note', models.TextField(blank=True, null=True)),
