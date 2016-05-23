@@ -190,7 +190,10 @@ class Place(models.Model):
         verbose_name="EC8 Soil classification")
 
     # folks
-    operator = models.ForeignKey('affiliation.Organism')
+    operators = models.ManyToManyField(
+        'affiliation.Organism',
+        through='PlaceOperator',
+        blank=True)
     contact = models.TextField(
         null=True,
         blank=True)
@@ -237,6 +240,11 @@ def create_state(sender, instance, created, **kwargs):
         s = State.objects.create(place=instance)
         instance.state = s
         instance.save()
+
+
+class PlaceOperator(models.Model):
+    place = models.ForeignKey('place.Place')
+    operator = models.ForeignKey('affiliation.Organism')
 
 
 class PlaceDocument(models.Model):

@@ -42,9 +42,6 @@ class Station(models.Model):
         max_digits=5,
         decimal_places=1)
 
-    # folks
-    operator = models.ForeignKey('affiliation.Organism')
-
     # files
     documents = models.ManyToManyField('document.Document', blank=True)
 

@@ -3,7 +3,8 @@ from django.contrib import admin
 from place.models import (
     GroundType,
     Place,
-    PlaceDocument)
+    PlaceDocument,
+    PlaceOperator)
 
 
 class GroundTypeAdmin(admin.ModelAdmin):
@@ -18,14 +19,19 @@ class PlaceDocumentInline(admin.TabularInline):
     extra = 1
 
 
+class PlaceOperatorInline(admin.TabularInline):
+    model = PlaceOperator
+    extra = 1
+
+
 class PlaceAdmin(admin.ModelAdmin):
-    fields = ['name', '_type', 'operator', 'parent', 'latitude', 'longitude', 'elevation', 'description']
-    list_display = ('name', '_type', 'operator', 'parent')
+    fields = ['name', '_type', 'parent', 'latitude', 'longitude', 'elevation', 'description']
+    list_display = ('name', '_type', 'parent')
     list_filter = ['_type']
-    search_fields = ['name', 'operator__name', 'parent__name']
+    search_fields = ['name', 'parent__name']
     ordering = ['name']
 
-    inlines = (PlaceDocumentInline,)
+    inlines = (PlaceOperatorInline, PlaceDocumentInline,)
 
 
 admin.site.register(Place, PlaceAdmin)
