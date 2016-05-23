@@ -38,9 +38,9 @@ ALLOWED_HOSTS = []
 # Project needs User and Place
 
 INSTALLED_APPS = (
+    'flat',
     'django.contrib.admin',
     'django.contrib.auth',
-    'polymorphic',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -121,5 +121,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'static')
+if os.getenv('STATIC_ROOT', None) is not None:
+    STATIC_ROOT = os.path.abspath(os.getenv('STATIC_ROOT'))
 
 UPLOAD_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
+if os.getenv('UPLOAD_ROOT', None) is not None:
+    UPLOAD_ROOT = os.path.abspath(os.getenv('UPLOAD_ROOT'))
