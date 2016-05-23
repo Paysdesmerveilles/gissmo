@@ -93,6 +93,7 @@ class Migration(migrations.Migration):
                 ('xml_restricted_status', models.IntegerField(blank=True, choices=[(0, 'Open'), (1, 'Closed'), (2, 'Partial')], null=True, verbose_name='StationXML Restricted status')),
                 ('code', models.CharField(max_length=40)),
                 ('description', models.TextField(blank=True, null=True)),
+                ('state', models.IntegerField(choices=[(0, 'Theoritical'), (1, 'Test'), (2, 'Production')], default=0)),
                 ('documents', models.ManyToManyField(blank=True, to='document.Document')),
                 ('operator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Organism')),
                 ('elevation', models.DecimalField(blank=True, decimal_places=1, max_digits=5, null=True, verbose_name='Elevation (m)')),

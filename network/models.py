@@ -3,6 +3,7 @@ from django.db import models
 from equipment import types as etype
 from measurement import units
 from network import codes as channel_code
+from network import states as nstate
 
 
 class Station(models.Model):
@@ -17,6 +18,9 @@ class Station(models.Model):
     description = models.TextField(
         null=True,
         blank=True)
+    state = models.IntegerField(
+        choices=nstate.STATE_CHOICES,
+        default=nstate.THEORITICAL)
 
     # GPS fields
     latitude = models.DecimalField(
