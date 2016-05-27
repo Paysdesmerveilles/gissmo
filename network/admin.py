@@ -77,9 +77,10 @@ class BuiltInline(admin.TabularInline):
 
 
 class StationAdmin(admin.ModelAdmin):
-    fields = ['code', 'description']
-    list_display = ('code',)
-    search_fields = ['code']
+    fields = ['code', 'description', 'state']
+    list_display = ('code', 'description', 'state')
+    list_filter = ('state',)
+    search_fields = ['code', 'description']
     ordering = ['code']
 
     inlines = (BuiltInline,)
