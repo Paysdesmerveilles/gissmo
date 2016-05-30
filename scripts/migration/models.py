@@ -94,7 +94,7 @@ class EquipmentModel(Model):
         database = db
         db_table = 'equipment_model'
 
-organism_choices = (
+agency_choices = (
     (0, 'Observatory/Laboratory'),
     (1, 'Network'),
     (2, 'Business'),
@@ -106,7 +106,7 @@ organism_choices = (
 class GissmoOrganism(Model):
     id = IntegerField(db_column='id')
     name = CharField()
-    _type = IntegerField(choices=organism_choices)
+    _type = IntegerField(choices=agency_choices)
     parent = ForeignKeyField(
         'self',
         null=True,
@@ -119,7 +119,7 @@ class GissmoOrganism(Model):
 
 class Agency(Model):
     name = CharField()
-    _type = IntegerField(choices=organism_choices)
+    _type = IntegerField(choices=agency_choices)
     parent = ForeignKeyField(
         'self',
         null=True,
@@ -130,7 +130,7 @@ class Agency(Model):
 
     class Meta:
         database = db
-        db_table = 'affiliation_organism'
+        db_table = 'affiliation_agency'
 
 
 class GissmoEquipment(Model):
@@ -152,6 +152,26 @@ class GissmoEquipment(Model):
     class Meta:
         database = db
         db_table = 'gissmo_equipment'
+
+
+class GissmoIntervention(Model):
+    station = IntegerField(db_column='station_id')
+    date = DateTimeField(db_column='intervention_date')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_intervention'
+
+
+class GissmoIntervEquip(Model):
+    id = IntegerField(db_column='id')
+    equip = IntegerField(db_column='equip_id')
+    built = IntegerField(db_column='built_id')
+    station = IntegerField(db_column='station_id')
+
+    class Meta:
+        database = db
+        db_table = 'gissmo_intervequip'
 
 
 class GissmoGroundType(Model):
@@ -182,7 +202,7 @@ class GissmoSite(Model):
     latitude = DecimalField(max_digits=8, decimal_places=6)
     longitude = DecimalField(max_digits=9, decimal_places=6)
     elevation = DecimalField(max_digits=5, decimal_places=1)
-    operator = ForeignKeyField(Agency, db_column='operator_id')
+    operator = ForeignKeyField(GissmoOrganism, db_column='operator_id')
     address = CharField()
     town = CharField()
     county = CharField()
@@ -211,25 +231,24 @@ class GissmoSite(Model):
 
 place_choices = (
     (0, 'Unknown'),
-    (1, 'Agency'),
-    (2, 'Theoritical site'),
-    (3, 'Measuring site'),
-    (4, 'Customer service place'),
-    (5, 'Tunnel'),
-    (6, 'Drift'),
-    (7, 'Drain'),
-    (8, 'Cave'),
-    (9, 'Underground'),
-    (10, 'Cabinet'),
-    (11, 'Chamber'),
-    (12, 'Prefabricated'),
-    (13, 'Premises'),
-    (14, 'Fort'),
-    (15, 'Apron'),
-    (16, 'Slab'),
-    (17, 'Outside'),
-    (18, 'Well'),
-    (19, 'Drilling'),
+    (1, 'Customer service place'),
+    (2, 'Tunnel'),
+    (3, 'Drift'),
+    (4, 'Drain'),
+    (5, 'Cave'),
+    (6, 'Cellar'),
+    (7, 'Underground'),
+    (8, 'Cabinet'),
+    (9, 'Chamber'),
+    (10, 'Prefabricated'),
+    (11, 'Premises'),
+    (12, 'Fort'),
+    (13, 'Apron'),
+    (14, 'Slab'),
+    (15, 'Outside'),
+    (16, 'Well'),
+    (17, 'Drilling'),
+    (18, 'Warehouse'),
 )
 
 
@@ -251,12 +270,19 @@ class Place(Model):
     longitude = DecimalField(max_digits=9, decimal_places=6)
     elevation = DecimalField(max_digits=5, decimal_places=1)
     ground_type = ForeignKeyField(GroundType, db_column='ground_type_id')
-    operator = ForeignKeyField(Agency, db_column='operator_id')
-    parent = ForeignKeyField('self', db_column='parent_id')
 
     class Meta:
         database = db
         db_table = 'place_place'
+
+
+class PlaceOperator(Model):
+    place = ForeignKeyField(Place, db_column='place_id')
+    operator = ForeignKeyField(Agency, db_column='operator_id')
+
+    class Meta:
+        database = db
+        db_table = 'place_placeoperator'
 
 
 class AuthUser(Model):
@@ -293,16 +319,27 @@ class State(Model):
 class Station(Model):
     code = CharField()
     description = TextField()
-    operator = ForeignKeyField(
-        Agency,
-        db_column='operator_id')
-    place = ForeignKeyField(
-        Place,
-        db_column='place_id')
+    latitude = DecimalField(max_digits=8, decimal_places=6)
+    longitude = DecimalField(max_digits=9, decimal_places=6)
+    elevation = DecimalField(max_digits=5, decimal_places=1)
+    state = IntegerField(default=0)
 
     class Meta:
         database = db
         db_table = 'network_station'
+
+
+class Built(Model):
+    place = ForeignKeyField(
+        Place,
+        db_column='place_id')
+    station = ForeignKeyField(
+        Station,
+        db_column='station_id')
+
+    class Meta:
+        database = db
+        db_table = 'network_built'
 
 
 class Equipment(Model):

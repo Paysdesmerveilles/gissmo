@@ -72,15 +72,10 @@ class Place(models.Model):
     A place on which you achieve some tasks. As:
       * testing some devices
       * sending broken devices (customer service place)
-      * installing a station
+      * installing elements for a station
       * searching for a new area to install a station
     """
     # fields
-    parent = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        verbose_name="Referent place")
     name = models.CharField(max_length=50)
     _type = models.IntegerField(
         choices=ptype.TYPE_CHOICES,

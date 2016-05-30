@@ -6,6 +6,7 @@ import pdb
 
 from models import (
     AuthUser,
+    Built,
     Configuration,
     db,
     Datatype,
@@ -14,8 +15,9 @@ from models import (
     GissmoBuilt,
     GissmoChainConfig,
     GissmoDatatype,
-    GissmoGroundType,
     GissmoEquipment,
+    GissmoGroundType,
+    GissmoIntervEquip,
     GissmoModel,
     GissmoNetwork,
     GissmoOrganism,
@@ -30,6 +32,7 @@ from models import (
     Agency,
     Parameter,
     Place,
+    PlaceOperator,
     Project,
     Station,
     Type,
@@ -144,19 +147,70 @@ def fetch_or_migrate_groundtype():
     return res
 
 
-def get_or_create_place(site, agency, ground_types):
+def link_place_to_agency(place, agency):
+    # Link place to agency (operator)
+    link_exist = PlaceOperator.select().where(
+        (PlaceOperator.operator_id == agency.id) &
+        (PlaceOperator.place_id == place.id))
+    if not link_exist:
+        PlaceOperator.create(
+            place=place,
+            operator=agency)
+    return
+
+
+def create_place(site, placename, _type, types, ground_types):
+    res = None
+    new_type = types[site._type]
+    if _type is not None:
+        new_type = _type
+    res = Place.create(
+        name=placename,
+        _type=new_type,
+        latitude=site.latitude,
+        longitude=site.longitude,
+        elevation=site.elevation,
+        description=site.description,
+        creation_date=site.date,
+        note=site.note,
+        address_street=site.address,
+        address_zipcode=site.zip_code,
+        address_city=site.town,
+        address_region=site.region,
+        address_county=site.county,
+        address_country=site.country,
+        geology=site.geology,
+        contact=site.contact)
+    if isinstance(res, tuple):
+        res = res[0]
+
+    # Add ground type
+    if site.ground_type:
+        new_ground_type_id = ground_types[site.ground_type]
+        if new_ground_type_id:
+            g = GroundType.get(GroundType.id == new_ground_type_id)
+            new = Place.get(Place.id == res.id)
+            new.ground_type = g
+            new.save()
+
+    return res
+
+
+def get_or_create_place(site, agency, ground_types, _type=None):
     types = {
-        1: 3,  # STATION => MEASURE
-        2: 1,  # OBSERVATOIRE => AGENCY
-        3: 4,  # SAV => CUSTOMER SERVICE
+        1: None,  # STATION => Station + "production" state
+        2: 18,  # OBSERVATOIRE => Agency + "undefined" warehouse place
+        3: 1,  # SAV => CUSTOMER SERVICE
         4: 0,  # NEANT => UNKNOWN
         5: 0,  # AUTRE => UNKNOWN
-        6: 3,  # SITE_TEST => MEASURE
-        7: 2,  # SITE_THEORIQUE => THEORITICAL
+        6: None,  # SITE_TEST => Station + "test" state
+        7: None,  # SITE_THEORIQUE => Station + "theoritical" state
     }
 
     res = None
     placename = site.name or site.code
+    if _type is not None and _type == 0:
+        placename = 'Undefined %s' % placename[:40]
     # Check that place doesn't exist with same name
     try:
         same_name = Place.get(Place.name == placename)
@@ -176,103 +230,138 @@ def get_or_create_place(site, agency, ground_types):
         res = same_name
     else:
         # Create Place
-        p = Place.create(
-            name=placename,
-            _type=types[site._type],
-            latitude=site.latitude,
-            longitude=site.longitude,
-            elevation=site.elevation,
-            operator=agency.id or None,
-            description=site.description,
-            creation_date=site.date,
-            note=site.note,
-            address_street=site.address,
-            address_zipcode=site.zip_code,
-            address_city=site.town,
-            address_region=site.region,
-            address_county=site.county,
-            address_country=site.country,
-            geology=site.geology,
-            contact=site.contact)
-        if isinstance(p, tuple):
-            p = p[0]
-
-        # Add ground type
-        if site.ground_type:
-            new_ground_type_id = ground_types[site.ground_type]
-            if new_ground_type_id:
-                g = GroundType.get(GroundType.id == new_ground_type_id)
-                new = Place.get(Place.id == p.id)
-                new.ground_type = g
-                new.save()
+        p = create_place(site, placename, _type, types, ground_types)
         res = p
 
+    # Link place to agency (operator)
+    link_place_to_agency(res, agency)
+    return res
+
+
+def get_or_create_agency(observatory):
+    code = observatory.code
+    # some specific checks
+    if code == 'DTINSU':
+        code = 'DT INSU'
+    elif code == 'OMP (Tarbes)':
+        code = 'OMP-TARBES'
+    # check if Agency exists
+    res = Agency.select().where(Agency.name == code)
+    if res:
+        res = res[0]
+    if not res:
+        res = Agency.create(
+            name=code,
+            _type=0)
+        if isinstance(res, tuple):
+            res = res[0]
+    return res
+
+
+def check_site_builts(station, agencies, ground_types):
+    res = None
+    # If equipments are located on this site but without Built,
+    # so create a 'Undefined' place with same latitude/longitude/elevation
+    station_equipments = GissmoEquipment.select().where(
+        GissmoEquipment.station == station.id)
+    if station_equipments:
+        interventions = GissmoIntervEquip.select().where(
+            (GissmoIntervEquip.equip << station_equipments) &
+            (GissmoIntervEquip.built.is_null(True))).count()
+        if interventions > 0:
+            # create 'Undefined' place with same code as this station
+            undefined = 0
+            agency_id = agencies[station.operator.id]
+            agency = Agency.get(Agency.id == agency_id)
+            p = get_or_create_place(
+                station,
+                agency,
+                ground_types,
+                _type=undefined)
+            if isinstance(p, tuple):
+                p = p[0]
+
+            # As place have been create, return it
+            res = p
     return res
 
 
 def fetch_or_migrate_site(ground_types, agencies):
     # Prepare some values
-    res = {}
-    to_link_to_parent = []
+    observatories = {}
+    stations = {}
+    places = {}
+    states = {
+        1: 2,  # Measurement site => production
+        6: 1,  # Test site => test
+        7: 0,  # Theoritical site => theoritical
+    }
 
-    # First create Place from GissmoSite that have no parents
-    for site in GissmoSite.select().where(
-        GissmoSite.parent.is_null(True)
-    ).order_by(GissmoSite.id):
-        print("Site: [%s] %s (ID: %s)" % (site.code, site.name, site.id))
-        new_agency_id = agencies[site.operator.id]
-        a = Agency.get(Agency.id == new_agency_id)
+    # Check observatories
+    old_obs = GissmoSite.select().where(
+        GissmoSite._type == 2).order_by(GissmoSite.id)
+    for obs in old_obs:
+        print("Site [OBS]: [%s] %s (ID: %s)" % (obs.code, obs.name, obs.id))
+        a = get_or_create_agency(obs)
+        observatories[obs.id] = a.id
+        # check if parent exists. If not, create it.
+        if obs.parent:
+            print("¦- parent detected")
+            parent = GissmoSite.get(GissmoSite.id == obs.parent)
+            if isinstance(parent, tuple):
+                parent = parent[0]
+            parent_a = get_or_create_agency(parent)
+            observatories[parent.id] = parent_a.id
+            new = Agency.get(Agency.id == a.id)
+            new.parent = parent_a
+            new.save()
 
-        p = get_or_create_place(site, a, ground_types)
-        res[site.id] = p.id
+    # Then places
+    old_places = GissmoSite.select().where(
+        GissmoSite._type << [3, 4, 5]).order_by(GissmoSite.id)
+    for place in old_places:
+        print("Site [PLACE]: [%s] %s (ID: %s)" % (
+            place.code, place.name, place.id))
+        agency_id = agencies[place.operator.id]
+        agency = Agency.get(Agency.id == agency_id)
+        p = get_or_create_place(place, agency, ground_types)
+        if isinstance(p, tuple):
+            p = p[0]
+        places[place.id] = p.id
 
-    # Then create Place or Station regarding GissmoSite that have parents
-    for element in GissmoSite.select().where(
-        GissmoSite.parent.is_null(False)
-    ).order_by(GissmoSite.id):
-        print("Site (parent): [%s] %s (ID: %s)" % (element.code, element.name, element.id))
-        new_agency_id = agencies[element.operator.id]
-        a = Agency.get(Agency.id == new_agency_id)
-
-        # For STATION, SITE_TEST and SITE_THEORIQUE, we create Station instead
-        # of a place
-        if element._type not in (1, 6, 7):
-            p = get_or_create_place(element, a, ground_types)
-            res[element.id] = p.id
-            if element.id != element.parent:
-                to_link_to_parent.append(element.id)
-        else:
-            parent_id = element.parent
-            if parent_id not in res:
-                parent = GissmoSite.get(GissmoSite.id == parent_id)
-                p = get_or_create_place(parent, a, ground_types)
-                res[parent_id] = p.id
-                if parent.parent and parent.id != parent.parent:
-                    to_link_to_parent.append(parent.id)
-            else:
-                p = Place.get(Place.id == res[parent_id])
-                if isinstance(p, tuple):
-                    p = p[0]
-            # Create a Station instead of a Place
-            # and link it to the parent (parent_id)
-            station = Station.select().where(Station.code == element.code)
-            if not station:
-                Station.create(
-                    code=element.code,
-                    description=element.station_description,
-                    operator=a or None,
-                    place=p)
-
-    # Create link between child and parents
-    print("LINKING place between them: %s…" % to_link_to_parent)
-    for site_id in to_link_to_parent:
-        print("Link parent from GissmoSite %s" % site_id)
-        site = GissmoSite.get(GissmoSite.id == site_id)
-        new = Place.get(Place.id == res[site_id])
-        parent = Place.get(Place.id == res[site.parent])
-        new.parent = parent
+    # Finally stations
+    old_stations = GissmoSite.select().where(
+        GissmoSite._type << [1, 6, 7]).order_by(GissmoSite.id)
+    for station in old_stations:
+        print("Site [STATION]: [%s] %s (ID: %s)" % (
+            station.code, station.name, station.id))
+        # Note: After migration, GISSMO 2.0 can have 2 stations with same code
+        # But the database from which we come have no doublons.
+        # So migration is safe about this
+        s = Station.get_or_create(code=station.code)
+        if isinstance(s, tuple):
+            s = s[0]
+        new = Station.get(Station.id == s.id)
+        new.description = station.name
+        new.state = states[station._type]
+        new.latitude = station.latitude
+        new.longitude = station.longitude
+        new.elevation = station.elevation
         new.save()
-    return res
+
+        stations[station.id] = s.id
+
+        have_built = check_site_builts(station, agencies, ground_types)
+        if have_built:
+            # remember place
+            places[station.id] = have_built
+
+            # Link station to the place
+            Built.get_or_create(
+                place=have_built,
+                station=s)
+
+    return observatories, stations, places
 
 
 def fetch_or_migrate_network():
@@ -295,7 +384,105 @@ def fetch_or_migrate_network():
     return res
 
 
-def fetch_or_migrate_equipment(places, agencies, models):
+def get_builttype(name):
+    res = 0
+    types = {
+        '01. Tunnel': 2,
+        '02. Galerie': 3,
+        '04. Drain': 4,
+        '05. Grotte': 5,
+        '06. Cave': 6,
+        '07. Sous sol': 7,
+        '08. Armoire': 8,
+        '09. Caisson': 9,
+        '10. Préfabriqué': 10,
+        '11. Local': 11,
+        '12. Fort militaire': 12,
+        '13. Radier': 13,
+        '14. Dalle': 14,
+        '15. Exterieur': 15,
+        '03. Puits sismique': 16,
+        'Autre': 0,
+        '16. Forage': 17,
+    }
+    if name in types:
+        return types[name]
+    return res
+
+
+def fetch_or_migrate_built(agencies):
+    res = {}
+    for built in GissmoBuilt.select().order_by(GissmoBuilt.id):
+        print("Built: %s (ID: %s)" % (built.name, built.id))
+        builttype = get_builttype(built._type.name)
+        builtname = built.name or 'Unknown'
+        # Builts have same operator as those from the linked StationSite
+        o = built.station.operator
+        p = Place.get_or_create(
+            name=builtname,
+            _type=builttype,
+            note=built.note)
+        if isinstance(p, tuple):
+            p = p[0]
+
+        # Link place to agency (operator)
+        agency_id = agencies[o.id]
+        agency = Agency.get(Agency.id == agency_id)
+        link_place_to_agency(p, agency)
+
+        # Link built to its station
+        try:
+            have_station = Station.get(Station.code == built.station.code)
+        except Station.DoesNotExist:
+            have_station = False
+        if have_station:
+            if isinstance(have_station, tuple):
+                have_station = have_station[0]
+            Built.get_or_create(
+                place=p,
+                station=have_station)
+
+        res[built.id] = p.id
+    return res
+
+
+def search_place_from_station_id(station_id, equip, places, agencies, ground_types, builts):
+    """
+    As we comme from fetch_or_migrate_equipment we know that:
+      - our station doesn't have any linked place
+      - but our equipment is linked to this station_id
+    First we check intervention for the given station and equipment. If last
+    one contains a built: check if exists. If not create it. And then link to
+    it.
+    Then if nothing found, create a place for the given Station with
+    "undefined" and link the place to agency and add it to "places" dict.
+    """
+    res = None
+    old_station = GissmoSite.get(GissmoSite.id == station_id)
+    # first check interventions
+    intervention = GissmoIntervEquip.select().where(
+        (GissmoIntervEquip == equip.id) &
+        (GissmoIntervEquip.station == station_id)
+    ).order_by(-GissmoIntervEquip.id).first()
+    if intervention and intervention.built and intervention.built.id in builts:
+        built_id = builts[intervention.built.id]
+        built = Place.get(Place.id == built_id)
+        res = built
+    else:
+        agency_id = agencies[old_station.operator.id]
+        agency = Agency.get(Agency.id == agency_id)
+        p = get_or_create_place(old_station, agency, ground_types)
+        if isinstance(p, tuple):
+            p = p[0]
+        res = p
+    return res
+
+
+def fetch_or_migrate_equipment(places, agencies, models, ground_types, builts):
+    """
+    For each equipment checks interventions.
+    Last one define the built or the station on which this equipment is.
+    """
     res = {}
     for equip in GissmoEquipment.select().order_by(GissmoEquipment.id):
         print("Equipment: %s (ID: %s)" % (equip.name, equip.id))
@@ -303,18 +490,13 @@ def fetch_or_migrate_equipment(places, agencies, models):
         owner_id = agencies[equip.owner.id]
         station_id = equip.station
         neant = Place.get(Place.name == 'NEANT')
-        # place equipment in "NEANT" if no station_id
+        # moves equipment in "NEANT" if no station_id
         if station_id and station_id in places:
             place = Place.get(Place.id == places[station_id])
             if isinstance(place, tuple):
                 place = place[0]
         elif station_id:
-            # Search station with same code
-            old_station = GissmoSite.get(GissmoSite.id == station_id)
-            station = Station.get(Station.code == old_station.code)
-            if isinstance(station, tuple):
-                station = station[0]
-            place = station.place
+            place = search_place_from_station_id(station_id, equip, places, agencies, ground_types, builts)
         else:
             place = neant
 
@@ -335,55 +517,6 @@ def fetch_or_migrate_equipment(places, agencies, models):
             new.save()
 
         res[equip.id] = e.id
-    return res
-
-
-def get_builttype(name):
-    res = 0
-    types = {
-        '01. Tunnel': 5,
-        '02. Galerie': 6,
-        '04. Drain': 7,
-        '05. Grotte': 8,
-        '06. Cave': 9,
-        '07. Sous sol': 10,
-        '08. Armoire': 11,
-        '09. Caisson': 12,
-        '10. Préfabriqué': 13,
-        '11. Local': 14,
-        '12. Fort militaire': 15,
-        '13. Radier': 16,
-        '14. Dalle': 17,
-        '15. Exterieur': 18,
-        '03. Puits sismique': 19,
-        'Autre': 0,
-        '16. Forage': 20,
-    }
-    if name in types:
-        return types[name]
-    return res
-
-
-def fetch_or_migrate_built():
-    res = {}
-    for built in GissmoBuilt.select().order_by(GissmoBuilt.id):
-        print("Built: %s (ID: %s)" % (built.name, built.id))
-        builttype = get_builttype(built._type.name)
-        builtname = built.name or 'Unknown'
-        # Builts have same operator as those from the linked StationSite
-        o = built.station.operator
-        p = Place.get_or_create(
-            name=builtname,
-            _type=builttype,
-            operator=o,
-            note=built.note)
-        if isinstance(p, tuple):
-            p = p[0]
-        # Link built to its station
-        new = Place.get(Place.id == p.id)
-        new.parent = built.station
-        new.save()
-        res[built.id] = p.id
     return res
 
 
@@ -498,21 +631,24 @@ def main():
         link_ground_type = fetch_or_migrate_groundtype()
         print("CORRELATION GROUND TYPE: %s" % link_ground_type)
 
-        # - gissmo_stationsite -> place_place
-        link_place = fetch_or_migrate_site(link_ground_type, link_agency)
+        # - gissmo_stationsite -> place_place + network_station
+        link_observatory, link_station, link_place = \
+            fetch_or_migrate_site(link_ground_type, link_agency)
+        print("CORRELATION OBS: %s" % link_observatory)
+        print("CORRELATION STATION: %s" % link_station)
         print("CORRELATION PLACE: %s" % link_place)
 
         # - gissmo_network -> network_network
         link_network = fetch_or_migrate_network()
         print("CORRELATION NETWORK: %s" % link_network)
 
-        # - gissmo_equipment -> equipment_equipment
-        link_equipment = fetch_or_migrate_equipment(link_place, link_agency, link_equipment_model)
-        print("CORRELATION EQUIPMENT: %s" % link_equipment)
-
         # - gissmo_built -> place_place
-        link_built = fetch_or_migrate_built()
+        link_built = fetch_or_migrate_built(link_agency)
         print("CORRELATION BUILT: %s" % link_built)
+
+        # - gissmo_equipment -> equipment_equipment
+        link_equipment = fetch_or_migrate_equipment(link_place, link_agency, link_equipment_model, link_ground_type, link_built)
+        print("CORRELATION EQUIPMENT: %s" % link_equipment)
 
         # - gissmo_datatype -> network_datatype
         link_datatype = fetch_or_migrate_datatype()

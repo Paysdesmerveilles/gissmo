@@ -72,9 +72,4 @@ class Migration(migrations.Migration):
             name='operator',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='affiliation.Agency'),
         ),
-        migrations.AddField(
-            model_name='place',
-            name='parent',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='place.Place', verbose_name='Referent place'),
-        ),
     ]

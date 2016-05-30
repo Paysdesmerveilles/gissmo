@@ -25,10 +25,10 @@ class PlaceOperatorInline(admin.TabularInline):
 
 
 class PlaceAdmin(admin.ModelAdmin):
-    fields = ['name', '_type', 'parent', 'latitude', 'longitude', 'elevation', 'description']
-    list_display = ('name', '_type', 'parent')
+    fields = ['name', '_type', 'latitude', 'longitude', 'elevation', 'description']
+    list_display = ('name', '_type')
     list_filter = ['_type']
-    search_fields = ['name', 'parent__name']
+    search_fields = ['name']
     ordering = ['name']
 
     inlines = (PlaceOperatorInline, PlaceDocumentInline,)
