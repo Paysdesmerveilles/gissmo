@@ -33,6 +33,23 @@ db = PooledPostgresqlExtDatabase(
     register_hstore=False)
 
 
+class AuthUser(Model):
+    id = IntegerField(db_column='id')
+    username = CharField()
+
+    class Meta:
+        database = db
+        db_table = 'auth_user'
+
+
+class AuthGroup(Model):
+    id = IntegerField(db_column='id')
+
+    class Meta:
+        database = db
+        db_table = 'auth_group'
+
+
 class GissmoSuperType(Model):
     id = IntegerField(db_column='id')
     name = CharField(db_column='equip_supertype_name')
@@ -285,23 +302,6 @@ class PlaceOperator(Model):
         db_table = 'place_placeoperator'
 
 
-class AuthUser(Model):
-    id = IntegerField(db_column='id')
-    username = CharField()
-
-    class Meta:
-        database = db
-        db_table = 'auth_user'
-
-
-class AuthGroup(Model):
-    id = IntegerField(db_column='id')
-
-    class Meta:
-        database = db
-        db_table = 'auth_group'
-
-
 class State(Model):
     code = IntegerField()
     start = DateTimeField()
@@ -365,6 +365,11 @@ class Equipment(Model):
     state = ForeignKeyField(
         State,
         db_column='state_id')
+    last_edition = DateTimeField(default=datetime.now())
+    last_user = ForeignKeyField(
+        AuthUser,
+        related_name='last_user',
+        db_column='last_user_id')
 
     def __str__(self):
         return '%s' % self.name

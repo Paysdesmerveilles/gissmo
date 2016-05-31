@@ -502,11 +502,13 @@ def fetch_or_migrate_equipment(places, agencies, models, ground_types, builts):
 
         m = EquipmentModel.get(EquipmentModel.id == model_id)
         o = Agency.get(Agency.id == owner_id)
+        default_user = AuthUser.get(AuthUser.username == 'admin.gissmo')
         e = Equipment.get_or_create(
             name=equip.name,
             model=m,
             owner=o,
-            place=place)
+            place=place,
+            last_user=default_user)
         if isinstance(e, tuple):
             e = e[0]
         if equip.vendor or equip.purchase_date or equip.note or equip.contact:
