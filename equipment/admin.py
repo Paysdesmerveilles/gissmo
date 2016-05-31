@@ -61,7 +61,7 @@ class ConfigurationInline(admin.TabularInline):
 
 
 class EquipmentAdmin(admin.ModelAdmin):
-    fields = ['name', 'model', 'owner']
+    fields = ['name', 'model', 'owner', 'place', 'last_user', 'last_edition']
     list_display = ('model', 'name', 'owner', 'place', 'state')
     search_fields = ['name', 'model__name', 'owner__name']
     list_filter = ['state']

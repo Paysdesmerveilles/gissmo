@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -7,6 +8,8 @@ from django.utils import timezone
 from equipment import protocols as Protocol
 from equipment import states as estate
 from equipment import types as etype
+
+import datetime
 
 
 class State(models.Model):
@@ -99,6 +102,10 @@ class Model(models.Model):
 
 
 class Equipment(models.Model):
+    def user_default():
+        u = User.objects.filter(username='admin.gissmo').first()
+        return u and u.id or ''
+
     name = models.CharField(
         max_length=50,
         verbose_name="Serial number")
@@ -134,6 +141,16 @@ class Equipment(models.Model):
         'equipment.State',
         related_name='current_state',
         null=True)
+
+    # edition
+    last_user = models.ForeignKey(
+        'auth.User',
+        verbose_name='Modified by',
+        default=user_default,
+        related_name='last_user')
+    last_edition = models.DateTimeField(
+        'Last edition',
+        default=datetime.date.today)
 
     def __str__(self):
         return '%s' % self.name
