@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateTimeField(db_index=True)),
                 ('note', models.TextField(blank=True, null=True)),
-                ('confirmed', models.BooleanField(default=None)),
+                ('confirmed', models.BooleanField(default=False)),
                 ('documents', models.ManyToManyField(blank=True, to='document.Document')),
             ],
         ),

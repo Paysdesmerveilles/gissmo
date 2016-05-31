@@ -11,7 +11,7 @@ class Intervention(models.Model):
     agencies = models.ManyToManyField(
         'affiliation.Agency',
         through="intervention.Operator")
-    confirmed = models.BooleanField(default=None)
+    confirmed = models.BooleanField(default=False)
     documents = models.ManyToManyField('document.Document', blank=True)
 
     def __str__(self):
