@@ -34,6 +34,11 @@ class Migration(migrations.Migration):
             $body$ LANGUAGE plpgsql;""")],
         ),
         migrations.RunSQL(
+            [("""CREATE TRIGGER equipment_type_audit
+            AFTER UPDATE ON equipment_type
+            FOR EACH ROW EXECUTE PROCEDURE gissmo_audit();""")],
+        ),
+        migrations.RunSQL(
             [("""CREATE TRIGGER equipment_audit
             AFTER UPDATE ON equipment_equipment
             FOR EACH ROW EXECUTE PROCEDURE gissmo_audit();""")],

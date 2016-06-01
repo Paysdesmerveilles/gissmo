@@ -12,6 +12,19 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(
+            [("""CREATE TABLE equipment_type_history (
+                type_id INTEGER,
+                name VARCHAR(40),
+                rank INTEGER,
+                parent_id INTEGER,
+                intervention_id INTEGER,
+                CONSTRAINT type_history_intervention_id_fk_intervention_id
+                    FOREIGN KEY (intervention_id)
+                    REFERENCES intervention_intervention (id),
+                insert_datetime TIMESTAMP DEFAULT now() NOT NULL,
+                id SERIAL);""")],
+        ),
+        migrations.RunSQL(
             [("""CREATE TABLE equipment_equipment_history (
                 equipment_id INTEGER,
                 name VARCHAR(50),
