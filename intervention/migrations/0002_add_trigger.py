@@ -7,7 +7,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('intervention', '0002_add_history'),
+        ('intervention', '0001_initial'),
     ]
 
     operations = [
@@ -32,15 +32,5 @@ class Migration(migrations.Migration):
                     RETURN NULL;
             END;
             $body$ LANGUAGE plpgsql;""")],
-        ),
-        migrations.RunSQL(
-            [("""CREATE TRIGGER equipment_type_audit
-            AFTER UPDATE ON equipment_type
-            FOR EACH ROW EXECUTE PROCEDURE gissmo_audit();""")],
-        ),
-        migrations.RunSQL(
-            [("""CREATE TRIGGER equipment_audit
-            AFTER UPDATE ON equipment_equipment
-            FOR EACH ROW EXECUTE PROCEDURE gissmo_audit();""")],
         ),
     ]
