@@ -1402,7 +1402,6 @@ class OrganismAdmin(admin.ModelAdmin):
                 request,
                 'Delete %s is forbidden!' % forbidden_element)
         else:
-            obj.delete()
             return super(OrganismAdmin, self).delete_model(request, obj)
 
 
