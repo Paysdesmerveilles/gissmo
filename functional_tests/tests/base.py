@@ -182,7 +182,7 @@ class FunctionalTest(LiveServerTestCase):
                 input_field.clear()
             input_field.send_keys(field.content)
 
-    def check_presence_in_list(self, url, fields):
+    def check_presence_in_list(self, url, fields, presence=True):
         # Stop few seconds if any problem to see what's needed
         same_url = self.browser.current_url == self.appurl + url
         if not same_url:
@@ -199,7 +199,10 @@ class FunctionalTest(LiveServerTestCase):
         rows = table.find_elements_by_xpath('//tbody/tr//th')
 
         for field in fields:
-            self.assertIn(field.content, [row.text for row in rows])
+            if presence:
+                self.assertIn(field.content, [row.text for row in rows])
+            else:
+                self.assertNotIn(field.content, [row.text for row in rows])
 
     def fill_in_form(self, url, fields, click_paths=[]):
         """
