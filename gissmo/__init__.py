@@ -1,1 +1,1 @@
-__version__ = "1.5.2-trunk"
+__version__ = "1.5.2"
