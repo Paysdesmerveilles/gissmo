@@ -1,6 +1,6 @@
-Current version (1.5.2-trunk):
+Version 1.5.2:
   - Fix about Organism deletion
-  - Change Dockerfile upload directory variable
+  - Change Dockerfile upload directory variable and permissions
   - Fix HTTPS problem with google map
 
 Version 1.5.1:
