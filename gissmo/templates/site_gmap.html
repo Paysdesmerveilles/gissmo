@@ -68,7 +68,7 @@
           {% else %}
             sites.push(["{{i.intervention.station.station_name}}", {{i.intervention.station.latitude}}, {{i.intervention.station.longitude}}, {{i.station_state}}, 1]);
           {% endif %}
-          url.push({% url 'admin:index' %} + "gissmo/stationsite/" + {{i.intervention.station.id}} + "/");
+          url.push('{% url 'admin:index' %}' + "gissmo/stationsite/" + {{i.intervention.station.id}} + "/");
           information.push("{{i.intervention.station.station_code}}");    
       {% endif %}
   {% endfor %}
@@ -76,7 +76,7 @@
   {% for j in ResStatTheo %}
       {% if j.latitude != None and j.longitude != None %}
           sites.push(["{{j.station_name}}", {{j.latitude}}, {{j.longitude}}, 'Theo', 1]);
-          url.push({% url 'admin:index' %} + "gissmo/stationsite/" + {{j.id}} + "/");
+          url.push('{% url 'admin:index' %}' + "gissmo/stationsite/" + {{j.id}} + "/");
           information.push("{{j.station_code}}");    
       {% endif %}
   {% endfor %}
@@ -84,7 +84,7 @@
   {% for k in ResStatTest %}
       {% if k.latitude != None and k.longitude != None %}
           test = sites.push(["{{k.station_name}}", {{k.latitude}}, {{k.longitude}}, 'Test', 1]);
-          url.push({% url 'admin:index' %} + "gissmo/stationsite/" + {{k.id}} + "/");
+          url.push('{% url 'admin:index' %}' + "gissmo/stationsite/" + {{k.id}} + "/");
           information.push("{{k.station_code}} : Referent site : {{k.station_parent.station_code}}");
       {% endif %}
   {% endfor %}

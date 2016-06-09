@@ -96,7 +96,7 @@ class CloseChannelsTest(TestCase):
             sample_rate=10.0,
             start_date=make_aware(channels_date))
         cls.url = \
-            '/gissmo/gissmo/stationsite/%s/closechannels/' % cls.station.id
+            '/gissmo/stationsite/%s/closechannels/' % cls.station.id
 
     def login(self):
         self.client.login(

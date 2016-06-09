@@ -1,3 +1,6 @@
+Current version (1.6-trunk):
+  - Admin interface is the main one. Foreget '/gissmo' in URL
+
 Version 1.5.2:
   - Fix about Organism deletion
   - Change Dockerfile upload directory variable and permissions

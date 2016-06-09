@@ -156,4 +156,4 @@ class EquipDocTest(FunctionalTest):
             for name in files:
                 if name == UPLOADED_FILE:
                     is_present = True
-        self.assertTrue(is_present, "File not found in upload directory.")
+        self.assertTrue(is_present, "File not found in upload directory. Check UPLOAD_ROOT variable definition and that destination directory is writable.")

@@ -86,7 +86,7 @@ class FunctionalTest(LiveServerTestCase):
         self.browser.implicitly_wait(3)
 
         self.url = self.server_url + '/'
-        self.adminurl = self.url + 'gissmo/'
+        self.adminurl = self.url
         self.appurl = self.adminurl + 'gissmo/'
 
         self.logged = False
