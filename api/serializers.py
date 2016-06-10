@@ -18,6 +18,8 @@ from gissmo.models import (
 from equipment.protocols import PROTOCOL_CHOICES
 from equipment.states import EQUIP_STATES
 
+from station.states import STATION_STATES
+
 from rest_framework import serializers
 
 
@@ -53,6 +55,7 @@ class SiteSerializer(serializers.HyperlinkedModelSerializer):
     code = serializers.CharField(source='station_code')
     type = EnumField(choices=StationSite.SITE_CHOICES, source='site_type', label='Type')
     restricted_status = EnumField(choices=StationSite.STATUS)
+    status = EnumField(choices=STATION_STATES, source='last_state')
 
     class Meta:
         model = StationSite
@@ -78,6 +81,7 @@ class SiteSerializer(serializers.HyperlinkedModelSerializer):
             # 'vault',  # missing field in station_xml
             'geology',
             'operator',
+            'status',
         )
 
 
