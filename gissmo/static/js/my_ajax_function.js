@@ -483,21 +483,21 @@ function get_site_built(selectBox, urlparm1){
 
 /*
 Function that list the value for a parameter
-when we describe the chainconfig
+when we describe the set_name (chainconfig or configequip)
 The trigger is the field parameter
 */
-function get_parameter_value(selectBox, urlparm1){
+function get_parameter_value(selectBox, urlparm1, set_name){
     var singleValues = selectBox.id.split("-")[1];
-    var parametervalue = document.getElementById('id_chainconfig_set-'+singleValues+'-parameter').value;
+    var parametervalue = document.getElementById('id_'+set_name+'_set-'+singleValues+'-parameter').value;
     var xhr_parameter_value_url = urlparm1;
     var parameter_id = parametervalue;
 
 
-    var value = document.getElementById('id_chainconfig_set-'+singleValues+'-value');
+    var value = document.getElementById('id_'+set_name+'_set-'+singleValues+'-value');
     var value_id = value.options[value.options.selectedIndex].value;
 
-    var valueselect = 'select#id_chainconfig_set-'+singleValues+'-value';
-    var myselect = $("select#id_chainconfig_set-"+singleValues+"-value");
+    var valueselect = 'select#id_'+set_name+'_set-'+singleValues+'-value';
+    var myselect = $(valueselect);
 
     $.ajax({
       type: "GET",

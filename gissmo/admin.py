@@ -200,6 +200,12 @@ class IPAddressInline(admin.TabularInline):
     extra = 1
 
 
+class ConfigEquipInline(admin.TabularInline):
+    model = ConfigEquip
+    extra = 0
+    formset = ConfigEquipInlineFormset
+
+
 class EquipFilter(SimpleListFilter):
     """
     Custom filter for the equipment change list
@@ -343,7 +349,10 @@ class EquipmentAdmin(admin.ModelAdmin):
             'fields': [('note')],
             'classes': ['collapse']})]
 
-    inlines = [EquipDocInline]
+    inlines = [EquipDocInline, ConfigEquipInline]
+
+    class Media:
+        js = ["js/my_ajax_function.js"]
 
     def changemodel_formset(self, equipment):
         """
@@ -1120,6 +1129,46 @@ class ChannelAdmin(admin.ModelAdmin):
 # empecher tout changement
 # generer l'ordre automatiquement
 
+    def set_chainconfig_parameters(self, chain, equip_values):
+        """
+        Set parameters to channel regarding the given chain.
+        Chain contains an equipment. Each equipment have 2 configurations:
+          - its default model configuration
+          - its own configuration
+        We first take each default equipment configuration. Then model's one.
+        """
+        model_id = chain.equip.equip_model_id
+        channel = get_object_or_404(Channel, pk=chain.channel.id)
+
+        model_params = {}
+        model_values = ParameterValue.objects.filter(
+            parameter__equip_model_id=model_id,
+            default_value=True).order_by('pk')
+        for mv in model_values:
+            model_params[mv.parameter_id] = mv.value
+
+        equip_params = {}
+        for ev in equip_values:
+            equip_params[ev.parameter_id] = ev.value
+
+        # Use models_params as first param/value, then apply equip_params ones
+        new_params = dict(model_params)
+        for p in new_params:
+            if p in equip_params:
+                new_params[p] = equip_params[p]
+
+        for param in new_params:
+            parameter = ParameterEquip.objects.get(pk=param)
+            value = ParameterValue.objects.filter(
+                parameter=parameter,
+                value=new_params[param]).first()
+            chainconfig = ChainConfig(
+                channel=channel,
+                chain=chain,
+                parameter=parameter,
+                value=value)
+            chainconfig.save()
+
     def save_formset(self, request, form, formset, change):
         """
         Réference du code
@@ -1134,44 +1183,25 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         for instance in instances:
             # Check if it's the correct type of inline
             if isinstance(instance, Chain):
+                # Keep equipment configuration to not squash previous one
+                equip = instance.equip
+                equip_values = ConfigEquip.objects.filter(
+                    equipment=equip)
                 instance.save()
-                # TODO: Find how to access the previous channel to
-                # recuparate the config of some equipments.
-                # Actually we add the default config.
+                # Use given chain to deploy its parameters (Inline Config.)
                 if '_saveasnew' not in request.POST:
-                    model_id = instance.equip.equip_model.id
-                    parameters = ParameterValue.objects.filter(
-                        parameter__equip_model_id=model_id,
-                        default_value=True).order_by('pk')
-
-                    for parameter in parameters:
-                        # Hack to inline in channel
-                        channel = get_object_or_404(
-                            Channel,
-                            pk=instance.channel.id)
-                        """
-                        Default value for config parameter
-                        """
-                        chainconfig = ChainConfig(
-                            channel=channel,
-                            chain=instance,
-                            parameter=parameter.parameter,
-                            value=parameter)
-                        chainconfig.save()
+                    self.set_chainconfig_parameters(instance, equip_values)
+            elif isinstance(instance, ChainConfig):
+                old_chain = get_object_or_404(Chain, pk=instance.chain.id)
+                new_chain = Chain.objects.filter(
+                    channel=instance.channel.id,
+                    order=old_chain.order,
+                    equip=old_chain.equip)
+                if new_chain:
+                    instance.chain = new_chain[0]
+                instance.save()
             else:
-                # Check if it is the correct type of inline
-                if isinstance(instance, ChainConfig):
-                    # Hack to inline in channel
-                    old_chain = get_object_or_404(Chain, pk=instance.chain.id)
-                    new_chain = Chain.objects.filter(
-                        channel=instance.channel.id,
-                        order=old_chain.order,
-                        equip=old_chain.equip)  # Hack to inline in channel
-                    if new_chain:
-                        instance.chain = new_chain[0]
-                    instance.save()
-                else:
-                    formset.save()
+                formset.save()
 
     def response_change(self, request, obj):
         is_continue = '_continue' in request.POST

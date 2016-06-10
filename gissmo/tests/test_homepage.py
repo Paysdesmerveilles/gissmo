@@ -1,9 +1,6 @@
 from __future__ import unicode_literals
 from django.test import TestCase
 
-DEFAULT_ADMIN_LOGIN = 'admin'
-DEFAULT_ADMIN_PASSWORD = 'admin'
-
 
 class HomePageTest(TestCase):
 

@@ -1363,12 +1363,12 @@ class ChainConfigInlineFormset(forms.models.BaseInlineFormSet):
             widget=forms.Select(
                 attrs={
                     'onchange':
-                    'get_parameter_value(this,\'' + url1 + '\');'}))
+                    'get_parameter_value(this,\'' + url1 + '\', \'chainconfig\');'}))
         form.fields['value'] = forms.ModelChoiceField(
             queryset=ParameterValue.objects.all(),
             widget=forms.Select(
                 attrs={
-                    'onfocus': 'get_parameter_value(this,\'' + url1 + '\');'}),
+                    'onfocus': 'get_parameter_value(this,\'' + url1 + '\', \'chainconfig\');'}),
             empty_label="-- Select a parameter --")
 
 
@@ -1392,3 +1392,31 @@ class ChannelChainInlineFormset(forms.models.BaseInlineFormSet):
                 queryset=ParameterValue.objects.filter(
                     parameter_id=parameter_id),
                 empty_label=None)
+
+
+class ConfigEquipInlineFormset(forms.models.BaseInlineFormSet):
+    """
+    Custom formset to filter parameters and value.
+    """
+
+    def add_fields(self, form, index):
+        super(ConfigEquipInlineFormset, self).add_fields(form, index)
+        if self.instance:
+            url1 = reverse('xhr_parameter_value')
+            qs_params = ParameterEquip.objects.filter(
+                equip_model_id=self.instance.equip_model_id)
+
+            form.fields['parameter'] = forms.ModelChoiceField(
+                queryset=qs_params.prefetch_related('equip_model'),
+                widget=forms.Select(
+                    attrs={
+                        'onchange':
+                            'get_parameter_value(this,\'' + url1 + '\', \'configequip\');'}))
+            form.fields['value'] = forms.ModelChoiceField(
+                queryset=ParameterValue.objects.filter(
+                    parameter_id__in=[x.id for x in qs_params]),
+                widget=forms.Select(
+                    attrs={
+                        'onfocus':
+                            'get_parameter_value(this,\'' + url1 + '\', \'configequip\');'}),
+                empty_label="-- Select a parameter --")

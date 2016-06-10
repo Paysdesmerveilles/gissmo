@@ -286,6 +286,19 @@ class ParameterValue(models.Model):
 
 
 @python_2_unicode_compatible
+class ConfigEquip(models.Model):
+    equipment = models.ForeignKey('gissmo.Equipment')
+    parameter = models.ForeignKey('gissmo.ParameterEquip')
+    value = models.ForeignKey('ParameterValue', verbose_name="Value")
+
+    class Meta:
+        verbose_name = 'Configuration'
+
+    def __str__(self):
+        return u'%s' % self.value
+
+
+@python_2_unicode_compatible
 class StationSite(models.Model):
     """
     **Description :** Site ou station d'intérêt dans le cadre du CLB Resif
@@ -713,6 +726,10 @@ l'équipment
         null=True,
         blank=True,
         verbose_name='Last place')
+    # Configuration
+    configurations = models.ManyToManyField(
+        'gissmo.ParameterEquip',
+        through='gissmo.ConfigEquip')
 
     def _get_type(self):
         "Returns the linked EquipType"
@@ -822,6 +839,26 @@ l'équipment
                     intervention=intervention,
                     organism=o)
 
+    def keep_models_configuration(self):
+        """
+        Check if equipment's model have a configuration.
+        If yes: attach it to equipment.
+        """
+        params = ParameterEquip.objects.filter(
+            equip_model_id=self.equip_model_id)
+        for param in params:
+            have_default = ParameterValue.objects.filter(
+                parameter=param,
+                default_value=True).count()
+            if have_default:
+                v = ParameterValue.objects.filter(
+                    parameter=param,
+                    default_value=True).first()
+                ConfigEquip.objects.create(
+                    equipment=self,
+                    parameter=param,
+                    value=v)
+
     def __init__(self, *args, **kwargs):
         """
         Permit to add stockage_site and actor as keyword when creating new
@@ -842,6 +879,7 @@ l'équipment
           * check stockage_site and purchase_date presence
           * create related interventions
           * check that no forbidden equipment model is used
+          * check if equipment's model have a configuration and take it
         """
         if not self.id:
             self.check_mandatories_data()
@@ -850,6 +888,8 @@ l'équipment
             res = super(Equipment, self).save(*args, **kwargs)
             # Then create intervention if needed
             self.get_or_create_intervention()
+            # Finally take default configuration from model
+            self.keep_models_configuration()
             return res
         return super(Equipment, self).save(*args, **kwargs)
 
