@@ -37,6 +37,8 @@ from station import actions as StationAction
 from gissmo.models import *  # NOQA
 from gissmo.tools import DecimalEncoder, timezone_aware
 
+from django.contrib.admin import site
+
 
 def site_maps(request):
     query = request.GET.get('Station', '')
@@ -80,6 +82,7 @@ def site_maps(request):
         "ResStatTheo": ResStatTheo,
         "ResStatTest": ResStatTest,
         "application_label": application_label,
+        "site_header": site.site_header,
     })
 
 site_maps = staff_member_required(site_maps)

@@ -4,7 +4,7 @@
 {% block breadcrumbs %}
     <div class="breadcrumbs">
         <a href="{% url 'admin:index' %}">Home</a> &rsaquo;
-        <a href="{% url 'admin:app_list' application_label %}">{{ application_label }}</a> &rsaquo;
+        <a href="{% url 'admin:app_list' application_label %}">{{ application_label|capfirst }}</a> &rsaquo;
         <a href="{% url 'admin:gissmo_stationsite_changelist' %}">Sites</a> &rsaquo;
         {% if StationUnique %}
           <a href="{% url 'admin:gissmo_stationsite_change' StationUnique.id %}">{{StationUnique.station_code}}</a> &rsaquo;
