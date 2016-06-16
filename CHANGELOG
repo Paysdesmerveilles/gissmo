@@ -1,5 +1,9 @@
 Current version (1.6-trunk):
-  - Admin interface is the main one. Foreget '/gissmo' in URL
+  - API new field on Site: 'status'
+  - Admin interface is the main one. Forget '/gissmo' in URL
+  - Docker entrypoint checks now postgreSQL variables
+  - Rename postgreSQL variable names in Django
+  - Dockerfile use now Alpine 3.4
 
 Version 1.5.2:
   - Fix about Organism deletion
