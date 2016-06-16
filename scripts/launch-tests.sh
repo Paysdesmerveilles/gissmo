@@ -13,6 +13,6 @@ if test $# -lt 1; then
   exit 1
 fi
 
-DB_PORT_5432_TCP_PORT=`docker inspect -f '{{ (index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' gissmo_db` python manage.py test $@
+POSTGRES_PORT=`docker inspect -f '{{ (index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' gissmo_db` python manage.py test $@
 
 exit 0
