@@ -814,6 +814,7 @@ class IntervStationInline(admin.TabularInline):
 class IntervEquipInline(admin.TabularInline):
     model = IntervEquip
     extra = 0
+    form = IntervEquipInlineForm
     formset = IntervEquipInlineFormset
 
     formfield_overrides = {
@@ -917,7 +918,8 @@ class InterventionAdmin(admin.ModelAdmin):
     def _create_formsets(self, request, obj, change):
         """
         override to provide initial data for inline formset.
-        Especially current user.
+        Especially current user for IntervUserInline.
+        And current equipment (if present in URL) for IntervEquipInline.
         """
         formsets = []
         inline_instances = []
@@ -946,16 +948,21 @@ class InterventionAdmin(admin.ModelAdmin):
                 formsets.append(FormSet(**formset_params))
                 inline_instances.append(inline)
             else:
+                # get equip
+                equip_id = request.GET.get('equip', None)
+                inline_initial_data = None
                 if isinstance(inline, IntervUserInline):
                     inline_initial_data = [
                         {'user': request.user},
                     ]
+                elif isinstance(inline, IntervEquipInline) and equip_id:
+                    inline_initial_data = [
+                        {'equip': Equipment.objects.get(pk=equip_id)},
+                    ]
+                if inline_initial_data:
                     formset_params['initial'] = inline_initial_data
-                    formsets.append(FormSet(**formset_params))
-                    inline_instances.append(inline)
-                else:
-                    formsets.append(FormSet(**formset_params))
-                    inline_instances.append(inline)
+                formsets.append(FormSet(**formset_params))
+                inline_instances.append(inline)
 
         return formsets, inline_instances
 

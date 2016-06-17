@@ -32,6 +32,9 @@ class InterventionTest(FunctionalTest):
         self.unknown, created = Organism.objects.get_or_create(
             name='Unknown',
             _type=4)
+        self.mandatory, created = Organism.objects.get_or_create(
+            name='DT INSU',
+            _type=0)
         self.project = Project.objects.create(
             name='ADEME',
             manager=self.superuser)
@@ -50,6 +53,38 @@ class InterventionTest(FunctionalTest):
             operator=self.unknown,
             creation_date=make_aware(station_date),
             project=self.project,
+            actor=self.superuser)
+        # Equipments
+        self.supertype_1 = EquipSupertype.objects.create(
+            equip_supertype_name='01. Scientific',
+            presentation_rank='1')
+        self.eq_type1 = EquipType.objects.create(
+            equip_supertype=self.supertype_1,
+            equip_type_name='Velocimeter',
+            presentation_rank=0)
+        self.eq_type2 = EquipType.objects.create(
+            equip_supertype=self.supertype_1,
+            equip_type_name='Datalogger',
+            presentation_rank=1)
+        self.equipment_model1 = EquipModel.objects.create(
+            equip_type=self.eq_type1,
+            equip_model_name='CMG-40T')
+        self.equipment_model2 = EquipModel.objects.create(
+            equip_type=self.eq_type2,
+            equip_model_name='Q330')
+        self.equipment_1 = Equipment.objects.create(
+            equip_model=self.equipment_model1,
+            serial_number='T4Q31',
+            owner=self.mandatory,
+            stockage_site=self.station_1,
+            purchase_date='2015-10-29',
+            actor=self.superuser)
+        self.equipment_2 = Equipment.objects.create(
+            equip_model=self.equipment_model2,
+            serial_number='3000',
+            owner=self.mandatory,
+            stockage_site=self.station_1,
+            purchase_date='2016-04-18',
             actor=self.superuser)
 
     def test_nochanges_default_actor_intervention_creation(self):
@@ -94,29 +129,6 @@ class InterventionTest(FunctionalTest):
         # This is because of __unicode__() that becomes __str__() in Python3.
         # We so test that it's possible via the web interface to create
         # an intervention with an equipment.
-
-        # Initialisation
-        self.mandatory, created = Organism.objects.get_or_create(
-            name='DT INSU',
-            _type=0)
-        self.supertype_1 = EquipSupertype.objects.create(
-            equip_supertype_name='01. Scientific',
-            presentation_rank='1')
-        self.eq_type = EquipType.objects.create(
-            equip_supertype=self.supertype_1,
-            equip_type_name='Velocimeter',
-            presentation_rank=0)
-        self.equipment_model = EquipModel.objects.create(
-            equip_type=self.eq_type,
-            equip_model_name='CMG-40T')
-        # Prepare equipment
-        self.equipment_1 = Equipment.objects.create(
-            equip_model=self.equipment_model,
-            serial_number='T4Q31',
-            owner=self.mandatory,
-            stockage_site=self.station_1,
-            purchase_date='2015-10-29',
-            actor=self.superuser)
 
         # Maxime login to the application in order to add an intervention
         self.gissmo_login()
@@ -170,3 +182,26 @@ class InterventionTest(FunctionalTest):
         input_save = self.browser.find_element_by_name('_save')
         input_save.send_keys(Keys.ENTER)
         self.browser.implicitly_wait(3)
+
+    def test_default_equipment_when_adding_intervention_from_equipment(self):
+        """
+        Add a new intervention from a given equipement that is linked to a
+        station should set this equipment as the default one in
+        IntervEquipInline formset.
+        """
+        # Olivier logins to Gissmo and then go to the equipment Q330
+        self.gissmo_login()
+        url = self.appurl + 'equipment/%s' % self.equipment_2.id
+        self.browser.get(url)
+
+        link = self.browser.find_element_by_link_text('ADD INTERVENTION')
+        link.click()
+        self.browser.implicitly_wait(3)
+
+        equip_list = Select(self.browser.find_element_by_name(
+            'intervequip_set-0-equip'))
+        content = equip_list.first_selected_option.text
+        self.assertEqual(
+            content,
+            str(self.equipment_2),
+            'Wrong selected equipment')

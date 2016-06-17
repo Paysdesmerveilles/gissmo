@@ -404,16 +404,40 @@ class IntervUserInlineForm(forms.models.ModelForm):
         return bool(self.initial or has_changed)
 
 
+class IntervEquipInlineForm(forms.models.ModelForm):
+    """
+    Custom model form that supports initial data when saved.
+    """
+
+    def has_changed(self):
+        """
+        Returns True if we have initial data.
+        """
+        has_changed = forms.models.ModelForm.has_changed(self)
+        return bool(self.initial or has_changed)
+
+
 class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
 
-    def __init__(self, *args, **kwargs):
+    def initial_form_count(self):
         """
-        Grabs the curried initial values and stores them into a 'private'
-        variable. Note: the use of self.__initial is important, using
-        self.initial or self._initial will be erased by a parent class
+        set 0 to use initial_extra explicitly.
         """
-        self.__initial = kwargs.pop('initial', [])
-        super(IntervEquipInlineFormset, self).__init__(*args, **kwargs)
+        if self.initial_extra:
+            return 0
+        else:
+            return forms.models.BaseInlineFormSet.initial_form_count(self)
+
+    def total_form_count(self):
+        """
+        use the initial_extra len to determine needed forms
+        """
+        if self.initial_extra:
+            count = len(self.initial_extra) if self.initial_extra else 0
+            count += self.extra
+            return count
+        else:
+            return forms.models.BaseInlineFormSet.total_form_count(self)
 
     def add_fields(self, form, index):
         super(IntervEquipInlineFormset, self).add_fields(form, index)
@@ -576,22 +600,12 @@ class IntervEquipInlineFormset(forms.models.BaseInlineFormSet):
             """
             Special case if we came from a specific equipment
             """
-            if self.__initial and self.__initial != ['']:
-                equip = get_object_or_404(Equipment, id=self.__initial[0])
-                form.fields['equip'] = forms.ModelChoiceField(
-                    queryset=Equipment.objects.filter(id=self.__initial[0]),
-                    empty_label="-- Select an equipment --",
-                    initial=equip,
-                    widget=forms.Select(
-                        attrs={
-                            'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
-            else:
-                form.fields['equip'] = forms.ModelChoiceField(
-                    queryset=Equipment.objects.none(),
-                    empty_label="-- Select an equipment --",
-                    widget=forms.Select(
-                        attrs={
-                            'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
+            form.fields['equip'] = forms.ModelChoiceField(
+                queryset=Equipment.objects.none(),
+                empty_label="-- Select an equipment --",
+                widget=forms.Select(
+                    attrs={
+                        'onfocus': 'get_equip(this,\'' + url2 + '\');'}))
 
         form.fields['equip_action'].widget = forms.Select(
             choices=ACTION_CHOICES,
@@ -1174,6 +1188,8 @@ class ChainInlineFormset(forms.models.BaseInlineFormSet):
         # TODO Ameliorer cette comparaison
         if self.__initial and self.__initial != ['']:
             # Flake8 consider this variable 'station' unused.
+            # TODO: probably that station was used to filter equipment by
+            # last station (with last_station_id)
             # station = get_object_or_404(StationSite, id=self.__initial[0])
             form.fields['equip'] = forms.ModelChoiceField(
                 queryset=Equipment.objects.all())
