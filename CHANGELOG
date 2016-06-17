@@ -1,4 +1,5 @@
 Current version (1.6-trunk):
+  - Fix: Default equipment on Intervention is not set. It uses now those from which you come.
   - Fix: Station map title was "Django administration". Now current application version
   - API new field on Site: 'status'
   - Admin interface is the main one. Forget '/gissmo' in URL
