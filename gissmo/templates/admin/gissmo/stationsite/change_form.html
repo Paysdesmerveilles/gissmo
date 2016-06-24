@@ -35,6 +35,7 @@
 {% block object-tools-items %}
   <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}intervention/add/?station={{ object_id }}">Add intervention</a></li>
   <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}channel/add/?station={{ object_id }}">Add channel</a></li>
+  <li><a href="{% url 'admin:createchannels' object_id %}">Add 3 channels</a></li>
   <li><a href="{% url 'admin:closechannels' object_id %}">Close channel(s)</a></li>
   <li><a href="{% url 'itineraire_maps' %}?Station={{ object_id }}">Itinerary</a></li>
   <li><a href="{% url 'site_maps' %}?Station={{ object_id }}">Stations map</a></li>

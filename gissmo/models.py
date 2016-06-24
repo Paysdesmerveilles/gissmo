@@ -1808,6 +1808,47 @@ class Chain(models.Model):
         unique_together = ("channel", "order")
         verbose_name = "Acquisition chain"
 
+    def set_chainconfig_parameters(self):
+        """
+        Set parameters to channel.
+        Chain contains an equipment. Each equipment have 2 configurations:
+          - its default model configuration
+          - its own configuration
+        We first take each default equipment configuration. Then model's one.
+        """
+        model_id = self.equip.equip_model_id
+        channel = get_object_or_404(Channel, pk=self.channel.id)
+        equip_values = ConfigEquip.objects.filter(equipment=self.equip)
+
+        model_params = {}
+        model_values = ParameterValue.objects.filter(
+            parameter__equip_model_id=model_id,
+            default_value=True).order_by('pk')
+        for mv in model_values:
+            model_params[mv.parameter_id] = mv.value
+
+        equip_params = {}
+        for ev in equip_values:
+            equip_params[ev.parameter_id] = ev.value
+
+        # Use models_params as first param/value, then apply equip_params ones
+        new_params = dict(model_params)
+        for p in new_params:
+            if p in equip_params:
+                new_params[p] = equip_params[p]
+
+        for param in new_params:
+            parameter = ParameterEquip.objects.get(pk=param)
+            value = ParameterValue.objects.filter(
+                parameter=parameter,
+                value=new_params[param]).first()
+            chainconfig = ChainConfig(
+                channel=channel,
+                chain=self,
+                parameter=parameter,
+                value=value)
+            chainconfig.save()
+
     def __str__(self):
         return u'%s : %s' % (self.order, self.equip)
 

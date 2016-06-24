@@ -1566,3 +1566,93 @@ def closechannels_process(request, form, station_id, context):
         return redirect(url)
 
     return render(request, "closechannels_view.html", context)
+
+
+@login_required(login_url='/gissmo/login/')
+def createchannels_process(request, form, chain_formset, station_id, context):
+    """
+    Create 3 channels regarding data.
+    """
+    url = reverse('admin:gissmo_stationsite_change', args=(station_id,))
+    success_message = "Channels successfylly created: %s"
+    default_sample_rate = {
+        'BH': 20,
+        'HH': 100,
+        'LH': 1,
+        'VH': 0.1,
+        'UH': 0.01,
+        'EL': 100,
+        'SH': 50,
+        'MH': 5,
+        'HN': 100,
+        'DP': 500,
+        'CH': 500,
+        'EH': 100,
+    }
+    default_azimut = {
+        'Z': 0,
+        'N': 0,
+        'E': 90,
+    }
+    default_dip = {
+        'Z': -90,
+        'N': 0,
+        'E': 0,
+    }
+    data = form.cleaned_data
+    code = data.get('code')
+    date = data.get('date')
+    location = data.get('location')
+    network = Network.objects.get(pk=data.get('network'))
+    station = StationSite.objects.get(pk=station_id)
+    created_channels = []
+
+    chain_data = []
+    for chain_form in chain_formset.forms:
+        if not chain_form.is_valid():
+            messages.error(
+                request,
+                'Acquisition chain misinformed!')
+            return render(request, "createchannels_view.html", context)
+        chain_data.append(chain_form.cleaned_data)
+
+    for axis in ['Z', 'N', 'E']:
+        wide_code = '%s%s' % (code, axis)
+        channel_code = ChannelCode.objects.filter(
+            channel_code=wide_code).first()
+        azimut = default_azimut[axis]
+        dip = default_dip[axis]
+        channel = Channel.objects.create(
+            station=station,
+            network=network,
+            channel_code=channel_code,
+            location_code=location,
+            latitude=station.latitude,
+            longitude=station.longitude,
+            elevation=station.elevation,
+            depth=0,
+            azimuth=azimut,
+            dip=dip,
+            sample_rate=default_sample_rate[code],
+            start_date=date,
+        )
+        if channel:
+            created_channels.append(wide_code)
+        for f in chain_data:
+            equip_id = f.get('equipment', None)
+            order_value = f.get('order', None)
+            if not equip_id and not order_value:
+                continue
+            equipment = Equipment.objects.get(pk=equip_id)
+            chain = Chain.objects.create(
+                equip=equipment,
+                channel=channel,
+                order=order_value)
+            # Create parameters on Channel
+            chain.set_chainconfig_parameters()
+
+    if created_channels:
+        messages.success(
+            request,
+            success_message % ",".join(created_channels))
+    return redirect(url)

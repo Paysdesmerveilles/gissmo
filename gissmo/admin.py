@@ -672,7 +672,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     inlines = [BuiltInline, StationDocInline, ]
 
     class Media:
-        js = ["js/spread_date.js"]
+        js = ["js/spread_date.js", "js/sample_rate.js"]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
@@ -729,7 +729,9 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
 
     def get_urls(self):
         """
-        Add new 'closechannels' possibility
+        Add new possibilities:
+            - closechannels
+            - createchannels
         """
         urls = super(StationSiteAdmin, self).get_urls()
         my_urls = [
@@ -737,6 +739,10 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
                 r'^(.+)/closechannels/$',
                 self.closechannels_view,
                 name='closechannels'),
+            url(
+                r'^(.+)/createchannels/$',
+                self.createchannels_view,
+                name='createchannels'),
         ]
         return my_urls + urls
 
@@ -795,6 +801,53 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
             context.update({'form': form})
 
         return render(request, "closechannels_view.html", context)
+
+    def createchannels_formset(self, station):
+        class CreateChannelChainForm(forms.Form):
+            equipments = [(x.id, x) for x in station.equipment_set.all()]
+            equipment = forms.ChoiceField(
+                choices=[('', '--')] + equipments,
+                label='Equipment',
+                required=True,
+                initial='')
+            order = forms.ChoiceField(
+                choices=[('', '--')] + list(Chain.ORDER_CHOICES),
+                label='Type',
+                required=True,
+                initial='')
+        return formset_factory(form=CreateChannelChainForm, extra=3)
+
+    def createchannels_view(self, request, station_id, code=None):
+        """
+        Aims to be a channel creator wizard. Always create 3 channels.
+        """
+        station = StationSite.objects.filter(id=station_id).first()
+        title = "Create 3 channels for %(station)s station" % {
+            'station': station.station_code}
+        # media add javascript links into result (if included in template)
+        date_widget_media = AdminDateWidget().media
+        time_widget_media = AdminTimeWidget().media
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+            station=station,
+            media=self.media + time_widget_media + date_widget_media,
+        )
+        if request.method == 'POST':
+            form = CreateChannelForm(request.POST)
+            CreateChannelChainFormSet = self.createchannels_formset(station)
+            chain_formset = CreateChannelChainFormSet(request.POST)
+            context.update({'form': form, 'chain_form': chain_formset})
+            if form.is_valid():
+                return createchannels_process(
+                    request, form, chain_formset, station_id, context)
+        else:
+            form = CreateChannelForm()
+            CreateChannelChainFormSet = self.createchannels_formset(station)
+            chain_formset = CreateChannelChainFormSet()
+            context.update({'form': form, 'chain_form': chain_formset})
+
+        return render(request, "createchannels_view.html", context)
 
 
 ####
@@ -1129,46 +1182,6 @@ class ChannelAdmin(admin.ModelAdmin):
 # empecher tout changement
 # generer l'ordre automatiquement
 
-    def set_chainconfig_parameters(self, chain, equip_values):
-        """
-        Set parameters to channel regarding the given chain.
-        Chain contains an equipment. Each equipment have 2 configurations:
-          - its default model configuration
-          - its own configuration
-        We first take each default equipment configuration. Then model's one.
-        """
-        model_id = chain.equip.equip_model_id
-        channel = get_object_or_404(Channel, pk=chain.channel.id)
-
-        model_params = {}
-        model_values = ParameterValue.objects.filter(
-            parameter__equip_model_id=model_id,
-            default_value=True).order_by('pk')
-        for mv in model_values:
-            model_params[mv.parameter_id] = mv.value
-
-        equip_params = {}
-        for ev in equip_values:
-            equip_params[ev.parameter_id] = ev.value
-
-        # Use models_params as first param/value, then apply equip_params ones
-        new_params = dict(model_params)
-        for p in new_params:
-            if p in equip_params:
-                new_params[p] = equip_params[p]
-
-        for param in new_params:
-            parameter = ParameterEquip.objects.get(pk=param)
-            value = ParameterValue.objects.filter(
-                parameter=parameter,
-                value=new_params[param]).first()
-            chainconfig = ChainConfig(
-                channel=channel,
-                chain=chain,
-                parameter=parameter,
-                value=value)
-            chainconfig.save()
-
     def save_formset(self, request, form, formset, change):
         """
         Réference du code
@@ -1183,14 +1196,10 @@ django-inlinemodeladmin-set-inline-field-from-request-on-save-set-user-field
         for instance in instances:
             # Check if it's the correct type of inline
             if isinstance(instance, Chain):
-                # Keep equipment configuration to not squash previous one
-                equip = instance.equip
-                equip_values = ConfigEquip.objects.filter(
-                    equipment=equip)
                 instance.save()
                 # Use given chain to deploy its parameters (Inline Config.)
                 if '_saveasnew' not in request.POST:
-                    self.set_chainconfig_parameters(instance, equip_values)
+                    instance.set_chainconfig_parameters()
             elif isinstance(instance, ChainConfig):
                 old_chain = get_object_or_404(Chain, pk=instance.chain.id)
                 new_chain = Chain.objects.filter(

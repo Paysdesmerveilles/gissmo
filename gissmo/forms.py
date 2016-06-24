@@ -33,6 +33,7 @@ from gissmo.models import (
     Equipment,
     ForbiddenEquipmentModel,
     IPAddress,
+    Network,
     ParameterEquip,
     ParameterValue,
     StationDoc,
@@ -1420,3 +1421,121 @@ class ConfigEquipInlineFormset(forms.models.BaseInlineFormSet):
                         'onfocus':
                             'get_parameter_value(this,\'' + url1 + '\', \'configequip\');'}),
                 empty_label="-- Select a parameter --")
+
+
+class CreateChannelForm(forms.Form):
+    BH = 'BH'
+    CH = 'CH'
+    DP = 'DP'
+    EH = 'EH'
+    EL = 'EL'
+    HH = 'HH'
+    HN = 'HN'
+    LH = 'LH'
+    MH = 'MH'
+    SH = 'SH'
+    UH = 'UH'
+    VH = 'VH'
+
+    CHOICES = (
+        (BH, BH),
+        (CH, CH),
+        (DP, DP),
+        (EH, EH),
+        (EL, EL),
+        (HH, HH),
+        (HN, HN),
+        (LH, LH),
+        (MH, MH),
+        (SH, SH),
+        (UH, UH),
+        (VH, VH),
+    )
+    code = forms.ChoiceField(
+        choices=CHOICES,
+        label='Starting code',
+        required=True,
+        widget=forms.Select(
+            attrs={
+                'onchange': 'set_sample_rate(this);'}))
+    network = forms.ChoiceField(
+        choices=[(x.id, x.network_code) for x in Network.objects.all()],
+        label='Network',
+        required=True)
+    location = forms.CharField(
+        max_length=2,
+        label='Location code',
+        initial='00',
+        required=True)
+    date = forms.SplitDateTimeField(
+        label='Starting date (yyyy-mm-dd)',
+        widget=widgets.AdminSplitDateTime,
+        required=True)
+    rate = forms.FloatField(
+        label='Sample rate',
+        required=True)
+
+    def __init__(self, *args, **kwargs):
+        super(CreateChannelForm, self).__init__(*args, **kwargs)
+
+        if 'instance' not in kwargs:
+            choices = self.fields['code'].choices
+            if not choices:
+                return
+            try:
+                first_letter = choices[0][0][0]
+            except Exception:
+                return
+            bandcode_values = {
+                'B': 20,
+                'H': 100,
+                'L': 1,
+                'V': 0.1,
+                'U': 0.01,
+                'E': 100,
+                'S': 50,
+                'M': 5,
+                'D': 500,
+                'C': 500,
+            }
+            self.fields['rate'].initial = bandcode_values[first_letter]
+
+    def clean(self):
+        cleaned_data = super(CreateChannelForm, self).clean()
+        code = cleaned_data.get('code', None)
+        rate = cleaned_data.get('rate', None)
+
+        # As code and rate are required, continue each field validation
+        if not code or not rate:
+            return
+
+        # Band code found in Appendix A from SEED manual, v.2.4
+        sample_rate_bandcode = {
+            'B': [9, 80],  # >= 10 and < 80
+            'C': [249, 1000],  # >= 250 and < 1000
+            'D': [249, 1000],  # >= 250 and < 1000
+            'E': [79, 250],  # >= 80 and < 250
+            'H': [79, 250],  # >= 80 and < 250
+            'L': [0.1, 1.1],  # ≈ 1
+            'M': [1, 10],  # > 1 and < 10
+            'S': [9, 80],  # >= 10 and < 80
+            'U': [0.001, 0.1],  # ≈ 0.01
+            'V': [0.01, 1],  # ≈ 0.1
+        }
+
+        code_first_letter = code[0]
+        # First letter not found
+        if code_first_letter not in sample_rate_bandcode:
+            raise forms.ValidationError(
+                "Band code not implemented!",
+                code="invalid")
+
+        # Check band code range
+        bandcode_range = sample_rate_bandcode[code_first_letter]
+        if rate <= bandcode_range[0] or rate >= bandcode_range[1]:
+            raise forms.ValidationError(
+                "Sample rate should be > %(min)s and < %(max)s",
+                code='invalid',
+                params={
+                    'min': bandcode_range[0],
+                    'max': bandcode_range[1]})

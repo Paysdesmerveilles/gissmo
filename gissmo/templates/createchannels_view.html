@@ -1,0 +1,57 @@
+{% extends "admin/base_site.html" %}
+{% load admin_static i18n admin_modify admin_urls %}
+{% load static from staticfiles %}
+
+{% block extrahead %}{{ block.super }}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{{ media }}
+{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />{% endblock %}
+
+{% block content %}
+<hr />
+{% if form.subject.errors %}
+<ol>
+  {% for error in form.subject.errors %}
+  <li><strong>{{ error|escape }}</strong></li>
+  {% endfor %}
+</ol>
+{% endif %}
+<form action="" method="post">
+  {% csrf_token %}
+  <div>
+    {{ form.as_p }}
+  </div>
+
+  <div class="inline-group">
+    <div class="tabular inline-related">
+      <fieldset class="module">
+        <h2>Acquisition Chains</h2>
+        <table>
+          <thead>
+            <tr>
+              <th colspan="2" class="required">Type</th>
+              <th class="required">Equipment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ chain_form.management_form }}
+            {{ chain_form.non_form_errors }}
+            {% for form in chain_form %}
+            <tr class="form-row {{ chain_form.prefix }}">
+              <td class="original">{{ form.id }}</td>
+              <td class="field-order">
+                {{ form.order }}{{ form.order.errors }}
+              </td>
+              <td class="field-equipment">
+                {{ form.equipment }}{{ form.equipment.errors }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </fieldset>
+  <input type="submit" value="Submit" />
+</form>
+{% endblock %}
