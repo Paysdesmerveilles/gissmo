@@ -18,6 +18,9 @@ else
   export POSTGRES_PORT="5432"
 fi
 
+# Now having pSQL access we create static files.
+python3 manage.py collectstatic --noinput --clear -v 0
+
 # Check /data directory
 chmod -R 700 $UPLOAD_ROOT
 chown -R guest $UPLOAD_ROOT

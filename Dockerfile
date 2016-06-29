@@ -23,7 +23,6 @@ RUN apk --no-cache --update add \
     python3 -m ensurepip && \
     pip3 install --upgrade pip && \
     pip install --no-cache-dir --upgrade -r requirements.txt && \
-    python3 manage.py collectstatic --noinput --clear -v 1 && \
     chown -R guest:users $GISSMO_DIR $UPLOAD_ROOT && \
     chmod -R 550 $GISSMO_DIR && \
     chmod -R 550 $UPLOAD_ROOT && \
