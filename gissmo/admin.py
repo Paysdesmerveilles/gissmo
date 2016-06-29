@@ -1106,7 +1106,7 @@ class ChannelAdmin(admin.ModelAdmin):
             'classes': ['collapse']})]
 
     search_fields = [
-        'network__code',
+        'network__network_code',
         'station__station_code',
         'channel_code__channel_code']
     inlines = [ChainInline, ChannelChainInline]
