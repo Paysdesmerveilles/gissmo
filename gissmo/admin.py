@@ -493,10 +493,6 @@ class EquipmentAdmin(admin.ModelAdmin):
             request).prefetch_related(
             'last_station')
         groups = request.user.groups.all()
-        group_names = [g.name for g in groups]
-        # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_names:
-            return qs
 
         allowed_sites = []
         for g in groups:
@@ -682,10 +678,6 @@ class StationSiteAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(StationSiteAdmin, self).get_queryset(request)
         groups = request.user.groups.all()
-        group_names = [g.name for g in groups]
-        # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_names:
-            return qs
 
         allowed_sites = []
         for g in groups:
@@ -929,10 +921,6 @@ class InterventionAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(InterventionAdmin, self).get_queryset(request)
         groups = request.user.groups.all()
-        group_names = [g.name for g in groups]
-        # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_names:
-            return qs
 
         allowed_sites = []
         for g in groups:
@@ -1373,15 +1361,6 @@ class ProjectAdmin(BaseGroupAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(manager_id=request.user.id)
-
-    def delete_model(self, request, obj):
-        if obj.name == 'ALL':
-            messages.error(
-                request,
-                'Delete of the group ALL is forbidden')
-        else:
-            obj.delete()
-            return super(ProjectAdmin, self).delete_model(request, obj)
 
     def get_model_perms(self, request):
         """
