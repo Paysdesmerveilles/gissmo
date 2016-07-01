@@ -21,7 +21,6 @@ from django.shortcuts import (
     get_object_or_404,
     redirect,
 )
-from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.conf.urls import url
 from django.forms.formsets import formset_factory
@@ -1062,12 +1061,12 @@ class ChainInline(admin.TabularInline):
             return mark_safe("<a href='%s'>delete</a>" % url)
 
     def get_formset(self, request, obj=None, **kwargs):
-        # Pourquoi est-ce que station est necessaire ?
-        station = request.GET.get('station', '')
-        initial = []
-        initial.append(station)
+        """
+        Put request in formset so that we can fetch station ID if needed.
+        For an example to filter Equipments regarding station_id
+        """
         formset = super(ChainInline, self).get_formset(request, obj, **kwargs)
-        formset.__init__ = curry(formset.__init__, initial=initial)
+        formset.request = request
         return formset
 
     def get_queryset(self, request):
@@ -1095,15 +1094,18 @@ class ChannelChainInline(admin.TabularInline):
     model = ChainConfig
     extra = 0
     max_num = 0
-    formset = ChannelChainInlineFormset
 
-    fields = ('chain', 'parameter', 'value')
+    # To improve a little bit performance, we only display param/value
+    # as readonly fields to let user insert new param/value by using
+    # "config" link in ChainConfigInline
+    fields = ['parameter', 'value']
+    readonly_fields = ('parameter', 'value')
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         # On suppose que le modèle a un champ image
         if db_field.name == 'chain':
             kwargs['widget'] = forms.TextInput(
-                attrs={'readonly': 'readonly', 'style': 'width: 1px'})
+                attrs={'style': 'width: 1px'})
             kwargs.pop('request', None)  # erreur sinon
             return db_field.formfield(**kwargs)
         return super(ChannelChainInline, self).formfield_for_dbfield(

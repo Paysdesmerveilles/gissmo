@@ -21,7 +21,6 @@ from station import states as StationState
 from station import actions as StationAction
 
 from gissmo.models import (
-    Organism,
     Built,
     Chain,
     Channel,
@@ -33,7 +32,9 @@ from gissmo.models import (
     Equipment,
     ForbiddenEquipmentModel,
     IPAddress,
+    IntervEquip,
     Network,
+    Organism,
     ParameterEquip,
     ParameterValue,
     StationDoc,
@@ -1174,53 +1175,45 @@ class IntervStationInlineFormset(forms.models.BaseInlineFormSet):
 
 class ChainInlineFormset(forms.models.BaseInlineFormSet):
 
-    def __init__(self, *args, **kwargs):
-        """
-        Grabs the curried initial values and stores them into a 'private'
-        variable. Note: the use of self.__initial is important, using
-        self.initial or self._initial will be erased by a parent class
-        """
-        self.__initial = kwargs.pop('initial', [])
-        super(ChainInlineFormset, self).__init__(*args, **kwargs)
-
     def add_fields(self, form, index):
+        """
+        ChainInline.get_formset gives us request.
+        Request contains station (?station=328 i.e).
+        We can so filter equipments by station._
+        """
         super(ChainInlineFormset, self).add_fields(form, index)
 
-        # TODO Ameliorer cette comparaison
-        if self.__initial and self.__initial != ['']:
-            # Flake8 consider this variable 'station' unused.
-            # TODO: probably that station was used to filter equipment by
-            # last station (with last_station_id)
-            # station = get_object_or_404(StationSite, id=self.__initial[0])
-            form.fields['equip'] = forms.ModelChoiceField(
-                queryset=Equipment.objects.all())
-
+        station_id = None
+        date = None
+        station_id = self.request.GET.get('station')
         url = reverse('xhr_equip_oper')
-
-        """
-        Initialize form.fields
-        """
         ORDER_CHOICES = [(c[0], c[1]) for c in Chain.ORDER_CHOICES]
         ORDER_CHOICES.insert(0, ('', '-- Select a type --'))
 
-        form.fields['equip'] = forms.ModelChoiceField(
-            queryset=Equipment.objects.all().prefetch_related('equip_model'),
-            empty_label="-- Select a type --")
+        if index is not None:
+            station_id = self.instance.station_id
+            date = self.instance.start_date
+
+        if station_id and date:
+            form.fields['equip'] = forms.ModelChoiceField(
+                queryset=available_equipment_scioper(station_id, date),
+                empty_label=None)
+        elif station_id:
+            interventions = IntervEquip.objects.filter(
+                station_id=station_id)
+            equipment_ids = [x.equip_id for x in interventions]
+            form.fields['equip'] = forms.ModelChoiceField(
+                queryset=Equipment.objects.filter(id__in=equipment_ids),
+                empty_label=None)
+        else:
+            form.fields['equip'] = forms.ModelChoiceField(
+                queryset=Equipment.objects.all().prefetch_related(
+                    'equip_model'),
+                empty_label="-- Select a type --")
+
         form.fields['order'].widget = forms.Select(
             choices=ORDER_CHOICES,
             attrs={'onchange': 'get_equip_oper(this,\'' + url + '\');'})
-
-        if index is not None:
-            try:
-                channel_station_id = self.instance.station_id
-                channel_date = self.instance.start_date
-                form.fields['equip'] = forms.ModelChoiceField(
-                    queryset=available_equipment_scioper(
-                        channel_station_id,
-                        channel_date),
-                    empty_label=None)
-            except:
-                return
 
 
 class ChannelForm(forms.ModelForm):

@@ -873,26 +873,29 @@ def available_equipment_scioper(station_id, date):
     equipment_list = []
     if not isinstance(station_id, int):
         station_id = int(station_id)
-    # TODO: find a better way to filter
-    # Not the best way to filter
-    # If the supertype name change we have to change the code too
+    # WARNING: If the supertype name change we have to change the code too
+    # TODO: Find another way to filter equipments, like a checkbox on
+    # equipment's supertype: "For acquisition chain" (for an example)
     a = "01. Scientifique"
     b = "06. Ordinateur"
-    equipments = Equipment.objects.filter(
-        Q(equip_model__equip_type__equip_supertype__equip_supertype_name=a) |
-        Q(equip_model__equip_type__equip_supertype__equip_supertype_name=b))
 
-    for equip in equipments:
-        if int(equip_place_todate_id(equip.id, date, None)) == station_id:
-            equipment_list.append(equip.id)
+    allowed = EquipSupertype.objects.filter(
+        Q(equip_supertype_name=a) | Q(equip_supertype_name=b))
+    interventions = IntervEquip.objects.filter(
+        intervention__intervention_date__lte=date,
+        station__id=station_id,
+        equip__equip_model__equip_type__equip_supertype__in=allowed).order_by(
+            'equip_id').distinct('equip_id').prefetch_related(
+                'equip__equip_model__equip_type__equip_supertype',
+                'intervention')
 
-    equip_dispo = Equipment.objects.filter(
-        id__in=equipment_list).order_by(
-            'equip_model__equip_type__equip_supertype',
-            'equip_model__equip_type__presentation_rank',
-            'equip_model',
-            'serial_number')
-    return equip_dispo
+    potential_equipments = [x.equip_id for x in interventions]
+    for equip_id in potential_equipments:
+        last_station_id = equip_place_todate_id(equip_id, date, None)
+        if int(last_station_id) == station_id:
+            equipment_list.append(equip_id)
+    return Equipment.objects.filter(id__in=equipment_list).prefetch_related(
+        'equip_model').order_by('equip_model', 'serial_number')
 
 
 def xhr_equip_oper(request):
@@ -905,6 +908,9 @@ def xhr_equip_oper(request):
         station = request.GET.get('station', '')
         date_debut = request.GET.get('date', '')
         heure_debut = request.GET.get('heure', '')
+
+        if not station:
+            return HttpResponse(status=400)
 
         date_heure_channel = u''.join([date_debut, u' ', heure_debut])
         date_debut_channel = datetime.strptime(
