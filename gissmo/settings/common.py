@@ -18,7 +18,6 @@ DATABASES = {
 }
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
-# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = []
 
 TIME_ZONE = 'Europe/Paris'
@@ -139,6 +138,4 @@ REST_FRAMEWORK = {
 API_ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '130.79.9.145',  # thefroid.u-strasbg.fr (Olivier DOSSMANN)
-    '130.79.10.231',  # gavrinis.u-strasbg.fr (Maxime BES-DE-BERC)
 ]
