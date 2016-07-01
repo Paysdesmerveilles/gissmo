@@ -1,4 +1,4 @@
-Current version (1.6-trunk):
+Version 1.6-rc1:
   - New "Add 3 channels" button wizard on Site (multiple channels creation)
   - An equipment have a default configuration that comes from its model. If you create a channel that uses this equipment, it takes first its default equipment configuration then its equipment's model configuration
   - Fix: Default equipment on Intervention is not set. It uses now those from which you come.
