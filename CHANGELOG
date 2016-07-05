@@ -1,4 +1,4 @@
-Version 1.6-rc1:
+Version 1.6-rc2:
   - Each station have a "Google Map View" link to display it on Google Map
   - Project called "ALL" is not mandatory
   - Reduce Channel detail page from 40 seconds to approximatively 2 seconds.
