@@ -14,8 +14,9 @@ RUN mkdir -p $GISSMO_DIR/static $UPLOAD_ROOT
 
 RUN apk --no-cache --update add \
         build-base \
-        linux-headers \
         libpq \
+        linux-headers \
+        mailcap \
         postgresql-dev \
         py-configobj \
         python3 \

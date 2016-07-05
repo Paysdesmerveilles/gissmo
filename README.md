@@ -2,9 +2,6 @@
 
 Gissmo aims to be a management system for equipments used in seismological stations.
 
-**WARNING**: This software follow CeCiLL license terms. Have a look to
-next "License" chapter.
-
 # Documentation
 
 Documentation is available with [mkdocs](http://www.mkdocs.org/).

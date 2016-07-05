@@ -1895,35 +1895,8 @@ class Project(Group):
         blank=True,
         verbose_name='Site')
 
-    # Validation to check that the name of the project ALL don't change
-    # It's needed in comparison to the admin.py module to filter station,
-    # equipment, intervention
-    # in the queryset
-    def clean(self):
-        if self.id:
-            name = 'ALL'
-            project = get_object_or_404(Project, pk=self.id)
-            if project.name == name and self.name != name:
-                raise ValidationError(
-                    "We can't change the name for '%(name)s'",
-                    params={'name': name})
-
     def get_sites_ids(self):
         return [s.id for s in self.sites.all()]
-
-    def delete(self, *args, **kwargs):
-        name = 'ALL'
-        old = Project.objects.get(pk=self.id)
-        assert old.name != name, ("Delete '%s' is forbidden!" % name)
-        return super(Project, self).delete(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        if self.id:
-            name = 'ALL'
-            old = Project.objects.get(pk=self.id)
-            assert old.name != name and self.name != name, (
-                "%s could be neither renamed nor replaced." % name)
-        return super(Project, self).save(*args, **kwargs)
 
 
 class LoggedActions(models.Model):

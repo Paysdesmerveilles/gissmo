@@ -1,4 +1,10 @@
 Version 1.6-rc1:
+  - Each station have a "Google Map View" link to display it on Google Map
+  - Project called "ALL" is not mandatory
+  - Reduce Channel detail page from 40 seconds to approximatively 2 seconds.
+  - Fix Docker static file content types (with a MIME file for uWSGI)
+  - Fix Docker entrypoint static file generation
+  - CeCILL license applied
   - New "Add 3 channels" button wizard on Site (multiple channels creation)
   - An equipment have a default configuration that comes from its model. If you create a channel that uses this equipment, it takes first its default equipment configuration then its equipment's model configuration
   - Fix: Default equipment on Intervention is not set. It uses now those from which you come.

@@ -21,7 +21,6 @@ from django.shortcuts import (
     get_object_or_404,
     redirect,
 )
-from django.utils.functional import curry
 from django.utils.safestring import mark_safe
 from django.conf.urls import url
 from django.forms.formsets import formset_factory
@@ -494,10 +493,6 @@ class EquipmentAdmin(admin.ModelAdmin):
             request).prefetch_related(
             'last_station')
         groups = request.user.groups.all()
-        group_names = [g.name for g in groups]
-        # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_names:
-            return qs
 
         allowed_sites = []
         for g in groups:
@@ -635,6 +630,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     list_filter = [StationSiteFilter, 'site_type']
     ordering = ['station_code']
     search_fields = ['station_code', 'site_name', 'operator__name']
+    readonly_fields = ['googlemap_link']
     form = StationSiteForm
 
     fieldsets = [
@@ -647,7 +643,7 @@ class StationSiteAdmin(admin.ModelAdmin):
                     'operator',
                     'creation_date',
                     'project'),
-                ('latitude', 'longitude', 'elevation'),
+                ('latitude', 'longitude', 'elevation', 'googlemap_link'),
                 ('ground_type')]}),
         ('Contacts', {
             'fields': [('contact')],
@@ -674,6 +670,23 @@ class StationSiteAdmin(admin.ModelAdmin):
     class Media:
         js = ["js/spread_date.js", "js/sample_rate.js"]
 
+    def googlemap_link(self, obj):
+        res = ''
+        if obj.id:
+            latitude = obj.latitude
+            longitude = obj.longitude
+            if longitude and latitude:
+                url = "https://www.google.com/maps/place/%s,%s/@%s,%s,17z/data=!3m1!1e3" % (
+                    latitude,
+                    longitude,
+                    latitude,
+                    longitude)
+                res = mark_safe(
+                    '<a href="%s" target="_blank">Google Map View</a>' % url)
+        return res
+
+    googlemap_link.short_description = 'Localization'
+
     def get_form(self, request, obj=None, **kwargs):
         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
         form.current_user = request.user
@@ -683,10 +696,6 @@ class StationSiteAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(StationSiteAdmin, self).get_queryset(request)
         groups = request.user.groups.all()
-        group_names = [g.name for g in groups]
-        # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_names:
-            return qs
 
         allowed_sites = []
         for g in groups:
@@ -930,10 +939,6 @@ class InterventionAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(InterventionAdmin, self).get_queryset(request)
         groups = request.user.groups.all()
-        group_names = [g.name for g in groups]
-        # The name of the group must stay ALL
-        if request.user.is_superuser or u'ALL' in group_names:
-            return qs
 
         allowed_sites = []
         for g in groups:
@@ -1062,12 +1067,12 @@ class ChainInline(admin.TabularInline):
             return mark_safe("<a href='%s'>delete</a>" % url)
 
     def get_formset(self, request, obj=None, **kwargs):
-        # Pourquoi est-ce que station est necessaire ?
-        station = request.GET.get('station', '')
-        initial = []
-        initial.append(station)
+        """
+        Put request in formset so that we can fetch station ID if needed.
+        For an example to filter Equipments regarding station_id
+        """
         formset = super(ChainInline, self).get_formset(request, obj, **kwargs)
-        formset.__init__ = curry(formset.__init__, initial=initial)
+        formset.request = request
         return formset
 
     def get_queryset(self, request):
@@ -1095,15 +1100,18 @@ class ChannelChainInline(admin.TabularInline):
     model = ChainConfig
     extra = 0
     max_num = 0
-    formset = ChannelChainInlineFormset
 
-    fields = ('chain', 'parameter', 'value')
+    # To improve a little bit performance, we only display param/value
+    # as readonly fields to let user insert new param/value by using
+    # "config" link in ChainConfigInline
+    fields = ['parameter', 'value']
+    readonly_fields = ('parameter', 'value')
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         # On suppose que le modèle a un champ image
         if db_field.name == 'chain':
             kwargs['widget'] = forms.TextInput(
-                attrs={'readonly': 'readonly', 'style': 'width: 1px'})
+                attrs={'style': 'width: 1px'})
             kwargs.pop('request', None)  # erreur sinon
             return db_field.formfield(**kwargs)
         return super(ChannelChainInline, self).formfield_for_dbfield(
@@ -1371,15 +1379,6 @@ class ProjectAdmin(BaseGroupAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(manager_id=request.user.id)
-
-    def delete_model(self, request, obj):
-        if obj.name == 'ALL':
-            messages.error(
-                request,
-                'Delete of the group ALL is forbidden')
-        else:
-            obj.delete()
-            return super(ProjectAdmin, self).delete_model(request, obj)
 
     def get_model_perms(self, request):
         """
