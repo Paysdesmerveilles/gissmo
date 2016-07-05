@@ -630,6 +630,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     list_filter = [StationSiteFilter, 'site_type']
     ordering = ['station_code']
     search_fields = ['station_code', 'site_name', 'operator__name']
+    readonly_fields = ['googlemap_link']
     form = StationSiteForm
 
     fieldsets = [
@@ -642,7 +643,7 @@ class StationSiteAdmin(admin.ModelAdmin):
                     'operator',
                     'creation_date',
                     'project'),
-                ('latitude', 'longitude', 'elevation'),
+                ('latitude', 'longitude', 'elevation', 'googlemap_link'),
                 ('ground_type')]}),
         ('Contacts', {
             'fields': [('contact')],
@@ -668,6 +669,23 @@ class StationSiteAdmin(admin.ModelAdmin):
 
     class Media:
         js = ["js/spread_date.js", "js/sample_rate.js"]
+
+    def googlemap_link(self, obj):
+        res = ''
+        if obj.id:
+            latitude = obj.latitude
+            longitude = obj.longitude
+            if longitude and latitude:
+                url = "https://www.google.com/maps/place/%s,%s/@%s,%s,17z/data=!3m1!1e3" % (
+                    latitude,
+                    longitude,
+                    latitude,
+                    longitude)
+                res = mark_safe(
+                    '<a href="%s" target="_blank">Google Map View</a>' % url)
+        return res
+
+    googlemap_link.short_description = 'Localization'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
