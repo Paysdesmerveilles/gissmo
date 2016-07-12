@@ -36,7 +36,6 @@ from api.serializers import (
 
 from api.filters import (
     OrganismFilter,
-    CalibrationUnitFilter,
     ChainFilter,
     ChannelDatatypeFilter,
     ChannelFilter,
@@ -143,12 +142,6 @@ class CalibrationUnitViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = CalibrationUnitSerializer
     queryset = CalibrationUnit.objects.all()
-    filter_backends = (
-        filters.DjangoFilterBackend,
-        filters.SearchFilter,
-        filters.OrderingFilter,)
-    filter_class = CalibrationUnitFilter
-    search_fields = ['name', 'description']
     ordering_fields = ['name']
     ordering = ['name']
 
