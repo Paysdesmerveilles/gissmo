@@ -5,7 +5,7 @@ Version 1.6-rc2:
   - Fix Docker static file content types (with a MIME file for uWSGI)
   - Fix Docker entrypoint static file generation
   - CeCILL license applied
-  - New "Add 3 channels" button wizard on Site (multiple channels creation)
+  - New "Add 3 channels" button wizard on Site (multiple channels creation). Checks that no similar channel exists before creation.
   - An equipment have a default configuration that comes from its model. If you create a channel that uses this equipment, it takes first its default equipment configuration then its equipment's model configuration
   - Fix: Default equipment on Intervention is not set. It uses now those from which you come.
   - Fix: Station map title was "Django administration". Now current application version

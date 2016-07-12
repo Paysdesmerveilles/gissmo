@@ -1574,6 +1574,41 @@ def closechannels_process(request, form, station_id, context):
     return render(request, "closechannels_view.html", context)
 
 
+def createchannels_check_duplicates(channel_dict):
+    """
+    If similar channels on same period: return True.
+    Otherwise False.
+    Criteria:
+      - channel code
+      - location code
+      - station_id
+      - starting date
+    """
+    code = channel_dict.get('code', None)
+    location = channel_dict.get('location', None)
+    date = channel_dict.get('date', None)
+    station_id = channel_dict.get('station_id', None)
+    network_id = channel_dict.get('network_id', None)
+
+    for axis in ['Z', 'N', 'E']:
+        name = code + axis
+        same = Channel.objects.filter(
+            Q(network_id=network_id) &
+            Q(channel_code__channel_code=name) &
+            Q(location_code=location) &
+            Q(station_id=station_id) &
+            Q(start_date__lte=date) &
+            (
+                Q(end_date__isnull=True) |
+                Q(end_date__gte=date)
+            )
+        )
+        if same:
+            return True
+
+    return False
+
+
 @login_required(login_url='/gissmo/login/')
 def createchannels_process(request, form, chain_formset, station_id, context):
     """
@@ -1614,12 +1649,29 @@ def createchannels_process(request, form, chain_formset, station_id, context):
     created_channels = []
 
     chain_data = []
+
+    # Check that no duplicates exist
+    channel_info = {
+        'code': code,
+        'date': date,
+        'location': location,
+        'network_id': network.id,
+        'station_id': station_id,
+    }
+    duplicates = createchannels_check_duplicates(channel_info)
+    if duplicates:
+        messages.error(
+            request,
+            'Channels with similar info exist!')
+        return render(request, "createchannels_view.html", context)
+
     for chain_form in chain_formset.forms:
         if not chain_form.is_valid():
             messages.error(
                 request,
                 'Acquisition chain misinformed!')
             return render(request, "createchannels_view.html", context)
+
         chain_data.append(chain_form.cleaned_data)
 
     for axis in ['Z', 'N', 'E']:
