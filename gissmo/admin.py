@@ -1131,13 +1131,14 @@ class ChannelAdmin(admin.ModelAdmin):
     save_as = True
     form = ChannelForm
 
-    # list_display = [
-    #     'network',
-    # 'station',
-    # 'channel_code',
-    # 'location_code',
-    # 'start_date',
-    # 'end_date']
+    list_display = [
+        'station',
+        'network',
+        'location_code',
+        'channel_code',
+        'start_date',
+        'end_date'
+    ]
     # list_editable = ['end_date' ]
 
     actions = ['delete_selected']
