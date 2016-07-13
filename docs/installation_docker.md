@@ -14,8 +14,6 @@ Gissmo docker container takes advantages of:
 In fact Gissmo container will be linked to a postgreSQL container that have data on your local system.
 For more information about this, check [manage data in containers](https://docs.docker.com/engine/tutorials/dockervolumes/).
 
-Let's going to install and configure Gissmo!
-
 ## Database container
 
 First you need to create a volume for database container:
@@ -30,8 +28,6 @@ where:
   * **/dbdata**: stored database directory. Create it.
   * **dbdata**: database volume name
   * **gissmo_db**: database container name (keep it in mind for next steps)
-
-Database container running!
 
 ## Generate Gissmo image
 

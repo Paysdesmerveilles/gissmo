@@ -6,7 +6,7 @@ Access to Gissmo admin interface with your fresh superuser. It's time to create 
 
 ## Needed data
 
-To be able to create equipments and interventions on sites, create these elements:
+To manipulate equipments and interventions on sites, create these elements:
 
   * projects and permissions for each one
   * user (linked to projects)
@@ -16,4 +16,4 @@ To be able to create equipments and interventions on sites, create these element
   * organisms
   * sites
 
-This should be enough to manipulate some data.
+This should be enough.
