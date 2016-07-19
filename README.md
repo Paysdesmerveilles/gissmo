@@ -4,6 +4,7 @@ Gissmo aims to be a web management system for tagged equipments located on some 
 
 Gissmo is used by seismological french network ([RESIF](http://www.resif.fr/)).
 
+[![Build Status](https://travis-ci.org/eost/gissmo.svg?branch=dev)](https://travis-ci.org/eost/gissmo)
 [![Python 3.4](https://img.shields.io/badge/python-3.4-green.svg)](http://python.org/)
 [![Django 1.8.13](https://img.shields.io/badge/django-1.8.13-green.svg)](http://djangoproject.com/)
 [![postgreSQL 9.5](https://img.shields.io/badge/postgreSQL-9.5-green.svg)](http://postgresql.org/)
