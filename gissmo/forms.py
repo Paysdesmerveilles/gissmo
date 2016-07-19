@@ -1452,7 +1452,7 @@ class CreateChannelForm(forms.Form):
             attrs={
                 'onchange': 'set_sample_rate(this);'}))
     network = forms.ChoiceField(
-        choices=[(x.id, x.network_code) for x in Network.objects.all()],
+        choices=[],
         label='Network',
         required=True)
     location = forms.CharField(
@@ -1471,6 +1471,8 @@ class CreateChannelForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(CreateChannelForm, self).__init__(*args, **kwargs)
 
+        self.fields['network'].choices = [
+            (x.id, x.network_code) for x in Network.objects.all()]
         if 'instance' not in kwargs:
             choices = self.fields['code'].choices
             if not choices:
