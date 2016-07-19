@@ -6,7 +6,6 @@ python:
 cache: pip
 install: "pip install -r requirements.txt"
 before_script:
-  - "psql -c 'create database gissmo;' -U postgres"
   - "python manage.py migrate"
   - "python manage.py collectstatic --noinput"
 script: "python manage.py test"
