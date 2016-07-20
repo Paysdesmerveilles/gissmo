@@ -32,6 +32,8 @@ With Gissmo you can:
 
 Gissmo is designed for seismology. But it is useful in case you manage location with a sheet of paper or a spreadsheet.
 
+![Gissmo site detail appearance](./docs/img/gissmo_site_detail.jpg)
+
 # Documentation
 
 [Gissmo documentation on Readthedocs](http://gissmo.readthedocs.io).
