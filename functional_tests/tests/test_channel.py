@@ -194,9 +194,10 @@ class ChannelTest(FunctionalTest):
             name='chain_set-0-equip',
             content=str(self.equip),
             _type=Select)
-        fields = [_type, equip]
-        for field in fields:
-            self.fill_in_field(field)
+        # As it takes time to display equipment, we make a pause after _type
+        self.fill_in_field(_type)
+        sleep(1)
+        self.fill_in_field(equip)
 
         # Save form
         sleep(3)
