@@ -1914,7 +1914,11 @@ class Project(Group):
     sites = models.ManyToManyField(
         'StationSite',
         blank=True,
-        verbose_name='Site')
+        verbose_name='Site',
+        related_name='projects')
+    is_excluded = models.BooleanField(
+        verbose_name='Exclude this project from filters',
+        default=False)
 
     def get_sites_ids(self):
         return [s.id for s in self.sites.all()]

@@ -485,22 +485,6 @@ class EquipmentAdmin(admin.ModelAdmin):
                 obj.equip_model)
         return res
 
-    def get_queryset(self, request):
-        """
-        Show only equipment according to the user's group (project)
-        """
-        qs = super(EquipmentAdmin, self).get_queryset(
-            request).prefetch_related(
-            'last_station')
-        groups = request.user.groups.all()
-
-        allowed_sites = []
-        for g in groups:
-            allowed_sites += g.project.get_sites_ids()
-        return qs.filter(
-            last_station_id__in=allowed_sites).prefetch_related(
-                'last_station')
-
     def save_model(self, request, obj, form, change):
         """
         Gives stockage_site and purchase_date to Equipment so that it can
@@ -618,6 +602,27 @@ class StationSiteFilter(SimpleListFilter):
             return queryset.filter(operator__id__exact=self.value())
 
 
+class ProjectFilter(SimpleListFilter):
+    title = "Projects"
+    parameter_name = "projects"
+
+    def lookups(self, request, model_admin):
+        """
+        Return all projects except those that have "is_excluded" checked
+        """
+        projects_except_excluded = Project.objects.filter(is_excluded=False)
+        return [(x.id, x.name) for x in projects_except_excluded]
+
+    def queryset(self, request, queryset):
+        """
+        Search projects regarding their ID (if given)
+        """
+        if self.value():
+            return queryset.filter(projects__id__exact=self.value())
+        else:
+            return queryset
+
+
 class StationSiteAdmin(admin.ModelAdmin):
     list_display = (
         'station_code',
@@ -627,7 +632,7 @@ class StationSiteAdmin(admin.ModelAdmin):
         'site_type',
         'latitude',
         'longitude')
-    list_filter = [StationSiteFilter, 'site_type']
+    list_filter = [StationSiteFilter, 'site_type', ProjectFilter]
     ordering = ['station_code']
     search_fields = ['station_code', 'site_name', 'operator__name']
     readonly_fields = ['googlemap_link']
@@ -691,16 +696,6 @@ class StationSiteAdmin(admin.ModelAdmin):
         form = super(StationSiteAdmin, self).get_form(request, obj, **kwargs)
         form.current_user = request.user
         return form
-
-    # Redefine queryset to show only site according to the user's group
-    def get_queryset(self, request):
-        qs = super(StationSiteAdmin, self).get_queryset(request)
-        groups = request.user.groups.all()
-
-        allowed_sites = []
-        for g in groups:
-            allowed_sites += g.project.get_sites_ids()
-        return qs.filter(id__in=allowed_sites)
 
     def save_model(self, request, obj, form, change):
         """
@@ -933,17 +928,6 @@ class InterventionAdmin(admin.ModelAdmin):
 
     class Media:
         js = ["js/my_ajax_function.js"]
-
-    # Redefine queryset to show only intervention according to the user's
-    # group
-    def get_queryset(self, request):
-        qs = super(InterventionAdmin, self).get_queryset(request)
-        groups = request.user.groups.all()
-
-        allowed_sites = []
-        for g in groups:
-            allowed_sites += g.project.get_sites_ids()
-        return qs.filter(station_id__in=allowed_sites)
 
     def response_change(self, request, obj):
         is_continue = '_continue' in request.POST
@@ -1372,6 +1356,7 @@ class NetworkAdmin(admin.ModelAdmin):
 
 
 class ProjectAdmin(BaseGroupAdmin):
+    list_display = ['name', 'manager', 'is_excluded']
     filter_horizontal = ('permissions', 'sites')
 
     # Redefine queryset to show only group according to the user's project
