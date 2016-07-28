@@ -85,8 +85,8 @@
            {% if station_vault %}
              <Vault>{{ station_vault }}</Vault>
            {% endif %}
-           {% if station.geology %}
-             <Geology>{{ station.geology }}</Geology>
+           {% if station.ground_type %}
+             <Geology>{{ station.ground_type }}</Geology>
            {% endif %}
            {% if station.operator %}
            <Operator>

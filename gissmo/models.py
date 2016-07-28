@@ -107,6 +107,12 @@ celui-ci d'un autre bâti
         max_length=40,
         default="Unknown",
         verbose_name="Short description")
+    ground_type = models.ForeignKey(
+        'GroundType',
+        null=True,
+        blank=True,
+        verbose_name="Soil classification",
+        help_text="Following EC8 soil classification. See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details")
     built_note = models.TextField(
         null=True,
         blank=True,
@@ -127,7 +133,7 @@ class GroundType(models.Model):
         max_length=255)
 
     class Meta:
-        verbose_name = "EC8 Soil classification"
+        verbose_name = "Soil classification"
 
     def __str__(self):
         return '%s' % self.name
@@ -504,8 +510,8 @@ class StationSite(models.Model):
         'GroundType',
         null=True,
         blank=True,
-        verbose_name="EC8 Soil classification",
-        help_text="See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details")
+        verbose_name="Soil classification",
+        help_text="Following EC8 soil classification. See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details")
     restricted_status = models.IntegerField(
         choices=STATUS,
         null=True,
