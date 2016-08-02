@@ -15,7 +15,7 @@ from gissmo.models import (
     Project,
     StationSite
 )
-from gissmo.settings.common import UPLOAD_ROOT
+from gissmo.settings.common import MEDIA_ROOT
 
 from datetime import datetime
 from time import sleep
@@ -77,7 +77,7 @@ class EquipDocTest(FunctionalTest):
         Clean document uploaded by tests
         """
         # clean working directory
-        for root, dirs, files in os.walk(UPLOAD_ROOT, topdown=False):
+        for root, dirs, files in os.walk(MEDIA_ROOT, topdown=False):
             for name in files:
                 if name == UPLOADED_FILE:
                     os.remove(os.path.join(root, name))
@@ -152,8 +152,8 @@ class EquipDocTest(FunctionalTest):
 
         # Check directory content
         is_present = False
-        for root, dirs, files in os.walk(UPLOAD_ROOT, topdown=False):
+        for root, dirs, files in os.walk(MEDIA_ROOT, topdown=False):
             for name in files:
                 if name == UPLOADED_FILE:
                     is_present = True
-        self.assertTrue(is_present, "File not found in upload directory. Check UPLOAD_ROOT variable definition and that destination directory is writable.")
+        self.assertTrue(is_present, "File not found in upload directory. Check MEDIA_ROOT variable definition and that destination directory is writable.")

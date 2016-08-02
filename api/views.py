@@ -7,35 +7,36 @@ from rest_framework import (
 )
 
 from gissmo.models import (
-    Organism,
     CalibrationUnit,
     Chain,
     ChainConfig,
     Channel,
     DataType,
+    DocumentView,
     Equipment,
     IPAddress,
     Network,
+    Organism,
     Service,
     StationSite,
 )
 
 from api.serializers import (
-    OrganismSerializer,
     CalibrationUnitSerializer,
     ChainSerializer,
     ChannelDatatypeSerializer,
     ChannelParameterSerializer,
     ChannelSerializer,
+    DocumentSerializer,
     EquipmentSerializer,
     IPAddressSerializer,
     NetworkSerializer,
+    OrganismSerializer,
     ServiceSerializer,
     SiteSerializer,
 )
 
 from api.filters import (
-    OrganismFilter,
     ChainFilter,
     ChannelDatatypeFilter,
     ChannelFilter,
@@ -43,6 +44,7 @@ from api.filters import (
     EquipmentFilter,
     IPAddressFilter,
     NetworkFilter,
+    OrganismFilter,
     ServiceFilter,
     SiteFilter,
 )
@@ -223,3 +225,11 @@ class ChannelParameterViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,)
     filter_class = ChannelParameterFilter
     search_fields = ['parameter']
+
+
+class DocumentViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Documents.
+    """
+    serializer_class = DocumentSerializer
+    queryset = DocumentView.objects.all()

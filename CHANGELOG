@@ -1,3 +1,8 @@
+Version 1.7:
+  - Change UPLOAD_ROOT to MEDIA_ROOT in Django settings (but keep it in Docker)
+  - API new object: Document (from Station, Equipment, Equipment's model and intervention)
+  - New services available (for Equipments): Telnet and FTP
+
 Version 1.6.1:
   - Fix about intervention deletion that does not update equipments
 

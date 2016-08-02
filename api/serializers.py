@@ -2,15 +2,16 @@
 from __future__ import unicode_literals
 
 from gissmo.models import (
-    Organism,
     CalibrationUnit,
     Chain,
     ChainConfig,
     Channel,
     DataType,
+    DocumentView,
     Equipment,
     IPAddress,
     Network,
+    Organism,
     Service,
     StationSite,
 )
@@ -248,4 +249,26 @@ class ChannelParameterSerializer(serializers.HyperlinkedModelSerializer):
             'parameter',
             'value',
             'model',
+        ]
+
+
+class DocumentSerializer(serializers.HyperlinkedModelSerializer):
+    linked_to = serializers.CharField(source='model')
+    link = serializers.FileField(source='_file')
+    doctype = serializers.CharField(source='_type')
+    intervention_id = serializers.IntegerField(source='intervention')
+
+    class Meta:
+        model = DocumentView
+        fields = [
+            'linked_to',
+            'title',
+            'doctype',
+            'start',
+            'end',
+            'link',
+            'equipment',
+            'station',
+            'equipmodel',
+            'intervention_id',
         ]

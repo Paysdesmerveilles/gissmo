@@ -33,11 +33,9 @@ USE_L10N = True
 
 USE_TZ = True
 
-UPLOAD_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
+MEDIA_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
 if os.getenv('UPLOAD_ROOT', None) is not None:
-    UPLOAD_ROOT = os.path.abspath(os.getenv('UPLOAD_ROOT'))
-
-MEDIA_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'media')
+    MEDIA_ROOT = os.path.abspath(os.getenv('UPLOAD_ROOT'))
 MEDIA_URL = '/media/'
 
 STATIC_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'static')

@@ -26,7 +26,7 @@ from gissmo.validators import (
 from gissmo.helpers import format_date
 from gissmo.tools import make_date_aware
 
-fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
+fs = FileSystemStorage(location=settings.MEDIA_ROOT)
 
 
 # WARNING: OLD PREVIOUS MODEL ACTOR HAVE THESE VALUES AS TYPE
@@ -2007,3 +2007,32 @@ class Organism(models.Model):
                 raise ValidationError(
                     "%(name)s organism should stay as it is!",
                     params={'name': name})
+
+
+class DocumentView(models.Model):
+    id = models.AutoField(primary_key=True)
+    model = models.CharField(max_length=30)
+    _type = models.CharField(
+        max_length=40,
+        null=True,
+        db_column='type')
+    title = models.CharField(max_length=40, null=True)
+    start = models.DateTimeField(null=True)
+    end = models.DateTimeField(null=True)
+    _file = models.FileField(
+        null=True,
+        db_column='file')
+    equipment = models.ForeignKey(
+        'gissmo.Equipment',
+        null=True,
+        db_column='equipment_id')
+    station = models.ForeignKey(
+        'gissmo.StationSite',
+        null=True,
+        db_column='station_id')
+    equipmodel = models.CharField(max_length=255, null=True)
+    intervention = models.IntegerField(null=True, db_column='intervention_id')
+
+    class Meta:
+        managed = False
+        db_table = 'gissmo_documentview'
