@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('gissmo', '0047_built_ground_type'),
+        ('gissmo', '0047_document_view_creation'),
     ]
 
     operations = [

@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('gissmo', '0046_auto_20160701_1505'),
+        ('gissmo', '0047_built_ground_type'),
     ]
 
     # ::INTEGER on SQL request avoids this problem:
