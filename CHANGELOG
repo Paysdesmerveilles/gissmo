@@ -1,3 +1,6 @@
+Version 1.6.1:
+  - Fix about intervention deletion that does not update equipments
+
 Version 1.6:
   - Improve Travis-CI support
   - Each station have a "Google Map View" link to display it on Google Map

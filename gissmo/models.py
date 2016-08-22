@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from django.utils.encoding import python_2_unicode_compatible
 from django.shortcuts import get_object_or_404
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
@@ -1227,6 +1229,19 @@ répertoriées
         e.last_station = e.get_last_station()
         e.save()
         return res
+
+
+@receiver(post_delete, sender=IntervEquip)
+def update_equipment(sender, instance, **kwargs):
+    """
+    Update equipment after intervention deletion:
+      - status
+      - station
+    """
+    e = Equipment.objects.get(pk=instance.equip_id)
+    e.last_state = e.get_last_state()
+    e.last_station = e.get_last_station()
+    e.save()
 
 
 @python_2_unicode_compatible
