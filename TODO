@@ -190,8 +190,10 @@ Afin de mesurer le passage de l'ancienne version à la nouvelle, voici les besoi
   * Pour chaque chaîne d'acquisition, sa configuration
   * Liste des équipements avec leur dernier emplacement connu et leur état
   * Liste des dernières interventions dans GISSMO
-  * Dernières modifications effectuées dans GISSMO
+  * Dernières modifications/interventions effectuées dans GISSMO
   * Liste des réseaux auxquels appartient une station donnée
   * Inversement : ensemble des stations d'un réseau donné
   * Dernier emplacement d'un équipement
   * Liste des stations liées à un projet donné
+  * Lien externe vers Google Map depuis la page d'une station afin de pouvoir planifier un éventuel trajet, ou bien mémoriser les lieux en "offline" depuis sa tablette tactile, etc.
+  * Wizard de création d'un ensemble de 3 canaux sur une station donnée
