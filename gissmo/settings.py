@@ -125,6 +125,6 @@ STATIC_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'static')
 if os.getenv('STATIC_ROOT', None) is not None:
     STATIC_ROOT = os.path.abspath(os.getenv('STATIC_ROOT'))
 
-UPLOAD_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
+MEDIA_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
 if os.getenv('UPLOAD_ROOT', None) is not None:
-    UPLOAD_ROOT = os.path.abspath(os.getenv('UPLOAD_ROOT'))
+    MEDIA_ROOT = os.path.abspath(os.getenv('UPLOAD_ROOT'))

@@ -3,7 +3,7 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models
 
 
-fs = FileSystemStorage(location=settings.UPLOAD_ROOT)
+fs = FileSystemStorage(location=settings.MEDIA_ROOT)
 
 
 class Type(models.Model):
