@@ -88,7 +88,7 @@ class Migration(migrations.Migration):
             name='Service',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('protocol', models.IntegerField(choices=[(0, 'SSH protocol'), (1, 'Seed link protocol'), (2, 'HTTP'), (3, 'HTTPS'), (4, 'SNMP'), (5, 'ICMP')])),
+                ('protocol', models.IntegerField(choices=[(0, 'SSH protocol'), (1, 'Seed link protocol'), (2, 'HTTP'), (3, 'HTTPS'), (4, 'SNMP'), (5, 'ICMP'), (6, 'Telnet'), (7, 'FTP')])),
                 ('port', models.PositiveIntegerField()),
                 ('description', models.CharField(blank=True, max_length=256, null=True)),
                 ('equipment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='equipment.Equipment')),

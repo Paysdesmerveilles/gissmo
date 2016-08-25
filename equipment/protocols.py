@@ -9,6 +9,8 @@ Protocols:
   3: HTTPS
   4: SNMP
   5: ICMP
+  6: TELNET
+  7: FTP
 """
 
 SSH = 0
@@ -17,6 +19,8 @@ HTTP = 2
 HTTPS = 3
 SNMP = 4
 ICMP = 5
+TELNET = 6
+FTP = 7
 
 PROTOCOL_CHOICES = (
     (SSH, 'SSH protocol'),
@@ -25,4 +29,6 @@ PROTOCOL_CHOICES = (
     (HTTPS, 'HTTPS'),
     (SNMP, 'SNMP'),
     (ICMP, 'ICMP'),
+    (TELNET, 'Telnet'),
+    (FTP, 'FTP'),
 )
