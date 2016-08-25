@@ -9,3 +9,6 @@ pep8
 pyflakes
 django-debug-toolbar
 django-extensions
+# REST API dependancies
+djangorestframework==3.3.1
+markdown==2.6.4

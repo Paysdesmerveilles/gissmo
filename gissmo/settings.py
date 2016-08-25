@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'affiliation',
     'document',
     'place',
@@ -52,6 +53,7 @@ INSTALLED_APPS = (
     'equipment',
     'network',
     'intervention',
+    'api',
     'debug_toolbar',
     'django_extensions',
 )
@@ -128,3 +130,9 @@ if os.getenv('STATIC_ROOT', None) is not None:
 MEDIA_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
 if os.getenv('UPLOAD_ROOT', None) is not None:
     MEDIA_ROOT = os.path.abspath(os.getenv('UPLOAD_ROOT'))
+
+REST_FRAMEWORK = {
+    # TODO: When better interface, add this: IsAuthenticatedOrReadOnly
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
+    'UNICODE_JSON': True,
+}
