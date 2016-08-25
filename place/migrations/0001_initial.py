@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(max_length=255)),
             ],
             options={
-                'verbose_name': 'EC8 Soil classification',
+                'verbose_name': 'Soil classification',
             },
         ),
         migrations.CreateModel(
@@ -65,7 +65,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='place',
             name='ground_type',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='place.GroundType', verbose_name='EC8 Soil classification'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='place.GroundType', verbose_name='Soil classification', help_text='Following EC8 soil classification. See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details'),
         ),
         migrations.AddField(
             model_name='place',

@@ -61,7 +61,7 @@ class GroundType(models.Model):
         max_length=255)
 
     class Meta:
-        verbose_name = "EC8 Soil classification"
+        verbose_name = "Soil classification"
 
     def __str__(self):
         return '%s' % self.name
@@ -136,7 +136,8 @@ class Place(models.Model):
         'GroundType',
         null=True,
         blank=True,
-        verbose_name="EC8 Soil classification")
+        verbose_name="Soil classification",
+        help_text="Following EC8 soil classification. See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details")
 
     # folks
     operators = models.ManyToManyField(
