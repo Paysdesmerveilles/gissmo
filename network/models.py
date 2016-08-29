@@ -140,7 +140,7 @@ class Installation(models.Model):
         return '%s (%s) on %s' % (
             etype.TYPE_CHOICES[self._type][1],
             self.equipment,
-            self.built)
+            self.place)
 
 
 class Datatype(models.Model):
