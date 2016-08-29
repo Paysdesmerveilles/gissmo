@@ -3,7 +3,7 @@
 from affiliation.models import Agency
 from affiliation.types import TYPE_CHOICES as AGENCY_TYPE_CHOICES
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 
 from document.models import Document
 from document.models import Type as DocumentType
@@ -372,6 +372,12 @@ class StationSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
+    projects = serializers.HyperlinkedRelatedField(
+        source='groups',
+        view_name='project-detail',
+        read_only=True,
+        many=True)
+
     class Meta:
         model = User
         fields = (
@@ -380,6 +386,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'first_name',
             'last_name',
             'email',
+            'projects',
         )
 
 
