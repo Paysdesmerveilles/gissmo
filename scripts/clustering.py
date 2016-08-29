@@ -6,7 +6,7 @@ import psycopg2
 
 DEBUG = False
 
-port = os.getenv('DB_PORT_5432_TCP_PORT', 5432)
+port = os.getenv('POSTGRES_PORT', 5432)
 sql_equipment_without_intervention = """
 SELECT id, insert_datetime, place_id
 FROM equipment_equipment_history
