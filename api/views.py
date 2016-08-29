@@ -68,6 +68,8 @@ class AgencyViewSet(viewsets.ModelViewSet):
     serializer_class = AgencySerializer
     queryset = Agency.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
 
 class ChannelViewSet(viewsets.ModelViewSet):
     """
@@ -76,8 +78,10 @@ class ChannelViewSet(viewsets.ModelViewSet):
     serializer_class = ChannelSerializer
     queryset = Channel.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class DatatypeViewSet(viewsets.ModelViewSet):
+
+class DatatypeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of datatypes.
 
@@ -88,8 +92,10 @@ class DatatypeViewSet(viewsets.ModelViewSet):
     serializer_class = DatatypeSerializer
     queryset = Datatype.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class DocumentTypeViewSet(viewsets.ModelViewSet):
+
+class DocumentTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of documents types.
 
@@ -99,6 +105,8 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
     """
     serializer_class = DocumentTypeSerializer
     queryset = DocumentType.objects.all()
+
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
@@ -115,6 +123,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentSerializer
     queryset = Document.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
 
 class EquipmentConfigurationViewSet(viewsets.ModelViewSet):
     """
@@ -123,16 +133,20 @@ class EquipmentConfigurationViewSet(viewsets.ModelViewSet):
     serializer_class = EquipmentConfigurationSerializer
     queryset = Configuration.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class EquipmentStateViewSet(viewsets.ModelViewSet):
+
+class EquipmentStateViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Previous and current state an equipment had or have.
     """
     serializer_class = EquipmentStateSerializer
     queryset = EquipmentState.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class EquipmentTypeViewSet(viewsets.ModelViewSet):
+
+class EquipmentTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of equipment model's types.
 
@@ -143,8 +157,10 @@ class EquipmentTypeViewSet(viewsets.ModelViewSet):
     serializer_class = EquipmentTypeSerializer
     queryset = Type.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class EquipmentModelViewSet(viewsets.ModelViewSet):
+
+class EquipmentModelViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of equipment's models.
 
@@ -155,6 +171,8 @@ class EquipmentModelViewSet(viewsets.ModelViewSet):
     serializer_class = EquipmentModelSerializer
     queryset = Model.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     """
@@ -163,8 +181,10 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     serializer_class = EquipmentSerializer
     queryset = Equipment.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class ForbiddenEquipmentModelViewSet(viewsets.ModelViewSet):
+
+class ForbiddenEquipmentModelViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of forbidden equipment's model.
 
@@ -177,8 +197,10 @@ class ForbiddenEquipmentModelViewSet(viewsets.ModelViewSet):
     serializer_class = ForbiddenEquipmentModelSerializer
     queryset = ForbiddenEquipmentModel.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class GroundTypeViewSet(viewsets.ModelViewSet):
+
+class GroundTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of ground types.
 
@@ -189,6 +211,8 @@ class GroundTypeViewSet(viewsets.ModelViewSet):
     serializer_class = GroundTypeSerializer
     queryset = GroundType.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
 
 class IPAddressViewSet(viewsets.ModelViewSet):
     """
@@ -197,7 +221,7 @@ class IPAddressViewSet(viewsets.ModelViewSet):
     serializer_class = IPAddressSerializer
     queryset = IPAddress.objects.all()
 
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
 
 class InstallationViewSet(viewsets.ModelViewSet):
@@ -209,21 +233,27 @@ class InstallationViewSet(viewsets.ModelViewSet):
     serializer_class = InstallationSerializer
     queryset = Installation.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class NetworkViewSet(viewsets.ModelViewSet):
+
+class NetworkViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of networks.
     """
     serializer_class = NetworkSerializer
     queryset = Network.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class ParameterViewSet(viewsets.ModelViewSet):
+
+class ParameterViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of parameters a equipment's model have.
     """
     serializer_class = ParameterSerializer
     queryset = Parameter.objects.all()
+
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class PlaceViewSet(viewsets.ModelViewSet):
@@ -233,21 +263,27 @@ class PlaceViewSet(viewsets.ModelViewSet):
     serializer_class = PlaceSerializer
     queryset = Place.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class PlaceStateViewSet(viewsets.ModelViewSet):
+
+class PlaceStateViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Previous and current state a place had or have.
     """
     serializer_class = PlaceStateSerializer
     queryset = PlaceState.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class ProjectViewSet(viewsets.ModelViewSet):
+
+class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of projects. Regroup users.
     """
     serializer_class = ProjectSerializer
     queryset = Project.objects.all()
+
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class ServiceViewSet(viewsets.ModelViewSet):
@@ -257,7 +293,7 @@ class ServiceViewSet(viewsets.ModelViewSet):
     serializer_class = ServiceSerializer
     queryset = Service.objects.all()
 
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
 
 class StationViewSet(viewsets.ModelViewSet):
@@ -267,8 +303,10 @@ class StationViewSet(viewsets.ModelViewSet):
     serializer_class = StationSerializer
     queryset = Station.objects.all()
 
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-class UserViewSet(viewsets.ModelViewSet):
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of users.
     """
@@ -278,10 +316,12 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
 
-class ValueViewSet(viewsets.ModelViewSet):
+class ValueViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List of values linked to a specific parameter (itself linked to a given
     equipment's model)
     """
     serializer_class = ValueSerializer
     queryset = Value.objects.all()
+
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
