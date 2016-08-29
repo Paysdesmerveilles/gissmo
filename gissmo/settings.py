@@ -130,6 +130,7 @@ if os.getenv('STATIC_ROOT', None) is not None:
 MEDIA_ROOT = os.path.join(os.path.abspath(os.path.curdir), 'upload')
 if os.getenv('UPLOAD_ROOT', None) is not None:
     MEDIA_ROOT = os.path.abspath(os.getenv('UPLOAD_ROOT'))
+MEDIA_URL = '/media/'
 
 REST_FRAMEWORK = {
     # TODO: When better interface, add this: IsAuthenticatedOrReadOnly

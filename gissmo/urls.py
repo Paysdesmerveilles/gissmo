@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.conf.urls import include, url
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 
@@ -22,4 +24,4 @@ urlpatterns = [
     url(r'^api/v2/', include('api.urls'), name='api'),
     url(r'^api/$', RedirectView.as_view(url='v2', permanent=False), name='api_redirect'),
     url(r'api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
