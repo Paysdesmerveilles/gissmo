@@ -55,7 +55,7 @@ class AgencySerializer(serializers.HyperlinkedModelSerializer):
 
 class ChannelSerializer(serializers.HyperlinkedModelSerializer):
     configurations = serializers.HyperlinkedRelatedField(
-        view_name='equipment_configuration-detail',
+        view_name='equipment_configurations-detail',
         read_only=True,
         many=True)
 
@@ -95,7 +95,7 @@ class DatatypeSerializer(serializers.ModelSerializer):
 class DocumentSerializer(serializers.HyperlinkedModelSerializer):
     type = serializers.HyperlinkedRelatedField(
         source='_type',
-        view_name='document_type-detail',
+        view_name='document_types-detail',
         queryset=DocumentType.objects.all())
     file = serializers.FileField(source='_file')
 
@@ -125,7 +125,7 @@ class DocumentTypeSerializer(serializers.ModelSerializer):
 
 class EquipmentSerializer(serializers.HyperlinkedModelSerializer):
     state = serializers.HyperlinkedRelatedField(
-        view_name='equipment_state-detail',
+        view_name='equipment_states-detail',
         read_only=True)
 
     class Meta:
@@ -166,7 +166,7 @@ class EquipmentConfigurationSerializer(serializers.HyperlinkedModelSerializer):
 class EquipmentModelSerializer(serializers.HyperlinkedModelSerializer):
     type = serializers.HyperlinkedRelatedField(
         source='_type',
-        view_name='type-detail',
+        view_name='types-detail',
         queryset=Type.objects.all())
 
     class Meta:
@@ -244,7 +244,7 @@ class InstallationSerializer(serializers.HyperlinkedModelSerializer):
         choices=INSTALLATION_TYPE_CHOICES,
         source='_type')
     configurations = serializers.HyperlinkedRelatedField(
-        view_name='equipment_configuration-detail',
+        view_name='equipment_configurations-detail',
         read_only=True,
         many=True)
 
@@ -292,7 +292,7 @@ class ParameterSerializer(serializers.HyperlinkedModelSerializer):
 class PlaceSerializer(serializers.HyperlinkedModelSerializer):
     type = serializers.ChoiceField(choices=PLACE_TYPE_CHOICES, source='_type')
     state = serializers.HyperlinkedRelatedField(
-        view_name='place_state-detail',
+        view_name='place_states-detail',
         read_only=True)
 
     class Meta:
@@ -376,7 +376,7 @@ class StationSerializer(serializers.HyperlinkedModelSerializer):
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     projects = serializers.HyperlinkedRelatedField(
         source='groups',
-        view_name='project-detail',
+        view_name='projects-detail',
         read_only=True,
         many=True)
 
