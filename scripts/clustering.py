@@ -37,7 +37,11 @@ def info(s):
 
 print("Used port: %s" % port)
 
-with psycopg2.connect(user="postgres", dbname="postgres", host="localhost", port=port) as conn:
+with psycopg2.connect(
+    user="postgres",
+    dbname="postgres",
+    host="localhost",
+        port=port) as conn:
     with conn.cursor() as curs:
         curs.execute(sql_equipment_without_intervention)
         for equip_change in curs.fetchall():

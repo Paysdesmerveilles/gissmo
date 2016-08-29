@@ -137,7 +137,8 @@ class Place(models.Model):
         null=True,
         blank=True,
         verbose_name="Soil classification",
-        help_text="Following EC8 soil classification. See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details")
+        help_text="Following EC8 soil classification. \
+See Pitilakis et al. (Bulletin of Earthquake Engineering, 2012) for details")
 
     # folks
     operators = models.ManyToManyField(

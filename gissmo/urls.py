@@ -22,6 +22,11 @@ urlpatterns = [
         iviews.lookup_transitions,
         name='lookup_transitions'),
     url(r'^api/v2/', include('api.urls'), name='api'),
-    url(r'^api/$', RedirectView.as_view(url='v2', permanent=False), name='api_redirect'),
-    url(r'api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(
+        r'^api/$',
+        RedirectView.as_view(url='v2', permanent=False),
+        name='api_redirect'),
+    url(r'api-auth/', include(
+        'rest_framework.urls',
+        namespace='rest_framework')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

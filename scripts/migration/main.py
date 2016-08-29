@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# WARNING: Need to use python manage.py migrate first! To deploy new 2.0 version
-import pdb
+# WARNING: Need to use python manage.py migrate first!
+# To deploy new 2.0 version
+# import pdb
 
 from models import (
     AuthUser,
@@ -367,7 +368,10 @@ def fetch_or_migrate_site(ground_types, agencies):
 def fetch_or_migrate_network():
     res = {}
     for network in GissmoNetwork.select().order_by(GissmoNetwork.id):
-        print("Network: [%s] %s (ID: %s)" % (network.code, network.name, network.id))
+        print("Network: [%s] %s (ID: %s)" % (
+            network.code,
+            network.name,
+            network.id))
         n = Network.get_or_create(code=network.code)
         if isinstance(n, tuple):
             n = n[0]
@@ -446,7 +450,13 @@ def fetch_or_migrate_built(agencies):
     return res
 
 
-def search_place_from_station_id(station_id, equip, places, agencies, ground_types, builts):
+def search_place_from_station_id(
+    station_id,
+    equip,
+    places,
+    agencies,
+    ground_types,
+        builts):
     """
     As we comme from fetch_or_migrate_equipment we know that:
       - our station doesn't have any linked place
@@ -496,7 +506,13 @@ def fetch_or_migrate_equipment(places, agencies, models, ground_types, builts):
             if isinstance(place, tuple):
                 place = place[0]
         elif station_id:
-            place = search_place_from_station_id(station_id, equip, places, agencies, ground_types, builts)
+            place = search_place_from_station_id(
+                station_id,
+                equip,
+                places,
+                agencies,
+                ground_types,
+                builts)
         else:
             place = neant
 
@@ -586,7 +602,8 @@ def fetch_or_migrate_configuration(equipments):
             config.parameter.name,
             config.value.name,
             config.id))
-        e = Equipment.get(Equipment.id == equipments[config.chain.equipment.id])
+        e = Equipment.get(
+            Equipment.id == equipments[config.chain.equipment.id])
         c = Configuration.get_or_create(
             parameter=config.parameter.name,
             value=config.value.name,
@@ -649,7 +666,12 @@ def main():
         print("CORRELATION BUILT: %s" % link_built)
 
         # - gissmo_equipment -> equipment_equipment
-        link_equipment = fetch_or_migrate_equipment(link_place, link_agency, link_equipment_model, link_ground_type, link_built)
+        link_equipment = fetch_or_migrate_equipment(
+            link_place,
+            link_agency,
+            link_equipment_model,
+            link_ground_type,
+            link_built)
         print("CORRELATION EQUIPMENT: %s" % link_equipment)
 
         # - gissmo_datatype -> network_datatype

@@ -17,7 +17,7 @@ class InterventionForm(forms.ModelForm):
             url = reverse('lookup_transitions')
             self.fields['site'] = forms.ModelChoiceField(
                 queryset=Site.objects.all(),
-                widget = forms.Select(
-                    attrs = {
+                widget=forms.Select(
+                    attrs={
                         'onchange': "get_transitions(this, '" + url + "');"})
             )

@@ -92,8 +92,8 @@ class DatatypeViewSet(viewsets.ModelViewSet):
 class DocumentTypeViewSet(viewsets.ModelViewSet):
     """
     List of documents types.
-    
-    Used by: 
+
+    Used by:
 
       * documents
     """
@@ -104,8 +104,8 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
 class DocumentViewSet(viewsets.ModelViewSet):
     """
     List of documents.
-    
-    Used by: 
+
+    Used by:
 
       * places
       * equipment's models
@@ -181,8 +181,8 @@ class ForbiddenEquipmentModelViewSet(viewsets.ModelViewSet):
 class GroundTypeViewSet(viewsets.ModelViewSet):
     """
     List of ground types.
-    
-    Used by: 
+
+    Used by:
 
       * places
     """

@@ -98,6 +98,7 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
         view_name='document_type-detail',
         queryset=DocumentType.objects.all())
     file = serializers.FileField(source='_file')
+
     class Meta:
         model = Document
         fields = (
@@ -205,7 +206,8 @@ class EquipmentTypeSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class ForbiddenEquipmentModelSerializer(serializers.HyperlinkedModelSerializer):
+class ForbiddenEquipmentModelSerializer(
+        serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ForbiddenEquipmentModel
         fields = (

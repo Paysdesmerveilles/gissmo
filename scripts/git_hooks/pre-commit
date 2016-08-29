@@ -8,18 +8,14 @@ import sys
 site_packages = glob.glob('%s/lib/*/site-packages' % os.environ['VIRTUAL_ENV'])[0]
 sys.path.insert(0, site_packages)
 
-from flake8.run import git_hook
+from flake8.main import git
 
-COMPLEXITY = os.getenv('FLAKE8_COMPLEXITY', 10)
 STRICT = os.getenv('FLAKE8_STRICT', True)
-IGNORE = os.getenv('FLAKE8_IGNORE', 'E501')
 LAZY = os.getenv('FLAKE8_LAZY', False)
 
 
 if __name__ == '__main__':
-    sys.exit(git_hook(
-        complexity=COMPLEXITY,
+    sys.exit(git.hook(
         strict=STRICT,
-        ignore=IGNORE,
         lazy=LAZY,
         ))
