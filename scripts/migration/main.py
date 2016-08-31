@@ -380,9 +380,6 @@ def fetch_or_migrate_network():
         new.description = network.description
         new.start = network.start
         new.end = network.end
-        new.xml_historical_code = network.historical_code
-        new.xml_alternate_code = network.alternate_code
-        new.xml_restricted_status = network.status
         new.save()
         res[network.id] = n.id
     return res
@@ -458,7 +455,7 @@ def search_place_from_station_id(
     ground_types,
         builts):
     """
-    As we comme from fetch_or_migrate_equipment we know that:
+    As we come from fetch_or_migrate_equipment we know that:
       - our station doesn't have any linked place
       - but our equipment is linked to this station_id
     First we check intervention for the given station and equipment. If last
