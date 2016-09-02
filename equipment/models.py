@@ -9,8 +9,6 @@ from equipment import protocols as Protocol
 from equipment import states as estate
 from equipment import types as etype
 
-import datetime
-
 
 class State(models.Model):
     code = models.IntegerField(
@@ -150,7 +148,7 @@ class Equipment(models.Model):
         related_name='last_user')
     last_edition = models.DateTimeField(
         'Last edition',
-        default=datetime.date.today)
+        default=timezone.now)
 
     def __str__(self):
         return '%s' % self.name

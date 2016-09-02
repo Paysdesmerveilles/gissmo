@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.conf import settings
-import datetime
+from django.utils import timezone
 import equipment.models
 
 
@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='equipment',
             name='last_edition',
-            field=models.DateTimeField(verbose_name='Last edition', default=datetime.date.today),
+            field=models.DateTimeField(default=timezone.now, verbose_name='Last edition'),
         ),
         migrations.AddField(
             model_name='equipment',
