@@ -196,6 +196,10 @@ class EquipmentStateSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class EquipmentTypeSerializer(serializers.HyperlinkedModelSerializer):
+    parent = serializers.HyperlinkedRelatedField(
+        view_name='types-detail',
+        queryset=Type.objects.filter(parent=False))
+
     class Meta:
         model = Type
         fields = (
