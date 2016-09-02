@@ -7,7 +7,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('intervention', '0002_add_trigger'),
+        ('intervention', '0002_create_procedure'),
     ]
 
     operations = [

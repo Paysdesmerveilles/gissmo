@@ -84,6 +84,11 @@ class Migration(migrations.Migration):
             AFTER UPDATE ON place_place
             FOR EACH ROW EXECUTE PROCEDURE gissmo_audit();""")],
         ),
+        migrations.RunSQL(
+            [("""CREATE TRIGGER place_place_cluster
+            AFTER INSERT ON place_place_history
+            FOR EACH ROW EXECUTE PROCEDURE place_place_clustering();""")],
+        ),
         # place_placeoperator
         migrations.RunSQL(
             [("""CREATE TABLE place_placeoperator_history (

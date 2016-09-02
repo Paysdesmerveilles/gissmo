@@ -117,6 +117,11 @@ class Migration(migrations.Migration):
             AFTER UPDATE ON network_installation
             FOR EACH ROW EXECUTE PROCEDURE gissmo_audit();""")],
         ),
+        migrations.RunSQL(
+            [("""CREATE TRIGGER network_installation_cluster
+            AFTER INSERT ON network_installation_history
+            FOR EACH ROW EXECUTE PROCEDURE have_place_id_field_clustering();""")],
+        ),
         # network_datatype
         migrations.RunSQL(
             [("""CREATE TABLE network_datatype_history (

@@ -70,4 +70,8 @@ class Migration(migrations.Migration):
             name='protagonists',
             field=models.ManyToManyField(through='intervention.Protagonist', to=settings.AUTH_USER_MODEL),
         ),
+        migrations.AlterUniqueTogether(
+            name='intervention',
+            unique_together=set([('date', 'place')]),
+        ),
     ]

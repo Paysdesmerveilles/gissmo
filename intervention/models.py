@@ -14,6 +14,9 @@ class Intervention(models.Model):
     confirmed = models.BooleanField(default=False)
     documents = models.ManyToManyField('document.Document', blank=True)
 
+    class Meta:
+        unique_together = (('date', 'place'),)
+
     def __str__(self):
         return '%s (%s)' % (self.date, self.place)
 

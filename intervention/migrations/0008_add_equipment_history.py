@@ -116,6 +116,11 @@ class Migration(migrations.Migration):
             AFTER UPDATE ON equipment_equipment
             FOR EACH ROW EXECUTE PROCEDURE gissmo_audit();""")],
         ),
+        migrations.RunSQL(
+            [("""CREATE TRIGGER equipment_equipment_cluster
+            AFTER INSERT ON equipment_equipment_history
+            FOR EACH ROW EXECUTE PROCEDURE have_place_id_field_clustering();""")],
+        ),
         # equipment_equipment_documents
         migrations.RunSQL(
             [("""CREATE TABLE equipment_equipment_documents_history (

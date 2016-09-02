@@ -7,13 +7,9 @@ import psycopg2
 DEBUG = False
 
 port = os.getenv('POSTGRES_PORT', 5432)
-sql_equipment_without_intervention = """
-SELECT id, insert_datetime, place_id
-FROM equipment_equipment_history
-WHERE intervention_id IS NULL
-ORDER BY insert_datetime, place_id;
-"""
-sql_intervention_regarding_criteria = """
+
+# Intervention requests
+sql_existing_intervention = """
 SELECT id
 FROM intervention_intervention
 WHERE date = %s
@@ -24,69 +20,115 @@ INSERT INTO intervention_intervention (date, place_id, confirmed)
 VALUES (%s, %s, False)
 RETURNING id;
 """
-sql_equipment_update = """
-UPDATE equipment_equipment_history
-SET intervention_id = %s
-WHERE id = %s;
-"""
 
 
 def info(s):
+    """
+    Just for printing elements. Sometimes not :)
+    """
     if DEBUG:
         print("%s" % s)
 
-print("Used port: %s" % port)
 
-with psycopg2.connect(
-    user="postgres",
-    dbname="postgres",
-    host="localhost",
-        port=port) as conn:
-    with conn.cursor() as curs:
-        curs.execute(sql_equipment_without_intervention)
-        for equip_change in curs.fetchall():
-            # search existing intervention
-            e = equip_change[0]
-            date = equip_change[1]
-            station_id = equip_change[2]
-            intervention = None
+def historyline_clustering(conn, history_lines, sql_update):
+    """
+    For each history line:
+      * Check if intervention exists at same date and location (place).
+      * If no one, create it.
+      * Finally link history lines (without intervention) to intervention.
+    """
+    for history_line in history_lines:
+        # search existing intervention with same date + place
+        history_object = history_line[0]
+        date = history_line[1]
+        location = history_line[2]
+        intervention = None
 
-            existing_intervention = None
-            with conn.cursor() as cur1:
-                info("Check Interv. for Equipment ID: %s" % e)
-                cur1.execute(
-                    sql_intervention_regarding_criteria,
-                    (date, station_id,))
+        existing_intervention = None
+        with conn.cursor() as cur1:
+            info("Check Interv. for Equipment ID: %s" % history_object)
+            cur1.execute(
+                sql_existing_intervention,
+                (date, location,))
 
-                existing_intervention = cur1.fetchone()
-                if existing_intervention:
-                    info("Found!")
-                    intervention = existing_intervention[0]
+            existing_intervention = cur1.fetchone()
+            if existing_intervention:
+                info("Found!")
+                intervention = existing_intervention[0]
 
-            if not existing_intervention:
-                info("Create Interv. for Equipment ID: %s" % e)
-                created_intervention = None
-                with conn.cursor() as cur2:
-                    cur2.execute(
-                        sql_intervention_creation,
-                        (date, station_id,))
-                    created_intervention = cur2.fetchone()[0]
-                if created_intervention:
-                    intervention = created_intervention
+        # if no existing intervention, create it!
+        if not existing_intervention:
+            info("Create Interv. for Equipment ID: %s" % history_object)
+            created_intervention = None
+            with conn.cursor() as cur2:
+                cur2.execute(
+                    sql_intervention_creation,
+                    (date, location,))
+                created_intervention = cur2.fetchone()[0]
+            if created_intervention:
+                intervention = created_intervention
 
-            if not intervention:
-                print("Error occured about intervention creation for this \
-equipment ID: %s" % e)
-                sys.exit(1)
-            else:
-                print("Equipment History '%s': using intervention '%s'" % (
-                    e, intervention))
-            info("Intervention ID used: %s" % intervention)
+        # check that we really have an intervention after that
+        if not intervention:
+            print("Error occured about intervention creation for this \
+equipment ID: %s" % history_object)
+            sys.exit(1)
+        else:
+            print("Equipment History '%s': using intervention '%s'" % (
+                history_object, intervention))
+        info("Intervention ID used: %s" % intervention)
 
-            with conn.cursor() as cur3:
-                cur3.execute(sql_equipment_update, (intervention, e,))
-                print("Equipment History '%s' updated." % e)
+        # finally UPDATE given equipment_history line with an intervention
+        with conn.cursor() as cur3:
+            print(history_line)
+            print("SQL: %s. | %s | %s" % (sql_update, intervention, history_object))
+            cur3.execute(sql_update, (intervention, history_object,))
+            print("Equipment History '%s' updated." % history_object)
 
-conn.close()
 
-sys.exit(0)
+def main():
+    """
+    Connect to the database, check history tables by searching lines
+    without intervention_id.
+    Checks:
+      * equipment_equipment_history
+      * place_place_history
+      * network_installation_histoyr
+    """
+    print("Used port: %s" % port)
+    with psycopg2.connect(
+        user="postgres",
+        dbname="postgres",
+        host="localhost",
+            port=port) as conn:
+        for table in [
+            'equipment_equipment_history',
+            'place_place_history',
+                'network_installation_history']:
+            place_field = 'place_id'
+            if table == 'place_place_history':
+                place_field = 'id'
+            sql_without_intervention = """
+                SELECT id, insert_datetime, %s
+                FROM %s
+                WHERE intervention_id IS NULL
+                ORDER BY insert_datetime, %s""" % (
+                    place_field,
+                    table,
+                    place_field)
+            sql_update = "UPDATE %s" % (table,)
+            sql_update += """
+                SET intervention_id = %s
+                WHERE id = %s;"""
+            print(table, sql_update)
+            # Do clustering on this element
+            lines = []
+            with conn.cursor() as curs:
+                curs.execute(sql_without_intervention)
+                lines = curs.fetchall()
+            historyline_clustering(conn, lines, sql_update)
+    conn.close()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
