@@ -20,7 +20,7 @@ HOST = os.getenv('POSTGRES_HOST', '127.0.0.1')
 DB = os.getenv('POSTGRES_DB', 'postgres')
 USER = os.getenv('POSTGRES_USER', 'postgres')
 PWD = os.getenv('POSTGRES_PASS', 'postgres')
-PORT = os.getenv('DB_PORT_5432_TCP_PORT', '5432')
+PORT = os.getenv('POSTGRES_PORT', '5432')
 
 db = PooledPostgresqlExtDatabase(
     DB,
