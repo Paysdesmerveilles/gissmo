@@ -4,7 +4,7 @@ from intervention.models import Intervention
 
 
 class InterventionAdmin(admin.ModelAdmin):
-    fields = ['place', 'date', 'confirmed']
+    fields = ['place', 'date', 'confirmed', 'note']
     list_display = ('date', 'place', 'confirmed')
     search_fields = ['date', 'place__name']
 
