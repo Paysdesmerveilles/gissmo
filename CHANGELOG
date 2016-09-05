@@ -1,8 +1,10 @@
-Version 1.7:
+Version 1.7-rc1:
   - Add a checkbox on project to hide some project from filtering on stations
   - Display all stations, equipments and interventions to all users
   - Change UPLOAD_ROOT to MEDIA_ROOT in Django settings (but keep it in Docker)
   - API new object: Document (from Station, Equipment, Equipment's model and intervention)
+  - Add groundtype field on Place
+  - Remove 'Recent Actions' panel from administration
   - New services available (for Equipments): Telnet and FTP
 
 Version 1.6.1:
