@@ -87,7 +87,7 @@ Which will display a list of commands.
 Then check database access (with information you were invited to remember in [postgreSQL preparation](#postgresql-preparation)):
 
 ```bash
-POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASSWORD="mot2passe2fou" python manage.py dbshell
+POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASS="mot2passe2fou" python manage.py dbshell
 ```
 
 You will see something like that:
@@ -107,7 +107,7 @@ To exit type this command then **Enter**:
 And launch database migration:
 
 ```bash
-POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASSWORD="mot2passe2fou" python manage.py migrate
+POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASS="mot2passe2fou" python manage.py migrate
 ```
 
 ## Static files
@@ -134,14 +134,14 @@ For more, see [Django documentation about SECRET_KEY](https://docs.djangoproject
 We use [uWSGI](http://uwsgi-docs.readthedocs.org/en/latest/) to deliver Gissmo:
 
 ```bash
-SECRET_KEY="abcdefghijklmnopqrstuvwxyz" DJANGO_SETTINGS_MODULE=gissmo.settings.production POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASSWORD="mot2passe2fou" ../bin/uwsgi --ini uwsgi.ini --pythonpath ./ --static-map=/gissmo/static/=./static
+SECRET_KEY="abcdefghijklmnopqrstuvwxyz" DJANGO_SETTINGS_MODULE=gissmo.settings.production POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASS="mot2passe2fou" ../bin/uwsgi --ini uwsgi.ini --pythonpath ./ --static-map=/gissmo/static/=./static
 ```
 
 Some explanations:
 
   * using uWSGI and **gissmo.settings.production** sets Gissmo in its production mode. So no DEBUG information will appears
   * we always need to gives SECRET_KEY in production mode
-  * you also need database connection settings with POSTGRES_DB, POSTGRES_USER and POSTGRES_PASSWORD
+  * you also need database connection settings with POSTGRES_DB, POSTGRES_USER and POSTGRES_PASS
   * we use Python virtualenv uWSGI (with **../bin/uwsgi**)
   * uWSGI settings are located here: **uwsgi.ini**
 
@@ -156,7 +156,7 @@ Gissmo administration needs an administrator called the **superuser**.
 Then:
 
 ```bash
-POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASSWORD="mot2passe2fou" python manage.py createsuperuser
+POSTGRES_DB=gissmodb POSTGRES_USER=gissmo_user POSTGRES_PASS="mot2passe2fou" python manage.py createsuperuser
 ```
 
 Just answer to what appears on the screen.

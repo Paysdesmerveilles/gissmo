@@ -1,21 +1,13 @@
 #!/usr/bin/env sh
 set -e
 
-if ! [ "$POSTGRES_DB" ]; then
-  export POSTGRES_DB="postgres"
-fi
-if ! [ "$POSTGRES_HOST"] && [ "DB_PORT_5432_TCP_ADDR" ]; then
+# DB_PORT_5432_TCP_ADDR and DB_PORT_5432_TCP_PORT exists if you link this
+# container to another one called 'db' (while using --link Docker option).
+if [ -z "$POSTGRES_HOST" ] && [ -n "$DB_PORT_5432_TCP_ADDR" ]; then
   export POSTGRES_HOST="$DB_PORT_5432_TCP_ADDR"
-else
-  export POSTGRES_HOST="127.0.0.1"
 fi
-if ! [ "$POSTGRES_USER" ]; then
-  export POSTGRES_USER="postgres"
-fi
-if ! [ "$POSTGRES_PORT" ] && [ "DB_PORT_5432_TCP_PORT" ]; then
+if [ -z "$POSTGRES_PORT" ] && [ -n "$DB_PORT_5432_TCP_PORT" ]; then
   export POSTGRES_PORT="$DB_PORT_5432_TCP_PORT"
-else
-  export POSTGRES_PORT="5432"
 fi
 
 # Now having pSQL access we create static files.
