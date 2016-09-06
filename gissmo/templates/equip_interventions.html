@@ -1,5 +1,9 @@
-<fieldset class="module aligned collapse">
-  <h2>Interventions on equipement. Status: {{ intervs.0.get_equip_state_display }}. Last place: {{ intervs.0.station.station_code }}. Place: {{ intervs.0.built }}</h2>
+<fieldset class="module aligned {{ collapse }}">
+  {% if collapse %}
+  <h2>All interventions.</h2>
+  {% else %}
+  <h2>Last 3 interventions. Current place: {{ intervs.0.built }}.</h2>
+  {% endif %}
    <table>
      <thead><tr>
          <th>Action</th>

@@ -46,6 +46,7 @@
 
 {% block submit_buttons_bottom %}{% submit_row %}
 {% if object_id %}
+{% display_station_interventions object_id 3 %}
 {% display_station_interventions object_id %}
 {% display_equip_last_location object_id %}
 {% display_hist_equip_station object_id %}

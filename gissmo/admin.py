@@ -337,7 +337,8 @@ class EquipmentAdmin(admin.ModelAdmin):
                     'serial_number',
                     'owner',
                     'purchase_date',
-                    'stockage_site')]}),
+                    'stockage_site'),
+                ('last_state', 'last_station')]}),
         ('Contacts', {
             'fields': [
                 (
@@ -347,6 +348,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         ('Other information', {
             'fields': [('note')],
             'classes': ['collapse']})]
+    readonly_fields = ['last_state', 'last_station']
 
     inlines = [EquipDocInline, ConfigEquipInline]
 
@@ -635,7 +637,7 @@ class StationSiteAdmin(admin.ModelAdmin):
     list_filter = [StationSiteFilter, 'site_type', ProjectFilter]
     ordering = ['station_code']
     search_fields = ['station_code', 'site_name', 'operator__name']
-    readonly_fields = ['googlemap_link']
+    readonly_fields = ['googlemap_link', 'last_state']
     form = StationSiteForm
 
     fieldsets = [
@@ -648,6 +650,7 @@ class StationSiteAdmin(admin.ModelAdmin):
                     'operator',
                     'creation_date',
                     'project'),
+                ('last_state'),
                 ('latitude', 'longitude', 'elevation', 'googlemap_link'),
                 ('ground_type')]}),
         ('Contacts', {

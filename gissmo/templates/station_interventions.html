@@ -1,5 +1,9 @@
-<fieldset class="module aligned collapse">
-  <h2>Site's interventions (Status: {{ intervs.0.5 }})</h2>
+<fieldset class="module aligned {{ collapse }}">
+  {% if collapse %}
+  <h2>All interventions</h2>
+  {% else %}
+  <h2>Last 3 interventions</h2>
+  {% endif %}
    <table>
      <thead><tr>
          <th>Date and time</th>

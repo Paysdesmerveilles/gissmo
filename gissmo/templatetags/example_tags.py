@@ -12,12 +12,15 @@ register = template.Library()
 
 
 @register.inclusion_tag('station_interventions.html')
-def display_station_interventions(station_id):
+def display_station_interventions(station_id, limit=None):
     """
     Fetch all site interventions.
     For each intervention on this site gives this informations:
       - involved actors
       - involved equipments
+    If limit is set we display only last 'x' station interventions (where x is
+    the number given by limit).
+    Otherwise we display all interventions in a collapsed panel.
     """
     # Obtain the app_label
     content_type = ContentType.objects.get_for_model(Intervention)
@@ -34,13 +37,20 @@ def display_station_interventions(station_id):
 
     # Fetch all interventions on the given site (and all related data)
     liste = []
+    collapse = True
     interventions = Intervention.objects.filter(
         station_id=station_id).order_by(
         '-intervention_date').prefetch_related(
         'intervorganism_set__organism',
         'intervequip_set__equip__equip_model',
         'intervequip_set__built',
-        'intervstation_set')
+        'intervstation_set',
+        'intervuser_set__user')
+    if limit is not None:
+        if not isinstance(limit, int):
+            limit = int(limit)
+        interventions = interventions[:limit]
+        collapse = False
     for intervention in interventions:
         # Display users and organisms as "user1, user2 (a1, a2, etc.)"
         protagonists = ''
@@ -64,7 +74,10 @@ def display_station_interventions(station_id):
 
         liste.append([intervention, protagonists, stations,
                       equips, line_number, last_state])
-    return {'intervs': liste, 'url_redirection': url_redirection}
+    res = {'intervs': liste, 'url_redirection': url_redirection}
+    if collapse:
+        res.update({'collapse': 'collapse'})
+    return res
 
 
 @register.inclusion_tag('equip_states.html')
@@ -77,15 +90,34 @@ def display_equip_states(equip_id):
 
 
 @register.inclusion_tag('equip_interventions.html')
-def display_equip_interventions(equip_id):
+def display_equip_interventions(equip_id, limit=None):
+    """
+    Display all interventions linked to this equipment (equip_id).
+    If limit is None (default value) we display all equipment, but collapse the
+    entire table.
+    If limit given, display only the given 
+    """
     intervs = []
+    collapse = True
     intervs = IntervEquip.objects.filter(equip__id=equip_id).order_by(
         '-intervention__intervention_date')
+    if limit is not None:
+        if not isinstance(limit, int):
+            limit = int(limit)
+        intervs = intervs[:limit]
+        collapse = False
+
     # Obtain the app_label
     content_type = ContentType.objects.get_for_model(IntervEquip)
     url_redirection = "admin:%s_intervention_change" % (content_type.app_label)
 
-    return {'intervs': intervs, 'url_redirection': url_redirection}
+    res = {
+        'intervs': intervs,
+        'url_redirection': url_redirection,
+    }
+    if collapse:
+        res.update({'collapse': 'collapse'})
+    return res
 
 
 @register.inclusion_tag('equip_locations.html')
