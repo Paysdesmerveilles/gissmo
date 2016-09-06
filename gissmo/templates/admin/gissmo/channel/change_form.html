@@ -33,7 +33,9 @@
 {% endblock %}
 
 {% block object-tools-items %}
-  <li><a href="history/" class="historylink">History</a></li>
+{% if original.station %}<li><a href="{% url 'admin:app_list' app_label=opts.app_label %}stationsite/{{ original.station_id }}">Check station</a></li>
+{% endif %}
+<li><a href="history/" class="historylink">History</a></li>
 {% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">View on site</a></li>{% endif%}
 {% endblock %}
 

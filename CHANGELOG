@@ -1,4 +1,6 @@
 Current version (1.8_trunk):
+  - Add "Check station" button for Equipments and Channels
+  - Add "Last 3 interventions" panel for Equipments and Stations
 
 Version 1.7:
   - Add a checkbox on project to hide some project from filtering on stations

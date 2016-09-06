@@ -13,6 +13,7 @@ from django.utils.timezone import make_aware
 
 from gissmo.models import (
     ChainConfig,
+    Channel,
     ChannelCode,
     ConfigEquip,
     EquipModel,
@@ -216,3 +217,41 @@ class ChannelTest(FunctionalTest):
             current,
             expected,
             'Wrong value: %s. Should be %s.' % (current, expected))
+
+    def test_check_station_button(self):
+        """
+        After channel creation, as we linked channel to a given station,
+        we check that "Check station" button exists and redirect to the station
+        """
+        # Create channel
+        self.channel_code = ChannelCode.objects.create(channel_code='HHZ')
+        creation_date = datetime.strptime('2016-09-07', '%Y-%m-%d')
+        self.channel_1 = Channel.objects.create(
+            network=self.network,
+            station=self.station,
+            channel_code=self.channel_code,
+            longitude='48.5793',
+            latitude='7.763',
+            elevation='200.0',
+            depth='0',
+            azimuth='90',
+            dip='-90',
+            sample_rate='100',
+            start_date=make_aware(creation_date))
+
+        # Login to Gissmo and go to the channel
+        self.gissmo_login()
+        url = '%schannel/%s' % (self.appurl, self.channel_1.id)
+        self.browser.get(url)
+
+        # Search link then click on it
+        link = self.browser.find_element_by_xpath('//a[. = "Check station"]')
+        link.click()
+
+        # Check redirection URL. Should be those from station
+        current = self.browser.current_url
+        expected = '%sstationsite/%s/' % (self.appurl, self.station.id)
+        self.assertEqual(
+            current,
+            expected,
+            'Wrong URL: %s. Should be: %s' % (current, expected))

@@ -10,11 +10,12 @@ from django.utils.timezone import make_aware
 from selenium.webdriver.support.ui import Select
 
 from gissmo.models import (
-    Organism,
+    EquipModel,
     EquipSupertype,
     EquipType,
     Equipment,
-    EquipModel,
+    Intervention,
+    Organism,
     Project,
     StationSite)
 
@@ -188,3 +189,71 @@ class EquipmentTest(FunctionalTest):
 
         url = '%sequipment/%s' % (self.appurl, self.equipment_1.id)
         self.fill_in_form(url, fields, click_paths)
+
+    def test_check_station_button(self):
+        """
+        We go to an equipment that is linked to a station and click on
+        "Check station" button to see if we're redirected to the right URL.
+        """
+        purchase_date = datetime.strptime('2015-10-01', '%Y-%m-%d')
+        self.equipment_1 = Equipment.objects.create(
+            equip_model=self.equipment_model_1,
+            serial_number='T4Q32',
+            owner=self.mandatory,
+            stockage_site=self.station_1,
+            purchase_date=make_aware(purchase_date),
+            actor=self.superuser)
+        url = '%sequipment/%s' % (self.appurl, self.equipment_1.id)
+        self.gissmo_login()
+        self.browser.get(url)
+        link = self.browser.find_element_by_xpath(
+            '//a[. = "Check station"]')
+        link.click()
+        self.browser.implicitly_wait(3)
+        expected_url = '%sstationsite/%s/' % (self.appurl, self.station_1.id)
+        current_url = self.browser.current_url
+        self.assertEqual(
+            current_url,
+            expected_url,
+            'Current: %s, Expected: %s' % (current_url, expected_url))
+
+    def test_check_station_button_without_link(self):
+        """
+        We need to check that an equipment without any station don't deliver
+        any "Check station" button.
+        """
+        # We start creating a new equipment. It creates automatically an
+        # intervention. So we search this intervention and delete it.
+        purchase_date = datetime.strptime('2015-10-01', '%Y-%m-%d')
+        self.equipment_1 = Equipment.objects.create(
+            equip_model=self.equipment_model_1,
+            serial_number='T4Q32',
+            owner=self.mandatory,
+            stockage_site=self.station_1,
+            purchase_date=make_aware(purchase_date),
+            actor=self.superuser)
+        intervequips = self.equipment_1.intervequip_set.all()
+        intervention_ids = [x.intervention_id for x in intervequips]
+        # Delete interventions
+        Intervention.objects.filter(id__in=intervention_ids).delete()
+
+        # Then go to the equipment and check that no link exist:
+        # click() method should result in an Exception
+        url = '%sequipment/%s' % (self.appurl, self.equipment_1.id)
+        self.gissmo_login()
+        self.browser.get(url)
+        self.browser.implicitly_wait(3)
+        try:
+            link = self.browser.find_element_by_xpath(
+                '//a[. = "Check station"]')
+            link.click()
+        except Exception:
+            # Link not found: success!
+            pass
+        finally:
+            expected = url + '/'
+            current = self.browser.current_url
+            self.assertEqual(
+                current,
+                expected,
+                'Current: %s. Expected: %s' % (current, expected))

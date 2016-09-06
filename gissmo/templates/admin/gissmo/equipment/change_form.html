@@ -34,6 +34,8 @@
 {% endblock %}
 
 {% block object-tools-items %}
+{% if original.last_station %}<li><a href="{% url 'admin:app_list' app_label=opts.app_label %}stationsite/{{ original.last_station.id }}">Check station</a></li>
+{% endif %}
 <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}intervention/add/{% equip_last_station object_id %}&equip={{ object_id }}">Add intervention</a></li>
 <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}equipment/{{ object_id }}/changemodel/" class="changelink">Change model</a></li>
 <li><a href="history/" class="historylink">History</a></li>
