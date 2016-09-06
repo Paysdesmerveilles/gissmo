@@ -10,9 +10,9 @@ Gissmo gets priority to **[Docker](http://docker.com/)** in order to have a Djan
   * [Source repository](https://github.com/eost/gissmo) (using Github)
   * [Bugs and improvements](https://github.com/eost/gissmo/issues) can be found on Github
   * [Flake8 script that checks your code before a commit](https://github.com/eost/gissmo/blob/master/scripts/git_hooks/pre-commit)
-  * [Mkdocs](http://mkdocs.org/) as documentation generator. We choose **Markdown** format
+  * [Mkdocs](http://mkdocs.org/) as documentation generator. We choose **Markdown** format. [Gissmo documentation](https://gissmo.readthedocs.org) is hosted by [Readthedocs](https://readthedocs.org/).
 
-Tests are done on in a [python virtual environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/).
+Tests are done on in a [python virtual environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) and automatically launched with [Travis](https://travis-ci.org/), just check [Gissmo Travis page](https://travis-ci.org/eost/gissmo).
 
 ## Git commit code convention
 
@@ -120,7 +120,7 @@ As Docker container starts using a specific entrypoint, it delivers 3 possibilit
 To launch the Docker container using one of these 3 ways, just do:
 
 ```bash
-docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/opt/gissmo/upload fabienengels/gissmo:1.6 development
+docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/data gissmo:1.7 development
 ```
 
 where:
@@ -132,7 +132,7 @@ where:
 You can also launch commands into the Docker container with the **development** version:
 
 ```bash
-docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/opt/gissmo/upload gissmo:1.6 development python3 manage.py migrate
+docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/data gissmo:1.7 development python3 manage.py migrate
 ```
 
 Have fun with Docker containers!

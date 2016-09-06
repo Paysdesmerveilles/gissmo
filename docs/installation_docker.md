@@ -36,7 +36,7 @@ Get source from [Gissmo Github repository](http://github.com/eost/gissmo/).
 Then go in gissmo local directory and:
 
 ```bash
-docker build -t gissmo:1.6 .
+docker build -t gissmo:1.7 .
 ```
 
 This will generate a Gissmo docker image.
@@ -53,10 +53,10 @@ Steps are:
 So:
 
 ```bash
-docker run -it --rm --link gissmo_db:db gissmo:1.6 python3 manage.py migrate
-docker run -it --rm --link gissmo_db:db gissmo:1.6 python3 manage.py createsuperuser
+docker run -it --rm --link gissmo_db:db gissmo:1.7 python3 manage.py migrate
+docker run -it --rm --link gissmo_db:db gissmo:1.7 python3 manage.py createsuperuser
 mkdir ~/upload
-docker run -it --rm -p 8002:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v ~/upload/:/opt/gissmo/uploads gissmo:1.6
+docker run -it --rm -p 8002:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v ~/upload/:/data gissmo:1.7
 ```
 
 where:
@@ -80,7 +80,7 @@ So apply this:
 
 ```bash
 docker start gissmo_db
-docker run -it --rm -p 8002:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v ~/upload/:/opt/gissmo/uploads gissmo:1.6
+docker run -it --rm -p 8002:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v ~/upload/:/data gissmo:1.7
 ```
 
 Last command is similar to those given in [Gissmo container chapter](#gissmo-container).
@@ -94,7 +94,7 @@ Gissmo administration needs an administrator called the **superuser**.
 Then:
 
 ```bash
-docker run -it --rm --link gissmo_db:db gissmo:1.6 python3 manage.py createsuperuser
+docker run -it --rm --link gissmo_db:db gissmo:1.7 python3 manage.py createsuperuser
 ```
 
 Just answer to what appears on the screen.

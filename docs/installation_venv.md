@@ -43,7 +43,7 @@ virtualenv -p python3 project
 
 This directory will contains:
 
-  * Gissmo (for an example gissmo-1.6 directory)
+  * Gissmo (for an example gissmo-1.7 directory)
   * all needed python libraries
 
 **Notes**:
@@ -57,9 +57,9 @@ Download Gissmo archive and extract it:
 
 ```bash
 cd project
-wget "https://github.com/eost/gissmo/archive/v1.6.tar.gz" -O gissmo.tar.gz
+wget "https://github.com/eost/gissmo/archive/v1.7.tar.gz" -O gissmo.tar.gz
 tar xvf gissmo.tar.gz
-cd gissmo-1.6
+cd gissmo-1.7
 ```
 
 You're now ready to configure Gissmo.
@@ -72,7 +72,7 @@ Enter in Python virtual environment and install needed libraries:
 
 ```bash
 source bin/activate
-cd gissmo-1.6
+cd gissmo-1.7
 pip install -r requirements.txt
 ```
 
