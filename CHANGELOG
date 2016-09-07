@@ -1,3 +1,6 @@
+Version 1.7.1-trunk:
+  - Fix uWSGI missing static parameter about /media files download
+
 Version 1.7:
   - Add a checkbox on project to hide some project from filtering on stations
   - Display all stations, equipments and interventions to all users
