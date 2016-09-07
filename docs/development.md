@@ -107,17 +107,19 @@ Documentation is now located in **site** directory.
 
 If you need more, have a look to [Mkdocs](http://mkdocs.org/) official documentation.
 
-## One Docker, 3 ways
+## Docker entrypoint commands
 
-As Docker container starts using a specific entrypoint, it delivers 3 possibilities:
+As Docker container starts using a specific entrypoint, it delivers multiple possibilities:
 
   * (default) **production**: start a uWSGI server
   * **test**: start a uWSGI server with DEBUG=True to display errors
   * **development**: start the Django python webserver
+  * **manage [argument ...]**: launch ```python3 manage.py [argument ...]``` into the container
+  * **migrate**: make a database migration using ```python3 manage.py migrate``` command. This takes NO more arguments
 
 **production** mode needs a SECRET_KEY environment variable to work well.
 
-To launch the Docker container using one of these 3 ways, just do:
+To launch the Docker container using one of these ways, just do:
 
 ```bash
 docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/data gissmo:1.7 development

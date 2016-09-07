@@ -53,8 +53,8 @@ Steps are:
 So:
 
 ```bash
-docker run -it --rm --link gissmo_db:db gissmo:1.7 python3 manage.py migrate
-docker run -it --rm --link gissmo_db:db gissmo:1.7 python3 manage.py createsuperuser
+docker run -it --rm --link gissmo_db:db gissmo:1.7 migrate
+docker run -it --rm --link gissmo_db:db gissmo:1.7 manage createsuperuser
 mkdir ~/upload
 docker run -it --rm -p 8002:8000 -e SECRET_KEY="abcdefg" --link gissmo_db:db -v ~/upload/:/data gissmo:1.7
 ```
@@ -68,6 +68,8 @@ where:
 **db** is mandatory. Gissmo uses it. Gissmo needs it as it is! **The link should always be named db**.
 
 Now you're ready to use Gissmo on [http://localhost:8002/](http://localhost:8002/).
+
+Check [Docker entrypoint commands section](development.md#docker-entrypoint-commands) for more information about Gissmo container possibilities.
 
 ## Relaunch container
 
@@ -94,7 +96,7 @@ Gissmo administration needs an administrator called the **superuser**.
 Then:
 
 ```bash
-docker run -it --rm --link gissmo_db:db gissmo:1.7 python3 manage.py createsuperuser
+docker run -it --rm --link gissmo_db:db gissmo:1.7 manage createsuperuser
 ```
 
 Just answer to what appears on the screen.

@@ -1,4 +1,5 @@
 Current version (1.8_trunk):
+  - Docker entrypoint - new commands: manage and migrate
   - Add "Check station" button for Equipments and Channels
   - Add "Last 3 interventions" panel for Equipments and Stations
 
