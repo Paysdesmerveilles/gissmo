@@ -1,4 +1,4 @@
-Version 1.7.1-trunk:
+Version 1.7.1:
   - Fix uWSGI missing static parameter about /media files download
 
 Version 1.7:

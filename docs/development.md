@@ -120,7 +120,7 @@ As Docker container starts using a specific entrypoint, it delivers 3 possibilit
 To launch the Docker container using one of these 3 ways, just do:
 
 ```bash
-docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/data gissmo:1.7 development
+docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/data gissmo:1.7.1 development
 ```
 
 where:
@@ -132,7 +132,7 @@ where:
 You can also launch commands into the Docker container with the **development** version:
 
 ```bash
-docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/data gissmo:1.7 development python3 manage.py migrate
+docker run -it --rm -P --link gissmo_db:db -v /srv/upload:/data gissmo:1.7.1 development python3 manage.py migrate
 ```
 
 Have fun with Docker containers!
